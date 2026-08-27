@@ -2,20 +2,50 @@
 
 ## Briques de base (`src/components/`)
 
+Les briques sont rangées par famille dans des sous-dossiers de `src/components/` :
+
+| Sous-dossier | Famille |
+| :--- | :--- |
+| `ui/` | primitives d'interface génériques (boutons, cartes de base) |
+| `layout/` | chrome global du site (en-tête, pied de page, bannières, fil d'Ariane) |
+| `cards/` | cartes de contenu typées (actualité, activité, catégorie) |
+| `article/` | briques de la page de lecture (colonnage, sommaire, progression, figure, nav précédent/suivant) |
+| `sections/` | blocs de page pleine largeur (voir plus bas) |
+
+### `ui/`
+
 | Composant | Usage |
 | :--- | :--- |
-| `Button.astro` | Bouton pilule. Props : `href` (rend un `<a>`, sinon un `<button>`), `variant` (`primary` \| `secondary` \| `outline`), `class` (classes additionnelles). |
-| `Card.astro` | Carte simple : titre + contenu libre (slot). Utilisée pour la grille "Adhérer". |
-| `ArticleCard.astro` | Carte d'actualité (image ou placeholder, date, auteur, titre, extrait, tag). Prend un objet `article` (voir [actualites.md](actualites.md)). Hauteur fixe `h-116` (464px, échelle dynamique Tailwind 4) pour harmoniser toutes les cartes d'une grille ; titre bloqué à 2 lignes (`line-clamp-2`, `leading-snug`), extrait bloqué à 4 lignes (`line-clamp-4`) ; carte en `flex flex-col`, le tag est poussé en bas via `mt-auto` quel que soit le nombre de lignes utilisées au-dessus. |
-| `ActivityCard.astro` | Carte d'activité (image ou placeholder, titre, extrait, lien "En savoir plus" et pastille de niveau optionnelle, tous deux ancrés en bas de carte), utilisée sur une page catégorie. Prend un objet `activity` (voir [activites.md](activites.md)). |
-| `CategoryCard.astro` | Carte de catégorie d'activité : badge icône [FontAwesome](https://fontawesome.com/search?ip=classic&s=solid) + libellé en majuscules, pas d'image. Prend un objet `category` (`{ slug, label, icon }` depuis `src/lib/categories.ts`). |
-| `FigureImage.astro` | Image (`astro:assets`) encapsulée dans un `<figure>`, avec `<figcaption>` optionnel affiché uniquement si un `caption` est fourni. Utilisé sur les pages de détail (actualité, activité) pour créditer une photo. |
-| `Breadcrumb.astro` | Fil d'Ariane (`Accueil > ... > page courante`). Prend un tableau `items` (`{ label, href? }`) ; le dernier élément (page courante) n'a jamais de `href` et reçoit seul `aria-current="page"`. Un élément intermédiaire peut aussi omettre `href` (ex. un libellé de menu déroulant sans page "hub" propre) : il s'affiche alors en texte simple, sans lien ni `aria-current`. Ne se rend pas si `items` contient moins de 2 éléments. Voir [navigation.md](navigation.md). |
-| `Article.astro` | Grille 2 colonnes article/sommaire. Sans le slot nommé `sidebar` rempli : une seule colonne (`<article class="mx-auto max-w-3xl px-4 py-16 sm:px-6">`). Avec ce slot rempli : bascule en 2 colonnes — `article` en largeur flexible (`minmax(0,1fr)`) + `aside` collant de 240px (visible à partir de `lg:`). Utilisé uniquement par `ArticleLayout` (voir plus bas) — pas destiné à être appelé directement depuis une page. |
-| `TableOfContents.astro` | Sommaire ("Sur cette page") à placer dans le slot `sidebar` d'`Article`. Prop `headings: { depth, slug, text }[]` (type `Heading` de `src/lib/headings.ts`) ; ne garde que `depth` 2-3, ne se rend pas s'il reste moins de 2 entrées — c'est ce qui fait que la colonne annexe n'apparaît que "selon le contenu". Défilement animé au clic (`scroll-behavior: smooth` + `scroll-margin-top` sur les `h2`/`h3`, dans `global.css`, avec respect de `prefers-reduced-motion`). Le lien du titre actuellement lu est surligné automatiquement au scroll (script `IntersectionObserver`-like sur `getBoundingClientRect`, classe `.is-active` définie dans `global.css`) — même style que le survol (liseré bleu à gauche). |
-| `ReadingProgress.astro` | Module "X min de lecture" + barre de progression qui se remplit avec le scroll de la page. Prop `minutes: number`. Placé juste au-dessus de `TableOfContents` dans le slot `sidebar`, uniquement quand le sommaire est lui-même affiché (même condition `headings.length > 1`). Le temps de lecture est calculé automatiquement au build (`estimateReadingTime()` dans `src/lib/reading-time.ts`, ~200 mots/minute) à partir du contenu brut markdown, et exposé via le champ `readingTime` de `NewsArticle`/`Activity` (`src/lib/news.ts`, `src/lib/activites.ts`). |
-| `Header.astro` | En-tête du site : logo, navigation, bouton "Adhérer", menu mobile. |
-| `Footer.astro` | Pied de page : logo, coordonnées, réseaux sociaux, copyright. |
+| `ui/Button.astro` | Bouton pilule. Props : `href` (rend un `<a>`, sinon un `<button>`), `variant` (`primary` \| `secondary` \| `outline`), `class` (classes additionnelles). |
+| `ui/Card.astro` | Carte simple : titre + contenu libre (slot). Utilisée pour la grille "Adhérer". |
+
+### `layout/`
+
+| Composant | Usage |
+| :--- | :--- |
+| `layout/Header.astro` | En-tête du site : logo, navigation, bouton "Adhérer", menu mobile. |
+| `layout/Footer.astro` | Pied de page : logo, coordonnées, réseaux sociaux, copyright. |
+| `layout/BrandStripe.astro` | Bande de couleurs de marque affichée en haut de l'en-tête. |
+| `layout/AnnonceBanner.astro` | Bannière d'annonces pleine largeur montée **au-dessus de `Header`** dans `Layout`. Lit `src/lib/annonces.ts` (contenu dans `src/contents/annonces.md`). Script client : fenêtre de dates, rotation auto (prop `intervalMs`, défaut 7000) avec flèches `‹` `›` si plusieurs annonces valides, pause au survol/focus, fermeture mémorisée en `sessionStorage`. Couleur pilotée par le `tone` de l'annonce affichée. Voir [annonces.md](annonces.md). |
+| `layout/Breadcrumb.astro` | Fil d'Ariane (`Accueil > ... > page courante`). Prend un tableau `items` (`{ label, href? }`) ; le dernier élément (page courante) n'a jamais de `href` et reçoit seul `aria-current="page"`. Un élément intermédiaire peut aussi omettre `href` (ex. un libellé de menu déroulant sans page "hub" propre) : il s'affiche alors en texte simple, sans lien ni `aria-current`. Ne se rend pas si `items` contient moins de 2 éléments. Voir [navigation.md](navigation.md). |
+
+### `cards/`
+
+| Composant | Usage |
+| :--- | :--- |
+| `cards/ArticleCard.astro` | Carte d'actualité (image ou placeholder, date, auteur, titre, extrait, tag). Prend un objet `article` (voir [actualites.md](actualites.md)). Hauteur fixe `h-116` (464px, échelle dynamique Tailwind 4) pour harmoniser toutes les cartes d'une grille ; titre bloqué à 2 lignes (`line-clamp-2`, `leading-snug`), extrait bloqué à 4 lignes (`line-clamp-4`) ; carte en `flex flex-col`, le tag est poussé en bas via `mt-auto` quel que soit le nombre de lignes utilisées au-dessus. |
+| `cards/ActivityCard.astro` | Carte d'activité (image ou placeholder, titre, extrait, lien "En savoir plus" et pastille de niveau optionnelle, tous deux ancrés en bas de carte), utilisée sur une page catégorie. Prend un objet `activity` (voir [activites.md](activites.md)). |
+| `cards/CategoryCard.astro` | Carte de catégorie d'activité : badge icône [FontAwesome](https://fontawesome.com/search?ip=classic&s=solid) + libellé en majuscules, pas d'image. Prend un objet `category` (`{ slug, label, icon }` depuis `src/lib/categories.ts`). |
+
+### `article/`
+
+| Composant | Usage |
+| :--- | :--- |
+| `article/Article.astro` | Grille 2 colonnes article/sommaire. Sans le slot nommé `sidebar` rempli : une seule colonne (`<article class="mx-auto max-w-3xl px-4 py-16 sm:px-6">`). Avec ce slot rempli : bascule en 2 colonnes — `article` en largeur flexible (`minmax(0,1fr)`) + `aside` collant de 240px (visible à partir de `lg:`). Utilisé uniquement par `ArticleLayout` (voir plus bas) — pas destiné à être appelé directement depuis une page. |
+| `article/TableOfContents.astro` | Sommaire ("Sur cette page") à placer dans le slot `sidebar` d'`Article`. Prop `headings: { depth, slug, text }[]` (type `Heading` de `src/lib/headings.ts`) ; ne garde que `depth` 2-3, ne se rend pas s'il reste moins de 2 entrées — c'est ce qui fait que la colonne annexe n'apparaît que "selon le contenu". Défilement animé au clic (`scroll-behavior: smooth` + `scroll-margin-top` sur les `h2`/`h3`, dans `global.css`, avec respect de `prefers-reduced-motion`). Le lien du titre actuellement lu est surligné automatiquement au scroll (script `IntersectionObserver`-like sur `getBoundingClientRect`, classe `.is-active` définie dans `global.css`) — même style que le survol (liseré bleu à gauche). |
+| `article/ReadingProgress.astro` | Module "X min de lecture" + barre de progression qui se remplit avec le scroll de la page. Prop `minutes: number`. Placé juste au-dessus de `TableOfContents` dans le slot `sidebar`, uniquement quand le sommaire est lui-même affiché (même condition `headings.length > 1`). Le temps de lecture est calculé automatiquement au build (`estimateReadingTime()` dans `src/lib/reading-time.ts`, ~200 mots/minute) à partir du contenu brut markdown, et exposé via le champ `readingTime` de `NewsArticle`/`Activity` (`src/lib/news.ts`, `src/lib/activites.ts`). |
+| `article/FigureImage.astro` | Image (`astro:assets`) encapsulée dans un `<figure>`, avec `<figcaption>` optionnel affiché uniquement si un `caption` est fourni. Utilisé sur les pages de détail (actualité, activité) pour créditer une photo. |
+| `article/PrevNextNav.astro` | Navigation "article précédent / suivant" placée dans le slot par défaut d'`ArticleLayout`. Voir [navigation.md](navigation.md). |
 
 > `ArticleLayout.astro` (le gabarit de page qui compose `Article` + `TableOfContents` + `ReadingProgress`, voir plus bas) vit dans `src/layouts/ArticleLayout.astro`, pas dans `src/components/` — comme `Layout.astro`, c'est un gabarit de page complet plutôt qu'une brique visuelle.
 

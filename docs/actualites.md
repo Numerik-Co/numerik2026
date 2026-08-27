@@ -69,7 +69,7 @@ Toute la logique de lecture est centralisée dans `src/lib/news.ts` (fonction `g
 - calcule le `slug` (= nom du dossier, donc `AAAA-MM-JJ-titre`), le `href` (`/actualites/<slug>`), et formate `publishAt` en date française,
 - trie par `publishAt` décroissant.
 
-Trois pages consomment cette fonction : `src/components/sections/ActualitesSection.astro` (accueil), `src/pages/actualites.astro` (liste), `src/pages/actualites/[slug].astro` (détail, génère une page statique par article via `getStaticPaths`). Le rendu visuel de chaque vignette est le composant partagé `src/components/ArticleCard.astro` — voir [composants.md](composants.md).
+Trois pages consomment cette fonction : `src/components/sections/ActualitesSection.astro` (accueil), `src/pages/actualites.astro` (liste), `src/pages/actualites/[slug].astro` (détail, génère une page statique par article via `getStaticPaths`). Le rendu visuel de chaque vignette est le composant partagé `src/components/cards/ArticleCard.astro` — voir [composants.md](composants.md).
 
 ## Pistes d'évolution
 

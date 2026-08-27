@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
-import logo from '../styles/img/logo_transparent.png';
-import { association } from '../lib/association';
+import logo from '../../styles/img/logo_transparent.png';
+import { association } from '../../lib/association';
 import BrandStripe from './BrandStripe.astro';
 
 const navLinks = [
@@ -20,7 +20,7 @@ const navLinks = [
 ];
 ---
 
-<header class="sticky top-0 z-50 bg-white/90 backdrop-blur">
+<header class="sticky top-0 z-50 isolate bg-white/90 backdrop-blur">
 	<div class="mx-auto flex max-w-6xl items-center justify-between sm:px-6">
 		<a href="/" class="flex items-center gap-2 font-heading text-xl text-gray-900">
 			<Image src={logo} alt={association.name} width={240} height={96} loading="eager" fetchpriority="high" class="h-16 w-auto" />

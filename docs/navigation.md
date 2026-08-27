@@ -2,7 +2,7 @@
 
 ## Menu principal
 
-Le menu du header est une liste codée en dur dans `src/components/Header.astro` :
+Le menu du header est une liste codée en dur dans `src/components/layout/Header.astro` :
 
 ```js
 const navLinks = [
@@ -52,7 +52,7 @@ breadcrumbs={[
 
 ## Fil d'Ariane
 
-Chaque page interne (tout sauf l'accueil `/` et la page 404) affiche un fil d'Ariane généré par `src/components/Breadcrumb.astro`, positionné **sous le bandeau de titre** (`PageHeader`) et au-dessus du reste du contenu de la page.
+Chaque page interne (tout sauf l'accueil `/` et la page 404) affiche un fil d'Ariane généré par `src/components/layout/Breadcrumb.astro`, positionné **sous le bandeau de titre** (`PageHeader`) et au-dessus du reste du contenu de la page.
 
 Ce positionnement est géré par un slot nommé dans `src/layouts/Layout.astro` :
 
@@ -91,7 +91,7 @@ Pour une nouvelle page, voir l'exemple de squelette dans [pages.md](pages.md).
 
 ## Pied de page
 
-`src/components/Footer.astro` affiche :
+`src/components/layout/Footer.astro` affiche :
 - le logo et la description de l'association,
 - les coordonnées (email, téléphone, adresse) depuis `src/lib/association.ts`,
 - les liens réseaux sociaux, générés dynamiquement à partir de `association.social` — seuls les réseaux renseignés (valeur non vide) s'affichent, voir [composants.md](composants.md),

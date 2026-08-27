@@ -28,6 +28,7 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 | :--- | :--- |
 | Publier ou modifier une actualité | [docs/actualites.md](docs/actualites.md) |
 | Publier ou modifier une activité (parcours, atelier...) | [docs/activites.md](docs/activites.md) |
+| Afficher une annonce temporaire dans la bannière du site (AG, appel à bénévoles...) | [docs/annonces.md](docs/annonces.md) |
 | Créer ou modifier une page (ex: une nouvelle rubrique) | [docs/pages.md](docs/pages.md) |
 | Changer les couleurs, les polices ou le logo | [docs/theme.md](docs/theme.md) |
 | Savoir quels composants réutiliser (boutons, cartes, sections...) | [docs/composants.md](docs/composants.md) |
@@ -38,8 +39,12 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 
 ```text
 src/
-├── components/         # Briques réutilisables (Button, Card, ArticleCard, ActivityCard, Header, Footer...)
-│   └── sections/        # Sections de page assemblées à partir des briques (Hero, CtaSection...)
+├── components/         # Briques réutilisables, rangées par famille
+│   ├── ui/             # Primitives génériques (Button, Card)
+│   ├── layout/         # Chrome du site (Header, Footer, BrandStripe, AnnonceBanner, Breadcrumb)
+│   ├── cards/          # Cartes de contenu (ArticleCard, ActivityCard, CategoryCard)
+│   ├── article/        # Briques de page de lecture (Article, TableOfContents, ReadingProgress, FigureImage, PrevNextNav)
+│   └── sections/       # Sections de page assemblées à partir des briques (Hero, CtaSection...)
 ├── contents/
 │   ├── news/            # Actualités : un dossier par article (index.md + image)
 │   └── activites/       # Activités : un dossier par activité (index.md + image)

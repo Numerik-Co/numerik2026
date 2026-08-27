@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
-import logo from '../styles/img/logo_transparent.png';
-import { association, getFullAddress } from '../lib/association';
+import logo from '../../styles/img/logo_transparent.png';
+import { association, getFullAddress } from '../../lib/association';
 const year = new Date().getFullYear();
 
 const socialIcons: Record<string, string> = {
@@ -68,7 +68,7 @@ const socialLinks = Object.entries(association.social)
 	</div>
 
 	<div class="border-t border-white/10 px-4 py-4 text-center text-xs text-white/70">
-		<p>&copy; {year} {association.name}. Tous droits réservés.</p>
+		<p>&copy; {year} {association.name}. Tous droits réservés. | Propulsé par Astro et développé par OpenPixl</p>
 		<p class="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
 			<a href="/mentions-legales" class="hover:text-white">Mentions légales</a>
 			<span aria-hidden="true">·</span>
