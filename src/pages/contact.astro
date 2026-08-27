@@ -1,0 +1,55 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/sections/PageHeader.astro';
+import Button from '../components/Button.astro';
+import { association, getFullAddress } from '../lib/association';
+
+const inputClass =
+	'w-full rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
+---
+
+<Layout
+	title={`Contact · ${association.name}`}
+	description={`Contactez l'association ${association.name} pour toute question, demande de partenariat ou d'accompagnement.`}
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: 'Contact' }]}
+>
+	<PageHeader
+		slot="page-header"
+		title="Contactez-nous"
+		description="Une question, un projet, une envie de vous impliquer ? Écrivez-nous."
+	/>
+
+	<section class="mx-auto grid max-w-5xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-2">
+		<div>
+			<h2 class="text-xl text-gray-900">Nos coordonnées</h2>
+			<ul class="mt-4 space-y-3 font-light text-gray-600">
+				<li><a href={`mailto:${association.email}`} class="hover:text-primary">{association.email}</a></li>
+				<li><a href={`tel:${association.phone.replace(/\s/g, '')}`} class="hover:text-primary">{association.phone}</a></li>
+				<li>{getFullAddress()}</li>
+			</ul>
+			<p class="mt-6 font-light text-gray-600">
+				Vous pouvez aussi nous retrouver directement lors de nos permanences en atelier.
+			</p>
+		</div>
+
+		<form class="space-y-4">
+			<div>
+				<label for="name" class="block text-sm font-medium text-gray-700">Nom</label>
+				<input type="text" id="name" name="name" required class={`mt-1 ${inputClass}`} />
+			</div>
+			<div>
+				<label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+				<input type="email" id="email" name="email" required class={`mt-1 ${inputClass}`} />
+			</div>
+			<div>
+				<label for="subject" class="block text-sm font-medium text-gray-700">Sujet</label>
+				<input type="text" id="subject" name="subject" class={`mt-1 ${inputClass}`} />
+			</div>
+			<div>
+				<label for="message" class="block text-sm font-medium text-gray-700">Message</label>
+				<textarea id="message" name="message" rows="5" required class={`mt-1 ${inputClass}`}></textarea>
+			</div>
+			<Button variant="primary" class="w-full sm:w-auto">Envoyer le message</Button>
+		</form>
+	</section>
+</Layout>

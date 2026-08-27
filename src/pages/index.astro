@@ -1,11 +1,41 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Hero from '../components/sections/Hero.astro';
+import ActivitesSection from '../components/sections/ActivitesSection.astro';
+import ActualitesSection from '../components/sections/ActualitesSection.astro';
+import CtaSection from '../components/sections/CtaSection.astro';
+import heroImage from '../styles/img/hero-mediation-numerique.jpg';
+import { association } from '../lib/association';
 ---
 
 <Layout>
-	<Welcome />
+	<Hero
+		title="Le numérique, ensemble et pour toutes et tous"
+		highlight="ensemble"
+		description={`${association.name} accompagne les habitant·e·s, les associations et les écoles dans la découverte et l'appropriation des outils numériques.`}
+		primaryLabel="Découvrir nos activités"
+		primaryHref="/activites"
+		secondaryLabel="Nous rejoindre"
+		secondaryHref="/adherer"
+		backgroundImage={heroImage}
+		overlay="black"
+	/>
+	<ActualitesSection
+		eyebrow="Actualités"
+		title="Les dernières actus de l'association"
+		ctaLabel="Voir toutes les actualités"
+		ctaHref="/actualites"
+		limit={3}
+	/>
+	<ActivitesSection
+		title="Nos activités"
+		ctaLabel="Accéder à la page"
+		ctaHref="/activites"
+	/>
+	<CtaSection
+		title="Envie de nous rejoindre ?"
+		description={`Bénévoles, adhérent·e·s ou partenaires : chacun·e a sa place chez ${association.name}.`}
+		buttonLabel="Adhérer à l'association"
+		buttonHref="/adherer"
+	/>
 </Layout>

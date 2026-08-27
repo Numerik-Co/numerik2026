@@ -1,0 +1,44 @@
+---
+interface NavItem {
+	href: string;
+	title: string;
+	meta?: string;
+}
+
+interface Props {
+	prev?: NavItem | null;
+	next?: NavItem | null;
+}
+
+const { prev, next } = Astro.props;
+---
+
+{(prev || next) && (
+	<nav class="mt-12 grid gap-4 sm:grid-cols-2" aria-label="Navigation entre les contenus">
+		{prev ? (
+			<a
+				href={prev.href}
+				class="group flex flex-col rounded-xl border border-gray-100 p-4 transition-colors hover:border-primary/30 hover:bg-primary/5"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+				</svg>
+				<span class="mt-1 font-heading text-sm text-gray-900 group-hover:text-primary">{prev.title}</span>
+				{prev.meta && <span class="mt-1 text-xs text-gray-500">{prev.meta}</span>}
+			</a>
+		) : <div />}
+
+		{next ? (
+			<a
+				href={next.href}
+				class="group flex flex-col rounded-xl border border-gray-100 p-4 text-right transition-colors hover:border-primary/30 hover:bg-primary/5 sm:items-end"
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+				</svg>
+				<span class="mt-1 font-heading text-sm text-gray-900 group-hover:text-primary">{next.title}</span>
+				{next.meta && <span class="mt-1 text-xs text-gray-500">{next.meta}</span>}
+			</a>
+		) : <div />}
+	</nav>
+)}

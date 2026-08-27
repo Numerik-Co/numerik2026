@@ -1,0 +1,57 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+	activity: {
+		href: string;
+		title: string;
+		excerpt: string;
+		level?: string;
+		image?: any;
+	};
+	loading?: 'lazy' | 'eager';
+}
+
+const { activity, loading = 'lazy' } = Astro.props;
+---
+
+<article class="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-md">
+	<a href={activity.href} class="block aspect-video overflow-hidden">
+		{activity.image ? (
+			<Image
+				src={activity.image}
+				alt={activity.title}
+				width={480}
+				height={270}
+				loading={loading}
+				class="h-full w-full object-cover"
+			/>
+		) : (
+			<span class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 text-xl">
+				Images à venir
+			</span>
+		)}
+	</a>
+	<div class="flex flex-1 flex-col p-6">
+		<h3 class="text-lg text-gray-900">
+			<a href={activity.href} class="hover:text-primary">{activity.title}</a>
+		</h3>
+		<p class="mt-2 font-light text-sm text-gray-600">{activity.excerpt}</p>
+		<div class="mt-auto flex items-end justify-between gap-4 pt-4">
+			<a
+				href={activity.href}
+				class="inline-flex items-center gap-1 font-heading text-sm font-semibold text-primary hover:text-secondary"
+			>
+				En savoir plus
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+				</svg>
+			</a>
+			{activity.level && (
+				<span class="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+					{activity.level}
+				</span>
+			)}
+		</div>
+	</div>
+</article>

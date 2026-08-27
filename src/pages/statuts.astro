@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/sections/PageHeader.astro';
+import ArticleLayout from '../layouts/ArticleLayout.js';
+import { association } from '../lib/association';
+---
+
+<Layout
+	title={`Statuts · ${association.name}`}
+	description={`Statuts de l'association ${association.name}.`}
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: 'Statuts' }]}
+>
+	<PageHeader slot="page-header" title="Statuts de l'association" />
+
+	<ArticleLayout>
+		<div class="markdown-content font-light text-gray-700">
+			<p>Contenu en cours de rédaction.</p>
+		</div>
+	</ArticleLayout>
+</Layout>

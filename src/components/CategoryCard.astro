@@ -1,0 +1,23 @@
+---
+interface Props {
+	category: {
+		slug: string;
+		label: string;
+		icon: string;
+	};
+}
+
+const { category } = Astro.props;
+---
+
+<a
+	href={`/activites/${category.slug}`}
+	class="flex flex-col items-center gap-4 rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm transition-shadow hover:shadow-md"
+>
+	<span class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-2xl text-primary">
+		<i class={`fa-solid ${category.icon}`} aria-hidden="true"></i>
+	</span>
+	<span class="font-heading text-sm font-semibold uppercase tracking-wide text-gray-900">
+		{category.label}
+	</span>
+</a>

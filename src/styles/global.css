@@ -1,0 +1,112 @@
+@import "tailwindcss";
+@import "@fortawesome/fontawesome-free/css/fontawesome.css";
+@import "@fortawesome/fontawesome-free/css/solid.css";
+@import "@fortawesome/fontawesome-free/css/brands.css";
+
+@font-face {
+	font-family: "Aileron";
+	src: url("./fonts/aileron/aileron-light.woff2") format("woff2"),
+		url("./fonts/aileron/aileron-light.woff") format("woff");
+	font-weight: 300;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "Como";
+	src: url("./fonts/como/como-semibold-webfont.woff2") format("woff2"),
+		url("./fonts/como/como-semibold-webfont.woff") format("woff");
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+
+@theme {
+	--color-primary: #2f7fc1;
+	--color-secondary: #1fa39e;
+	--color-accent: #7cb93f;
+
+	--font-heading: "Como", sans-serif;
+	--font-body: "Aileron", sans-serif;
+}
+
+body {
+	font-family: var(--font-body);
+	font-weight: 400;
+	color: var(--color-gray-800, #1f2937);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}
+
+.markdown-content h2,
+.markdown-content h3 {
+	scroll-margin-top: 6rem;
+}
+
+.toc-link.is-active {
+	border-color: var(--color-primary);
+	color: var(--color-primary);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-heading);
+	font-weight: 600;
+}
+
+/* Rendu du contenu Markdown (actualités, activités...) importé via <Content /> */
+.markdown-content p {
+	margin-top: 1rem;
+}
+
+.markdown-content p:first-child {
+	margin-top: 0;
+}
+
+.markdown-content h2 {
+	margin-top: 2rem;
+	margin-bottom: 0.5rem;
+	font-size: 1.5rem;
+}
+
+.markdown-content h3 {
+	margin-top: 1.5rem;
+	margin-bottom: 0.5rem;
+	font-size: 1.25rem;
+}
+
+.markdown-content strong {
+	font-weight: 600;
+	color: var(--color-gray-900, #111827);
+}
+
+.markdown-content a {
+	color: var(--color-primary);
+	text-decoration: underline;
+}
+
+.markdown-content a:hover {
+	color: var(--color-secondary);
+}
+
+.markdown-content blockquote {
+	margin: 1.5rem 0;
+	border-left: 4px solid var(--color-accent);
+	border-radius: 0.75rem;
+	background: color-mix(in oklab, var(--color-accent) 8%, white);
+	padding: 1rem 1.25rem;
+}
+
+.markdown-content ul {
+	margin-top: 1rem;
+	padding-left: 1.5rem;
+	list-style: disc;
+}

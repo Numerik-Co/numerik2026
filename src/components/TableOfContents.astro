@@ -1,0 +1,57 @@
+---
+import type { Heading } from '../lib/headings';
+
+interface Props {
+	headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+---
+
+{items.length > 1 && (
+	<nav aria-label="Sur cette page">
+		<p class="font-heading text-xs font-semibold uppercase tracking-wide text-gray-500">Sur cette page</p>
+		<ul class="mt-3 space-y-2 text-sm">
+			{items.map((heading) => (
+				<li class={heading.depth === 3 ? 'pl-3' : ''}>
+					<a
+						href={`#${heading.slug}`}
+						data-toc-link
+						class="toc-link block border-l-2 border-transparent pl-3 text-gray-600 transition-colors hover:border-primary hover:text-primary"
+					>
+						{heading.text}
+					</a>
+				</li>
+			))}
+		</ul>
+	</nav>
+)}
+
+<script>
+	const nav = document.querySelector('nav[aria-label="Sur cette page"]');
+	const links = nav ? Array.from(nav.querySelectorAll('a[data-toc-link]')) : [];
+	const targets = links
+		.map((link) => document.getElementById(link.getAttribute('href').slice(1)))
+		.filter((el) => el !== null);
+
+	const OFFSET = 120;
+
+	function updateActive() {
+		let activeId = null;
+
+		for (const target of targets) {
+			if (target.getBoundingClientRect().top - OFFSET <= 0) {
+				activeId = target.id;
+			}
+		}
+
+		links.forEach((link) => {
+			link.classList.toggle('is-active', link.getAttribute('href') === `#${activeId}`);
+		});
+	}
+
+	updateActive();
+	window.addEventListener('scroll', updateActive, { passive: true });
+	window.addEventListener('resize', updateActive);
+</script>

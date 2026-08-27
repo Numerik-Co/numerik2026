@@ -1,0 +1,82 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../styles/img/logo_transparent.png';
+import { association } from '../lib/association';
+import BrandStripe from './BrandStripe.astro';
+
+const navLinks = [
+	{ href: '/', label: 'Accueil' },
+	{ href: '/association', label: 'Association' },
+	{ href: '/activites', label: 'Activités' },
+	{ href: '/actualites', label: 'Actualités' },
+	{ href: '/contact', label: 'Contact' },
+];
+---
+
+<header class="sticky top-0 z-50 bg-white/90 backdrop-blur">
+	<div class="mx-auto flex max-w-6xl items-center justify-between sm:px-6">
+		<a href="/" class="flex items-center gap-2 font-heading text-xl text-gray-900">
+			<Image src={logo} alt={association.name} width={240} height={96} loading="eager" fetchpriority="high" class="h-16 w-auto" />
+		</a>
+
+		<nav class="hidden items-center gap-8 md:flex">
+			{navLinks.map((link) => (
+				<a
+					href={link.href}
+					class="text-sm font-medium text-gray-600 transition-colors hover:text-primary uppercase"
+				>
+					{link.label}
+				</a>
+			))}
+		</nav>
+
+		<div class="hidden md:block">
+			<a
+				href="/adherer"
+				class="rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90"
+			>
+				Adhérer
+			</a>
+		</div>
+
+		<button
+			id="menu-toggle"
+			type="button"
+			class="flex h-10 w-10 items-center justify-center rounded-full text-gray-700 md:hidden"
+			aria-label="Ouvrir le menu"
+			aria-expanded="false"
+			aria-controls="mobile-menu"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+			</svg>
+		</button>
+	</div>
+
+	<nav id="mobile-menu" class="hidden flex-col gap-4 border-t border-gray-100 px-4 py-4 md:hidden">
+		{navLinks.map((link) => (
+			<a href={link.href} class="text-sm font-medium text-gray-600 hover:text-primary">
+				{link.label}
+			</a>
+		))}
+		<a
+			href="/adherer"
+			class="w-fit rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white"
+		>
+			Adhérer
+		</a>
+	</nav>
+
+	<BrandStripe />
+</header>
+
+<script>
+	const toggle = document.getElementById('menu-toggle');
+	const menu = document.getElementById('mobile-menu');
+
+	toggle?.addEventListener('click', () => {
+		const isOpen = menu?.classList.toggle('flex');
+		menu?.classList.toggle('hidden', !isOpen);
+		toggle.setAttribute('aria-expanded', String(Boolean(isOpen)));
+	});
+</script>

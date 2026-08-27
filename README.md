@@ -1,46 +1,52 @@
-# Astro Starter Kit: Basics
+# numérik&Co — site associatif
+
+Site de l'association **numérik&Co**, développé avec [Astro 7](https://docs.astro.build) et [Tailwind CSS 4](https://tailwindcss.com).
+
+## Démarrage rapide
 
 ```sh
-npm create astro@latest -- --template basics
+npm install
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Le site est alors disponible sur `http://localhost:4321`.
 
-## 🚀 Project Structure
+> En session avec l'assistant IA, le serveur de dev se lance en tâche de fond avec `astro dev --background` (voir `CLAUDE.md`), géré ensuite avec `astro dev stop` / `astro dev status` / `astro dev logs`.
 
-Inside of your Astro project, you'll see the following folders and files:
+| Commande            | Action                                    |
+| :------------------ | :----------------------------------------- |
+| `npm run dev`        | Lance le serveur de développement          |
+| `npm run build`       | Génère le site statique dans `./dist/`     |
+| `npm run preview`     | Prévisualise le build de production        |
+| `npm run astro ...`   | Accès direct à la CLI Astro                |
+
+## Documentation
+
+La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **par besoin** :
+
+| Je veux... | Voir |
+| :--- | :--- |
+| Publier ou modifier une actualité | [docs/actualites.md](docs/actualites.md) |
+| Publier ou modifier une activité (parcours, atelier...) | [docs/activites.md](docs/activites.md) |
+| Créer ou modifier une page (ex: une nouvelle rubrique) | [docs/pages.md](docs/pages.md) |
+| Changer les couleurs, les polices ou le logo | [docs/theme.md](docs/theme.md) |
+| Savoir quels composants réutiliser (boutons, cartes, sections...) | [docs/composants.md](docs/composants.md) |
+| Modifier les liens du menu ou du pied de page | [docs/navigation.md](docs/navigation.md) |
+| Comprendre l'organisation technique du projet | [docs/developpement.md](docs/developpement.md) |
+
+## Structure du projet (vue rapide)
 
 ```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+src/
+├── components/         # Briques réutilisables (Button, Card, ArticleCard, ActivityCard, Header, Footer...)
+│   └── sections/        # Sections de page assemblées à partir des briques (Hero, CtaSection...)
+├── contents/
+│   ├── news/            # Actualités : un dossier par article (index.md + image)
+│   └── activites/       # Activités : un dossier par activité (index.md + image)
+├── layouts/             # Layout.astro : squelette HTML commun à toutes les pages
+├── lib/                 # Fonctions utilitaires (news.ts, activites.ts : lecture/tri du contenu)
+├── pages/               # Une route par fichier (index.astro = "/", actualites.astro = "/actualites"...)
+└── styles/              # global.css (couleurs, polices), fonts/, img/ (logo)
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Pour le détail de chaque dossier, voir [docs/developpement.md](docs/developpement.md).

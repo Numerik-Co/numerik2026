@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Button from '../components/Button.astro';
+import { association } from '../lib/association';
+---
+
+<Layout title={`Page en construction · ${association.name}`}>
+	<section class="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-4 text-center sm:px-6">
+		<span class="flex h-20 w-20 items-center justify-center rounded-full bg-accent/10 text-4xl">
+			🚧
+		</span>
+		<p class="mt-6 font-heading text-2xl text-primary">404</p>
+		<h1 class="mt-2 text-3xl text-gray-900 sm:text-4xl">Cette page est en cours de construction</h1>
+		<p class="mt-4 font-light text-gray-600">
+			Nous travaillons encore sur ce contenu. Revenez bientôt, ou retournez à l'accueil pour
+			découvrir nos activités.
+		</p>
+		<div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+			<Button href="/" variant="primary">Retour à l'accueil</Button>
+			<Button href={`mailto:${association.email}`} variant="outline">Nous écrire</Button>
+		</div>
+	</section>
+</Layout>

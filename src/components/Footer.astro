@@ -1,0 +1,80 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../styles/img/logo_transparent.png';
+import { association, getFullAddress } from '../lib/association';
+const year = new Date().getFullYear();
+
+const socialIcons: Record<string, string> = {
+	facebook: 'fa-brands fa-facebook',
+	instagram: 'fa-brands fa-instagram',
+	linkedin: 'fa-brands fa-linkedin',
+	twitter: 'fa-brands fa-x-twitter',
+	youtube: 'fa-brands fa-youtube',
+	tiktok: 'fa-brands fa-tiktok',
+};
+
+const socialLinks = Object.entries(association.social)
+	.filter(([, url]) => !!url)
+	.map(([key, url]) => ({
+		url: url as string,
+		icon: socialIcons[key] ?? 'fa-solid fa-link',
+		label: key.charAt(0).toUpperCase() + key.slice(1),
+	}));
+---
+
+<footer class="bg-secondary text-white">
+	<div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">
+		<div>
+			<p class="font-heading text-lg">
+				<Image src={logo} alt={association.name} width={420} height={192} class="h-16 w-auto" />
+			</p>
+			<p class="mt-2 text-sm text-white/80">
+				{association.description}
+			</p>
+		</div>
+
+		<div>
+			<p class="font-heading text-sm uppercase tracking-wide text-white/70">Contact</p>
+			<ul class="mt-2 space-y-2 text-sm text-white/80">
+				<li class="flex items-center gap-2">
+					<i class="fa-solid fa-envelope w-4 text-white/60" aria-hidden="true"></i>
+					<a href={`mailto:${association.email}`} class="hover:text-white">{association.email}</a>
+				</li>
+				<li class="flex items-center gap-2">
+					<i class="fa-solid fa-phone w-4 text-white/60" aria-hidden="true"></i>
+					<a href={`tel:${association.phone.replace(/\s/g, '')}`} class="hover:text-white">{association.phone}</a>
+				</li>
+				<li class="flex items-center gap-2">
+					<i class="fa-solid fa-location-dot w-4 text-white/60" aria-hidden="true"></i>
+					{getFullAddress()}
+				</li>
+			</ul>
+		</div>
+
+		{
+			socialLinks.length > 0 && (
+				<div>
+					<p class="font-heading text-sm uppercase tracking-wide text-white/70">Suivez-nous</p>
+					<div class="mt-2 flex gap-4">
+						{socialLinks.map(({ url, icon, label }) => (
+							<a href={url} aria-label={label} class="text-lg text-white/80 hover:text-white">
+								<i class={icon} aria-hidden="true" />
+							</a>
+						))}
+					</div>
+				</div>
+			)
+		}
+	</div>
+
+	<div class="border-t border-white/10 px-4 py-4 text-center text-xs text-white/70">
+		<p>&copy; {year} {association.name}. Tous droits réservés.</p>
+		<p class="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+			<a href="/mentions-legales" class="hover:text-white">Mentions légales</a>
+			<span aria-hidden="true">·</span>
+			<a href="/statuts" class="hover:text-white">Statuts</a>
+			<span aria-hidden="true">·</span>
+			<a href="/reglement-interieur" class="hover:text-white">Règlement intérieur</a>
+		</p>
+	</div>
+</footer>

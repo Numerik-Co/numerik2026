@@ -1,0 +1,54 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/sections/PageHeader.astro';
+import Card from '../components/Card.astro';
+import Button from '../components/Button.astro';
+import { association } from '../lib/association';
+
+const memberships = [
+	{
+		title: 'Membre individuel',
+		description:
+			"Participez aux ateliers, aux événements et à la vie de l'association en tant qu'adhérent·e.",
+	},
+	{
+		title: 'Membre bénévole',
+		description:
+			'Donnez de votre temps pour animer des ateliers ou accompagner nos actions sur le terrain.',
+	},
+	{
+		title: 'Membre partenaire',
+		description:
+			`Votre structure souhaite soutenir ou collaborer avec ${association.name} sur un projet commun.`,
+	},
+];
+---
+
+<Layout
+	title={`Adhérer · ${association.name}`}
+	description={`Rejoignez ${association.name} en tant qu'adhérent·e, bénévole ou partenaire.`}
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: 'Adhérer' }]}
+>
+	<PageHeader
+		slot="page-header"
+		title={`Adhérer à ${association.name}`}
+		description="Bénévoles, adhérent·e·s ou partenaires : chacun·e a sa place dans l'association."
+	/>
+
+	<section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+		<div class="grid gap-6 md:grid-cols-3">
+			{memberships.map((membership) => (
+				<Card title={membership.title}>{membership.description}</Card>
+			))}
+		</div>
+
+		<div class="mt-12 text-center">
+			<p class="font-light text-gray-600">
+				Prêt·e à nous rejoindre ? Contactez-nous pour connaître les modalités d'adhésion.
+			</p>
+			<div class="mt-6">
+				<Button href="/contact" variant="primary">Nous contacter</Button>
+			</div>
+		</div>
+	</section>
+</Layout>

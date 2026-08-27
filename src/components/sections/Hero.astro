@@ -1,0 +1,71 @@
+---
+import { Image } from 'astro:assets';
+import Button from '../Button.astro';
+import { association } from '../../lib/association';
+
+interface Props {
+	title?: string;
+	highlight?: string;
+	description?: string;
+	primaryLabel?: string;
+	primaryHref?: string;
+	secondaryLabel?: string;
+	secondaryHref?: string;
+	backgroundImage?: any;
+	overlay?: 'white' | 'black' | 'none';
+}
+
+const {
+	title = 'Le numérique, ensemble et pour toutes et tous',
+	highlight = 'ensemble',
+	description = `${association.name} accompagne les habitant·e·s, les associations et les écoles dans la découverte et l'appropriation des outils numériques.`,
+	primaryLabel = 'Découvrir nos activités',
+	primaryHref = '/activites',
+	secondaryLabel = 'Nous rejoindre',
+	secondaryHref = '/adherer',
+	backgroundImage,
+	overlay = 'black',
+} = Astro.props;
+
+const [before, after = ''] = title.split(highlight);
+
+const hasImage = Boolean(backgroundImage);
+const isDark = hasImage && overlay === 'black';
+
+const overlayClass = {
+	black: 'bg-black/50',
+	white: 'bg-white/70',
+	none: '',
+}[overlay];
+---
+
+<section
+	class={`relative overflow-hidden px-4 py-20 text-center sm:px-6 ${hasImage ? 'flex min-h-[480px] flex-col items-center justify-center' : ''}`}
+>
+	{hasImage && (
+		<>
+			<Image
+				src={backgroundImage}
+				alt=""
+				width={1920}
+				height={1080}
+				loading="eager"
+				class="absolute inset-0 h-full w-full object-cover"
+			/>
+			{overlay !== 'none' && <div class={`absolute inset-0 ${overlayClass}`}></div>}
+		</>
+	)}
+
+	<div class="relative mx-auto max-w-6xl">
+		<h1 class={`text-4xl sm:text-5xl ${isDark ? 'text-white' : 'text-gray-900'}`}>
+			{before}<span class="text-primary">{highlight}</span>{after}
+		</h1>
+		<p class={`mx-auto mt-6 max-w-2xl font-light ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
+			{description}
+		</p>
+		<div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+			<Button href={primaryHref} variant="primary">{primaryLabel}</Button>
+			<Button href={secondaryHref} variant="outline">{secondaryLabel}</Button>
+		</div>
+	</div>
+</section>

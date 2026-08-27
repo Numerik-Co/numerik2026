@@ -1,0 +1,30 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+	image: any;
+	alt: string;
+	caption?: string;
+	loading?: 'lazy' | 'eager';
+	width?: number;
+	height?: number;
+	class?: string;
+	imageClass?: string;
+}
+
+const {
+	image,
+	alt,
+	caption,
+	loading = 'lazy',
+	width = 960,
+	height = 480,
+	class: className,
+	imageClass = 'aspect-video w-full rounded-2xl object-cover',
+} = Astro.props;
+---
+
+<figure class={className}>
+	<Image src={image} alt={alt} width={width} height={height} loading={loading} class={imageClass} />
+	{caption && <figcaption class="mt-2 text-right text-xs text-gray-500">{caption}</figcaption>}
+</figure>
