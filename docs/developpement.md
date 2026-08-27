@@ -2,7 +2,8 @@
 
 ## Stack
 
-- **[Astro 7](https://docs.astro.build)** — génération de site statique (chaque page est pré-rendue en HTML au build, pas de serveur applicatif nécessaire en production).
+- **[Astro 7](https://docs.astro.build)** — `output` reste `'static'` par défaut : chaque page est pré-rendue en HTML au build. Seules les routes qui déclarent explicitement `export const prerender = false` (ex. `src/pages/api/adherer.ts`) sont rendues à la demande par le serveur Node.
+- **`@astrojs/node`** (`mode: 'standalone'`) — adaptateur qui fournit le petit serveur HTTP nécessaire aux routes API ; à mettre derrière un reverse proxy (nginx/Apache) et un process manager (PM2) en production. Voir [api.md](api.md).
 - **[Tailwind CSS 4](https://tailwindcss.com)** — classes utilitaires, configurées directement en CSS via `@theme` dans `src/styles/global.css` (pas de fichier `tailwind.config.js`, c'est le fonctionnement natif de Tailwind 4).
 - **`@astrojs/rss`** — génération du flux `/rss.xml`.
 - **`@fortawesome/fontawesome-free`** — icônes des catégories d'activités, auto-hébergées (import CSS dans `global.css`, pas de CDN externe).
@@ -44,13 +45,17 @@ src/
 │   ├── actualites/[slug].astro                       # route dynamique, une page par actualité
 │   ├── activites/[category].astro                    # route dynamique, une page par catégorie
 │   ├── activites/[category]/[slug].astro             # route dynamique, une page par activité
+│   ├── api/adherer.ts                                # route serveur (prerender=false), voir api.md
 │   ├── rss.xml.js                                    # endpoint RSS
 │   └── 404.astro                                     # page "en construction" (toute route inconnue)
-└── styles/
-    ├── global.css                                    # couleurs, polices, styles de base + .markdown-content (voir theme.md)
-    ├── fonts/                                         # fichiers de polices (Aileron, Como)
-    └── img/                                            # logo
+├── styles/
+│   ├── global.css                                    # couleurs, polices, styles de base + .markdown-content (voir theme.md)
+│   ├── fonts/                                         # fichiers de polices (Aileron, Como)
+│   └── img/                                            # logo
+└── env.d.ts                                           # typage des variables d'environnement (import.meta.env)
 ```
+
+À la racine du projet : `.env.example` liste les variables d'environnement attendues (à copier en `.env`, jamais commité — voir [api.md](api.md)).
 
 Pas de dossier `src/assets/` ni `public/` actif à ce stade (contenu de démarrage Astro supprimé) ; les images du site vivent à côté de ce qui les utilise (`src/styles/img/` pour le logo, `src/contents/news/<slug>/` et `src/contents/activites/<slug>/` pour les visuels).
 
@@ -70,6 +75,7 @@ Le champ `site` sert à générer des URLs absolues correctes dans le flux RSS (
 - [docs/actualites.md](actualites.md) — alimenter les actualités
 - [docs/activites.md](activites.md) — alimenter les activités
 - [docs/pages.md](pages.md) — créer des pages
+- [docs/api.md](api.md) — routes serveur et intégration Grist (bulletin d'adhésion)
 - [docs/theme.md](theme.md) — couleurs, polices, logo
 - [docs/composants.md](composants.md) — composants disponibles
 - [docs/navigation.md](navigation.md) — menu et pied de page
