@@ -7,6 +7,14 @@ Le menu du header est une liste codée en dur dans `src/components/Header.astro`
 ```js
 const navLinks = [
 	{ href: '/', label: 'Accueil' },
+	{
+		label: 'Association',
+		children: [
+			{ href: '/association/historique', label: 'Historique' },
+			{ href: '/association/ethique-du-logiciel-libre', label: 'Éthique du logiciel libre' },
+			{ href: '/association/conseiller-numerique', label: 'Conseiller numérique' },
+		],
+	},
 	{ href: '/activites', label: 'Activités' },
 	{ href: '/actualites', label: 'Actualités' },
 	{ href: '/contact', label: 'Contact' },
@@ -15,34 +23,32 @@ const navLinks = [
 
 Pour ajouter, retirer ou réordonner une entrée : modifier ce tableau. Le rendu (desktop + menu mobile) et le bouton "Adhérer" s'ajustent automatiquement.
 
+Une entrée avec `children` (comme "Association" ci-dessus) n'a pas de `href` propre : ce n'est qu'un déclencheur de menu déroulant, pas un lien. Une entrée sans `children` garde un simple `href`.
+
 ## ⚠️ Un dossier de pages ne crée pas un sous-menu automatiquement
 
-Astro transforme la structure de `src/pages/` en routes (voir [pages.md](pages.md)), mais **ne génère aucun menu** à partir de cette arborescence. Créer `src/pages/activites/ateliers.astro` fait exister `/activites/ateliers`, mais ne fait *rien* apparaître dans la navbar.
+Astro transforme la structure de `src/pages/` en routes (voir [pages.md](pages.md)), mais **ne génère aucun menu** à partir de cette arborescence. Créer `src/pages/activites/ateliers.astro` fait exister `/activites/ateliers`, mais ne fait *rien* apparaître dans la navbar : il faut explicitement ajouter l'entrée (et ses `children` le cas échéant) dans `navLinks`.
 
-Pour un menu déroulant (dropdown) sur une entrée existante, deux approches :
+## Menu déroulant (dropdown)
 
-- **Liste codée en dur avec enfants (recommandé pour un nombre limité de sous-pages)** — étendre `navLinks` :
+Une entrée `navLinks` avec un tableau `children: { href, label }[]` fait apparaître un menu déroulant dans `Header.astro` :
 
-  ```js
-  const navLinks = [
-  	{ href: '/', label: 'Accueil' },
-  	{
-  		label: 'Activités',
-  		href: '/activites',
-  		children: [
-  			{ href: '/activites/les-parcours', label: 'Les parcours' },
-  			{ href: '/activites/les-ateliers-du-samedi', label: 'Les ateliers du samedi' },
-  		],
-  	},
-  	...
-  ];
-  ```
+- **Desktop** : un `<button>` (`aria-haspopup="true"`, `aria-expanded`) ouvre un panneau (`data-dropdown-panel`) au clic. Un script dans `Header.astro` gère l'ouverture/fermeture (`classList.toggle('hidden', ...)` sur le panneau, comme pour le menu mobile), ferme les autres dropdowns ouverts, et ferme au clic en dehors ou à la touche `Échap`.
+- **Mobile** : pas de second niveau de repli — le libellé s'affiche en texte simple, suivi de ses `children` indentés (`pl-3`), toujours visibles dans le menu mobile déjà dépliable.
 
-  Puis adapter le template de `Header.astro` pour afficher un sous-menu au survol/clic quand `children` existe (avec `aria-haspopup` / `aria-expanded` pour l'accessibilité).
+Si un jour la liste de sous-pages devient longue ou gérée par quelqu'un d'autre que le développeur, une alternative est de générer le tableau `children` depuis une [content collection](https://docs.astro.build/en/guides/content-collections/) (champ `order`, `getCollection()`) plutôt que de le coder en dur — plus flexible, mais plus de mise en place.
 
-- **Génération automatique via une Content Collection** — si la liste de sous-pages devient longue ou gérée par quelqu'un d'autre que le développeur, définir une vraie [content collection](https://docs.astro.build/en/guides/content-collections/) avec un champ `order`, puis construire le sous-menu avec `getCollection()` dans `Header.astro`. Plus flexible, mais plus de mise en place (schéma, tri).
+⚠️ Une entrée avec `children` n'ayant pas de page "hub" propre (ex. "Association" ne mène plus à `/association`, supprimée), toute page qui construit un fil d'Ariane mentionnant ce libellé intermédiaire doit omettre son `href` :
 
-Ce chantier n'est **pas encore fait** — le menu actuel est une simple liste plate à un niveau.
+```js
+breadcrumbs={[
+	{ label: 'Accueil', href: '/' },
+	{ label: 'Association' }, // pas de href : pas de page à lier
+	{ label: page.title },
+]}
+```
+
+`Breadcrumb.astro` affiche alors ce libellé en texte simple (pas de lien), et seul le tout dernier élément reçoit `aria-current="page"`.
 
 ## Fil d'Ariane
 

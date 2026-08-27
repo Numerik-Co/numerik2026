@@ -1,0 +1,17 @@
+---
+const sidebarContent = await Astro.slots.render('sidebar');
+const hasSidebar = sidebarContent.trim() !== '';
+---
+
+{hasSidebar ? (
+	<div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start lg:gap-12">
+		<article class="min-w-0">
+			<slot />
+		</article>
+		<aside class="hidden lg:sticky lg:top-24 lg:block" set:html={sidebarContent} />
+	</div>
+) : (
+	<article class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+		<slot />
+	</article>
+)}

@@ -52,6 +52,49 @@ Astro utilise le **routage par fichiers** : chaque fichier dans `src/pages/` dev
 
 3. Ajouter un lien vers cette page dans le menu si besoin (voir [navigation.md](navigation.md)).
 
+## Ajouter une page "de lecture" (contenu article, sans sections libres)
+
+Pour une page qui affiche un contenu de type article — mentions légales, statuts, une sous-page Association... — plutôt que d'empiler des sections comme ci-dessus, utiliser `ArticleLayout` (voir [composants.md](composants.md#page-longue-avec-sommaire-articlelayout--tablecontents)) et stocker le texte dans `src/contents/pages/<slug>/index.md` :
+
+```md
+---
+title: "Titre affiché"
+description: "Sous-titre optionnel affiché sous le titre"
+---
+
+Le contenu de la page, en Markdown.
+```
+
+Puis un fichier `src/pages/ma-page.astro` minimal :
+
+```astro
+---
+import ArticleLayout from '../layouts/ArticleLayout.astro';
+import { getPageBySlug } from '../lib/pages';
+import { association } from '../lib/association';
+
+const page = getPageBySlug('ma-page');
+const { Content } = page;
+---
+
+<ArticleLayout
+	title={`${page.title} · ${association.name}`}
+	description="Description pour les moteurs de recherche"
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: page.title }]}
+	pageHeaderTitle={page.title}
+	pageHeaderDescription={page.description}
+	headings={page.headings}
+>
+	<div class="markdown-content font-light text-gray-700">
+		<Content />
+	</div>
+</ArticleLayout>
+```
+
+`ArticleLayout` compose déjà `Layout`, `PageHeader`, le fil d'Ariane et — si le contenu a plus d'un titre — le sommaire "Sur cette page" avec temps de lecture : pas besoin de les réimporter séparément. Voir [composants.md](composants.md) pour le détail des props.
+
+Cas particulier : si le contenu a besoin d'interpoler des valeurs dynamiques (ex. `mentions-legales`, qui injecte les coordonnées de l'association depuis `src/lib/association.ts`), utiliser un fichier `.mdx` à la place de `.md` — `src/lib/pages.ts` lit les deux indifféremment. Un `.mdx` peut contenir des `import`/`export const` et des expressions `{...}` au milieu du texte, exactement comme dans un composant Astro.
+
 ## Créer un sous-dossier de pages (ex: `/adherer/tarifs`)
 
 Un dossier dans `src/pages/` crée un sous-chemin d'URL :

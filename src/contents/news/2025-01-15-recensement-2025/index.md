@@ -7,9 +7,13 @@ tag: "Vie locale"
 author: "numérik&Co"
 ---
 
-Du 16 janvier au 15 février a lieu sur notre commune la campagne de recensement 2025.
+## La campagne de recensement 2025
+
+**Du 16 janvier au 15 février a lieu sur notre commune la campagne de recensement 2025.**
 
 Ces derniers jours, c'est glissé dans votre boîte aux lettres un courrier concernant le lancement de la campagne de recensement 2025. Des agents recenseurs viendront à vos domiciles pour compléter les informations vous concernant. Toutefois, vous avez la possibilité de réaliser cette démarche vous-même en passant par un site dédié : [le-recensement-et-moi.fr](https://www.le-recensement-et-moi.fr/).
+
+## Comment réaliser cette démarche
 
 Pour vous aider dans cette démarche, durant toute la période du recensement (du 16 janvier au 15 février), Clément, notre conseiller numérique, sera mis à disposition de la commune de Saint-Pierre sur le chalet du quartier de « La Moustey ».
 

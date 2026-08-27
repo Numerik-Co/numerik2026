@@ -1,0 +1,48 @@
+---
+title: "Mentions légales"
+---
+
+import { association, getFullAddress } from '../../../lib/association';
+
+export const registrationNumber = association.legal.registrationNumber || '[Numéro SIRET ou RNA]';
+export const president = association.legal.president || '[Nom du président]';
+export const publicationManager = association.legal.publicationManager || association.legal.president || '[Nom du président ou du responsable du site]';
+export const publicationManagerRole = association.legal.publicationManagerRole || "[Fonction dans l'association]";
+export const hostingName = association.legal.hosting.name || '[À compléter]';
+export const hostingAddress = association.legal.hosting.address || '[À compléter]';
+export const hostingPhone = association.legal.hosting.phone || '[À compléter]';
+
+## Éditeur du site
+
+Association {association.name}<br/>
+Siège social : {getFullAddress()}<br/>
+Email : {association.email}<br/>
+Téléphone : {association.phone}<br/>
+Association loi 1901 enregistrée sous le numéro : {registrationNumber}<br/>
+Président de l'association : {president}
+
+## Hébergeur du site
+
+Nom de l'hébergeur : {hostingName}<br/>
+Adresse : {hostingAddress}<br/>
+Téléphone : {hostingPhone}
+
+## Responsabilité éditoriale
+
+Le responsable de la publication est {publicationManager}, en sa qualité de {publicationManagerRole}.
+
+## Propriété intellectuelle
+
+Le contenu (textes, images, vidéos, etc.) présent sur ce site est la propriété exclusive de l'association {association.name}, sauf mention contraire. Toute reproduction, distribution, modification ou utilisation de ces contenus sans l'autorisation écrite préalable de l'association est strictement interdite.
+
+## Données personnelles
+
+Conformément à la réglementation RGPD, les données personnelles collectées sur ce site (formulaire de contact, inscription, etc.) sont exclusivement destinées à l'usage interne de l'association {association.name}. Ces données ne seront ni vendues, ni échangées, ni partagées avec des tiers sans votre consentement explicite. Vous disposez d'un droit d'accès, de modification, de rectification et de suppression de vos données personnelles. Pour exercer ce droit, vous pouvez nous contacter à l'adresse suivante : {association.email}.
+
+## Cookies
+
+Ce site utilise des cookies pour améliorer votre expérience de navigation. Vous pouvez choisir de désactiver les cookies via les paramètres de votre navigateur, mais cela peut limiter certaines fonctionnalités du site.
+
+## Limitation de responsabilité
+
+L'association {association.name} met tout en œuvre pour fournir des informations exactes et à jour sur son site internet. Cependant, elle ne saurait être tenue responsable des erreurs ou omissions dans ces informations, ni des dommages directs ou indirects pouvant résulter de l'accès ou de l'utilisation du site.

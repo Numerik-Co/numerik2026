@@ -1,20 +1,21 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import PageHeader from '../components/sections/PageHeader.astro';
 import ArticleLayout from '../layouts/ArticleLayout.astro';
+import PageHeader from '../components/sections/PageHeader.astro';
+import { getPageBySlug } from '../lib/pages';
 import { association } from '../lib/association';
+
+const page = getPageBySlug('reglement-interieur');
+const { Content } = page;
 ---
 
-<Layout
-	title={`Règlement intérieur · ${association.name}`}
+<ArticleLayout
+	title={`${page.title} · ${association.name}`}
 	description={`Règlement intérieur de l'association ${association.name}.`}
-	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: 'Règlement intérieur' }]}
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: page.title }]}
 >
-	<PageHeader slot="page-header" title="Règlement intérieur" />
+	<PageHeader slot="page-header" title={page.title} />
 
-	<ArticleLayout>
-		<div class="markdown-content font-light text-gray-700">
-			<p>Contenu en cours de rédaction.</p>
-		</div>
-	</ArticleLayout>
-</Layout>
+	<div class="markdown-content font-light text-gray-700">
+		<Content />
+	</div>
+</ArticleLayout>

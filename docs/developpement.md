@@ -6,6 +6,7 @@
 - **`@astrojs/node`** (`mode: 'standalone'`) — adaptateur qui fournit le petit serveur HTTP nécessaire aux routes API ; à mettre derrière un reverse proxy (nginx/Apache) et un process manager (PM2) en production. Voir [api.md](api.md).
 - **[Tailwind CSS 4](https://tailwindcss.com)** — classes utilitaires, configurées directement en CSS via `@theme` dans `src/styles/global.css` (pas de fichier `tailwind.config.js`, c'est le fonctionnement natif de Tailwind 4).
 - **`@astrojs/rss`** — génération du flux `/rss.xml`.
+- **`@astrojs/mdx`** — pour les pages de `src/contents/pages/` qui ont besoin d'interpoler des valeurs dynamiques (ex. `mentions-legales`) ; voir [pages.md](pages.md).
 - **`@fortawesome/fontawesome-free`** — icônes des catégories d'activités, auto-hébergées (import CSS dans `global.css`, pas de CDN externe).
 
 ## Commandes
@@ -26,18 +27,21 @@ src/
 │   ├── Button.astro, Card.astro, ArticleCard.astro,
 │   │   ActivityCard.astro, CategoryCard.astro,
 │   │   FigureImage.astro                             # briques réutilisables
-│   ├── TableOfContents.astro, ReadingProgress.astro  # sommaire + temps de lecture (slot sidebar d'ArticleLayout)
+│   ├── Article.astro                                 # grille 2 colonnes article/sommaire, utilisée par ArticleLayout
+│   ├── TableOfContents.astro, ReadingProgress.astro  # sommaire + temps de lecture (slot sidebar d'Article)
 │   ├── Header.astro, Footer.astro                    # structure commune
 │   └── sections/                                     # blocs de page (Hero, CtaSection, PageHeader...)
 ├── contents/
 │   ├── news/<slug>/                                  # un dossier par actualité (index.md + cover.*)
-│   └── activites/<slug>/                             # un dossier par activité (index.md + cover.*)
+│   ├── activites/<slug>/                             # un dossier par activité (index.md + cover.*)
+│   └── pages/<slug>/                                 # un dossier par page "de lecture" (index.md ou .mdx)
 ├── layouts/
 │   ├── Layout.astro                                  # <html>, <head>, Header + <slot/> + Footer
-│   └── ArticleLayout.astro                           # conteneur 2 colonnes article/sommaire (pages longues)
+│   └── ArticleLayout.astro                           # gabarit de page complet pour le contenu de lecture (voir composants.md)
 ├── lib/
 │   ├── news.ts                                       # lecture/tri/formatage des actualités (getAllNews)
 │   ├── activites.ts                                  # lecture/tri des activités (getAllActivities, getActivitiesByCategory)
+│   ├── pages.ts                                      # lecture des pages de contents/pages/ (getPageBySlug)
 │   ├── reading-time.ts                               # estimation du temps de lecture (~200 mots/minute)
 │   └── categories.ts                                 # registre fixe des 4 catégories d'activités (label, icône)
 ├── pages/

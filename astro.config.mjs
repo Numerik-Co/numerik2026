@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 import node from '@astrojs/node';
 
+import mdx from '@astrojs/mdx';
+
 // https://astro.build/config
 export default defineConfig({
   // TODO: remplacer par le vrai nom de domaine une fois le site en ligne (utilisé pour générer les URLs absolues du flux RSS).
@@ -16,5 +18,7 @@ export default defineConfig({
 
   adapter: node({
     mode: 'standalone'
-  })
+  }),
+
+  integrations: [mdx()]
 });

@@ -1,97 +1,24 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import PageHeader from '../components/sections/PageHeader.astro';
 import ArticleLayout from '../layouts/ArticleLayout.astro';
+import PageHeader from '../components/sections/PageHeader.astro';
 import TableOfContents from '../components/TableOfContents.astro';
-import { association, getFullAddress } from '../lib/association';
-import type { Heading } from '../lib/headings';
+import { getPageBySlug } from '../lib/pages';
+import { association } from '../lib/association';
 
-const headings: Heading[] = [
-	{ depth: 2, slug: 'editeur-du-site', text: 'Éditeur du site' },
-	{ depth: 2, slug: 'hebergeur-du-site', text: 'Hébergeur du site' },
-	{ depth: 2, slug: 'responsabilite-editoriale', text: 'Responsabilité éditoriale' },
-	{ depth: 2, slug: 'propriete-intellectuelle', text: 'Propriété intellectuelle' },
-	{ depth: 2, slug: 'donnees-personnelles', text: 'Données personnelles' },
-	{ depth: 2, slug: 'cookies', text: 'Cookies' },
-	{ depth: 2, slug: 'limitation-de-responsabilite', text: 'Limitation de responsabilité' },
-];
-
-const { legal } = association;
-const registrationNumber = legal.registrationNumber || '[Numéro SIRET ou RNA]';
-const president = legal.president || '[Nom du président]';
-const publicationManager =
-	legal.publicationManager || legal.president || '[Nom du président ou du responsable du site]';
-const publicationManagerRole = legal.publicationManagerRole || '[Fonction dans l\'association]';
-const hostingName = legal.hosting.name || '[À compléter]';
-const hostingAddress = legal.hosting.address || '[À compléter]';
-const hostingPhone = legal.hosting.phone || '[À compléter]';
+const page = getPageBySlug('mentions-legales');
+const { Content } = page;
 ---
 
-<Layout
-	title={`Mentions légales · ${association.name}`}
+<ArticleLayout
+	title={`${page.title} · ${association.name}`}
 	description={`Mentions légales du site de ${association.name}.`}
-	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: 'Mentions légales' }]}
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: page.title }]}
 >
-	<PageHeader slot="page-header" title="Mentions légales" />
+	<PageHeader slot="page-header" title={page.title} />
 
-	<ArticleLayout>
-		<TableOfContents slot="sidebar" headings={headings} />
+	{page.headings.length > 1 && <TableOfContents slot="sidebar" headings={page.headings} />}
 
-		<div class="markdown-content font-light text-gray-700">
-			<h2 id="editeur-du-site">Éditeur du site</h2>
-			<p>
-				Association {association.name}<br />
-				Siège social : {getFullAddress()}<br />
-				Email : {association.email}<br />
-				Téléphone : {association.phone}<br />
-				Association loi 1901 enregistrée sous le numéro : {registrationNumber}<br />
-				Président de l'association : {president}
-			</p>
-
-			<h2 id="hebergeur-du-site">Hébergeur du site</h2>
-			<p>
-				Nom de l'hébergeur : {hostingName}<br />
-				Adresse : {hostingAddress}<br />
-				Téléphone : {hostingPhone}
-			</p>
-
-			<h2 id="responsabilite-editoriale">Responsabilité éditoriale</h2>
-			<p>
-				Le responsable de la publication est {publicationManager}, en sa qualité de {publicationManagerRole}.
-			</p>
-
-			<h2 id="propriete-intellectuelle">Propriété intellectuelle</h2>
-			<p>
-				Le contenu (textes, images, vidéos, etc.) présent sur ce site est la propriété exclusive de
-				l'association {association.name}, sauf mention contraire. Toute reproduction, distribution,
-				modification ou utilisation de ces contenus sans l'autorisation écrite préalable de
-				l'association est strictement interdite.
-			</p>
-
-			<h2 id="donnees-personnelles">Données personnelles</h2>
-			<p>
-				Conformément à la réglementation RGPD, les données personnelles collectées sur ce site
-				(formulaire de contact, inscription, etc.) sont exclusivement destinées à l'usage interne de
-				l'association {association.name}. Ces données ne seront ni vendues, ni échangées, ni partagées
-				avec des tiers sans votre consentement explicite. Vous disposez d'un droit d'accès, de
-				modification, de rectification et de suppression de vos données personnelles. Pour exercer ce
-				droit, vous pouvez nous contacter à l'adresse suivante : {association.email}.
-			</p>
-
-			<h2 id="cookies">Cookies</h2>
-			<p>
-				Ce site utilise des cookies pour améliorer votre expérience de navigation. Vous pouvez
-				choisir de désactiver les cookies via les paramètres de votre navigateur, mais cela peut
-				limiter certaines fonctionnalités du site.
-			</p>
-
-			<h2 id="limitation-de-responsabilite">Limitation de responsabilité</h2>
-			<p>
-				L'association {association.name} met tout en œuvre pour fournir des informations exactes et
-				à jour sur son site internet. Cependant, elle ne saurait être tenue responsable des erreurs ou
-				omissions dans ces informations, ni des dommages directs ou indirects pouvant résulter de
-				l'accès ou de l'utilisation du site.
-			</p>
-		</div>
-	</ArticleLayout>
-</Layout>
+	<div class="markdown-content font-light text-gray-700">
+		<Content />
+	</div>
+</ArticleLayout>

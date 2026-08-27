@@ -30,7 +30,7 @@ const { items } = Astro.props;
 									)}
 								</a>
 							) : (
-								<span class="font-medium text-gray-700" aria-current="page">{item.label}</span>
+								<span class="font-medium text-gray-700" aria-current={index === items.length - 1 ? 'page' : undefined}>{item.label}</span>
 							)}
 						</li>
 						{index < items.length - 1 && (
