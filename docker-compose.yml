@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    image: numerik2026:latest
+    container_name: numerik2026
+    restart: unless-stopped
+
+    # Secrets Grist (et autres) — fichier .env présent sur le VPS, hors dépôt
+    env_file:
+      - .env
+
+    # Le conteneur n'est joignable qu'en local :
+    # un reverse proxy (nginx / Traefik) gère le vrai domaine + HTTPS devant.
+    ports:
+      - "127.0.0.1:4321:4321"
+
+    # Aucun volume de données : l'app n'écrit rien sur disque, tout va dans Grist.
