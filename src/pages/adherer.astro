@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PageHeader from '../components/sections/PageHeader.astro';
+import PartenairesSection from '../components/sections/PartenairesSection.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
 import { association } from '../lib/association';
@@ -21,6 +22,20 @@ const memberships = [
 		description:
 			`Votre structure souhaite soutenir ou collaborer avec ${association.name} sur un projet commun.`,
 	},
+];
+
+const cotisations = [
+	{ label: 'Individuel', price: '30 €' },
+	{ label: 'Couple', price: '50 €' },
+	{ label: 'Chômeur·euse · étudiant·e', price: '20 €' },
+	{ label: 'Jeune de moins de 16 ans', price: 'Gratuit' },
+];
+
+const activites = [
+	{ label: 'Cours à l’année', price: '65 €' },
+	{ label: 'Perfectionnement', price: '35 €' },
+	{ label: 'FabLab', price: '65 €' },
+	{ label: 'Juniors', price: 'Gratuit' },
 ];
 ---
 
@@ -49,4 +64,95 @@ const memberships = [
 			</p>
 		</div>
 	</section>
+
+	<section class="bg-gray-50 py-16">
+		<div class="mx-auto max-w-6xl px-4 sm:px-6">
+			<div class="max-w-2xl">
+				<h2 class="text-3xl text-gray-900">Tarifs 2025-2026</h2>
+				<p class="mt-4 font-light text-gray-600">
+					L'adhésion est valable de début septembre à fin juin. La cotisation n'est pas
+					remboursable.
+				</p>
+			</div>
+
+			<div class="mt-10 grid gap-6 md:grid-cols-2">
+				<div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+					<h3 class="text-lg text-gray-900">Cotisations</h3>
+					<ul class="mt-4 divide-y divide-gray-100 text-sm">
+						{cotisations.map((item) => (
+							<li class="flex items-center justify-between py-2 font-light text-gray-600">
+								<span>{item.label}</span>
+								<span class="font-heading font-semibold text-gray-900">{item.price}</span>
+							</li>
+						))}
+					</ul>
+				</div>
+
+				<div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+					<h3 class="text-lg text-gray-900">Activités</h3>
+					<ul class="mt-4 divide-y divide-gray-100 text-sm">
+						{activites.map((item) => (
+							<li class="flex items-center justify-between py-2 font-light text-gray-600">
+								<span>{item.label}</span>
+								<span class="font-heading font-semibold text-gray-900">{item.price}</span>
+							</li>
+						))}
+					</ul>
+					<p>* : Les tarifs indiqués sont étudiés chaque année et validés lors de l'assemblée générale.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+		<div class="grid gap-10 md:grid-cols-2">
+			<div>
+				<h2 class="text-3xl text-gray-900">Ce que l'adhésion vous apporte</h2>
+				<p class="mt-4 font-light text-gray-600">
+					Pendant les périodes d'ouverture de la salle, l'adhésion donne droit :
+				</p>
+				<ul class="mt-4 space-y-2 font-light text-gray-600">
+					<li class="flex gap-2">
+						<i class="fa-solid fa-check mt-1 text-primary" aria-hidden="true"></i>
+						<span>à l'utilisation des équipements et des logiciels du club ;</span>
+					</li>
+					<li class="flex gap-2">
+						<i class="fa-solid fa-check mt-1 text-primary" aria-hidden="true"></i>
+						<span>aux conseils et à l'accompagnement de nos animateur·rice·s bénévoles et de notre service civique.</span>
+					</li>
+				</ul>
+				<p class="mt-6 font-light text-gray-600">
+					Auprès de notre partenaire principal <strong>Informatique40</strong>, l'adhésion ouvre
+					aussi droit à <strong>5 %</strong> de remise sur le matériel neuf et <strong>10 %</strong>
+					sur les consommables.
+				</p>
+			</div>
+
+			<div>
+				<h2 class="text-3xl text-gray-900">Comment adhérer ?</h2>
+				<p class="mt-4 font-light text-gray-600">
+					Vous pouvez récupérer la fiche d'adhésion :
+				</p>
+				<ul class="mt-4 space-y-2 font-light text-gray-600">
+					<li class="flex gap-2">
+						<i class="fa-solid fa-location-dot mt-1 text-primary" aria-hidden="true"></i>
+						<span>lors de votre venue dans notre salle, pour découvrir nos activités ;</span>
+					</li>
+					<li class="flex gap-2">
+						<i class="fa-solid fa-handshake mt-1 text-primary" aria-hidden="true"></i>
+						<span>auprès de nos partenaires : Mairie de Saint-Pierre-du-Mont, Informatique40 ;</span>
+					</li>
+					<li class="flex gap-2">
+						<i class="fa-solid fa-envelope mt-1 text-primary" aria-hidden="true"></i>
+						<span>en <a href="/contact" class="text-primary hover:text-secondary">nous contactant</a> directement.</span>
+					</li>
+				</ul>
+				<div class="mt-6">
+					<Button href="/contact" variant="primary">Nous contacter</Button>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<PartenairesSection class="border-t border-gray-100" />
 </Layout>

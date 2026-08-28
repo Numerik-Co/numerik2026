@@ -78,6 +78,7 @@ Le champ `site` sert à générer des URLs absolues correctes dans le flux RSS (
 
 - [docs/actualites.md](actualites.md) — alimenter les actualités
 - [docs/activites.md](activites.md) — alimenter les activités
+- [docs/annonces.md](annonces.md) — bannière d'annonces temporaires (au-dessus de la navbar)
 - [docs/pages.md](pages.md) — créer des pages
 - [docs/api.md](api.md) — routes serveur et intégration Grist (bulletin d'adhésion)
 - [docs/theme.md](theme.md) — couleurs, polices, logo

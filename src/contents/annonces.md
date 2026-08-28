@@ -1,0 +1,59 @@
+---
+# =============================================================================
+#  Annonces affichées dans la bannière en haut de toutes les pages
+# =============================================================================
+#
+#  Chaque entrée de la liste `annonces` ci-dessous s'affiche dans la bannière
+#  (au-dessus de la barre de navigation) UNIQUEMENT pendant sa période de
+#  validité (entre `startDate` et `endDate`, dates incluses).
+#
+#  Si plusieurs annonces sont valides en même temps, elles défilent
+#  automatiquement dans la bannière ; des flèches ‹ › permettent aussi de
+#  passer de l'une à l'autre.
+#
+#  Champs disponibles pour chaque annonce :
+#
+#    id        (obligatoire) identifiant unique, en minuscules-avec-tirets.
+#              Sert à mémoriser que le visiteur a fermé l'annonce (pour la
+#              session en cours). Changez l'id pour ré-afficher une annonce
+#              modifiée à tout le monde.
+#    title     (obligatoire) titre court, en gras.
+#    message   (obligatoire) une à deux phrases.
+#    startDate (obligatoire) "AAAA-MM-JJ" — premier jour d'affichage.
+#    endDate   (obligatoire) "AAAA-MM-JJ" — dernier jour d'affichage (inclus).
+#    tone      (optionnel)  "info" (bleu, défaut) | "accent" (vert) | "urgent" (ambre).
+#              Colore toute la bannière.
+#    icon      (optionnel)  nom d'icône Font Awesome solid, ex. "fa-bullhorn",
+#              "fa-calendar-days", "fa-hand-holding-heart". Défaut : "fa-bullhorn".
+#    ctaLabel  (optionnel)  texte du lien d'action.
+#    ctaHref   (optionnel)  cible du lien d'action (interne "/adherer" ou externe).
+#    active    (optionnel)  false pour désactiver une annonce sans la supprimer
+#              (utile pour préparer un brouillon).
+#
+#  Pensez à toujours mettre les valeurs entre guillemets doubles.
+# =============================================================================
+
+annonces:
+  - id: "ag-2026"
+    title: "Assemblée générale 2026"
+    message: "Notre assemblée générale annuelle approche. Tous les adhérent·e·s sont convié·e·s : votre présence compte."
+    startDate: "2026-08-20"
+    endDate: "2026-09-18"
+    tone: "info"
+    icon: "fa-calendar-days"
+    ctaLabel: "Voir les détails"
+    ctaHref: "/actualites/2026-08-17-assemblee-generale-2026"
+
+  - id: "recherche-animateurs-2026"
+    title: "Recherchons Animateur·rice·s"
+    message: "Vous aimez transmettre autour du numérique ? Rejoignez l'équipe qui anime nos ateliers, même quelques heures par mois."
+    startDate: "2026-08-25"
+    endDate: "2026-12-31"
+    tone: "accent"
+    icon: "fa-hand-holding-heart"
+    ctaLabel: "Nous contacter"
+    ctaHref: "/contact"
+---
+
+Ce fichier ne contient pas de texte libre : tout le contenu des annonces se
+règle dans l'en-tête ci-dessus (la partie entre les `---`).

@@ -1,0 +1,37 @@
+---
+import { partenaires } from '../../lib/partenaires';
+
+interface Props {
+	title?: string;
+	description?: string;
+	class?: string;
+}
+
+const {
+	title = "Les partenaires de l'association",
+	description = "NUMERIK&Co agit aux côtés d'institutions et de réseaux qui soutiennent la médiation et l'inclusion numériques.",
+	class: className = '',
+} = Astro.props;
+---
+
+<section class={`mx-auto max-w-6xl px-4 py-16 sm:px-6 ${className}`}>
+	<div class="max-w-2xl">
+		<h2 class="text-3xl text-gray-900">{title}</h2>
+		{description && <p class="mt-4 font-light text-gray-600">{description}</p>}
+	</div>
+
+	<ul class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+		{partenaires.map((partenaire) => (
+			<li class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+				<h3 class="text-lg text-gray-900">
+					{partenaire.url ? (
+						<a href={partenaire.url} class="hover:text-primary">{partenaire.name}</a>
+					) : (
+						partenaire.name
+					)}
+				</h3>
+				<p class="mt-2 text-sm font-light text-gray-600">{partenaire.role}</p>
+			</li>
+		))}
+	</ul>
+</section>

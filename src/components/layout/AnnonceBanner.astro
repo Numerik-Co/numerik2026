@@ -1,0 +1,220 @@
+---
+import { getAnnonces } from '../../lib/annonces';
+
+interface Props {
+	/** Durée d'affichage de chaque annonce avant rotation automatique (ms). */
+	intervalMs?: number;
+}
+
+const { intervalMs = 7000 } = Astro.props;
+const annonces = getAnnonces();
+
+// Le `tone` de l'annonce affichée colore toute la barre.
+const toneClass: Record<string, string> = {
+	info: 'bg-primary text-white',
+	accent: 'bg-accent text-white',
+	urgent: 'bg-amber-400 text-amber-950',
+};
+---
+
+{
+	annonces.length > 0 && (
+		<div
+			id="annonce-banner"
+			role="region"
+			aria-label="Annonce de l'association"
+			data-interval={intervalMs}
+			class={`relative transition-colors ${toneClass.info}`}
+			hidden
+		>
+			<div class="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-sm sm:gap-3 sm:px-6">
+				<button
+					type="button"
+					data-annonce-prev
+					class="hidden h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/10"
+					aria-label="Annonce précédente"
+				>
+					<i class="fa-solid fa-chevron-left" aria-hidden="true" />
+				</button>
+
+				<div class="min-w-0 flex-1">
+					{annonces.map((annonce) => (
+						<div
+							data-annonce
+							data-id={annonce.id}
+							data-start={annonce.startDate}
+							data-end={annonce.endDate}
+							data-tone={annonce.tone}
+							class="hidden flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-center"
+						>
+							<i class={`fa-solid ${annonce.icon} shrink-0`} aria-hidden="true" />
+							<span class="font-heading font-semibold">{annonce.title}</span>
+							<span class="opacity-90">{annonce.message}</span>
+							{annonce.ctaLabel && annonce.ctaHref && (
+								<a
+									href={annonce.ctaHref}
+									class="whitespace-nowrap font-semibold underline underline-offset-2 hover:no-underline"
+								>
+									{annonce.ctaLabel}
+									<i class="fa-solid fa-arrow-right ml-1 text-xs" aria-hidden="true" />
+								</a>
+							)}
+						</div>
+					))}
+				</div>
+
+				<button
+					type="button"
+					data-annonce-next
+					class="hidden h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/10"
+					aria-label="Annonce suivante"
+				>
+					<i class="fa-solid fa-chevron-right" aria-hidden="true" />
+				</button>
+
+				<button
+					type="button"
+					data-annonce-close
+					class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/10"
+					aria-label="Fermer l'annonce"
+				>
+					<i class="fa-solid fa-xmark" aria-hidden="true" />
+				</button>
+			</div>
+		</div>
+	)
+}
+
+<script>
+	// Ce <script> d'un composant .astro est compilé et envoyé au navigateur
+	// automatiquement par Astro : aucune directive `client:*` n'est nécessaire
+	// (celles-ci ne concernent que les composants de framework React/Vue/Svelte).
+
+	const TONE: Record<string, string[]> = {
+		info: ['bg-primary', 'text-white'],
+		accent: ['bg-accent', 'text-white'],
+		urgent: ['bg-amber-400', 'text-amber-950'],
+	};
+	const ALL_TONE = ['bg-primary', 'bg-accent', 'bg-amber-400', 'text-white', 'text-amber-950'];
+	const dismissKey = (id: string) => `annonce-dismissed:${id}`;
+
+	// Fermeture mémorisée pour la session de navigation en cours uniquement :
+	// la bannière réapparaît à la prochaine visite (nouvel onglet / navigateur).
+	function isDismissed(id: string): boolean {
+		try {
+			return sessionStorage.getItem(dismissKey(id)) === '1';
+		} catch {
+			return false;
+		}
+	}
+
+	function markDismissed(id: string) {
+		try {
+			sessionStorage.setItem(dismissKey(id), '1');
+		} catch {
+			/* stockage indisponible : on ignore */
+		}
+	}
+
+	const banner = document.getElementById('annonce-banner');
+	if (banner) {
+		const interval = Number(banner.dataset.interval) || 7000;
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const prevBtn = banner.querySelector<HTMLElement>('[data-annonce-prev]');
+		const nextBtn = banner.querySelector<HTMLElement>('[data-annonce-next]');
+		const closeBtn = banner.querySelector<HTMLElement>('[data-annonce-close]');
+
+		const now = new Date();
+		const allSlides = Array.from(banner.querySelectorAll<HTMLElement>('[data-annonce]'));
+		const slides = allSlides.filter((slide) => {
+			const start = new Date(`${slide.dataset.start}T00:00:00`);
+			const end = new Date(`${slide.dataset.end}T23:59:59`);
+			if (now < start || now > end) return false;
+			return !isDismissed(slide.dataset.id ?? '');
+		});
+
+		let index = 0;
+		let timer: number | undefined;
+
+		const applyTone = (tone: string | undefined) => {
+			banner.classList.remove(...ALL_TONE);
+			banner.classList.add(...(TONE[tone ?? 'info'] ?? TONE.info));
+		};
+
+		const render = () => {
+			const current = slides[index];
+			// On repasse sur TOUTES les annonces du DOM (pas seulement `slides`)
+			// pour qu'une annonce retirée par la fermeture soit bien masquée.
+			allSlides.forEach((slide) => {
+				const shown = slide === current;
+				slide.classList.toggle('hidden', !shown);
+				slide.classList.toggle('flex', shown);
+			});
+			applyTone(current?.dataset.tone);
+		};
+
+		const updateControls = () => {
+			const multiple = slides.length > 1;
+			for (const btn of [prevBtn, nextBtn]) {
+				btn?.classList.toggle('hidden', !multiple);
+				btn?.classList.toggle('flex', multiple);
+			}
+		};
+
+		const go = (to: number) => {
+			index = (to + slides.length) % slides.length;
+			render();
+		};
+
+		const stop = () => {
+			if (timer !== undefined) {
+				window.clearInterval(timer);
+				timer = undefined;
+			}
+		};
+
+		const start = () => {
+			stop();
+			if (slides.length > 1 && !reduceMotion) {
+				timer = window.setInterval(() => go(index + 1), interval);
+			}
+		};
+
+		if (slides.length === 0) {
+			banner.hidden = true;
+		} else {
+			banner.hidden = false;
+			render();
+			updateControls();
+			start();
+
+			prevBtn?.addEventListener('click', () => {
+				go(index - 1);
+				start();
+			});
+			nextBtn?.addEventListener('click', () => {
+				go(index + 1);
+				start();
+			});
+			closeBtn?.addEventListener('click', () => {
+				markDismissed(slides[index]?.dataset.id ?? '');
+				slides.splice(index, 1);
+				if (index >= slides.length) index = 0;
+				if (slides.length === 0) {
+					stop();
+					banner.hidden = true;
+					return;
+				}
+				render();
+				updateControls();
+				start();
+			});
+
+			// Rotation en pause au survol et pendant la navigation au clavier.
+			banner.addEventListener('mouseenter', stop);
+			banner.addEventListener('mouseleave', start);
+			banner.addEventListener('focusin', stop);
+			banner.addEventListener('focusout', start);
+		}
+	}
+</script>
