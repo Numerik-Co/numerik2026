@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Config Docker CLI locale (deploy.sh, VPS avec /root en lecture seule)
+.dockercfg/

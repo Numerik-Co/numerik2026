@@ -4,6 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# Certains VPS montent /root en lecture seule : le CLI Docker ne peut pas créer
+# ~/.docker. On lui donne un dossier inscriptible dans le projet.
+export DOCKER_CONFIG="$(pwd)/.dockercfg"
+mkdir -p "$DOCKER_CONFIG"
+
 echo "→ Récupération du code (git pull --ff-only)"
 git pull --ff-only
 
