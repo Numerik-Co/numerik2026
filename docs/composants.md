@@ -118,6 +118,16 @@ Props :
 - Pour une page markdown/MDX (actualité, activité, page "légale" — voir [pages.md](pages.md)), `headings` et `readingTime` viennent directement de l'objet de contenu (`article.headings`/`article.readingTime`, `activity.*`, ou `page.headings` via `src/lib/pages.ts`) — Astro (et `@astrojs/mdx` pour le `.mdx`) génère les `id` des `<h2>`/`<h3>` automatiquement, pas besoin de les écrire à la main.
 - Le contenu spécifique à une page (ex. `PrevNextNav`, un lien "Retour à ...") se place simplement dans le slot par défaut, avant ou après le `<div class="markdown-content">`.
 
+## Îlots interactifs (Vue)
+
+La quasi-totalité du site est du HTML statique. Les rares blocs qui ont besoin de JavaScript côté client (état, appels réseau) sont des **îlots** : des composants Vue montés dans une page Astro avec une directive `client:*`.
+
+- Intégration : `@astrojs/vue` (dans `astro.config.mjs`). Les fichiers `.vue` s'importent et s'utilisent comme des composants Astro, avec en plus `client:load` / `client:visible` / `client:idle` pour choisir quand ils s'hydratent.
+- Rangement : un dossier par îlot sous `src/components/<nom>/` (ex. `src/components/adhesion/`), avec le composant orchestrateur, ses sous-composants présentationnels et un `client.ts` pour les appels aux routes API.
+- Règle : un îlot ne parle jamais à un service externe directement — il appelle une route `src/pages/api/*` qui détient les secrets. Voir [api.md](api.md).
+
+Îlot existant : **`adhesion/AdhesionForm.vue`** — formulaire d'adhésion (`/adherer/formulaire`), détaillé dans [api.md](api.md).
+
 ## Convention de style
 
 Toutes les briques et sections respectent la même palette (`bg-primary`, `text-secondary`, `bg-accent`...) et les mêmes rayons/ombres (`rounded-2xl`, `border-gray-100`, `shadow-sm hover:shadow-md`) — réutiliser ces classes pour toute nouvelle carte ou bloc garde le site cohérent visuellement. Voir [theme.md](theme.md) pour la liste des couleurs disponibles.

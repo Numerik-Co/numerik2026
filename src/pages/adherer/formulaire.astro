@@ -1,0 +1,31 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PageHeader from '../../components/sections/PageHeader.astro';
+import AdhesionForm from '../../components/adhesion/AdhesionForm.vue';
+import { association } from '../../lib/association';
+---
+
+<Layout
+	title={`Formulaire d'adhésion · ${association.name}`}
+	description={`Adhérez à ${association.name} en ligne : nouvelle adhésion ou renouvellement.`}
+	breadcrumbs={[
+		{ label: 'Accueil', href: '/' },
+		{ label: 'Adhérer', href: '/adherer' },
+		{ label: "Formulaire d'adhésion" },
+	]}
+>
+	<PageHeader
+		slot="page-header"
+		title="Formulaire d'adhésion"
+		description="Nouvelle adhésion ou renouvellement, puis choix de la cotisation et de l'activité."
+	/>
+
+	<section class="mx-auto max-w-6xl px-4 pt-4 pb-16 sm:px-6">
+		<AdhesionForm client:load />
+		<p class="mx-auto mt-8 max-w-3xl text-xs text-gray-400">
+			Les informations recueillies servent uniquement à la gestion de votre adhésion par
+			&nbsp;{association.name}. Vous pouvez demander leur rectification ou leur suppression à
+			&nbsp;<a href={`mailto:${association.email}`} class="underline">{association.email}</a>.
+		</p>
+	</section>
+</Layout>
