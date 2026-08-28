@@ -10,7 +10,7 @@ const navLinks = [
 	{
 		label: 'Association',
 		children: [
-			{ href: '/association/historique', label: 'Historique' },
+			{ href: '/association/notre-histoire', label: 'Notre histoire' },
 			{ href: '/association/ethique-du-logiciel-libre', label: 'Éthique du logiciel libre' },
 			{ href: '/association/conseiller-numerique', label: 'Conseiller numérique' },
 		],

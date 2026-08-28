@@ -14,7 +14,7 @@ Astro utilise le **routage par fichiers** : chaque fichier dans `src/pages/` dev
 | `src/pages/actualites/[slug].astro` | `/actualites/<slug>` | Détail d'un article (généré automatiquement, un par dossier dans `src/contents/news/`) |
 | `src/pages/adherer.astro` | `/adherer` | Adhésion à l'association |
 | `src/pages/association/index.astro` | `/association` | Page d'accueil de l'association, liens vers ses sous-pages |
-| `src/pages/association/historique.astro` | `/association/historique` | Historique de l'association |
+| `src/pages/association/notre-histoire.astro` | `/association/notre-histoire` | Histoire de l'association (contenu dans `src/contents/pages/notre-histoire/`) |
 | `src/pages/association/ethique-du-logiciel-libre.astro` | `/association/ethique-du-logiciel-libre` | Éthique du logiciel libre |
 | `src/pages/association/conseiller-numerique.astro` | `/association/conseiller-numerique` | Présentation du conseiller numérique |
 | `src/pages/contact.astro` | `/contact` | Coordonnées + formulaire de contact |
@@ -95,6 +95,31 @@ const { Content } = page;
 
 Cas particulier : si le contenu a besoin d'interpoler des valeurs dynamiques (ex. `mentions-legales`, qui injecte les coordonnées de l'association depuis `src/lib/association.ts`), utiliser un fichier `.mdx` à la place de `.md` — `src/lib/pages.ts` lit les deux indifféremment. Un `.mdx` peut contenir des `import`/`export const` et des expressions `{...}` au milieu du texte, exactement comme dans un composant Astro.
 
+## Renommer une page ou changer son titre
+
+Le `getPageBySlug('<slug>')` d'une page de lecture ne fait **aucune transformation** : le `<slug>` passé doit être **exactement le nom du dossier** dans `src/contents/pages/` (tirets, minuscules, pas d'espace). C'est le point qui casse le build si on ne le tient pas synchronisé.
+
+### Cas A — changer seulement le titre affiché (URL inchangée)
+
+Un seul endroit : le frontmatter du contenu.
+
+1. Dans `src/contents/pages/<slug>/index.md`, modifier `title:` (et `description:` si besoin).
+
+Le `<title>` de l'onglet, le `PageHeader`, le dernier maillon du fil d'Ariane se mettent à jour automatiquement (ils lisent `page.title`). **Exception** : le libellé dans le menu (`src/components/layout/Header.astro`) est écrit en dur → le changer aussi à la main si besoin.
+
+### Cas B — renommer la page (le slug et l'URL changent)
+
+Exemple réel : `historique` → `notre-histoire`. Le slug apparaît à **trois endroits qui doivent rester identiques**, plus les liens entrants :
+
+1. **Dossier de contenu** : `src/contents/pages/historique/` → `src/contents/pages/notre-histoire/`
+2. **Fichier de route** : `src/pages/association/historique.astro` → `src/pages/association/notre-histoire.astro` (l'URL suit le chemin du fichier → `/association/notre-histoire`)
+3. **Argument** de `getPageBySlug('historique')` → `getPageBySlug('notre-histoire')` dans ce `.astro` — identique au nom du dossier de l'étape 1
+4. `title:` du frontmatter (`src/contents/pages/notre-histoire/index.md`)
+5. **Liens vers l'ancienne URL** : `grep -rn "association/historique" src/` — menu déroulant (`src/components/layout/Header.astro`), fils d'Ariane, liens dans d'autres pages ou contenus
+6. Site en ligne : ajouter une redirection dans `astro.config.mjs` pour ne pas casser les liens existants —
+   `redirects: { '/association/historique': '/association/notre-histoire' }`
+7. `npm run build` pour vérifier. L'erreur `Page introuvable dans src/contents/pages/ pour le slug "…"` signifie que les étapes 1 et 3 sont désynchronisées (le dossier ne s'appelle pas comme l'argument de `getPageBySlug`).
+
 ## Créer un sous-dossier de pages (ex: `/adherer/tarifs`)
 
 Un dossier dans `src/pages/` crée un sous-chemin d'URL :
@@ -108,7 +133,7 @@ C'est exactement ce principe qu'utilisent déjà `src/pages/activites/[category]
 
 ```
 src/pages/association/index.astro                       → /association
-src/pages/association/historique.astro                  → /association/historique
+src/pages/association/notre-histoire.astro              → /association/notre-histoire
 src/pages/association/ethique-du-logiciel-libre.astro    → /association/ethique-du-logiciel-libre
 src/pages/association/conseiller-numerique.astro         → /association/conseiller-numerique
 ```
