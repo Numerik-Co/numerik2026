@@ -6,9 +6,18 @@
  *   - `COLS`   : mapping "champ logique" -> "id de colonne Grist"
  *   - `GENRE_CHOICES` / `ROLE_*` : valeurs des listes de choix Grist
  *
- * La clé Grist ne vit QUE côté serveur (import.meta.env), jamais exposée au
- * navigateur. Voir docs/api.md.
+ * La clé Grist ne vit QUE côté serveur, jamais exposée au navigateur.
+ * Voir docs/api.md.
+ *
+ * Lecture à l'EXÉCUTION via `process.env` (adaptateur Node) : `import.meta.env`
+ * est figé au build — donc vide quand on construit l'image Docker sans `.env`.
+ * `import.meta.env` reste en repli (utile en dev / autres contextes).
  */
+
+const ENV = {
+	...(import.meta.env as unknown as Record<string, string | undefined>),
+	...(process.env as Record<string, string | undefined>),
+};
 
 const {
 	GRIST_BASE_URL,
@@ -20,7 +29,7 @@ const {
 	GRIST_TABLE_COTISATIONS,
 	GRIST_TABLE_ACTIVITES,
 	GRIST_TABLE_SAISONS,
-} = import.meta.env;
+} = ENV;
 
 export const TABLES = {
 	membres: GRIST_TABLE_MEMBRES || 'Membres',
