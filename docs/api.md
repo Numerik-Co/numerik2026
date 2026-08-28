@@ -89,8 +89,6 @@ Toutes en `prerender = false`. Elles ne parlent à Grist qu'à travers `src/lib/
 | `/api/adhesion/detacher-membre` | POST | Retire un membre d'une adhésion multiple (`Adhesions.Membres` + `Responsable_de`). |
 | `/api/adhesion/adresse` | GET | Proxy vers l'**API Adresse** (Base Adresse Nationale, `api-adresse.data.gouv.fr`, sans clé). `?q=` → suggestions `{ label, adresse, codePostal, commune }`. |
 
-> `src/pages/api/adhesion/zz-schema.ts` est une route d'introspection Grist **réservée au dev** (`import.meta.env.DEV`) — à retirer avant mise en production.
-
 ### Deux tables distinctes
 
 Le process alimente **deux** tables, pas une :
@@ -109,5 +107,6 @@ Le process alimente **deux** tables, pas une :
 ### À finaliser
 
 - Protection anti-spam (honeypot, rate-limit) et éventuel e-mail de confirmation.
-- Retirer `zz-schema.ts` avant la production.
 - Vérifier le comportement si `Places_restantes` cesse d'être une formule (verrou de place à gérer).
+
+> Besoin de réinspecter le schéma Grist (tables/colonnes/formules) ? Recréer une petite route de debug jetable qui appelle `GET {GRIST_BASE_URL}/api/docs/{GRIST_DOC_ID}/tables` puis `.../tables/<id>/columns`, la garder derrière `import.meta.env.DEV`, et la supprimer une fois le mapping calé.
