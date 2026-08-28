@@ -11,8 +11,8 @@ import vue from '@astrojs/vue';
 
 // https://astro.build/config
 export default defineConfig({
-  // TODO: remplacer par le vrai nom de domaine une fois le site en ligne (utilisé pour générer les URLs absolues du flux RSS).
-  site: 'https://numerikandco.org',
+  // Nom de domaine public (URLs absolues du flux RSS, sitemap…).
+  site: 'https://www.clubmicrosaintpierre.fr',
 
   vite: {
     plugins: [tailwindcss()]
