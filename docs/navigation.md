@@ -2,59 +2,76 @@
 
 ## Menu principal
 
-Le menu du header est une liste codée en dur dans `src/components/layout/Header.astro` :
+Le menu du header est **construit automatiquement au build** par
+`src/lib/navigation.ts` (`getNavTree()`), à partir de deux sources :
 
-```js
-const navLinks = [
-	{ href: '/', label: 'Accueil' },
-	{
-		label: 'Association',
-		children: [
-			{ href: '/association/notre-histoire', label: 'Notre histoire' },
-			{ href: '/association/ethique-du-logiciel-libre', label: 'Éthique du logiciel libre' },
-			{ href: '/association/conseiller-numerique', label: 'Conseiller numérique' },
-		],
-	},
-	{ href: '/activites', label: 'Activités' },
-	{ href: '/actualites', label: 'Actualités' },
-	{ href: '/contact', label: 'Contact' },
-];
+1. **`src/config/site.ts`** — les pages applicatives du template
+   (`builtinNav` : Accueil, Activités, Actualités, Contact) et le bouton CTA
+   « Adhérer » (`cta`, jamais une entrée de menu).
+2. **Les pages de `src/contents/pages/`** dont le frontmatter porte
+   `menu.show: true` — voir [pages.md](pages.md) et le guide éditeur
+   [`src/contents/README.md`](../src/contents/README.md).
+
+`src/components/layout/Header.astro` consomme `getNavTree()` : le rendu
+(desktop + menu mobile) et le bouton « Adhérer » sont inchangés, seule la
+source des données a changé. Le tableau `navLinks` codé en dur a disparu.
+
+### Ajouter / retirer / réordonner une entrée
+
+| Cas | Où agir |
+| --- | --- |
+| Page éditoriale (contenu) | Frontmatter `menu:` de `src/contents/pages/<...>/index.md` |
+| Page applicative (Accueil, Activités…) | Tableau `builtinNav` de `src/config/site.ts` |
+| Bouton « Adhérer » | Objet `cta` de `src/config/site.ts` (`enabled: false` le masque) |
+| Ordre | Champ `order` — builtin et contenu sont triés sur la **même échelle** |
+
+Repères d'`order` actuels : Accueil `0`, Association `10`, Activités `20`,
+Actualités `30`, Contact `40`.
+
+## Un dossier de pages **crée** désormais un sous-menu
+
+Contrairement à l'ancienne version : ranger des pages de contenu dans un
+sous-dossier de `src/contents/pages/` les regroupe automatiquement dans un
+menu déroulant.
+
+```
+src/contents/pages/
+  association/
+    _group.md                     -> libellé + ordre du menu déroulant
+    notre-histoire/index.md        -> /association/notre-histoire (enfant, menu.show:true)
+    conseiller-numerique/index.md  -> /association/conseiller-numerique
 ```
 
-Pour ajouter, retirer ou réordonner une entrée : modifier ce tableau. Le rendu (desktop + menu mobile) et le bouton "Adhérer" s'ajustent automatiquement.
+- `_group.md` (`label`, `order`) décrit le dropdown. Absent → libellé déduit du
+  nom de dossier (`association` → « Association »).
+- Le **libellé du dropdown n'est pas cliquable** : seules les pages enfants
+  (avec `menu.show: true`) ont un lien.
+- Chaque enfant garde son propre `menu.order` / `menu.label` pour sa position
+  et son texte **dans** le dropdown.
 
-Une entrée avec `children` (comme "Association" ci-dessus) n'a pas de `href` propre : ce n'est qu'un déclencheur de menu déroulant, pas un lien. Une entrée sans `children` garde un simple `href`.
+## Menu déroulant (rendu)
 
-## ⚠️ Un dossier de pages ne crée pas un sous-menu automatiquement
+`getNavTree()` produit soit `{ label, href }` (lien simple), soit
+`{ label, children: NavLink[] }` (dropdown). `Header.astro` gère les deux :
 
-Astro transforme la structure de `src/pages/` en routes (voir [pages.md](pages.md)), mais **ne génère aucun menu** à partir de cette arborescence. Créer `src/pages/activites/ateliers.astro` fait exister `/activites/ateliers`, mais ne fait *rien* apparaître dans la navbar : il faut explicitement ajouter l'entrée (et ses `children` le cas échéant) dans `navLinks`.
+- **Desktop** : un `<button>` (`aria-haspopup`, `aria-expanded`) ouvre un
+  panneau (`data-dropdown-panel`) au clic. Le script de `Header.astro` gère
+  l'ouverture/fermeture, ferme les autres dropdowns, et ferme au clic extérieur
+  ou à `Échap`.
+- **Mobile** : le libellé s'affiche en texte simple, suivi de ses enfants
+  indentés (`pl-3`).
 
-## Menu déroulant (dropdown)
-
-Une entrée `navLinks` avec un tableau `children: { href, label }[]` fait apparaître un menu déroulant dans `Header.astro` :
-
-- **Desktop** : un `<button>` (`aria-haspopup="true"`, `aria-expanded`) ouvre un panneau (`data-dropdown-panel`) au clic. Un script dans `Header.astro` gère l'ouverture/fermeture (`classList.toggle('hidden', ...)` sur le panneau, comme pour le menu mobile), ferme les autres dropdowns ouverts, et ferme au clic en dehors ou à la touche `Échap`.
-- **Mobile** : pas de second niveau de repli — le libellé s'affiche en texte simple, suivi de ses `children` indentés (`pl-3`), toujours visibles dans le menu mobile déjà dépliable.
-
-Si un jour la liste de sous-pages devient longue ou gérée par quelqu'un d'autre que le développeur, une alternative est de générer le tableau `children` depuis une [content collection](https://docs.astro.build/en/guides/content-collections/) (champ `order`, `getCollection()`) plutôt que de le coder en dur — plus flexible, mais plus de mise en place.
-
-⚠️ Une entrée avec `children` n'ayant pas de page "hub" propre (ex. "Association" ne mène plus à `/association`, supprimée), toute page qui construit un fil d'Ariane mentionnant ce libellé intermédiaire doit omettre son `href` :
-
-```js
-breadcrumbs={[
-	{ label: 'Accueil', href: '/' },
-	{ label: 'Association' }, // pas de href : pas de page à lier
-	{ label: page.title },
-]}
-```
-
-`Breadcrumb.astro` affiche alors ce libellé en texte simple (pas de lien), et seul le tout dernier élément reçoit `aria-current="page"`.
+⚠️ Un libellé de dropdown n'ayant pas de page « hub » propre, tout fil d'Ariane
+qui le mentionne doit omettre son `href` — c'est ce que fait automatiquement
+`src/pages/[...slug].astro` (`{ label: getGroupLabel(folder) }` sans `href`).
+`Breadcrumb.astro` affiche alors ce libellé en texte simple.
 
 ## Fil d'Ariane
 
-Chaque page interne (tout sauf l'accueil `/` et la page 404) affiche un fil d'Ariane généré par `src/components/layout/Breadcrumb.astro`, positionné **sous le bandeau de titre** (`PageHeader`) et au-dessus du reste du contenu de la page.
-
-Ce positionnement est géré par un slot nommé dans `src/layouts/Layout.astro` :
+Chaque page interne (tout sauf l'accueil `/` et la 404) affiche un fil d'Ariane
+généré par `src/components/layout/Breadcrumb.astro`, positionné **sous le
+bandeau de titre** (`PageHeader`) via un slot nommé dans `Layout.astro` /
+`ArticleLayout.astro` :
 
 ```astro
 <main class="flex-1">
@@ -64,38 +81,35 @@ Ce positionnement est géré par un slot nommé dans `src/layouts/Layout.astro` 
 </main>
 ```
 
-Pour qu'une page bénéficie de ce placement, deux choses :
+Pour une page « libre » (`.astro` dans `src/pages/`), deux choses :
 
-1. Passer un tableau `breadcrumbs` en prop à `<Layout>` (pas de génération automatique depuis l'URL — chaque page le construit à partir des données qu'elle a déjà : catégorie, activité, article...).
-2. Ajouter `slot="page-header"` sur son `<PageHeader>` (ou tout autre bloc de titre), pour qu'il s'affiche avant le fil d'Ariane plutôt qu'après :
+1. Passer un tableau `breadcrumbs` en prop au layout (pas de génération
+   automatique depuis l'URL).
+2. Ajouter `slot="page-header"` sur son `<PageHeader>`.
 
-```astro
-<Layout
-	title="..."
-	description="..."
-	breadcrumbs={[
-		{ label: 'Accueil', href: '/' },
-		{ label: 'Activités', href: '/activites' },
-		{ label: category.label }, // page courante : pas de href
-	]}
->
-	<PageHeader slot="page-header" title={category.label} description={category.description} />
+Pour une page de contenu (`src/contents/pages/`), le fil d'Ariane est **construit
+automatiquement** par `src/pages/[...slug].astro` à partir du chemin :
+`Accueil` → (libellé du dossier parent, si sous-dossier) → titre de la page.
 
-	<!-- reste du contenu, dans le slot par défaut -->
-</Layout>
-```
-
-Convention : "Accueil" toujours en premier avec `href: '/'`, chaque étape intermédiaire a un `href`, et le **dernier élément (page courante) n'a jamais de `href`** — il s'affiche en texte simple avec `aria-current="page"`. Si `breadcrumbs` n'est pas fourni à `<Layout>`, ou contient un seul élément, rien ne s'affiche (cas de l'accueil et de la 404).
-
-Pour une nouvelle page, voir l'exemple de squelette dans [pages.md](pages.md).
+Convention : « Accueil » toujours en premier avec `href: '/'`, chaque étape
+intermédiaire a un `href` (sauf un libellé de dropdown), et le **dernier
+élément (page courante) n'a jamais de `href`** — il s'affiche en texte simple
+avec `aria-current="page"`. Un `breadcrumbs` absent ou à un seul élément
+n'affiche rien (accueil, 404).
 
 ## Pied de page
 
 `src/components/layout/Footer.astro` affiche :
 - le logo et la description de l'association,
 - les coordonnées (email, téléphone, adresse) depuis `src/lib/association.ts`,
-- les liens réseaux sociaux, générés dynamiquement à partir de `association.social` — seuls les réseaux renseignés (valeur non vide) s'affichent, voir [composants.md](composants.md),
-- le copyright (année générée automatiquement),
-- une ligne de liens légaux codée en dur : "Mentions légales" (`/mentions-legales`), "Statuts" (`/statuts`) et "Règlement intérieur" (`/reglement-interieur`).
+- les liens réseaux sociaux, générés à partir de `association.social` (seuls les
+  réseaux renseignés s'affichent — voir [composants.md](composants.md)),
+- le copyright (année automatique),
+- une ligne de liens légaux codée en dur : « Mentions légales »
+  (`/mentions-legales`), « Statuts » (`/statuts`), « Règlement intérieur »
+  (`/reglement-interieur`).
 
-Ces trois pages légales sont des pages statiques classiques dans `src/pages/` (voir [pages.md](pages.md)) — elles ne sont volontairement liées que depuis le pied de page, pas depuis le menu principal.
+Ces trois pages sont des pages de contenu ordinaires
+(`src/contents/pages/<slug>/index.md`) avec `menu.show: false` : accessibles par
+leur URL, liées uniquement depuis le pied de page. Passer leur `menu.show` à
+`true` les ajouterait aussi à la navbar.

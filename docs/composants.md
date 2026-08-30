@@ -10,6 +10,7 @@ Les briques sont rangées par famille dans des sous-dossiers de `src/components/
 | `layout/` | chrome global du site (en-tête, pied de page, bannières, fil d'Ariane) |
 | `cards/` | cartes de contenu typées (actualité, activité, catégorie) |
 | `article/` | briques de la page de lecture (colonnage, sommaire, progression, figure, nav précédent/suivant) |
+| `forms/` | garde d'ouverture/fermeture des formulaires |
 | `sections/` | blocs de page pleine largeur (voir plus bas) |
 
 ### `ui/`
@@ -48,6 +49,22 @@ Les briques sont rangées par famille dans des sous-dossiers de `src/components/
 | `article/PrevNextNav.astro` | Navigation "article précédent / suivant" placée dans le slot par défaut d'`ArticleLayout`. Voir [navigation.md](navigation.md). |
 
 > `ArticleLayout.astro` (le gabarit de page qui compose `Article` + `TableOfContents` + `ReadingProgress`, voir plus bas) vit dans `src/layouts/ArticleLayout.astro`, pas dans `src/components/` — comme `Layout.astro`, c'est un gabarit de page complet plutôt qu'une brique visuelle.
+
+### `forms/`
+
+| Composant | Usage |
+| :--- | :--- |
+| `forms/FormGate.astro` | Entoure un formulaire : `<FormGate form="<clé>">…</FormGate>`. Si `site.forms.<clé>.enabled` (dans `src/config/site.ts`) vaut `true`, rend le contenu du slot par défaut tel quel ; sinon, le remplace par un encart informatif (`closedTitle` + `closedMessage`). Slot nommé `fallback` optionnel : un bouton d'alternative affiché sous le message de fermeture (ex. `<Button slot="fallback" href="/contact">Nous contacter</Button>`). Clés actuelles : `adhesion` (`src/pages/adherer/formulaire.astro`), `contact` (`src/pages/contact.astro`). |
+
+Pour la logique côté page — masquer un bouton d'accès quand le formulaire est
+fermé, par exemple — `src/lib/forms.ts` expose `isFormOpen(name)` et
+`getFormToggle(name)`. C'est ce qu'utilise `src/pages/adherer.astro` pour
+cacher le bouton « Adhérer en ligne ».
+
+**Ajouter un nouveau formulaire au système** : ajouter une clé dans
+`site.forms` (`enabled`, `closedTitle`, `closedMessage`), puis entourer le
+formulaire de `<FormGate form="<nouvelle-clé>">`. Le type `FormName` se met à
+jour automatiquement à partir de `site.forms`.
 
 Exemple d'usage de `Button` :
 
@@ -115,7 +132,7 @@ Props :
 | `headings` | Optionnel, tableau `Heading[]`. Si plus d'une entrée, `ArticleLayout` affiche automatiquement `ReadingProgress` (si `readingTime` est fourni) + `TableOfContents` dans la colonne latérale — sinon la page reste en une seule colonne. |
 | `readingTime` | Optionnel (`number`, en minutes). Sans valeur, pas de module temps de lecture même si `headings` en a plusieurs. |
 
-- Pour une page markdown/MDX (actualité, activité, page "légale" — voir [pages.md](pages.md)), `headings` et `readingTime` viennent directement de l'objet de contenu (`article.headings`/`article.readingTime`, `activity.*`, ou `page.headings` via `src/lib/pages.ts`) — Astro (et `@astrojs/mdx` pour le `.mdx`) génère les `id` des `<h2>`/`<h3>` automatiquement, pas besoin de les écrire à la main.
+- Pour une page markdown/MDX (actualité, activité, page éditoriale — voir [pages.md](pages.md)), `headings` et `readingTime` viennent directement de l'objet de contenu (`article.headings`/`article.readingTime`, `activity.*`, ou `page.headings` via `src/lib/content-pages.ts`) — Astro (et `@astrojs/mdx` pour le `.mdx`) génère les `id` des `<h2>`/`<h3>` automatiquement, pas besoin de les écrire à la main.
 - Le contenu spécifique à une page (ex. `PrevNextNav`, un lien "Retour à ...") se place simplement dans le slot par défaut, avant ou après le `<div class="markdown-content">`.
 
 ## Îlots interactifs (Vue)

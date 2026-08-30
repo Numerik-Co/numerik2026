@@ -5,6 +5,9 @@ import PartenairesSection from '../components/sections/PartenairesSection.astro'
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
 import { association } from '../lib/association';
+import { isFormOpen } from '../lib/forms';
+
+const adhesionEnLigneOuverte = isFormOpen('adhesion');
 
 const memberships = [
 	{
@@ -58,10 +61,19 @@ const activites = [
 		</div>
 
 		<div class="mt-12 text-center">
-			<Button href="/adherer/formulaire" variant="primary">Adhérer en ligne</Button>
-			<p class="mt-3 text-sm font-light text-gray-500">
-				Nouvelle adhésion ou renouvellement, en quelques minutes.
-			</p>
+			{adhesionEnLigneOuverte ? (
+				<>
+					<Button href="/adherer/formulaire" variant="primary">Adhérer en ligne</Button>
+					<p class="mt-3 text-sm font-light text-gray-500">
+						Nouvelle adhésion ou renouvellement, en quelques minutes.
+					</p>
+				</>
+			) : (
+				<p class="mx-auto max-w-xl text-sm font-light text-gray-500">
+					L'adhésion en ligne est momentanément fermée. Retrouvez ci-dessous comment
+					adhérer autrement, ou <a href="/contact" class="text-primary hover:text-secondary">contactez-nous</a>.
+				</p>
+			)}
 		</div>
 	</section>
 

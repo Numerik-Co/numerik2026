@@ -1,0 +1,43 @@
+---
+import ArticleLayout from '../layouts/ArticleLayout.astro';
+import PageHeader from '../components/sections/PageHeader.astro';
+import TableOfContents from '../components/article/TableOfContents.astro';
+import { association } from '../lib/association';
+import { getContentPages, getGroupLabel } from '../lib/content-pages';
+
+/**
+ * Route attrape-tout : rend n'importe quelle page rangée dans
+ * `src/contents/pages/<...>/index.{md,mdx}`. L'éditeur n'a qu'à créer
+ * le fichier markdown, aucune page `.astro` à écrire.
+ */
+export function getStaticPaths() {
+	return getContentPages().map((page) => ({
+		params: { slug: page.slug },
+		props: { page },
+	}));
+}
+
+const { page } = Astro.props;
+const { Content, headings } = page;
+
+const breadcrumbs: { label: string; href?: string }[] = [{ label: 'Accueil', href: '/' }];
+if (page.segments.length > 1) {
+	// Libellé du dossier parent (menu déroulant), non cliquable.
+	breadcrumbs.push({ label: getGroupLabel(page.segments[0]) });
+}
+breadcrumbs.push({ label: page.title });
+---
+
+<ArticleLayout
+	title={`${page.title} · ${association.name}`}
+	description={page.description ?? `${page.title} — ${association.name}.`}
+	breadcrumbs={breadcrumbs}
+>
+	<PageHeader slot="page-header" title={page.title} description={page.description} />
+
+	{headings.length > 1 && <TableOfContents slot="sidebar" headings={headings} />}
+
+	<div class="markdown-content font-light text-gray-700">
+		<Content />
+	</div>
+</ArticleLayout>

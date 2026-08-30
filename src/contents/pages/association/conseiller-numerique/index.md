@@ -1,6 +1,9 @@
 ---
 title: "Conseiller numérique"
 description: "Le numérique, ça se partage ensemble : un accompagnement gratuit et sur mesure."
+menu:
+  show: true
+  order: 30
 ---
 
 Un·e conseiller·ère numérique est un·e professionnel·le formé·e pour accompagner les Français·es dans leur volonté de devenir autonomes dans leurs usages numériques au quotidien. Par des suivis individuels et des ateliers collectifs, il·elle veille à ce que chaque personne progresse à son rythme.

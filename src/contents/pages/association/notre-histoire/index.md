@@ -1,6 +1,9 @@
 ---
 title: "Notre histoire"
 description: "Plus de 30 ans à rendre le numérique accessible à toutes et tous."
+menu:
+  show: true
+  order: 10
 ---
 
 **NUMERIK&Co** existe depuis plus de 30 ans, avec une idée simple : 

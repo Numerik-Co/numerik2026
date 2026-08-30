@@ -2,22 +2,14 @@
 import { Image } from 'astro:assets';
 import logo from '../../styles/img/logo_transparent.png';
 import { association } from '../../lib/association';
+import { getNavTree } from '../../lib/navigation';
+import { site } from '../../config/site';
 import BrandStripe from './BrandStripe.astro';
 
-const navLinks = [
-	{ href: '/', label: 'Accueil' },
-	{
-		label: 'Association',
-		children: [
-			{ href: '/association/notre-histoire', label: 'Notre histoire' },
-			{ href: '/association/ethique-du-logiciel-libre', label: 'Éthique du logiciel libre' },
-			{ href: '/association/conseiller-numerique', label: 'Conseiller numérique' },
-		],
-	},
-	{ href: '/activites', label: 'Activités' },
-	{ href: '/actualites', label: 'Actualités' },
-	{ href: '/contact', label: 'Contact' },
-];
+// Menu construit au build à partir de src/config/site.ts + des frontmatters
+// `menu:` des pages de src/contents/pages/ (voir src/contents/README.md).
+const navLinks = getNavTree();
+const cta = site.cta;
 ---
 
 <header class="sticky top-0 z-50 isolate bg-white/90 backdrop-blur">
@@ -64,14 +56,16 @@ const navLinks = [
 			)}
 		</nav>
 
-		<div class="hidden md:block">
-			<a
-				href="/adherer"
-				class="rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90"
-			>
-				Adhérer
-			</a>
-		</div>
+		{cta.enabled && (
+			<div class="hidden md:block">
+				<a
+					href={cta.href}
+					class="rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90"
+				>
+					{cta.label}
+				</a>
+			</div>
+		)}
 
 		<button
 			id="menu-toggle"
@@ -106,12 +100,14 @@ const navLinks = [
 				</a>
 			)
 		)}
-		<a
-			href="/adherer"
-			class="w-fit rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white"
-		>
-			Adhérer
-		</a>
+		{cta.enabled && (
+			<a
+				href={cta.href}
+				class="w-fit rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white"
+			>
+				{cta.label}
+			</a>
+		)}
 	</nav>
 
 	<BrandStripe />

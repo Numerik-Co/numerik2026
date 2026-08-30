@@ -34,18 +34,24 @@ src/
 ├── contents/
 │   ├── news/<slug>/                                  # un dossier par actualité (index.md + cover.*)
 │   ├── activites/<slug>/                             # un dossier par activité (index.md + cover.*)
-│   └── pages/<slug>/                                 # un dossier par page "de lecture" (index.md ou .mdx)
+│   ├── pages/<...>/index.{md,mdx}                     # pages éditoriales : le chemin = l'URL, frontmatter menu: (voir pages.md)
+│   ├── pages/<dossier>/_group.md                     # libellé + ordre d'un menu déroulant
+│   └── README.md                                     # guide de rédaction destiné aux éditeurs
 ├── layouts/
 │   ├── Layout.astro                                  # <html>, <head>, Header + <slot/> + Footer
 │   └── ArticleLayout.astro                           # gabarit de page complet pour le contenu de lecture (voir composants.md)
+├── config/
+│   └── site.ts                                       # config par déploiement : CTA « Adhérer » + builtinNav
 ├── lib/
 │   ├── news.ts                                       # lecture/tri/formatage des actualités (getAllNews)
 │   ├── activites.ts                                  # lecture/tri des activités (getAllActivities, getActivitiesByCategory)
-│   ├── pages.ts                                      # lecture des pages de contents/pages/ (getPageBySlug)
+│   ├── content-pages.ts                              # découverte des pages de contents/pages/ (getContentPages, getGroupMeta)
+│   ├── navigation.ts                                 # construction du menu au build (getNavTree)
 │   ├── reading-time.ts                               # estimation du temps de lecture (~200 mots/minute)
 │   └── categories.ts                                 # registre fixe des 4 catégories d'activités (label, icône)
 ├── pages/
 │   ├── index.astro, activites.astro, contact.astro...  # une route par fichier
+│   ├── [...slug].astro                               # route attrape-tout : rend les pages de contents/pages/
 │   ├── actualites/[slug].astro                       # route dynamique, une page par actualité
 │   ├── activites/[category].astro                    # route dynamique, une page par catégorie
 │   ├── activites/[category]/[slug].astro             # route dynamique, une page par activité

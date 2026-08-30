@@ -30,9 +30,11 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 | Publier ou modifier une activité (parcours, atelier...) | [docs/activites.md](docs/activites.md) |
 | Afficher une annonce temporaire dans la bannière du site (AG, appel à bénévoles...) | [docs/annonces.md](docs/annonces.md) |
 | Créer ou modifier une page (ex: une nouvelle rubrique) | [docs/pages.md](docs/pages.md) |
+| Rédiger une page éditoriale et la placer dans le menu (guide éditeur) | [src/contents/README.md](src/contents/README.md) |
 | Changer les couleurs, les polices ou le logo | [docs/theme.md](docs/theme.md) |
 | Savoir quels composants réutiliser (boutons, cartes, sections...) | [docs/composants.md](docs/composants.md) |
 | Modifier les liens du menu ou du pied de page | [docs/navigation.md](docs/navigation.md) |
+| Ouvrir / fermer un formulaire (adhésion, contact…) | [docs/composants.md](docs/composants.md#forms) |
 | Comprendre l'organisation technique du projet | [docs/developpement.md](docs/developpement.md) |
 
 ## Structure du projet (vue rapide)
@@ -45,12 +47,15 @@ src/
 │   ├── cards/          # Cartes de contenu (ArticleCard, ActivityCard, CategoryCard)
 │   ├── article/        # Briques de page de lecture (Article, TableOfContents, ReadingProgress, FigureImage, PrevNextNav)
 │   └── sections/       # Sections de page assemblées à partir des briques (Hero, CtaSection...)
+├── config/             # site.ts : config par déploiement (CTA « Adhérer », menu des pages applicatives)
 ├── contents/
 │   ├── news/            # Actualités : un dossier par article (index.md + image)
-│   └── activites/       # Activités : un dossier par activité (index.md + image)
+│   ├── activites/       # Activités : un dossier par activité (index.md + image)
+│   ├── pages/           # Pages éditoriales : le chemin = l'URL, frontmatter menu: (voir contents/README.md)
+│   └── README.md        # Guide de rédaction destiné aux éditeurs
 ├── layouts/             # Layout.astro : squelette HTML commun à toutes les pages
-├── lib/                 # Fonctions utilitaires (news.ts, activites.ts : lecture/tri du contenu)
-├── pages/               # Une route par fichier (index.astro = "/", actualites.astro = "/actualites"...)
+├── lib/                 # Fonctions utilitaires (news.ts, activites.ts, content-pages.ts, navigation.ts)
+├── pages/               # Une route par fichier ("/", "/actualites"...) + [...slug].astro (pages éditoriales)
 └── styles/              # global.css (couleurs, polices), fonts/, img/ (logo)
 ```
 

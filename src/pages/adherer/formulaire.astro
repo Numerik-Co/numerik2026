@@ -1,6 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PageHeader from '../../components/sections/PageHeader.astro';
+import FormGate from '../../components/forms/FormGate.astro';
+import Button from '../../components/ui/Button.astro';
 import AdhesionForm from '../../components/adhesion/AdhesionForm.vue';
 import { association } from '../../lib/association';
 ---
@@ -21,11 +23,15 @@ import { association } from '../../lib/association';
 	/>
 
 	<section class="mx-auto max-w-6xl px-4 pt-4 pb-16 sm:px-6">
-		<AdhesionForm client:load />
-		<p class="mx-auto mt-8 max-w-3xl text-xs text-gray-400">
-			Les informations recueillies servent uniquement à la gestion de votre adhésion par
-			&nbsp;{association.name}. Vous pouvez demander leur rectification ou leur suppression à
-			&nbsp;<a href={`mailto:${association.email}`} class="underline">{association.email}</a>.
-		</p>
+		<FormGate form="adhesion">
+			<AdhesionForm client:load />
+			<p class="mx-auto mt-8 max-w-3xl text-xs text-gray-400">
+				Les informations recueillies servent uniquement à la gestion de votre adhésion par
+				&nbsp;{association.name}. Vous pouvez demander leur rectification ou leur suppression à
+				&nbsp;<a href={`mailto:${association.email}`} class="underline">{association.email}</a>.
+			</p>
+
+			<Button slot="fallback" href="/contact" variant="primary">Nous contacter</Button>
+		</FormGate>
 	</section>
 </Layout>
