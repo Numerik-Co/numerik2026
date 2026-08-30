@@ -9,7 +9,7 @@ order: 2
 
 Un samedi tous les deux mois, numérik&Co vous accueille pour prendre soin de vos équipements numériques.
 
-Besoin de conseils pour entretenir votre ordinateur, d'astuces pour optimiser votre smartphone, ou d'aide pour réparer une tablette ? Nos ateliers sont là pour vous accompagner pas à pas, avec un suivi personnalisé. Animés par des bénévoles passionnés, ces moments d'échange vous permettront d'apprendre à mieux entretenir et dépanner vos appareils, tout en prolongeant leur durée de vie, dans une ambiance conviviale.
+Besoin de conseils pour entretenir votre ordinateur, d'astuces pour optimiser votre smartphone, ou d'aide pour réparer une tablette ? Nos ateliers sont là pour vous accompagner pas à pas, avec un suivi personnalisé. Animés par des bénévoles passionnés, ces moments d'échange vous permettront d'apprendre à nettoyer votre système, installer les mises à jour et résoudre les problèmes techniques courants, tout en prolongeant la durée de vie de vos appareils — dans une ambiance conviviale. Que vous soyez débutant·e ou plus expérimenté·e, ces sessions pratiques sont ouvertes à tous.
 
 ## Ce que nous pouvons faire sur place
 
@@ -28,6 +28,21 @@ Certaines interventions techniques plus approfondies, engageant du temps ou une 
 
 > Et si votre demande nécessite une expertise plus pointue, nous vous orienterons vers nos partenaires de confiance pour vous conseiller et vous guider.
 
-Une participation de 5€ est demandée aux personnes extérieures à l'association bénéficiant d'un accompagnement.
+## Calendrier 2025-2026
 
-Pour connaître les prochaines dates, [contactez-nous](/contact).
+- Samedi 4 octobre 2025
+- Samedi 6 décembre 2025
+- Samedi 7 février 2026
+- Samedi 4 avril 2026
+- Samedi 6 juin 2026
+
+Les dates peuvent évoluer : en cas de doute, [contactez-nous](/contact).
+
+## Horaires
+
+De 09h00 à 12h00, sans rendez-vous.
+
+## Places et tarifs
+
+- Gratuit pour les adhérent·e·s de l'association
+- 5 € pour les personnes extérieures bénéficiant d'un accompagnement
