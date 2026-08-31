@@ -45,6 +45,37 @@ Tout est statique (`output: 'static'`) : le menu est calculé au `build`.
   `src/pages/contact.astro` (`contact`). Nouveau formulaire : ajouter une clé
   dans `site.forms` puis l'entourer d'un `<FormGate>`.
 
+## Composants réutilisables
+
+### Agenda hebdomadaire
+
+Affiche le planning des séances de la semaine, jour par jour, avec code
+couleur par famille d'activité.
+
+- `src/lib/agenda.ts` — données et types. `weeklyAgenda: AgendaSession[]` est
+  le planning par défaut (jour, horaires, intitulé, `animators` et `location`
+  facultatifs, `kind`, `note` facultative). `AGENDA_KIND_META` associe à
+  chaque `kind` (`parcours`, `fablab`, `espace-jeune`, `bidouille-repair`,
+  `conseiller-numerique`) un libellé, une icône Font Awesome et des classes /
+  hex de couleur ; ajouter un `kind` = ajouter une entrée ici. Les
+  permanences du Conseiller Numérique sont générées par le helper
+  `conseillerNumerique` (chaque matin de semaine, lieu variable). `groupByDay()`
+  regroupe et trie les séances selon `AGENDA_DAYS`. **Modifier le planning =
+  éditer `weeklyAgenda`** (fichier de code, pas de contenu Markdown).
+- `src/components/sections/WeeklyAgenda.astro` — le composant.
+  `<WeeklyAgenda />` rend le planning par défaut ; props : `sessions`
+  (jeu de séances personnalisé), `showHeading`, `title`, `description`,
+  `showLegend`, `startHour` / `endHour` (bornes de l'axe horaire, défaut
+  9 → 20), `class` (utilitaires ajoutés au `<section>`). Rendu en grille
+  agenda : axe des heures à gauche, une colonne par jour, blocs positionnés
+  par `grid-row` calculé depuis les horaires (lignes de 30 min) ; scroll
+  horizontal sous ~44rem. Les horaires doivent tomber sur des multiples de
+  30 min et tenir dans `[startHour, endHour]`.
+- Consommé par `src/pages/activites.astro`. Réutilisable ailleurs :
+  `import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro'` puis
+  `<WeeklyAgenda showHeading={false} />` (ex. bloc dans une page d'accueil ou
+  filtré via `sessions`).
+
 ## Documentation
 
 Full documentation: https://docs.astro.build

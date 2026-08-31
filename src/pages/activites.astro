@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import PageHeader from '../components/sections/PageHeader.astro';
 import ActivitesSection from '../components/sections/ActivitesSection.astro';
+import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro';
 import { association } from '../lib/association';
 ---
 
@@ -16,6 +17,8 @@ import { association } from '../lib/association';
 		description="Des parcours, des ateliers et des temps de médiation numérique pour tous les niveaux."
 	/>
 	<ActivitesSection showHeading={false} />
+
+	<WeeklyAgenda class="border-t border-gray-100" />
 
 	<section class="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
 		<h2 class="text-2xl text-gray-900">Une activité à envisager avec nous ?</h2>

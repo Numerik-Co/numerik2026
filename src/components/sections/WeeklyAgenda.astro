@@ -1,0 +1,160 @@
+---
+import {
+	AGENDA_KIND_META,
+	groupByDay,
+	weeklyAgenda,
+	type AgendaSession,
+} from '../../lib/agenda';
+
+interface Props {
+	/** Séances à afficher. Par défaut : le planning de l'association. */
+	sessions?: AgendaSession[];
+	/** Affiche le titre et l'intro de la section. */
+	showHeading?: boolean;
+	title?: string;
+	description?: string;
+	/** Affiche la légende des familles d'activités. */
+	showLegend?: boolean;
+	/** Première / dernière heure affichée sur l'axe (défaut 9 → 20). */
+	startHour?: number;
+	endHour?: number;
+	/** Classes utilitaires supplémentaires sur le `<section>`. */
+	class?: string;
+}
+
+const {
+	sessions = weeklyAgenda,
+	showHeading = true,
+	title = 'Le planning de la semaine',
+	description = 'Toutes nos séances hebdomadaires. Les créneaux sont susceptibles d’évoluer en cours d’année.',
+	showLegend = true,
+	startHour = 9,
+	endHour = 20,
+	class: className = '',
+} = Astro.props;
+
+const days = groupByDay(sessions);
+const usedKinds = [...new Set(sessions.map((s) => s.kind))];
+
+const startMin = startHour * 60;
+const slotCount = ((endHour - startHour) * 60) / 30; // lignes de 30 min
+const hours = Array.from({ length: endHour - startHour + 1 }, (_, i) => startHour + i);
+
+/** « 16h30 » → 990 (minutes depuis minuit). */
+function toMin(hhmm: string): number {
+	const [h, m] = hhmm.split('h');
+	return Number(h) * 60 + Number(m || 0);
+}
+/** Ligne de grille (1 = en-tête, 2 = première demi-heure). */
+function row(hhmm: string): number {
+	return Math.round((toMin(hhmm) - startMin) / 30) + 2;
+}
+
+const gridStyle = [
+	'--agenda-slot: 2.25rem',
+	`grid-template-columns: 3.25rem repeat(${days.length}, minmax(0, 1fr))`,
+	`grid-template-rows: auto repeat(${slotCount}, var(--agenda-slot))`,
+].join('; ');
+---
+
+<section class={`mx-auto max-w-6xl px-4 py-16 sm:px-6 ${className}`}>
+	{showHeading && (
+		<div class="max-w-2xl">
+			<h2 class="text-3xl text-gray-900">{title}</h2>
+			{description && <p class="mt-4 font-light text-gray-600">{description}</p>}
+		</div>
+	)}
+
+	{showLegend && (
+		<ul class={`flex flex-wrap gap-x-5 gap-y-2 ${showHeading ? 'mt-6' : ''}`}>
+			{usedKinds.map((kind) => (
+				<li class="flex items-center gap-2 text-sm text-gray-600">
+					<span class={`h-2.5 w-2.5 rounded-full ${AGENDA_KIND_META[kind].dot}`} aria-hidden="true"></span>
+					{AGENDA_KIND_META[kind].label}
+				</li>
+			))}
+		</ul>
+	)}
+
+	<div class="mt-10 overflow-x-auto">
+		<div class="grid min-w-[48rem] md:min-w-0" style={gridStyle}>
+			{/* Séparateurs de colonnes */}
+			{days.map((_, i) => (
+				<div
+					class="pointer-events-none border-l border-gray-100"
+					style={`grid-column: ${i + 2}; grid-row: 1 / -1;`}
+				></div>
+			))}
+
+			{/* En-têtes de jour */}
+			{days.map((d, i) => (
+				<div
+					class="pb-3 text-center font-heading text-sm font-semibold uppercase tracking-wide text-gray-900"
+					style={`grid-column: ${i + 2}; grid-row: 1;`}
+				>
+					{d.day}
+				</div>
+			))}
+
+			{/* Lignes horaires + libellés de l'axe */}
+			{hours.map((h) => {
+				const r = Math.round((h * 60 - startMin) / 30) + 2;
+				return (
+					<>
+						<div
+							class="pointer-events-none border-t border-gray-100"
+							style={`grid-column: 1 / -1; grid-row: ${r};`}
+						></div>
+						<div
+							class="-translate-y-2 pr-2 text-right text-xs tabular-nums text-gray-400"
+							style={`grid-column: 1; grid-row: ${r};`}
+						>
+							{String(h).padStart(2, '0')}h
+						</div>
+					</>
+				);
+			})}
+
+			{/* Blocs activité */}
+			{days.map((d, i) =>
+				d.sessions.map((s) => {
+					const meta = AGENDA_KIND_META[s.kind];
+					return (
+						<div
+							class="z-10 m-0.5 flex flex-col overflow-hidden rounded-xl border border-l-4 border-gray-100 bg-white p-2 shadow-sm"
+							style={`grid-column: ${i + 2}; grid-row: ${row(s.start)} / ${row(s.end)}; border-left-color: ${meta.hex};`}
+							title={[
+								`${s.start} – ${s.end}`,
+								s.title,
+								s.animators && `animé par ${s.animators}`,
+								s.location,
+							]
+								.filter(Boolean)
+								.join(' · ')}
+						>
+							<span class="flex items-center gap-1.5 font-heading text-xs font-semibold text-gray-900">
+								<i class={`fa-solid ${meta.icon} text-[10px] ${meta.text}`} aria-hidden="true"></i>
+								{s.start} – {s.end}
+							</span>
+							<span class="mt-0.5 text-xs leading-tight text-gray-900">{s.title}</span>
+							{s.animators && (
+								<span class="mt-0.5 text-[11px] font-light leading-tight text-gray-600">
+									Animé par {s.animators}
+								</span>
+							)}
+							{s.location && (
+								<span class="mt-0.5 flex items-center gap-1 text-[11px] font-light leading-tight text-gray-600">
+									<i class="fa-solid fa-location-dot text-[9px] text-gray-400" aria-hidden="true"></i>
+									{s.location}
+								</span>
+							)}
+							{s.note && (
+								<span class="mt-auto pt-1 text-[11px] leading-tight text-gray-500">{s.note}</span>
+							)}
+						</div>
+					);
+				})
+			)}
+		</div>
+	</div>
+</section>
