@@ -1,6 +1,6 @@
 ---
 title: "Les parcours"
-isPublish: true
+isPublish: false
 excerpt: "Des parcours d'apprentissage progressifs et adaptés à votre niveau : grand débutant, initiation et perfectionnement."
 category: "parcours"
 order: 1
