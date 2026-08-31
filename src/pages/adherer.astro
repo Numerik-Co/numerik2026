@@ -28,16 +28,17 @@ const memberships = [
 ];
 
 const cotisations = [
-	{ label: 'Individuel', price: '30 €' },
+	{ label: 'Individuelle', price: '30 €' },
 	{ label: 'Couple', price: '50 €' },
 	{ label: 'Chômeur·euse · étudiant·e', price: '20 €' },
 	{ label: 'Jeune de moins de 16 ans', price: 'Gratuit' },
+	{ label: 'Structure', price: '110€' },
 ];
 
 const activites = [
-	{ label: 'Cours à l’année', price: '65 €' },
-	{ label: 'Perfectionnement', price: '35 €' },
-	{ label: 'FabLab', price: '65 €' },
+	{ label: 'Cours à l’année', price: '30 € par trimestre' },
+	{ label: 'Perfectionnement', price: '45 €' },
+	{ label: 'FabLab', price: '30 €' },
 	{ label: 'Juniors', price: 'Gratuit' },
 ];
 ---
@@ -80,10 +81,12 @@ const activites = [
 	<section class="bg-gray-50 py-16">
 		<div class="mx-auto max-w-6xl px-4 sm:px-6">
 			<div class="max-w-2xl">
-				<h2 class="text-3xl text-gray-900">Tarifs 2025-2026</h2>
+				<h2 class="text-3xl text-gray-900">Tarifs 2026-2027</h2>
 				<p class="mt-4 font-light text-gray-600">
 					L'adhésion est valable de début septembre à fin juin. La cotisation n'est pas
-					remboursable.
+					remboursable. <br>
+					Une cotisation au sein d'une association ou d'un club sportif est une contribution des membres permettant d'assurer la pérénité de la structure et des actions qu'elle mets en place.
+					Ce geste si banal est une manière de soutenir le projet de l'association et ce qu'elle défend.
 				</p>
 			</div>
 
@@ -110,7 +113,7 @@ const activites = [
 							</li>
 						))}
 					</ul>
-					<p>* : Les tarifs indiqués sont étudiés chaque année et validés lors de l'assemblée générale.</p>
+					<p class="font-light text-gray-900">* : Les tarifs indiqués sont étudiés chaque année et validés lors de l'assemblée générale.</p>
 				</div>
 			</div>
 		</div>
