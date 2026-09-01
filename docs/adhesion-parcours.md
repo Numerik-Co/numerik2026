@@ -22,10 +22,14 @@ flowchart TD
     B -->|"Juste recevoir les actualités"| E["Nom, prénom, courriel + consentement"]
     E --> Efin(["Inscription aux actualités enregistrée"])
 
-    D -->|"1 fiche trouvée"| G
-    D -->|"Plusieurs fiches"| D1["Choisir la bonne personne"] --> G
-    D -->|"Fiche rattachée à l'adhésion d'un·e autre"| D3["« … fait partie de l'adhésion de X »<br/>Continuer avec le·la responsable X<br/>(le groupe est reconstitué)"] --> G
+    D -->|"1 fiche trouvée"| DP
+    D -->|"Plusieurs fiches"| D1["Choisir la bonne personne"] --> DP
+    D -->|"Fiche rattachée à l'adhésion d'un·e autre"| D3["« … fait partie de l'adhésion de X »<br/>Continuer avec le·la responsable X<br/>(le groupe est reconstitué)"] --> DP
     D -->|"Aucune fiche"| D2["Message d'aide → revenir au choix de départ"] --> B
+
+    DP["Confirmer la fiche + préférences<br/>(newsletter, droit à l'image)"] --> DA{"Adhésion déjà à jour<br/>pour la saison ?"}
+    DA -->|"Oui"| J
+    DA -->|"Non"| G
 
     C --> G["Étape 2 · Cotisation<br/>liste filtrée : personne physique / morale"]
     G --> H{"Cotisation famille / couple ?"}
@@ -78,6 +82,17 @@ flowchart TD
     **poursuivre malgré tout à son nom** (adhésion individuelle) ;
   - **aucune fiche** → message : vérifier l'orthographe ou repartir sur
     « Nouveau membre ».
+- **Renouvellement — confirmation de la fiche** : une fois la bonne personne
+  identifiée, un encart récapitule la fiche et affiche deux cases
+  **pré-cochées selon Grist** — *lettre d'information* et *droit à l'image* —
+  que l'adhérent·e peut ajuster (enregistrées sur sa fiche). Un lien
+  « Ce n'est pas vous ? » permet de reprendre la saisie.
+- **Renouvellement — adhésion déjà à jour** : si la colonne
+  `Membres.Adhesion en cours` est vraie (le membre figure déjà dans une
+  adhésion de la saison en cours), l'encart l'indique et le bouton devient
+  **« Choisir une activité »** : on saute l'étape Cotisation et on va
+  directement à l'activité. Utile pour inscrire un membre à jour à une
+  nouvelle activité en cours d'année.
 - Les erreurs de saisie (courriel, code postal, téléphone…) s'affichent sous les
   champs ; l'envoi reste bloqué tant qu'il en reste.
 
@@ -114,7 +129,8 @@ flowchart TD
 
 ### Étape 4 · Récapitulatif
 
-- Rappel : cotisation, **liste des activités**, **total à régler** (sur place).
+- Rappel : cotisation (ou « Déjà à jour pour la saison » si l'étape Cotisation a
+  été sautée), **liste des activités**, **total à régler** (sur place).
 - **« Imprimer le bulletin d'adhésion (PDF) »** : présent si l'instance Gotenberg
   est configurée sur le serveur (voir [bulletin-pdf.md](bulletin-pdf.md)). Ouvre
   le bulletin dans un nouvel onglet, prêt à imprimer.

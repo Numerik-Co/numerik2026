@@ -57,6 +57,7 @@ export const COLS = {
 		droitImage: 'Droit_image', // Bool
 		commentaires: 'Commentaires',
 		responsableDe: 'Responsable_de', // RefList:Membres (membres rattachés)
+		adhesionEnCours: 'Adhesion_en_cours', // Bool FORMULE (lecture seule) : le membre figure dans une Adhesions de la saison « Actuelle »
 	},
 	adhesion: {
 		membres: 'Membres', // RefList:Membres  -> ["L", id, ...]

@@ -7,6 +7,8 @@ import { formatPrix } from './format';
 const props = defineProps<{
 	membreLabel: string;
 	cotisation: CotisationOption | null;
+	/** Renouvellement d'un membre déjà à jour : pas de nouvelle cotisation, activité seule. */
+	adhesionDejaAJour?: boolean;
 	inscriptions: InscriptionLigne[];
 	montantTotal: number | null;
 	/** Lien vers le bulletin d'adhésion PDF ; `null` si la génération n'est pas configurée. */
@@ -26,19 +28,22 @@ const emit = defineEmits<{ recommencer: [] }>();
 			<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white">
 				<i class="fa-solid fa-check" aria-hidden="true"></i>
 			</span>
-			<h2 class="font-heading text-lg text-gray-900">Adhésion enregistrée</h2>
+			<h2 class="font-heading text-lg text-gray-900">
+				{{ adhesionDejaAJour ? 'Inscription enregistrée' : 'Adhésion enregistrée' }}
+			</h2>
 		</div>
 
 		<p class="mt-4 text-sm text-gray-700">
-			Merci <span class="font-medium">{{ membreLabel }}</span>, votre demande d'adhésion est bien
-			enregistrée.
+			Merci <span class="font-medium">{{ membreLabel }}</span>,
+			{{ adhesionDejaAJour ? 'votre inscription est bien enregistrée.' : "votre demande d'adhésion est bien enregistrée." }}
 		</p>
 
 		<dl class="mt-4 divide-y divide-primary/15 rounded-xl bg-white text-sm">
 			<div class="flex justify-between px-4 py-2">
 				<dt class="text-gray-600">Cotisation</dt>
 				<dd class="text-gray-900">
-					{{ cotisation?.label }} — {{ formatPrix(cotisation?.prix ?? null) }}
+					<template v-if="adhesionDejaAJour">Déjà à jour pour la saison</template>
+					<template v-else>{{ cotisation?.label }} — {{ formatPrix(cotisation?.prix ?? null) }}</template>
 				</dd>
 			</div>
 			<div class="flex justify-between gap-4 px-4 py-2">

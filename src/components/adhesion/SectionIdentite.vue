@@ -10,6 +10,7 @@ import {
 import type {
 	ContactPayload,
 	MembreCandidat,
+	MembreEtat,
 	MembrePayload,
 	MembreRattache,
 	Mode,
@@ -24,6 +25,9 @@ const props = defineProps<{
 	busy: boolean;
 	candidats: MembreCandidat[];
 	rattache: MembreRattache | null;
+	/** Renouvellement : fiche retrouvée, en attente de confirmation des préférences. */
+	renouvEtat: MembreEtat | null;
+	renouvPrefs: { newsletter: boolean; droitImage: boolean };
 }>();
 
 const emit = defineEmits<{
@@ -31,6 +35,8 @@ const emit = defineEmits<{
 	choisir: [candidat: MembreCandidat];
 	confirmerResponsable: [];
 	ignorerRattachement: [];
+	confirmerRenouvellement: [];
+	reprendreIdentite: [];
 	submitContact: [payload: ContactPayload];
 }>();
 
@@ -232,7 +238,59 @@ function envoyerContact() {
 					</ul>
 				</div>
 
+				<!-- Renouvellement : confirmation de la fiche + préférences -->
+				<div v-if="renouvEtat" class="mt-5 rounded-xl bg-primary/5 p-4">
+					<p class="text-sm text-gray-700">
+						Fiche trouvée :
+						<span class="font-medium text-gray-900">{{ renouv.prenom }} {{ renouv.nom }}</span>.
+						<button
+							type="button"
+							class="ml-1 text-gray-500 underline hover:text-primary"
+							@click="emit('reprendreIdentite')"
+						>
+							Ce n'est pas vous ?
+						</button>
+					</p>
+
+					<p
+						v-if="renouvEtat.adhesionEnCours"
+						class="mt-3 flex items-start gap-2 rounded-lg bg-white px-3 py-2 text-sm text-gray-600"
+					>
+						<i class="fa-solid fa-circle-check mt-0.5 text-primary" aria-hidden="true"></i>
+						<span>
+							Votre adhésion pour la saison en cours est déjà enregistrée. Vous pouvez passer
+							directement au choix d'une activité.
+						</span>
+					</p>
+
+					<fieldset class="mt-3 space-y-2">
+						<legend class="text-sm font-medium text-gray-700">Vos préférences</legend>
+						<label class="flex items-start gap-3">
+							<input v-model="renouvPrefs.newsletter" type="checkbox" class="mt-1" />
+							<span class="text-sm text-gray-600">
+								J'accepte de recevoir la lettre d'information de l'association.
+							</span>
+						</label>
+						<label class="flex items-start gap-3">
+							<input v-model="renouvPrefs.droitImage" type="checkbox" class="mt-1" />
+							<span class="text-sm text-gray-600">
+								J'autorise l'association à utiliser mon image sur ses supports de communication.
+							</span>
+						</label>
+					</fieldset>
+
+					<button
+						type="button"
+						class="mt-4 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+						:disabled="busy"
+						@click="emit('confirmerRenouvellement')"
+					>
+						{{ busy ? 'Envoi…' : renouvEtat.adhesionEnCours ? 'Choisir une activité' : 'Continuer' }}
+					</button>
+				</div>
+
 				<button
+					v-if="!renouvEtat"
 					type="submit"
 					class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
 					:disabled="busy"

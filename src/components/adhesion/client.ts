@@ -18,6 +18,7 @@ import type {
 	MembreRecherche,
 	MembreResult,
 	RenouvellementPayload,
+	RenouvPreferencesPayload,
 } from '../../lib/adhesion/types';
 
 async function post<T>(url: string, body: unknown): Promise<T> {
@@ -51,6 +52,9 @@ export const adhesionApi = {
 
 	retrouverMembre: (payload: RenouvellementPayload) =>
 		post<MembreResult>('/api/adhesion/membre', { mode: 'renouvellement', ...payload }),
+
+	majPreferences: (payload: RenouvPreferencesPayload) =>
+		post<{ ok: true }>('/api/adhesion/preferences', payload),
 
 	inscrireContact: (payload: ContactPayload) =>
 		post<{ membreId: number }>('/api/adhesion/contact', payload),

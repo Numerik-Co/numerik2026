@@ -14,6 +14,7 @@ import type {
 	GroupeMembre,
 	InscriptionLigne,
 	MembreCandidat,
+	MembreEtat,
 	MembrePayload,
 	MembreRattache,
 	MembreRecherche,
@@ -42,6 +43,11 @@ const step = ref<Step>('identite');
 
 const identite = reactive<MembrePayload>(emptyIdentite());
 const renouv = reactive({ nom: '', prenom: '' });
+/** Renouvellement : fiche retrouvée en attente de confirmation (préférences + adhésion à jour). */
+const renouvEtat = ref<MembreEtat | null>(null);
+const renouvPrefs = reactive({ newsletter: false, droitImage: false });
+/** Renouvellement d'un membre déjà à jour : l'étape Cotisation est sautée. */
+const cotisationSkipped = ref(false);
 
 const membreId = ref<number | null>(null);
 const membreLabel = ref('');
@@ -96,6 +102,8 @@ function reset() {
 	bulletinToken.value = null;
 	candidats.value = [];
 	rattache.value = null;
+	renouvEtat.value = null;
+	cotisationSkipped.value = false;
 	groupe.value = [];
 	resultatsRecherche.value = [];
 	cotisationId.value = null;
@@ -116,6 +124,7 @@ async function submitIdentite() {
 	error.value = '';
 	candidats.value = [];
 	rattache.value = null;
+	renouvEtat.value = null;
 	try {
 		const res =
 			mode.value === 'nouveau'
@@ -135,15 +144,78 @@ async function submitIdentite() {
 			rattache.value = { membre: res.membre, responsable: res.responsable };
 			return;
 		}
-		membreId.value = res.membreId;
-		membreLabel.value = `${res.prenom} ${res.nom}`.trim();
-		membreGenre.value = res.genre;
-		await goCotisation();
+		await identifier(res);
 	} catch (e) {
 		error.value = messageOf(e);
 	} finally {
 		busy.value = false;
 	}
+}
+
+/**
+ * Fiche identifiée (création, rapprochement direct, choix d'un candidat ou
+ * responsable retenu). En renouvellement on marque une pause « préférences »
+ * avant de poursuivre ; en création on enchaîne sur la cotisation.
+ */
+async function identifier(
+	m: MembreEtat & { membreId: number; prenom: string; nom: string; genre: Genre | null },
+) {
+	membreId.value = m.membreId;
+	membreLabel.value = `${m.prenom} ${m.nom}`.trim();
+	membreGenre.value = m.genre;
+	if (mode.value === 'renouvellement') {
+		renouvPrefs.newsletter = m.newsletter;
+		renouvPrefs.droitImage = m.droitImage;
+		renouvEtat.value = {
+			newsletter: m.newsletter,
+			droitImage: m.droitImage,
+			adhesionEnCours: m.adhesionEnCours,
+			groupe: m.groupe,
+		};
+		return; // l'étape 1 reste active, SectionIdentite affiche le panneau
+	}
+	await goCotisation();
+}
+
+/** Renouvellement : préférences confirmées → MAJ Grist si changement, puis suite du parcours. */
+async function confirmerRenouvellement() {
+	const etat = renouvEtat.value;
+	if (membreId.value === null || !etat) return;
+	busy.value = true;
+	error.value = '';
+	try {
+		if (
+			renouvPrefs.newsletter !== etat.newsletter ||
+			renouvPrefs.droitImage !== etat.droitImage
+		) {
+			await adhesionApi.majPreferences({
+				membreId: membreId.value,
+				newsletter: renouvPrefs.newsletter,
+				droitImage: renouvPrefs.droitImage,
+			});
+		}
+		renouvEtat.value = null;
+		if (etat.adhesionEnCours) {
+			// Adhésion déjà à jour : on saute la cotisation, direction l'activité.
+			cotisationSkipped.value = true;
+			groupe.value = etat.groupe;
+			await chargerActivites();
+		} else {
+			await goCotisation();
+		}
+	} catch (e) {
+		error.value = messageOf(e);
+	} finally {
+		busy.value = false;
+	}
+}
+
+/** L'usager rejette la fiche proposée : on rouvre la saisie nom + prénom. */
+function reprendreIdentite() {
+	renouvEtat.value = null;
+	membreId.value = null;
+	membreLabel.value = '';
+	membreGenre.value = null;
 }
 
 async function submitContact(payload: ContactPayload) {
@@ -160,11 +232,8 @@ async function submitContact(payload: ContactPayload) {
 }
 
 function choisirCandidat(c: MembreCandidat) {
-	membreId.value = c.membreId;
-	membreLabel.value = `${c.prenom} ${c.nom}`.trim();
-	membreGenre.value = c.genre;
 	candidats.value = [];
-	void goCotisation();
+	void identifier(c);
 }
 
 /** Renouveler au nom du·de la responsable de l'adhésion (reconstitue le groupe). */
@@ -414,15 +483,19 @@ function annuler() {
 				:busy="busy"
 				:candidats="candidats"
 				:rattache="rattache"
+				:renouv-etat="renouvEtat"
+				:renouv-prefs="renouvPrefs"
 				@submit="submitIdentite"
 				@choisir="choisirCandidat"
 				@confirmer-responsable="confirmerResponsable"
 				@ignorer-rattachement="ignorerRattachement"
+				@confirmer-renouvellement="confirmerRenouvellement"
+				@reprendre-identite="reprendreIdentite"
 				@submit-contact="submitContact"
 			/>
 
 			<SectionCotisation
-				v-if="step !== 'identite'"
+				v-if="step !== 'identite' && !cotisationSkipped"
 				:options="cotisations"
 				v-model="cotisationId"
 				:active="step === 'cotisation'"
@@ -465,6 +538,7 @@ function annuler() {
 				v-if="step === 'recap'"
 				:membre-label="membreLabel"
 				:cotisation="cotisationChoisie"
+				:adhesion-deja-a-jour="cotisationSkipped"
 				:inscriptions="inscriptions"
 				:montant-total="montantTotal"
 				:bulletin-href="bulletinHref"

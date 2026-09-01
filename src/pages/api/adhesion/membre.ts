@@ -5,12 +5,13 @@ import {
 	GristError,
 	type GristRecord,
 	listRecords,
+	membreLabel,
 	parseRefList,
 	TABLES,
 } from '../../../lib/adhesion/grist';
 import { membreFieldsForGrist, readGenre, validateMembrePayload } from '../../../lib/adhesion/membre-fields';
 import { isNonEmptyString, json, normalize } from '../../../lib/adhesion/http';
-import type { MembreCandidat, MembreResult } from '../../../lib/adhesion/types';
+import type { GroupeMembre, MembreCandidat, MembreEtat, MembreResult } from '../../../lib/adhesion/types';
 
 export const prerender = false;
 
@@ -23,7 +24,33 @@ function indiceOf(m: GristRecord): string {
 	return [annee ? `né·e en ${String(annee).slice(0, 2)}••` : '', ville].filter(Boolean).join(' · ');
 }
 
-function toCandidat(m: GristRecord, fbPrenom = '', fbNom = ''): MembreCandidat {
+/** Groupe déjà connu de la fiche (responsable + membres rattachés) ; `[]` si fiche seule. */
+function groupeDe(records: GristRecord[], m: GristRecord): GroupeMembre[] {
+	const ids = [m.id, ...parseRefList(m.fields[COLS.membre.responsableDe])];
+	if (ids.length < 2) return [];
+	return ids.map((id) => {
+		const f = records.find((r) => r.id === id);
+		return { membreId: id, label: f ? membreLabel(f.fields) : `Membre ${id}` };
+	});
+}
+
+/** Préférences + état d'adhésion d'une fiche retrouvée. */
+function etatDe(records: GristRecord[], m: GristRecord): MembreEtat {
+	const c = COLS.membre;
+	return {
+		newsletter: m.fields[c.newsletter] === true,
+		droitImage: m.fields[c.droitImage] === true,
+		adhesionEnCours: m.fields[c.adhesionEnCours] === true,
+		groupe: groupeDe(records, m),
+	};
+}
+
+function toCandidat(
+	records: GristRecord[],
+	m: GristRecord,
+	fbPrenom = '',
+	fbNom = '',
+): MembreCandidat {
 	const c = COLS.membre;
 	return {
 		membreId: m.id,
@@ -31,6 +58,7 @@ function toCandidat(m: GristRecord, fbPrenom = '', fbNom = ''): MembreCandidat {
 		nom: String(m.fields[c.nom] ?? fbNom),
 		genre: readGenre(m.fields[c.genre]),
 		indice: indiceOf(m),
+		...etatDe(records, m),
 	};
 }
 
@@ -49,7 +77,17 @@ async function creerMembre(data: Record<string, unknown>): Promise<MembreResult 
 	const payload = validateMembrePayload(data);
 	if (!payload) return null;
 	const membreId = await createRecord(TABLES.membres, membreFieldsForGrist(payload));
-	return { status: 'ok', membreId, prenom: payload.prenom, nom: payload.nom, genre: payload.genre };
+	return {
+		status: 'ok',
+		membreId,
+		prenom: payload.prenom,
+		nom: payload.nom,
+		genre: payload.genre,
+		newsletter: payload.newsletter,
+		droitImage: payload.droitImage,
+		adhesionEnCours: false,
+		groupe: [],
+	};
 }
 
 async function retrouverMembre(nom: string, prenom: string): Promise<MembreResult> {
@@ -72,8 +110,8 @@ async function retrouverMembre(nom: string, prenom: string): Promise<MembreResul
 		if (responsable) {
 			return {
 				status: 'rattache',
-				membre: toCandidat(m, prenom, nom),
-				responsable: toCandidat(responsable),
+				membre: toCandidat(records, m, prenom, nom),
+				responsable: toCandidat(records, responsable),
 			};
 		}
 		return {
@@ -82,11 +120,12 @@ async function retrouverMembre(nom: string, prenom: string): Promise<MembreResul
 			prenom: String(m.fields[c.prenom] ?? prenom),
 			nom: String(m.fields[c.nom] ?? nom),
 			genre: readGenre(m.fields[c.genre]),
+			...etatDe(records, m),
 		};
 	}
 
 	const candidats: MembreCandidat[] = matches.map((m) => {
-		const cand = toCandidat(m, prenom, nom);
+		const cand = toCandidat(records, m, prenom, nom);
 		return { ...cand, indice: cand.indice || 'plusieurs fiches à ce nom' };
 	});
 	return { status: 'ambigu', candidats };

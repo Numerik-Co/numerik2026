@@ -23,10 +23,17 @@ export interface MembrePayload {
 	droitImage: boolean; // -> colonne Membres.Droit_image (Bool)
 }
 
-/** Étape 1 — renouvellement : on ne transmet que l'identité. */
+/** Étape 1 — renouvellement : la recherche ne transmet que l'identité. */
 export interface RenouvellementPayload {
 	nom: string;
 	prenom: string;
+}
+
+/** Renouvellement — mise à jour des préférences de la fiche retrouvée. */
+export interface RenouvPreferencesPayload {
+	membreId: number;
+	newsletter: boolean;
+	droitImage: boolean;
 }
 
 /** Inscription « actualités seules ». */
@@ -54,12 +61,24 @@ export interface DetacherMembrePayload {
 }
 
 export type MembreResult =
-	| { status: 'ok'; membreId: number; prenom: string; nom: string; genre: Genre | null }
+	| ({ status: 'ok'; membreId: number; prenom: string; nom: string; genre: Genre | null } & MembreEtat)
 	| { status: 'ambigu'; candidats: MembreCandidat[] }
 	| ({ status: 'rattache' } & MembreRattache)
 	| { status: 'introuvable' };
 
-export interface MembreCandidat {
+/**
+ * État d'une fiche retrouvée au renouvellement : préférences modifiables +
+ * adhésion déjà à jour pour la saison en cours (`Membres.Adhesion_en_cours`).
+ */
+export interface MembreEtat {
+	newsletter: boolean;
+	droitImage: boolean;
+	adhesionEnCours: boolean;
+	/** Responsable + membres rattachés si adhésion multiple ; `[]` si fiche seule. */
+	groupe: GroupeMembre[];
+}
+
+export interface MembreCandidat extends MembreEtat {
 	membreId: number;
 	prenom: string;
 	nom: string;
