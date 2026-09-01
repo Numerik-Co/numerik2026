@@ -24,8 +24,8 @@ flowchart TD
 
     D -->|"1 fiche trouvée"| DP
     D -->|"Plusieurs fiches"| D1["Choisir la bonne personne"] --> DP
-    D -->|"Fiche rattachée à l'adhésion d'un·e autre"| D3["« … fait partie de l'adhésion de X »<br/>Continuer avec le·la responsable X<br/>(le groupe est reconstitué)"] --> DP
     D -->|"Aucune fiche"| D2["Message d'aide → revenir au choix de départ"] --> B
+    D -. "fiche = membre rattaché →<br/>bascule silencieuse sur le·la responsable" .-> DP
 
     DP["Confirmer la fiche + préférences<br/>(newsletter, droit à l'image)"] --> DA{"Adhésion déjà à jour<br/>pour la saison ?"}
     DA -->|"Oui"| J
@@ -70,23 +70,23 @@ flowchart TD
 - **Nouveau** : genre, identité, coordonnées, **adresse avec autocomplétion**
   (remplit code postal + commune), cases newsletter et droit à l'image. La date
   de naissance disparaît si le genre est « Association ».
-- **Renouvellement** : après nom + prénom, quatre cas :
+- **Renouvellement** : après nom + prénom, trois cas :
   - **1 fiche** → on continue ;
   - **plusieurs fiches** → on choisit la bonne (un indice « né·e en 19•• · ville »
     aide à distinguer) ;
-  - **fiche rattachée à l'adhésion d'un·e autre** (elle figure dans le
-    `Responsable_de` d'un·e autre membre — cas d'une famille / couple saisie du
-    mauvais nom) → un encart indique le·la responsable de l'adhésion et propose
-    **« Continuer avec … »** : le parcours repart au nom du·de la responsable et
-    les membres du groupe sont reconstitués automatiquement. Un lien permet de
-    **poursuivre malgré tout à son nom** (adhésion individuelle) ;
   - **aucune fiche** → message : vérifier l'orthographe ou repartir sur
     « Nouveau membre ».
+- **Membre rattaché** : si le nom saisi est celui d'un membre inscrit dans le
+  `Responsable_de` d'un·e autre (famille / couple), la fiche est **résolue
+  silencieusement sur le·la responsable** — c'est lui/elle qui porte l'adhésion.
+  Aucun message : les membres du groupe apparaissent ensuite à l'étape
+  « Membres du groupe » comme pour toute adhésion multiple.
 - **Renouvellement — confirmation de la fiche** : une fois la bonne personne
-  identifiée, un encart récapitule la fiche et affiche deux cases
-  **pré-cochées selon Grist** — *lettre d'information* et *droit à l'image* —
-  que l'adhérent·e peut ajuster (enregistrées sur sa fiche). Un lien
-  « Ce n'est pas vous ? » permet de reprendre la saisie.
+  identifiée, un encart récapitule la fiche (son nom **canonique**, celui de
+  Grist) et affiche deux cases **pré-cochées selon Grist** — *lettre
+  d'information* et *droit à l'image* — que l'adhérent·e peut ajuster
+  (enregistrées sur sa fiche). Un lien « Ce n'est pas vous ? » permet de
+  reprendre la saisie.
 - **Renouvellement — adhésion déjà à jour** : si la colonne
   `Membres.Adhesion en cours` est vraie (le membre figure déjà dans une
   adhésion de la saison en cours), l'encart l'indique et le bouton devient

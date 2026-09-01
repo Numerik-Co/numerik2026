@@ -12,7 +12,6 @@ import type {
 	MembreCandidat,
 	MembreEtat,
 	MembrePayload,
-	MembreRattache,
 	Mode,
 } from '../../lib/adhesion/types';
 
@@ -24,7 +23,8 @@ const props = defineProps<{
 	done: boolean;
 	busy: boolean;
 	candidats: MembreCandidat[];
-	rattache: MembreRattache | null;
+	/** Libellé « Prénom Nom » de la fiche identifiée (canonique côté Grist). */
+	membreLabel: string;
 	/** Renouvellement : fiche retrouvée, en attente de confirmation des préférences. */
 	renouvEtat: MembreEtat | null;
 	renouvPrefs: { newsletter: boolean; droitImage: boolean };
@@ -33,8 +33,6 @@ const props = defineProps<{
 const emit = defineEmits<{
 	submit: [];
 	choisir: [candidat: MembreCandidat];
-	confirmerResponsable: [];
-	ignorerRattachement: [];
 	confirmerRenouvellement: [];
 	reprendreIdentite: [];
 	submitContact: [payload: ContactPayload];
@@ -189,38 +187,6 @@ function envoyerContact() {
 					:errors="montreErreurs ? erreursMembre : undefined"
 				/>
 
-				<!-- Fiche rattachée : renouveler au nom du·de la responsable -->
-				<div v-if="rattache" class="mt-5 rounded-xl bg-amber-50 p-4">
-					<p class="text-sm text-amber-800">
-						<span class="font-medium text-gray-900">
-							{{ rattache.membre.prenom }} {{ rattache.membre.nom }}
-						</span>
-						fait partie d'une adhésion dont le·la responsable est
-						<span class="font-medium text-gray-900">
-							{{ rattache.responsable.prenom }} {{ rattache.responsable.nom }}<template v-if="rattache.responsable.indice"> — {{ rattache.responsable.indice }}</template></span>.
-						Le renouvellement se fait au nom du·de la responsable ; les membres du groupe
-						seront reconstitués automatiquement.
-					</p>
-					<div class="mt-3 flex flex-wrap items-center gap-4">
-						<button
-							type="button"
-							class="rounded-full bg-accent px-5 py-2 font-heading text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-							:disabled="busy"
-							@click="emit('confirmerResponsable')"
-						>
-							Continuer avec {{ rattache.responsable.prenom }} {{ rattache.responsable.nom }}
-						</button>
-						<button
-							type="button"
-							class="text-sm text-gray-500 hover:text-primary disabled:opacity-50"
-							:disabled="busy"
-							@click="emit('ignorerRattachement')"
-						>
-							Poursuivre à mon nom (adhésion individuelle)
-						</button>
-					</div>
-				</div>
-
 				<!-- Désambiguïsation renouvellement -->
 				<div v-if="candidats.length" class="mt-5 rounded-xl bg-amber-50 p-4">
 					<p class="text-sm text-amber-800">Plusieurs fiches correspondent. Laquelle est la vôtre ?</p>
@@ -242,7 +208,7 @@ function envoyerContact() {
 				<div v-if="renouvEtat" class="mt-5 rounded-xl bg-primary/5 p-4">
 					<p class="text-sm text-gray-700">
 						Fiche trouvée :
-						<span class="font-medium text-gray-900">{{ renouv.prenom }} {{ renouv.nom }}</span>.
+						<span class="font-medium text-gray-900">{{ membreLabel }}</span>.
 						<button
 							type="button"
 							class="ml-1 text-gray-500 underline hover:text-primary"
@@ -308,7 +274,7 @@ function envoyerContact() {
 		</template>
 
 		<p v-else class="mt-3 text-sm text-gray-600">
-			{{ mode === 'nouveau' ? identite.prenom + ' ' + identite.nom : renouv.prenom + ' ' + renouv.nom }}
+			{{ membreLabel }}
 			<span class="text-gray-400">— informations enregistrées</span>
 		</p>
 	</li>

@@ -63,7 +63,6 @@ export interface DetacherMembrePayload {
 export type MembreResult =
 	| ({ status: 'ok'; membreId: number; prenom: string; nom: string; genre: Genre | null } & MembreEtat)
 	| { status: 'ambigu'; candidats: MembreCandidat[] }
-	| ({ status: 'rattache' } & MembreRattache)
 	| { status: 'introuvable' };
 
 /**
@@ -84,16 +83,6 @@ export interface MembreCandidat extends MembreEtat {
 	nom: string;
 	genre: Genre | null;
 	indice: string; // ex. "né·e en 19•• · ville"
-}
-
-/**
- * Renouvellement : la fiche saisie n'est pas responsable de son adhésion — elle
- * figure dans le `Responsable_de` d'un·e autre membre. Le parcours doit repartir
- * du·de la responsable (c'est lui/elle qui porte le bulletin et le groupe).
- */
-export interface MembreRattache {
-	membre: MembreCandidat; // la fiche saisie
-	responsable: MembreCandidat; // le·la responsable de l'adhésion
 }
 
 /** Étape 2 — choix de la cotisation (crée un enregistrement dans Adhesions). */

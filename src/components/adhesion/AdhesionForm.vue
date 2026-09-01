@@ -16,7 +16,6 @@ import type {
 	MembreCandidat,
 	MembreEtat,
 	MembrePayload,
-	MembreRattache,
 	MembreRecherche,
 	Mode,
 } from '../../lib/adhesion/types';
@@ -55,8 +54,6 @@ const membreGenre = ref<Genre | null>(null);
 const adhesionId = ref<number | null>(null);
 const bulletinToken = ref<string | null>(null);
 const candidats = ref<MembreCandidat[]>([]);
-/** Renouvellement : fiche saisie rattachée à l'adhésion d'un·e autre (à confirmer). */
-const rattache = ref<MembreRattache | null>(null);
 const groupe = ref<GroupeMembre[]>([]);
 const resultatsRecherche = ref<MembreRecherche[]>([]);
 const sectionMembresRef = ref<InstanceType<typeof SectionMembres> | null>(null);
@@ -101,7 +98,6 @@ function reset() {
 	adhesionId.value = null;
 	bulletinToken.value = null;
 	candidats.value = [];
-	rattache.value = null;
 	renouvEtat.value = null;
 	cotisationSkipped.value = false;
 	groupe.value = [];
@@ -123,7 +119,6 @@ async function submitIdentite() {
 	busy.value = true;
 	error.value = '';
 	candidats.value = [];
-	rattache.value = null;
 	renouvEtat.value = null;
 	try {
 		const res =
@@ -140,10 +135,6 @@ async function submitIdentite() {
 			candidats.value = res.candidats;
 			return;
 		}
-		if (res.status === 'rattache') {
-			rattache.value = { membre: res.membre, responsable: res.responsable };
-			return;
-		}
 		await identifier(res);
 	} catch (e) {
 		error.value = messageOf(e);
@@ -153,9 +144,10 @@ async function submitIdentite() {
 }
 
 /**
- * Fiche identifiée (création, rapprochement direct, choix d'un candidat ou
- * responsable retenu). En renouvellement on marque une pause « préférences »
- * avant de poursuivre ; en création on enchaîne sur la cotisation.
+ * Fiche identifiée (création, rapprochement direct ou choix d'un candidat ;
+ * un membre rattaché est déjà résolu côté serveur sur son·sa responsable).
+ * En renouvellement on marque une pause « préférences » avant de poursuivre ;
+ * en création on enchaîne sur la cotisation.
  */
 async function identifier(
 	m: MembreEtat & { membreId: number; prenom: string; nom: string; genre: Genre | null },
@@ -234,20 +226,6 @@ async function submitContact(payload: ContactPayload) {
 function choisirCandidat(c: MembreCandidat) {
 	candidats.value = [];
 	void identifier(c);
-}
-
-/** Renouveler au nom du·de la responsable de l'adhésion (reconstitue le groupe). */
-function confirmerResponsable() {
-	if (!rattache.value) return;
-	choisirCandidat(rattache.value.responsable);
-	rattache.value = null;
-}
-
-/** Poursuivre malgré tout au nom de la fiche saisie (adhésion individuelle). */
-function ignorerRattachement() {
-	if (!rattache.value) return;
-	choisirCandidat(rattache.value.membre);
-	rattache.value = null;
 }
 
 async function goCotisation() {
@@ -482,13 +460,11 @@ function annuler() {
 				:done="step !== 'identite'"
 				:busy="busy"
 				:candidats="candidats"
-				:rattache="rattache"
+				:membre-label="membreLabel"
 				:renouv-etat="renouvEtat"
 				:renouv-prefs="renouvPrefs"
 				@submit="submitIdentite"
 				@choisir="choisirCandidat"
-				@confirmer-responsable="confirmerResponsable"
-				@ignorer-rattachement="ignorerRattachement"
 				@confirmer-renouvellement="confirmerRenouvellement"
 				@reprendre-identite="reprendreIdentite"
 				@submit-contact="submitContact"
