@@ -89,7 +89,7 @@ Toutes en `prerender = false`. Elles ne parlent à Grist qu'à travers `src/lib/
 | :--- | :--- | :--- |
 | `/api/adhesion/cotisations` | GET | Cotisations de la saison en cours (`{ id, label, prix, personneMorale, multiple }`). |
 | `/api/adhesion/activites` | GET | Activités de la saison en cours (`{ id, label, prix, placesRestantes }`). |
-| `/api/adhesion/membre` | POST | Étape 1. `mode:'nouveau'` → crée le `Membres` (rôle déduit du genre) et renvoie `membreId`. `mode:'renouvellement'` → rapproche sur nom + prénom normalisés : `ok` / `ambigu` / `introuvable`. |
+| `/api/adhesion/membre` | POST | Étape 1. `mode:'nouveau'` → crée le `Membres` (rôle déduit du genre) et renvoie `membreId`. `mode:'renouvellement'` → rapproche sur nom + prénom normalisés : `ok` / `ambigu` (plusieurs fiches) / `rattache` (la fiche saisie figure dans le `Responsable_de` d'un·e autre membre → renvoie `membre` + `responsable`, le front propose de renouveler au nom du·de la responsable) / `introuvable`. |
 | `/api/adhesion/contact` | POST | Sous-parcours actualités : crée un `Membres` minimal `Role = Contact`, `Newsletters = true`. |
 | `/api/adhesion/cotisation` | POST | Étape 2. Crée l'enregistrement **`Adhesions`** (membre + cotisation, `Statut = Impayé`), renvoie `adhesionId`. |
 | `/api/adhesion/co-membre` | POST | Adhésion multiple : crée un `Membres`, l'ajoute à `Adhesions.Membres` et à `Membres[responsable].Responsable_de`. |

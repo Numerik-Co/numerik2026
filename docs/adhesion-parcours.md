@@ -24,6 +24,7 @@ flowchart TD
 
     D -->|"1 fiche trouvée"| G
     D -->|"Plusieurs fiches"| D1["Choisir la bonne personne"] --> G
+    D -->|"Fiche rattachée à l'adhésion d'un·e autre"| D3["« … fait partie de l'adhésion de X »<br/>Continuer avec le·la responsable X<br/>(le groupe est reconstitué)"] --> G
     D -->|"Aucune fiche"| D2["Message d'aide → revenir au choix de départ"] --> B
 
     C --> G["Étape 2 · Cotisation<br/>liste filtrée : personne physique / morale"]
@@ -65,10 +66,16 @@ flowchart TD
 - **Nouveau** : genre, identité, coordonnées, **adresse avec autocomplétion**
   (remplit code postal + commune), cases newsletter et droit à l'image. La date
   de naissance disparaît si le genre est « Association ».
-- **Renouvellement** : après nom + prénom, trois cas :
+- **Renouvellement** : après nom + prénom, quatre cas :
   - **1 fiche** → on continue ;
   - **plusieurs fiches** → on choisit la bonne (un indice « né·e en 19•• · ville »
     aide à distinguer) ;
+  - **fiche rattachée à l'adhésion d'un·e autre** (elle figure dans le
+    `Responsable_de` d'un·e autre membre — cas d'une famille / couple saisie du
+    mauvais nom) → un encart indique le·la responsable de l'adhésion et propose
+    **« Continuer avec … »** : le parcours repart au nom du·de la responsable et
+    les membres du groupe sont reconstitués automatiquement. Un lien permet de
+    **poursuivre malgré tout à son nom** (adhésion individuelle) ;
   - **aucune fiche** → message : vérifier l'orthographe ou repartir sur
     « Nouveau membre ».
 - Les erreurs de saisie (courriel, code postal, téléphone…) s'affichent sous les

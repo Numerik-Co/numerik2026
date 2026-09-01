@@ -7,7 +7,13 @@ import {
 	validateMembre,
 	validateRenouvellement,
 } from '../../lib/adhesion/validation';
-import type { ContactPayload, MembreCandidat, MembrePayload, Mode } from '../../lib/adhesion/types';
+import type {
+	ContactPayload,
+	MembreCandidat,
+	MembrePayload,
+	MembreRattache,
+	Mode,
+} from '../../lib/adhesion/types';
 
 const props = defineProps<{
 	mode: Mode;
@@ -17,11 +23,14 @@ const props = defineProps<{
 	done: boolean;
 	busy: boolean;
 	candidats: MembreCandidat[];
+	rattache: MembreRattache | null;
 }>();
 
 const emit = defineEmits<{
 	submit: [];
 	choisir: [candidat: MembreCandidat];
+	confirmerResponsable: [];
+	ignorerRattachement: [];
 	submitContact: [payload: ContactPayload];
 }>();
 
@@ -173,6 +182,38 @@ function envoyerContact() {
 					:membre="props.identite"
 					:errors="montreErreurs ? erreursMembre : undefined"
 				/>
+
+				<!-- Fiche rattachée : renouveler au nom du·de la responsable -->
+				<div v-if="rattache" class="mt-5 rounded-xl bg-amber-50 p-4">
+					<p class="text-sm text-amber-800">
+						<span class="font-medium text-gray-900">
+							{{ rattache.membre.prenom }} {{ rattache.membre.nom }}
+						</span>
+						fait partie d'une adhésion dont le·la responsable est
+						<span class="font-medium text-gray-900">
+							{{ rattache.responsable.prenom }} {{ rattache.responsable.nom }}<template v-if="rattache.responsable.indice"> — {{ rattache.responsable.indice }}</template></span>.
+						Le renouvellement se fait au nom du·de la responsable ; les membres du groupe
+						seront reconstitués automatiquement.
+					</p>
+					<div class="mt-3 flex flex-wrap items-center gap-4">
+						<button
+							type="button"
+							class="rounded-full bg-accent px-5 py-2 font-heading text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+							:disabled="busy"
+							@click="emit('confirmerResponsable')"
+						>
+							Continuer avec {{ rattache.responsable.prenom }} {{ rattache.responsable.nom }}
+						</button>
+						<button
+							type="button"
+							class="text-sm text-gray-500 hover:text-primary disabled:opacity-50"
+							:disabled="busy"
+							@click="emit('ignorerRattachement')"
+						>
+							Poursuivre à mon nom (adhésion individuelle)
+						</button>
+					</div>
+				</div>
 
 				<!-- Désambiguïsation renouvellement -->
 				<div v-if="candidats.length" class="mt-5 rounded-xl bg-amber-50 p-4">

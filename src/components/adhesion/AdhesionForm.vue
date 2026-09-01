@@ -15,6 +15,7 @@ import type {
 	InscriptionLigne,
 	MembreCandidat,
 	MembrePayload,
+	MembreRattache,
 	MembreRecherche,
 	Mode,
 } from '../../lib/adhesion/types';
@@ -48,6 +49,8 @@ const membreGenre = ref<Genre | null>(null);
 const adhesionId = ref<number | null>(null);
 const bulletinToken = ref<string | null>(null);
 const candidats = ref<MembreCandidat[]>([]);
+/** Renouvellement : fiche saisie rattachée à l'adhésion d'un·e autre (à confirmer). */
+const rattache = ref<MembreRattache | null>(null);
 const groupe = ref<GroupeMembre[]>([]);
 const resultatsRecherche = ref<MembreRecherche[]>([]);
 const sectionMembresRef = ref<InstanceType<typeof SectionMembres> | null>(null);
@@ -92,6 +95,7 @@ function reset() {
 	adhesionId.value = null;
 	bulletinToken.value = null;
 	candidats.value = [];
+	rattache.value = null;
 	groupe.value = [];
 	resultatsRecherche.value = [];
 	cotisationId.value = null;
@@ -111,6 +115,7 @@ async function submitIdentite() {
 	busy.value = true;
 	error.value = '';
 	candidats.value = [];
+	rattache.value = null;
 	try {
 		const res =
 			mode.value === 'nouveau'
@@ -124,6 +129,10 @@ async function submitIdentite() {
 		}
 		if (res.status === 'ambigu') {
 			candidats.value = res.candidats;
+			return;
+		}
+		if (res.status === 'rattache') {
+			rattache.value = { membre: res.membre, responsable: res.responsable };
 			return;
 		}
 		membreId.value = res.membreId;
@@ -156,6 +165,20 @@ function choisirCandidat(c: MembreCandidat) {
 	membreGenre.value = c.genre;
 	candidats.value = [];
 	void goCotisation();
+}
+
+/** Renouveler au nom du·de la responsable de l'adhésion (reconstitue le groupe). */
+function confirmerResponsable() {
+	if (!rattache.value) return;
+	choisirCandidat(rattache.value.responsable);
+	rattache.value = null;
+}
+
+/** Poursuivre malgré tout au nom de la fiche saisie (adhésion individuelle). */
+function ignorerRattachement() {
+	if (!rattache.value) return;
+	choisirCandidat(rattache.value.membre);
+	rattache.value = null;
 }
 
 async function goCotisation() {
@@ -390,8 +413,11 @@ function annuler() {
 				:done="step !== 'identite'"
 				:busy="busy"
 				:candidats="candidats"
+				:rattache="rattache"
 				@submit="submitIdentite"
 				@choisir="choisirCandidat"
+				@confirmer-responsable="confirmerResponsable"
+				@ignorer-rattachement="ignorerRattachement"
 				@submit-contact="submitContact"
 			/>
 
