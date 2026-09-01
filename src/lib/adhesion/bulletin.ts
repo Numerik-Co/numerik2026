@@ -78,7 +78,8 @@ export class GotenbergError extends Error {
 }
 
 /**
- * Envoie le HTML complet (document, pas fragment) à Gotenberg et renvoie le PDF.
+ * Envoie le HTML complet (document, pas fragment) à Gotenberg et renvoie le PDF
+ * en `ArrayBuffer` (corps de `Response` valide, contrairement à `Buffer`).
  *
  * Les champs de formulaire préservent la mise en forme du gabarit :
  *  - marges à 0 + `preferCssPageSize` : Gotenberg n'ajoute pas ses ~1 cm et
@@ -89,7 +90,7 @@ export class GotenbergError extends Error {
  *  - `skipNetworkIdleEvent=false` : attend que le réseau soit calme, sinon le
  *    logo distant peut manquer.
  */
-export async function htmlToPdf(html: string): Promise<Buffer> {
+export async function htmlToPdf(html: string): Promise<ArrayBuffer> {
 	if (!GOTENBERG_URL) throw new GotenbergError('GOTENBERG_URL manquant.');
 
 	const form = new FormData();
@@ -122,5 +123,5 @@ export async function htmlToPdf(html: string): Promise<Buffer> {
 		);
 	}
 
-	return Buffer.from(await res.arrayBuffer());
+	return res.arrayBuffer();
 }

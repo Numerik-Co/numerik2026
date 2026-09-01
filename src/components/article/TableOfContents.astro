@@ -32,7 +32,10 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 	const nav = document.querySelector('nav[aria-label="Sur cette page"]');
 	const links = nav ? Array.from(nav.querySelectorAll('a[data-toc-link]')) : [];
 	const targets = links
-		.map((link) => document.getElementById(link.getAttribute('href').slice(1)))
+		.map((link) => {
+			const href = link.getAttribute('href');
+			return href ? document.getElementById(href.slice(1)) : null;
+		})
 		.filter((el) => el !== null);
 
 	const OFFSET = 120;
