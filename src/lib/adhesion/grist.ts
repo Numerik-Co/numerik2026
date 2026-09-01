@@ -215,9 +215,18 @@ export async function updateRecord(
 	id: number,
 	fields: Record<string, unknown>,
 ): Promise<void> {
+	await updateRecords(table, [{ id, fields }]);
+}
+
+/** PATCH groupé : plusieurs enregistrements d'une même table en une requête. */
+export async function updateRecords(
+	table: string,
+	records: { id: number; fields: Record<string, unknown> }[],
+): Promise<void> {
+	if (records.length === 0) return;
 	await gristFetch(`/tables/${table}/records`, {
 		method: 'PATCH',
-		body: JSON.stringify({ records: [{ id, fields }] }),
+		body: JSON.stringify({ records }),
 	});
 }
 

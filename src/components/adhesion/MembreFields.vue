@@ -7,6 +7,8 @@ import type { Errors } from '../../lib/adhesion/validation';
 const props = defineProps<{
 	membre: MembrePayload;
 	errors?: Errors<MembrePayload>;
+	/** Masque les cases newsletter / droit à l'image (adhésion liée : réglage porté par le·la responsable). */
+	hidePreferences?: boolean;
 }>();
 
 const genres: { value: string; label: string }[] = [
@@ -152,18 +154,20 @@ function choisir(s: AdresseSuggestion) {
 			<span v-if="errors?.telMobile" class="mt-1 block text-xs text-red-600">{{ errors.telMobile }}</span>
 		</label>
 
-		<label class="flex items-start gap-3 sm:col-span-2">
-			<input v-model="membre.newsletter" type="checkbox" class="mt-1" />
-			<span class="text-sm text-gray-600">
-				J'accepte de recevoir la lettre d'information de l'association.
-			</span>
-		</label>
-		<label class="flex items-start gap-3 sm:col-span-2">
-			<input v-model="membre.droitImage" type="checkbox" class="mt-1" />
-			<span class="text-sm text-gray-600">
-				J'autorise l'association à utiliser mon image sur ses supports de communication.
-			</span>
-		</label>
+		<template v-if="!hidePreferences">
+			<label class="flex items-start gap-3 sm:col-span-2">
+				<input v-model="membre.newsletter" type="checkbox" class="mt-1" />
+				<span class="text-sm text-gray-600">
+					J'accepte de recevoir la lettre d'information de l'association.
+				</span>
+			</label>
+			<label class="flex items-start gap-3 sm:col-span-2">
+				<input v-model="membre.droitImage" type="checkbox" class="mt-1" />
+				<span class="text-sm text-gray-600">
+					J'autorise l'association à utiliser mon image sur ses supports de communication.
+				</span>
+			</label>
+		</template>
 		<p class="text-xs text-gray-400 sm:col-span-2">Au moins un numéro de téléphone est requis.</p>
 	</div>
 </template>

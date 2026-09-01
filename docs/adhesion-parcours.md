@@ -84,9 +84,10 @@ flowchart TD
 - **Renouvellement — confirmation de la fiche** : une fois la bonne personne
   identifiée, un encart récapitule la fiche (son nom **canonique**, celui de
   Grist) et affiche deux cases **pré-cochées selon Grist** — *lettre
-  d'information* et *droit à l'image* — que l'adhérent·e peut ajuster
-  (enregistrées sur sa fiche). Un lien « Ce n'est pas vous ? » permet de
-  reprendre la saisie.
+  d'information* et *droit à l'image* — que l'adhérent·e peut ajuster. Pour une
+  **adhésion liée**, ce choix est appliqué à **tous les membres du foyer**
+  (responsable + membres rattachés), pas seulement à la fiche saisie. Un lien
+  « Ce n'est pas vous ? » permet de reprendre la saisie.
 - **Renouvellement — adhésion déjà à jour** : si la colonne
   `Membres.Adhesion en cours` est vraie (le membre figure déjà dans une
   adhésion de la saison en cours), l'encart l'indique et le bouton devient
@@ -108,6 +109,9 @@ flowchart TD
 - Ajouter chaque membre : soit **créer une nouvelle fiche**, soit **rechercher
   et rattacher un membre existant**.
 - **Minimum 2 membres** pour continuer. Un membre ajouté par erreur se retire ici.
+- La **lettre d'information** et le **droit à l'image** ne sont pas demandés par
+  membre : chaque membre ajouté (nouveau ou existant) hérite du choix du·de la
+  responsable de l'adhésion.
 
 ### Étape 3 · Activité
 

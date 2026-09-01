@@ -102,8 +102,16 @@ defineExpose({ reset });
 		<template v-if="active">
 			<!-- Nouveau membre -->
 			<form v-if="panneau === 'nouveau'" class="mt-5 border-t border-gray-100 pt-5" @submit.prevent="valider" novalidate>
-				<p class="mb-3 text-sm font-medium text-gray-700">Nouveau membre à rattacher</p>
-				<MembreFields :membre="coMembre" :errors="montreErreurs ? erreurs : undefined" />
+				<p class="mb-1 text-sm font-medium text-gray-700">Nouveau membre à rattacher</p>
+				<p class="mb-3 text-xs text-gray-400">
+					La lettre d'information et le droit à l'image suivent le choix du·de la responsable
+					de l'adhésion.
+				</p>
+				<MembreFields
+					:membre="coMembre"
+					:errors="montreErreurs ? erreurs : undefined"
+					hide-preferences
+				/>
 				<div class="mt-6 flex items-center gap-4">
 					<button
 						type="submit"

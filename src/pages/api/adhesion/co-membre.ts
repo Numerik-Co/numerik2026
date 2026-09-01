@@ -8,6 +8,7 @@ import {
 	refList,
 	TABLES,
 	updateRecord,
+	updateRecords,
 } from '../../../lib/adhesion/grist';
 import { membreFieldsForGrist, validateMembrePayload } from '../../../lib/adhesion/membre-fields';
 import { json } from '../../../lib/adhesion/http';
@@ -64,10 +65,24 @@ export const POST: APIRoute = async ({ request }) => {
 		});
 
 		const responsables = await listRecords(TABLES.membres, { id: [responsableId] });
-		const rattachesActuels = parseRefList(responsables[0]?.fields[COLS.membre.responsableDe]);
-		await updateRecord(TABLES.membres, responsableId, {
-			[COLS.membre.responsableDe]: refList(...withId(rattachesActuels, nouveauId)),
-		});
+		const resp = responsables[0]?.fields;
+		const rattachesActuels = parseRefList(resp?.[COLS.membre.responsableDe]);
+		// En un seul PATCH : rattache le membre au·à la responsable ET aligne ses
+		// préférences (newsletter, droit à l'image) sur celles du·de la responsable
+		// — un seul choix pour toute l'adhésion liée.
+		await updateRecords(TABLES.membres, [
+			{
+				id: responsableId,
+				fields: { [COLS.membre.responsableDe]: refList(...withId(rattachesActuels, nouveauId)) },
+			},
+			{
+				id: nouveauId,
+				fields: {
+					[COLS.membre.newsletter]: resp?.[COLS.membre.newsletter] === true,
+					[COLS.membre.droitImage]: resp?.[COLS.membre.droitImage] === true,
+				},
+			},
+		]);
 
 		return json({ membreId: nouveauId, prenom, nom });
 	} catch (err) {

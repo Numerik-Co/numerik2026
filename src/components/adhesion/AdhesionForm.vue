@@ -169,17 +169,18 @@ async function identifier(
 	await goCotisation();
 }
 
-/** Renouvellement : préférences confirmées → MAJ Grist si changement, puis suite du parcours. */
+/** Renouvellement : préférences confirmées → MAJ Grist, puis suite du parcours. */
 async function confirmerRenouvellement() {
 	const etat = renouvEtat.value;
 	if (membreId.value === null || !etat) return;
 	busy.value = true;
 	error.value = '';
 	try {
-		if (
-			renouvPrefs.newsletter !== etat.newsletter ||
-			renouvPrefs.droitImage !== etat.droitImage
-		) {
+		// Adhésion liée : on aligne systématiquement tout le foyer sur ce choix.
+		// Fiche seule : on n'écrit que si une case a changé.
+		const aChange =
+			renouvPrefs.newsletter !== etat.newsletter || renouvPrefs.droitImage !== etat.droitImage;
+		if (etat.groupe.length > 0 || aChange) {
 			await adhesionApi.majPreferences({
 				membreId: membreId.value,
 				newsletter: renouvPrefs.newsletter,

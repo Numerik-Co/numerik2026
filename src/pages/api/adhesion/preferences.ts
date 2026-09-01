@@ -1,5 +1,12 @@
 import type { APIRoute } from 'astro';
-import { COLS, GristError, TABLES, updateRecord } from '../../../lib/adhesion/grist';
+import {
+	COLS,
+	GristError,
+	listRecords,
+	parseRefList,
+	TABLES,
+	updateRecords,
+} from '../../../lib/adhesion/grist';
 import { json } from '../../../lib/adhesion/http';
 
 export const prerender = false;
@@ -7,6 +14,9 @@ export const prerender = false;
 /**
  * Renouvellement — met à jour les préférences (newsletter, droit à l'image) de la
  * fiche retrouvée à l'étape 1. N'écrit que ces deux colonnes.
+ *
+ * Adhésion liée : le même choix est appliqué au·à la responsable **et à tous les
+ * membres rattachés** (`Membres.Responsable_de`) — un seul réglage pour le foyer.
  */
 export const POST: APIRoute = async ({ request }) => {
 	const body = await request.json().catch(() => null);
@@ -18,11 +28,19 @@ export const POST: APIRoute = async ({ request }) => {
 		return json({ error: 'membreId requis.' }, 400);
 	}
 
+	const fields = {
+		[COLS.membre.newsletter]: newsletter === true,
+		[COLS.membre.droitImage]: droitImage === true,
+	};
+
 	try {
-		await updateRecord(TABLES.membres, membreId, {
-			[COLS.membre.newsletter]: newsletter === true,
-			[COLS.membre.droitImage]: droitImage === true,
-		});
+		const fiches = await listRecords(TABLES.membres, { id: [membreId] });
+		const rattaches = parseRefList(fiches[0]?.fields[COLS.membre.responsableDe]);
+		const ids = [membreId, ...rattaches];
+		await updateRecords(
+			TABLES.membres,
+			ids.map((id) => ({ id, fields })),
+		);
 		return json({ ok: true });
 	} catch (err) {
 		const status = err instanceof GristError ? err.status : 500;
