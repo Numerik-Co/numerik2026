@@ -35,6 +35,7 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 | Savoir quels composants réutiliser (boutons, cartes, sections...) | [docs/composants.md](docs/composants.md) |
 | Modifier les liens du menu ou du pied de page | [docs/navigation.md](docs/navigation.md) |
 | Ouvrir / fermer un formulaire (adhésion, contact…) | [docs/composants.md](docs/composants.md#forms) |
+| Comprendre / présenter le parcours d'adhésion en ligne | [docs/adhesion-parcours.md](docs/adhesion-parcours.md) |
 | Comprendre l'organisation technique du projet | [docs/developpement.md](docs/developpement.md) |
 
 ## Structure du projet (vue rapide)

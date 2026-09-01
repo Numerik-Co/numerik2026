@@ -59,6 +59,10 @@ Ces variables sont typées dans `src/env.d.ts` pour l'auto-complétion sur `impo
 
 ## Formulaire d'adhésion
 
+> Vue fonctionnelle du parcours (schéma + étape par étape, pour former des
+> utilisateurs) : [adhesion-parcours.md](adhesion-parcours.md). Ci-dessous, le
+> détail technique.
+
 ### Îlot Vue
 
 `src/pages/adherer/formulaire.astro` monte l'îlot `src/components/adhesion/AdhesionForm.vue` en `client:load`, entouré de `<FormGate form="adhesion">`. Deux parcours (**Nouveau membre** / **Renouvellement**) et un déroulé : identité → cotisation → *(membres du groupe si cotisation multiple)* → activité → récapitulatif, chaque étape n'étant révélée qu'après le retour de la précédente.
