@@ -61,7 +61,7 @@ export const site = {
 	 */
 	forms: {
 		adhesion: {
-			enabled: false,
+			enabled: true,
 			closedTitle: 'Adhésions en ligne momentanément fermées',
 			closedMessage:
 				"Le formulaire d'adhésion en ligne n'est pas ouvert actuellement. " +
