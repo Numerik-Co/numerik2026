@@ -23,5 +23,8 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
+# obsidian vault settings (docs/)
+.obsidian/
+
 # Config Docker CLI locale (deploy.sh, VPS avec /root en lecture seule)
 .dockercfg/
