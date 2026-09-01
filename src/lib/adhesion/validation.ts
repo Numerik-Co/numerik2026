@@ -2,7 +2,7 @@
  * Validation côté client (messages inline). Le serveur revalide de toute façon
  * (voir membre-fields.ts) — ceci ne sert qu'à guider la saisie.
  */
-import { GENRE_CHOICES } from './grist';
+import { GENRE_CHOICES } from './choices';
 import type { ContactPayload, MembrePayload } from './types';
 
 export type Errors<T> = Partial<Record<keyof T, string>>;

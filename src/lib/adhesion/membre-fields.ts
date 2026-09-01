@@ -3,7 +3,8 @@
  * Partagé par les routes /api/adhesion/membre (étape 1) et /api/adhesion/co-membre
  * (membre supplémentaire d'une adhésion multiple).
  */
-import { COLS, dateToEpochSeconds, GENRE_CHOICES, ROLE_MORAL, ROLE_PHYSIQUE } from './grist';
+import { GENRE_CHOICES, ROLE_MORAL, ROLE_PHYSIQUE } from './choices';
+import { COLS, dateToEpochSeconds } from './grist';
 import { isNonEmptyString } from './http';
 import type { Genre, MembrePayload } from './types';
 

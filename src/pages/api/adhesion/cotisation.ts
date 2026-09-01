@@ -10,6 +10,7 @@ import {
 	STATUT_IMPAYE,
 	TABLES,
 } from '../../../lib/adhesion/grist';
+import { isBulletinEnabled, signBulletinToken } from '../../../lib/adhesion/bulletin';
 import { json, toNumberOrNull } from '../../../lib/adhesion/http';
 import type { AdhesionResult, GroupeMembre } from '../../../lib/adhesion/types';
 
@@ -61,7 +62,11 @@ export const POST: APIRoute = async ({ request }) => {
 			});
 		}
 
-		const result: AdhesionResult = { adhesionId, groupe };
+		const result: AdhesionResult = {
+			adhesionId,
+			groupe,
+			...(isBulletinEnabled() ? { bulletinToken: signBulletinToken(adhesionId) } : {}),
+		};
 		return json(result);
 	} catch (err) {
 		const status = err instanceof GristError ? err.status : 500;

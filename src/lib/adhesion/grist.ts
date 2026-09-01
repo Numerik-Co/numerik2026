@@ -63,7 +63,8 @@ export const COLS = {
 		cotisation: 'Cotisation', // Ref:Cotisation -> rowId
 		statut: 'Statut', // Choice: Payé | Partiellement | Impayé
 		montantDu: 'Montant_du', // Numeric
-		// Colonnes FORMULE (ne pas écrire) : Saison, Tarif, Regle, Formule, Renouvellement
+		bulletinHtml: 'Formule', // FORMULE (lecture seule) : HTML complet du bulletin d'adhésion, cf. docs/bulletin-pdf.md
+		// Autres colonnes FORMULE (ne pas écrire) : Saison, Tarif, Regle, Renouvellement
 	},
 	inscription: {
 		membre: 'Membre', // Ref:Membres  -> rowId
@@ -98,18 +99,21 @@ export const COLS = {
 	},
 } as const;
 
-/** Valeurs exactes de la liste de choix Membres.Genre. */
-export const GENRE_CHOICES = ['Homme', 'Femme', 'Autre', 'Association'] as const;
-export type GenreGrist = (typeof GENRE_CHOICES)[number];
-
-/** Rôle déduit du genre (le formulaire public ne demande pas le rôle interne). */
-export const ROLE_PHYSIQUE = 'Adhérent.e physique';
-export const ROLE_MORAL = 'Adherent.e Moral.e';
-export const ROLE_CONTACT = 'Contact';
-
-export const STATUT_IMPAYE = 'Impayé';
-export const DISPO_INSCRIT = 'Inscrit';
-export const DISPO_ATTENTE = "Liste d'attente";
+/**
+ * Valeurs des listes de choix Grist : déplacées dans `./choices` (module pur)
+ * pour rester importables côté navigateur sans traîner `process.env` /
+ * `node:crypto`. Ré-exportées ici pour le code serveur qui importe déjà `grist`.
+ */
+export {
+	GENRE_CHOICES,
+	ROLE_PHYSIQUE,
+	ROLE_MORAL,
+	ROLE_CONTACT,
+	STATUT_IMPAYE,
+	DISPO_INSCRIT,
+	DISPO_ATTENTE,
+} from './choices';
+export type { GenreGrist } from './choices';
 
 export class GristError extends Error {
 	constructor(

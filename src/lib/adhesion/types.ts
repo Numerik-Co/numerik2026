@@ -86,6 +86,8 @@ export interface GroupeMembre {
 export interface AdhesionResult {
 	adhesionId: number;
 	groupe: GroupeMembre[]; // membres déjà rattachés (via Responsable_de), responsable en tête
+	/** Jeton signé pour /api/adhesion/bulletin ; absent si la génération PDF n'est pas configurée. */
+	bulletinToken?: string;
 }
 
 /** Résultat d'une recherche de membre (rattachement d'un membre existant). */
@@ -106,6 +108,16 @@ export interface AdresseSuggestion {
 
 export interface InscriptionResult {
 	inscriptionId: number;
+	disponibilite: string; // "Inscrit" | "Liste d'attente"
+}
+
+/** Une inscription activité enregistrée pendant le parcours (affichage étape 3 + récap). */
+export interface InscriptionLigne {
+	membreId: number;
+	membreLabel: string;
+	activiteId: number;
+	activiteLabel: string;
+	prix: number | null;
 	disponibilite: string; // "Inscrit" | "Liste d'attente"
 }
 

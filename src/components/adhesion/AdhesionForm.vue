@@ -12,6 +12,7 @@ import type {
 	CotisationOption,
 	Genre,
 	GroupeMembre,
+	InscriptionLigne,
 	MembreCandidat,
 	MembrePayload,
 	MembreRecherche,
@@ -45,7 +46,7 @@ const membreId = ref<number | null>(null);
 const membreLabel = ref('');
 const membreGenre = ref<Genre | null>(null);
 const adhesionId = ref<number | null>(null);
-const disponibilite = ref('');
+const bulletinToken = ref<string | null>(null);
 const candidats = ref<MembreCandidat[]>([]);
 const groupe = ref<GroupeMembre[]>([]);
 const resultatsRecherche = ref<MembreRecherche[]>([]);
@@ -54,7 +55,8 @@ const sectionMembresRef = ref<InstanceType<typeof SectionMembres> | null>(null);
 const cotisations = ref<CotisationOption[]>([]);
 const activites = ref<ActiviteOption[]>([]);
 const cotisationId = ref<number | null>(null);
-const activiteId = ref<number | null>(null);
+/** Inscriptions activité créées pendant le parcours (1 ligne par membre × activité). */
+const inscriptions = ref<InscriptionLigne[]>([]);
 
 const busy = ref(false);
 const error = ref('');
@@ -62,14 +64,25 @@ const error = ref('');
 const cotisationChoisie = computed(
 	() => cotisations.value.find((c) => c.id === cotisationId.value) ?? null,
 );
-const activiteChoisie = computed(
-	() => activites.value.find((a) => a.id === activiteId.value) ?? null,
+/** Membres candidats à une inscription : le groupe si adhésion multiple, sinon l'adhérent seul. */
+const membresPourActivite = computed<GroupeMembre[]>(() =>
+	groupe.value.length > 0
+		? groupe.value
+		: membreId.value !== null
+			? [{ membreId: membreId.value, label: membreLabel.value }]
+			: [],
 );
 const montantTotal = computed(() => {
 	const c = cotisationChoisie.value?.prix ?? null;
-	const a = activiteChoisie.value?.prix ?? null;
-	return c === null && a === null ? null : (c ?? 0) + (a ?? 0);
+	const activitesTotal = inscriptions.value.reduce((s, l) => s + (l.prix ?? 0), 0);
+	if (c === null && inscriptions.value.length === 0) return null;
+	return (c ?? 0) + activitesTotal;
 });
+const bulletinHref = computed(() =>
+	bulletinToken.value
+		? `/api/adhesion/bulletin?t=${encodeURIComponent(bulletinToken.value)}`
+		: null,
+);
 
 function reset() {
 	step.value = 'identite';
@@ -77,12 +90,12 @@ function reset() {
 	membreLabel.value = '';
 	membreGenre.value = null;
 	adhesionId.value = null;
-	disponibilite.value = '';
+	bulletinToken.value = null;
 	candidats.value = [];
 	groupe.value = [];
 	resultatsRecherche.value = [];
 	cotisationId.value = null;
-	activiteId.value = null;
+	inscriptions.value = [];
 	error.value = '';
 }
 watch(mode, reset);
@@ -183,6 +196,7 @@ async function submitCotisation() {
 			cotisationId: cotisationId.value,
 		});
 		adhesionId.value = res.adhesionId;
+		bulletinToken.value = res.bulletinToken ?? null;
 
 		if (cotisationChoisie.value?.multiple) {
 			groupe.value =
@@ -269,28 +283,45 @@ async function rechercherMembres(q: string) {
 	}
 }
 
-async function submitActivite() {
-	if (membreId.value === null || activiteId.value === null) return;
+/** Crée une inscription (membre × activité) et l'ajoute à la liste. Renvoie false en cas d'échec. */
+async function ajouterInscription(payload: { membreId: number; activiteId: number }): Promise<boolean> {
+	const doublon = inscriptions.value.some(
+		(l) => l.membreId === payload.membreId && l.activiteId === payload.activiteId,
+	);
+	if (doublon) return true;
+
 	busy.value = true;
 	error.value = '';
 	try {
-		const res = await adhesionApi.enregistrerActivite({
-			membreId: membreId.value,
-			activiteId: activiteId.value,
+		const res = await adhesionApi.enregistrerActivite(payload);
+		const act = activites.value.find((a) => a.id === payload.activiteId);
+		const mem = membresPourActivite.value.find((m) => m.membreId === payload.membreId);
+		inscriptions.value.push({
+			membreId: payload.membreId,
+			membreLabel: mem?.label ?? membreLabel.value,
+			activiteId: payload.activiteId,
+			activiteLabel: act?.label ?? '',
+			prix: act?.prix ?? null,
+			disponibilite: res.disponibilite,
 		});
-		disponibilite.value = res.disponibilite;
-		step.value = 'recap';
+		return true;
 	} catch (e) {
 		error.value = messageOf(e);
+		return false;
 	} finally {
 		busy.value = false;
 	}
 }
 
+/** Bouton « Valider mon inscription » : enregistre la sélection en attente puis va au récap. */
+async function finaliserActivites(pending: { membreId: number; activiteId: number } | null) {
+	if (pending && !(await ajouterInscription(pending))) return;
+	step.value = 'recap';
+}
+
 /** L'usager ne choisit pas d'activité maintenant : on va au récap sans créer d'inscription. */
 function sauterActivite() {
-	activiteId.value = null;
-	disponibilite.value = '';
+	inscriptions.value = [];
 	step.value = 'recap';
 }
 
@@ -394,11 +425,13 @@ function annuler() {
 			<SectionActivite
 				v-if="step === 'activite' || step === 'recap'"
 				:options="activites"
-				v-model="activiteId"
+				:membres="membresPourActivite"
+				:inscriptions="inscriptions"
 				:active="step === 'activite'"
 				:done="step === 'recap'"
 				:busy="busy"
-				@submit="submitActivite"
+				@ajouter="ajouterInscription"
+				@submit="finaliserActivites"
 				@passer="sauterActivite"
 			/>
 
@@ -406,9 +439,9 @@ function annuler() {
 				v-if="step === 'recap'"
 				:membre-label="membreLabel"
 				:cotisation="cotisationChoisie"
-				:activite="activiteChoisie"
+				:inscriptions="inscriptions"
 				:montant-total="montantTotal"
-				:disponibilite="disponibilite"
+				:bulletin-href="bulletinHref"
 				@recommencer="recommencer"
 			/>
 		</ol>

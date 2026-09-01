@@ -65,6 +65,27 @@ Les clés Grist (`GRIST_API_KEY`…) **ne doivent pas** être copiées dans l'im
 - stockées dans un fichier `.env` **présent sur le VPS uniquement**, hors dépôt
   Git (déjà dans `.gitignore`).
 
+### Bulletin PDF : instance Gotenberg (optionnel)
+
+Le bulletin d'adhésion en PDF ([bulletin-pdf.md](bulletin-pdf.md)) a besoin d'une
+instance **Gotenberg** joignable depuis le conteneur `web`. Deux cas :
+
+- **Instance externe** : renseigner seulement `GOTENBERG_URL` (+ `BULLETIN_SECRET`)
+  dans le `.env`. Rien d'autre à faire.
+- **Service à côté** : ajouter au `docker-compose.yml` et pointer dessus par le
+  nom de service :
+
+  ```yaml
+    gotenberg:
+      image: gotenberg/gotenberg:8
+      restart: unless-stopped
+      # pas de ports publiés : accessible seulement sur le réseau compose
+  ```
+
+  puis `GOTENBERG_URL=http://gotenberg:3000` dans le `.env`.
+
+Sans ces variables, le lien « Imprimer le bulletin » n'apparaît simplement pas.
+
 ---
 
 ## 3. Tester en local

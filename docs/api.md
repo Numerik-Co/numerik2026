@@ -51,6 +51,9 @@ Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner :
 | `GRIST_TABLE_INSCRIPTIONS` | Nom technique de la table des inscriptions (défaut `Inscriptions`) — optionnel |
 | `GRIST_TABLE_COTISATIONS` | Nom technique de la table des cotisations (défaut `Cotisations`) — optionnel |
 | `GRIST_TABLE_ACTIVITES` | Nom technique de la table des activités (défaut `Activites`) — optionnel |
+| `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
+| `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |
+| `BULLETIN_SECRET` | Secret HMAC du lien de bulletin — **secret**, requis avec `GOTENBERG_URL` |
 
 Ces variables sont typées dans `src/env.d.ts` pour l'auto-complétion sur `import.meta.env`.
 
@@ -69,8 +72,8 @@ Ces variables sont typées dans `src/env.d.ts` pour l'auto-complétion sur `impo
 | `SectionIdentite.vue` | étape 1 ; porte aussi le sous-parcours **« recevoir seulement les actualités »** (nom + prénom + courriel + consentement) |
 | `SectionCotisation.vue` | étape 2 ; filtre les cotisations selon personne physique / morale (`personneMorale`) |
 | `SectionMembres.vue` | étape « groupe », affichée si la cotisation choisie a `Multiple = true` ; liste des membres + formulaire d'ajout, min. 2 membres pour continuer |
-| `SectionActivite.vue` | étape 3 ; « N places restantes » / « Complet » ; bouton **« Continuer sans activité »** → va au récap sans créer d'`Inscription` (l'inscription à une activité se fera plus tard directement dans Grist) |
-| `SectionRecap.vue` | récapitulatif + montant à régler (règlement en présentiel) |
+| `SectionActivite.vue` | étape 3 ; « N places restantes » / « Complet ». Select **« Pour qui ? »** si l'adhésion compte plusieurs membres. Bouton **« Ajouter une activité »** → `POST /api/adhesion/inscription` immédiat (1 `Inscription` par membre × activité), la ligne s'ajoute à la liste ; **« Valider mon inscription »** → enregistre la sélection en attente puis va au récap ; **« Continuer sans activité »** (visible tant qu'aucune activité n'est ajoutée) → récap sans créer d'`Inscription`. Pas de retrait ici — se corrige ensuite dans Grist. |
+| `SectionRecap.vue` | récapitulatif (liste des activités, une par ligne) + montant à régler (règlement en présentiel) + lien bulletin PDF |
 
 Les appels réseau passent par `src/components/adhesion/client.ts`.
 
@@ -106,9 +109,19 @@ Le process alimente **deux** tables, pas une :
 
 `src/lib/adhesion/membre-fields.ts` porte la validation + conversion d'un membre **côté serveur** (partagée par `membre` et `co-membre`). `src/lib/adhesion/validation.ts` porte la validation **côté client** (`validateMembre` / `validateContact` / `validateRenouvellement`) : champs obligatoires, format courriel / code postal / téléphone (10 chiffres, au moins un des deux), date de naissance non future et plausible. Les composants passent le résultat à `MembreFields` via la prop `errors` et bloquent l'envoi tant qu'il reste une erreur ; le serveur revalide systématiquement.
 
+### Bulletin d'adhésion en PDF
+
+Lien « Imprimer le bulletin » au récapitulatif : la route
+`/api/adhesion/bulletin` lit la colonne Formule `Adhesions.Formule` (HTML
+complet) et la fait convertir par une instance **Gotenberg**. Accès protégé par
+un jeton signé (`BULLETIN_SECRET`) émis dans la réponse de
+`/api/adhesion/cotisation`. Actif seulement si `GOTENBERG_URL` et
+`BULLETIN_SECRET` sont renseignés. Détail complet : [bulletin-pdf.md](bulletin-pdf.md).
+
 ### À finaliser
 
 - Protection anti-spam (honeypot, rate-limit) et éventuel e-mail de confirmation.
 - Vérifier le comportement si `Places_restantes` cesse d'être une formule (verrou de place à gérer).
+- Pas de retrait d'une `Inscription` depuis l'étape 3 (il faudrait une route `detacher-inscription` façon `detacher-membre`).
 
 > Besoin de réinspecter le schéma Grist (tables/colonnes/formules) ? Recréer une petite route de debug jetable qui appelle `GET {GRIST_BASE_URL}/api/docs/{GRIST_DOC_ID}/tables` puis `.../tables/<id>/columns`, la garder derrière `import.meta.env.DEV`, et la supprimer une fois le mapping calé.
