@@ -429,7 +429,7 @@ function annuler() {
 				<label class="flex flex-1 cursor-pointer items-start gap-3 rounded-xl border border-gray-200 p-4 hover:border-primary" :class="{ 'border-primary bg-primary/5': mode === 'renouvellement' }">
 					<input type="radio" value="renouvellement" v-model="mode" class="mt-1" />
 					<span>
-						<span class="block font-heading text-gray-900">Renouvellement</span>
+						<span class="block font-heading text-gray-900">Renouvellement ou Inscription</span>
 						<span class="block text-sm font-light text-gray-600">Vous avez déjà été adhérent·e.</span>
 					</span>
 				</label>
