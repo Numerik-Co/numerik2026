@@ -1,23 +1,36 @@
 ---
 title: "Ateliers du Conseiller Numérique"
 isPublish: true
-excerpt: "Des ateliers gratuits animés par notre conseillère numérique pour accompagner chacun vers plus d'autonomie face aux outils du quotidien."
+excerpt: "Un atelier collectif gratuit chaque mois, animé par notre conseillère numérique, pour prendre en main vos outils du quotidien."
 category: "mediation-numerique"
 imageCredit: "Photo : Kampus / Pexels"
 order: 3
 ---
 
-Dans un monde où le numérique est devenu omniprésent, les démarches administratives, la communication, l'accès aux services publics ou encore la recherche d'information passent de plus en plus par des outils digitaux.
+Que ce soit pour gérer vos démarches, naviguer sereinement sur internet en sécurité, ou obtenir des conseils et des explications, notre conseillère numérique organise chaque mois un atelier collectif. Prenez en main vos outils du quotidien et gagnez en autonomie dès aujourd'hui !
 
-C'est dans ce contexte que notre conseillère numérique propose des ateliers ouverts à tous les publics. Son rôle s'inscrit dans une mission essentielle aujourd'hui : accompagner chacun vers plus d'autonomie numérique, réduire la fracture digitale et permettre à tous de bénéficier pleinement des opportunités offertes par les outils en ligne.
+Les ateliers se déroulent de 9h30 à 11h30, sont **gratuits, ouverts à tous et sans engagement**, sur inscription.
 
-## Objectifs des ateliers
+## Le calendrier
 
-- Faciliter la prise en main des outils numériques du quotidien
-- Comprendre et réaliser ses démarches en ligne en toute sécurité
-- Gagner en confiance dans l'usage du numérique
-- Favoriser l'inclusion numérique pour tous les âges et tous les niveaux
+- Ven. 9 octobre 2026 — Ameli et Mon espace santé
+- Ven. 6 novembre 2026 — Découvrir service-public.gouv.fr
+- Ven. 11 décembre 2026 — Découvrir Landespublic.org
+- Ven. 8 janvier 2027 — Les conseils de sécurité
+- Ven. 5 février 2027 — Authentification et mot de passe
+- Ven. 12 mars 2027 — Les banques en ligne
+- Ven. 21 mai 2027 — QR code : mode d'emploi
+- Ven. 18 juin 2027 — C'est quoi l'IA ?
 
-Dans une société de plus en plus connectée, ces temps d'échange et d'apprentissage deviennent un véritable levier d'inclusion sociale, d'autonomie et de simplification du quotidien.
+## Bon à savoir
+
+Le conseiller numérique n'est pas habilité à créer de dossier administratif : c'est un accompagnement aux outils numériques, pas une aide à la constitution de dossiers. Pour un accompagnement individuel sur rendez-vous, voir la page [conseiller numérique](/association/conseiller-numerique).
+
+## Contact
+
+Je suis joignable par téléphone ou par e-mail aux coordonnées ci-dessous. Attention : pour un meilleur accompagnement lors des rendez-vous matinaux, je ne réponds pas au téléphone à ces horaires.
+
+- Téléphone : 09 51 93 77 06
+- Courriel : [conseiller-numerique@clubmicrosaintpierre.fr](mailto:conseiller-numerique@clubmicrosaintpierre.fr)
 
 Pour vous inscrire au prochain atelier, [contactez-nous](/contact).
