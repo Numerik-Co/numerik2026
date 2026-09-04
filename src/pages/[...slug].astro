@@ -2,6 +2,7 @@
 import ArticleLayout from '../layouts/ArticleLayout.astro';
 import PageHeader from '../components/sections/PageHeader.astro';
 import TableOfContents from '../components/article/TableOfContents.astro';
+import FigureImage from '../components/article/FigureImage.astro';
 import { association } from '../lib/association';
 import { getContentPages, getGroupLabel } from '../lib/content-pages';
 
@@ -36,6 +37,16 @@ breadcrumbs.push({ label: page.title });
 	<PageHeader slot="page-header" title={page.title} description={page.description} />
 
 	{headings.length > 1 && <TableOfContents slot="sidebar" headings={headings} />}
+
+	{page.image && (
+		<FigureImage
+			image={page.image}
+			alt={page.title}
+			caption={page.imageCredit}
+			loading="eager"
+			class="mb-8"
+		/>
+	)}
 
 	<div class="markdown-content font-light text-gray-700">
 		<Content />

@@ -7,7 +7,7 @@ de toucher au code : créer une page = créer un fichier Markdown.
 
 | Dossier | Contenu |
 | --- | --- |
-| `pages/` | Pages « éditoriales » (présentation, statuts, mentions légales…) |
+| `pages/` | Pages « éditoriales » (présentation, statuts, mentions légales…), avec `cover.jpg` optionnel |
 | `news/` | Articles d'actualité (un dossier par article, avec `cover.jpg` optionnel) |
 | `activites/` | Fiches d'activité |
 | `annonces.md` | Bandeau d'annonce affiché en haut du site |
@@ -43,6 +43,20 @@ Le reste de la navigation (Accueil, Activités, Actualités, Contact) et le bout
 
 3. C'est tout. La route et l'entrée de menu sont générées automatiquement au
    déploiement.
+
+### Ajouter une image de couverture
+
+Placer un fichier `cover.jpg` (ou `.png`) à côté de `index.md` : il s'affiche
+automatiquement en haut de la page. Le frontmatter optionnel `imageCredit`
+affiche un crédit sous l'image (utile pour respecter la licence d'une photo
+libre de droit) :
+
+```md
+---
+title: "Notre projet"
+imageCredit: "Photo : Prénom Nom / Source (licence)"
+---
+```
 
 ### Page accessible mais absente du menu
 

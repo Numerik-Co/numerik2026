@@ -11,27 +11,27 @@ menu:
 Il est fondé entre les adhérents aux présents statuts une association régie par la loi du 1er juillet 1901 et le décret du 16 août 1901, ayant pour titre : NUMÉRIK&CO.
 ## ARTICLE 2 - OBJET
 ### 2.1 L'association « Numérik&Co » a pour objet :
- De promouvoir et de favoriser la médiation numérique en tant que levier d'éducation populaire, en facilitant l'accès de tous aux technologies et outils numériques.
- D'encourager et de soutenir l'utilisation des logiciels libres et Open Source, considérés comme un facteur de réussite et d'émancipation, dans une démarche de partage et de coopération.
- D'offrir des opportunités d'apprentissage et de développement des compétences numériques auprès d'un public large et diversifié, sans distinction de sexe, d'âge, de culture ou de situation sociale.
+- De promouvoir et de favoriser la médiation numérique en tant que levier d'éducation populaire, en facilitant l'accès de tous aux technologies et outils numériques.
+- D'encourager et de soutenir l'utilisation des logiciels libres et Open Source, considérés comme un facteur de réussite et d'émancipation, dans une démarche de partage et de coopération.
+- D'offrir des opportunités d'apprentissage et de développement des compétences numériques auprès d'un public large et diversifié, sans distinction de sexe, d'âge, de culture ou de situation sociale.
 ### 2.2 Les moyens d'action de l'association sont notamment :
- L'organisation de formations, d'ateliers, de conférences et d'événements publics visant à sensibiliser et à former aux usages et enjeux du numérique, en privilégiant une approche collaborative et inclusive.
- La mutualisation et le partage des connaissances autour des outils numériques, des logiciels libres et des pratiques numériques responsables et citoyennes.
- La création de partenariats avec d'autres associations, institutions éducatives, collectivités locales et tout organisme partageant les mêmes valeurs d'éducation populaire et de médiation numérique.
+- L'organisation de formations, d'ateliers, de conférences et d'événements publics visant à sensibiliser et à former aux usages et enjeux du numérique, en privilégiant une approche collaborative et inclusive.
+- La mutualisation et le partage des connaissances autour des outils numériques, des logiciels libres et des pratiques numériques responsables et citoyennes.
+- La création de partenariats avec d'autres associations, institutions éducatives, collectivités locales et tout organisme partageant les mêmes valeurs d'éducation populaire et de médiation numérique.
 ## ARTICLE 3 - SIÈGE SOCIAL
-Le siège social est fixé à :
+Le siège social est fixé à :
 Maison des Associations - Salle 3
 40, Impasse Georges SABDE
 40280 SAINT PIERRE DU MONT
 Il pourra être transféré par simple décision du conseil d'administration.
 ## Article 4 - DURÉE
 La durée de l’association est illimitée.
-##ARTICLE 5 – COMPOSITION
+## ARTICLE 5 – COMPOSITION
 L'association se compose de :
 a) Membres d'honneur
 b) Membres bienfaiteurs
 c) Membres actifs ou adhérents
-Peuvent adhérer en tant que membres : des personnes physiques, des personnes morales représentant des associations partenaires ou souhaitant bénéficier des services proposés par le Numérik&Co.
+Peuvent adhérer en tant que membres : des personnes physiques, des personnes morales représentant des associations partenaires ou souhaitant bénéficier des services proposés par le Numérik&Co.
 ## ARTICLE 6 - ADMISSION
 L'association « Numérik&Co » est ouverte à toute personne, sans distinction de sexe, d'âge, d'origine, de situation sociale ou de niveau de compétence en matière numérique, souhaitant s'impliquer dans ses activités et partager ses valeurs d'éducation populaire et de promotion des logiciels libres.
 L'admission des membres est subordonnée à l'acceptation des statuts et du règlement intérieur de l'association. Toute personne souhaitant adhérer doit remplir un formulaire d'adhésion et s'acquitter d'une cotisation annuelle, dont le montant est fixé chaque année par l'Assemblée Générale.
@@ -41,7 +41,7 @@ L’association se réserve le droit de refuser toute demande d'adhésion pour d
 Sont membres actifs ceux qui ont pris l'engagement de verser annuellement une somme à titre de cotisation.
 Sont membres d'honneur ceux qui ont rendu des services signalés à l'association, ils sont dispensés de cotisations.
 Sont membres bienfaiteurs, les personnes qui versent un droit d'entrée et une cotisation annuelle fixée chaque année par l'assemblée générale.
-##ARTICLE 8 : DROITS ET DEVOIRS DES MEMBRES ET REGLEMENT INTERIEUR
+## ARTICLE 8 : DROITS ET DEVOIRS DES MEMBRES ET REGLEMENT INTERIEUR
 L'association « Numérik&Co » se dote d'un règlement intérieur qui précise les modalités de fonctionnement de l'association, les droits et devoirs des membres, ainsi que les règles de vie associative en accord avec les statuts.
 Droits des membres :
 Les membres de l'association disposent du droit de participer à toutes les activités organisées par l'association et d'exercer leur droit de vote en Assemblée Générale, conformément aux dispositions du règlement intérieur.

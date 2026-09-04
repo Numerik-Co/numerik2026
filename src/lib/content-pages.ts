@@ -33,6 +33,9 @@ export interface ContentPage {
 	description?: string;
 	/** `null` si le frontmatter ne contient pas de bloc `menu:`. */
 	menu: PageMenuMeta | null;
+	/** Image de couverture, si un fichier `cover.*` existe dans le dossier de la page. */
+	image?: any;
+	imageCredit?: string;
 	headings: Heading[];
 	Content: any;
 }
@@ -62,6 +65,11 @@ const groupModules = import.meta.glob('../contents/pages/**/_group.{md,mdx}', {
 	eager: true,
 }) as Record<string, GroupModule>;
 
+const pageImages = import.meta.glob('../contents/pages/**/cover.*', {
+	eager: true,
+	import: 'default',
+}) as Record<string, any>;
+
 function titleCase(segment: string): string {
 	return segment
 		.split('-')
@@ -75,6 +83,11 @@ function relativePath(path: string): string {
 
 function slugFromPagePath(path: string): string {
 	return relativePath(path).replace(/\/index\.mdx?$/, '');
+}
+
+/** Dossier contenant le fichier, pour associer une page à son éventuel `cover.*`. */
+function dirFromPath(path: string): string {
+	return path.slice(0, path.lastIndexOf('/'));
 }
 
 function folderFromGroupPath(path: string): string {
@@ -114,6 +127,7 @@ export function getContentPages(): ContentPage[] {
 			const leaf = segments[segments.length - 1];
 			const title = mod.frontmatter.title ?? titleCase(leaf);
 			const rawMenu = mod.frontmatter.menu;
+			const imagePath = Object.keys(pageImages).find((p) => dirFromPath(p) === dirFromPath(path));
 
 			const menu: PageMenuMeta | null = rawMenu
 				? {
@@ -130,6 +144,8 @@ export function getContentPages(): ContentPage[] {
 				title,
 				description: mod.frontmatter.description,
 				menu,
+				image: imagePath ? pageImages[imagePath] : undefined,
+				imageCredit: mod.frontmatter.imageCredit,
 				headings: mod.getHeadings(),
 				Content: mod.Content,
 			} satisfies ContentPage;
