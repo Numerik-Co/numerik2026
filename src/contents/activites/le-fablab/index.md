@@ -1,35 +1,50 @@
 ---
 title: "Le FabLab"
 isPublish: true
-excerpt: "Un atelier de fabrication numérique ouvert à tous les créateurs, petits et grands, pour expérimenter, inventer et réaliser ses projets."
+excerpt: "Un espace de fabrication numérique ouvert à tous, chaque lundi soir, pour concevoir, imprimer, découper et réparer vos projets."
 category: "fablab"
 imageCredit: "Photo : Jakub Zerdzicki / Pexels"
 order: 1
 ---
 
-Le FabLab est un espace de création, de partage et d'innovation, ouvert à toutes celles et ceux qui veulent explorer une idée et la concrétiser. On y expérimente, on invente et on réalise ses projets à partir de machines numériques : imprimantes 3D, découpe et gravure laser…
+Le FabLab est un espace de création, de partage et d'innovation, ouvert à toutes celles et ceux qui souhaitent explorer une idée et la concrétiser, essayer de faire le futur ensemble. On y expérimente, on invente et on réalise ses projets à partir de machines numériques : imprimantes 3D, découpe et gravure laser…
 
 ## C'est quoi, un FabLab ?
 
-Fondé sur les principes de la Charte des FabLabs, ce lieu privilégie la collaboration et l'apprentissage par la pratique. Chacun·e y trouve les outils et les ressources pour concevoir, fabriquer et tester des prototypes ou des projets variés, du simple objet à des créations plus complexes.
+Fondé sur les principes de la Charte des FabLabs, ce lieu favorise la collaboration et l'apprentissage par la pratique. Chacun·e y trouve les outils et les ressources pour concevoir, fabriquer et tester des prototypes ou des projets variés, du simple objet à des créations plus complexes.
 
-C'est aussi une culture de l'ouverture et de l'inclusion, où les connaissances et les savoir-faire se transmettent librement entre les membres. Que vous soyez curieux·se, bricoleur·se ou porteur·se d'un projet précis, des bénévoles vous accompagnent dans la prise en main des outils.
+Le FabLab encourage une culture de l'inclusion et de l'ouverture, où les connaissances et les savoir-faire se transmettent librement entre les membres.
 
 ## On y fait quoi ?
 
-On met en commun les connaissances et les compétences de chacun pour donner envie de créer et de mener des projets à plusieurs :
+Mutualisons nos connaissances et nos compétences pour faire partager l'envie de créer et de réaliser des projets à plusieurs :
 
-- Concevoir et imprimer des pièces en 3D
-- Découper et graver au laser (bois, plexiglas, cuir…)
-- Prototyper un objet, un boîtier, une maquette
-- S'initier à la modélisation, à l'électronique et au code
+- Conception et impression 3D
+- Électronique et code
+- Découpe et gravure laser (bois, carton, cuir, acrylique…)
+- Réparation et prototypage d'objets
 
-## Horaires
+## Comment se déroule un atelier ?
 
-L'atelier hebdomadaire a lieu tous les lundis après-midi, de 16h30 à 18h00.
+Chaque lundi soir, le FabLab s'organise autour des projets de ses participant·e·s : pas de programme imposé, pas de niveau requis. Vous venez avec votre idée, votre objet à réparer ou votre projet en cours, et les bénévoles de l'association vous accompagnent selon vos besoins — en modélisation 3D, impression 3D, électronique, code, découpe (laser, vinyle…) ou toute autre compétence utile à votre projet.
 
-## Places et tarifs
+> Que vous soyez débutant·e curieux·se ou déjà bricoleur·se aguerri·e, chacun·e avance à son rythme sur son propre projet, dans un esprit d'entraide et de partage de compétences.
 
-L'atelier du lundi est gratuit pour les jeunes à partir de 16 ans. Un accès plus large au FabLab et à ses machines fait l'objet d'une adhésion dédiée.
+### Quelques exemples de projets
 
-Pour connaître les modalités et les autres créneaux d'ouverture, [contactez-nous](/contact).
+- Jardinière connectée
+- Plotter
+- Réparation de pièces 3D
+- Découpe et gravure sur bois
+
+… et toute autre idée que vous souhaitez concrétiser !
+
+## Notre matériel à disposition
+
+Le FabLab est équipé d'une imprimante 3D **Bambu Lab H2S** et d'une découpeuse/graveuse laser **Ortur 3**, mobilisables pour vos projets sur rendez-vous.
+
+Besoin d'imprimer une pièce en 3D ou de découper/graver un matériau (bois, carton, cuir, acrylique…) ? Les bénévoles vous accompagnent dans la préparation de votre fichier et la réalisation, quel que soit votre niveau — même si vous n'avez encore jamais touché à ce type de machine.
+
+## Comment participer ?
+
+Venez le lundi soir avec votre projet — ou simplement avec une idée, même encore floue ! Pour connaître les modalités et les tarifs, [contactez-nous](/contact).
