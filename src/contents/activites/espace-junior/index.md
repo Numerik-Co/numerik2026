@@ -4,6 +4,7 @@ isPublish: true
 excerpt: "Le rendez-vous des jeunes jusqu'à 16 ans : coder, fabriquer, et construire ensemble un robot pour la Robocup 2026."
 category: "fablab"
 level: "Jusqu'à 16 ans"
+imageCredit: "Photo : Vanessa Loring / Pexels"
 order: 2
 ---
 

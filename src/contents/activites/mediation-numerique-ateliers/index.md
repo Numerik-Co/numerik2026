@@ -3,6 +3,7 @@ title: "Ateliers du Conseiller Numérique"
 isPublish: true
 excerpt: "Des ateliers gratuits animés par notre conseillère numérique pour accompagner chacun vers plus d'autonomie face aux outils du quotidien."
 category: "mediation-numerique"
+imageCredit: "Photo : Kampus / Pexels"
 order: 3
 ---
 

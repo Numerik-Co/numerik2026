@@ -4,6 +4,7 @@ isPublish: true
 excerpt: "Un parcours progressif en 5 cycles thématiques, les mardis et jeudis, pour maîtriser le numérique au quotidien."
 category: "parcours"
 level: "Tous niveaux"
+imageCredit: "Photo : Kampus / Pexels"
 order: 2
 ---
 

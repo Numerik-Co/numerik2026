@@ -3,6 +3,7 @@ title: "Le FabLab"
 isPublish: true
 excerpt: "Un atelier de fabrication numérique ouvert à tous les créateurs, petits et grands, pour expérimenter, inventer et réaliser ses projets."
 category: "fablab"
+imageCredit: "Photo : Jakub Zerdzicki / Pexels"
 order: 1
 ---
 
