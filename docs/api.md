@@ -88,7 +88,7 @@ Toutes en `prerender = false`. Elles ne parlent à Grist qu'à travers `src/lib/
 | Route | Méthode | Rôle |
 | :--- | :--- | :--- |
 | `/api/adhesion/cotisations` | GET | Cotisations de la saison en cours (`{ id, label, prix, personneMorale, multiple }`). |
-| `/api/adhesion/activites` | GET | Activités de la saison en cours (`{ id, label, prix, placesRestantes }`). |
+| `/api/adhesion/activites` | GET | Activités de type « Ateliers » de la saison en cours (`{ id, label, prix, placesRestantes }`). |
 | `/api/adhesion/membre` | POST | Étape 1. `mode:'nouveau'` → crée le `Membres` (rôle déduit du genre) et renvoie `membreId`. `mode:'renouvellement'` → rapproche sur nom + prénom normalisés : `ok` / `ambigu` (plusieurs fiches) / `introuvable`. Si la fiche retrouvée est un **membre rattaché** (elle figure dans le `Responsable_de` d'un·e autre membre), la réponse `ok` est **résolue silencieusement sur le·la responsable** — c'est lui/elle qui porte l'adhésion du groupe. Les réponses `ok` et les candidats `ambigu` portent l'**état** de la fiche : `newsletter`, `droitImage`, `adhesionEnCours` (colonne formule `Membres.Adhesion_en_cours`) et `groupe` (responsable + membres rattachés, `[]` si fiche seule). |
 | `/api/adhesion/preferences` | POST | Renouvellement — met à jour `Newsletters` + `Droit_image` (`{ membreId, newsletter, droitImage }`). **Adhésion liée** : le même choix est appliqué à `membreId` **et à tous ses `Responsable_de`** (un réglage unique pour le foyer, PATCH groupé). |
 | `/api/adhesion/contact` | POST | Sous-parcours actualités : crée un `Membres` minimal `Role = Contact`, `Newsletters = true`. |

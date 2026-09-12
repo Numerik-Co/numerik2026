@@ -13,6 +13,8 @@ import type {
 	CotisationOption,
 	CotisationPayload,
 	DetacherMembrePayload,
+	ExterieurPayload,
+	ExterieurResult,
 	InscriptionResult,
 	MembrePayload,
 	MembreRecherche,
@@ -58,6 +60,9 @@ export const adhesionApi = {
 
 	inscrireContact: (payload: ContactPayload) =>
 		post<{ membreId: number }>('/api/adhesion/contact', payload),
+
+	creerParticipantExterieur: (payload: ExterieurPayload) =>
+		post<ExterieurResult>('/api/adhesion/participant-exterieur', payload),
 
 	ajouterCoMembre: (payload: CoMembrePayload) =>
 		post<CoMembreResult>('/api/adhesion/co-membre', payload),

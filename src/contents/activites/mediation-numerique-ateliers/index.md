@@ -4,6 +4,7 @@ isPublish: true
 excerpt: "Un atelier collectif gratuit chaque mois, animé par notre conseillère numérique, pour prendre en main vos outils du quotidien."
 category: "mediation-numerique"
 imageCredit: "Photo : Kampus / Pexels"
+inscription: false
 order: 3
 ---
 

@@ -74,5 +74,12 @@ export const site = {
 				"Le formulaire de contact n'est pas ouvert actuellement. " +
 				'Vous pouvez nous joindre par téléphone ou par e-mail (coordonnées ci-contre).',
 		},
+		inscription: {
+			enabled: true,
+			closedTitle: 'Inscriptions en ligne momentanément fermées',
+			closedMessage:
+				"Le formulaire d'inscription en ligne n'est pas ouvert actuellement. " +
+				'Vous pouvez nous contacter directement pour vous inscrire à une activité.',
+		},
 	} satisfies Record<string, FormToggle>,
 };

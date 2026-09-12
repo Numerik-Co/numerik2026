@@ -43,6 +43,25 @@ export interface ContactPayload {
 	email: string;
 }
 
+/**
+ * Formulaire simplifié d'inscription à une activité — profil « extérieur »
+ * (non-adhérent) : on ne demande qu'un moyen de le/la recontacter.
+ */
+export interface ExterieurPayload {
+	genre: Genre;
+	nom: string;
+	prenom: string;
+	telephone: string;
+}
+
+export interface ExterieurResult {
+	membreId: number;
+	prenom: string;
+	nom: string;
+}
+
+export type Profil = 'adherent' | 'exterieur' | '';
+
 /** Membre supplémentaire d'une adhésion multiple (ex. Couple) : nouveau ou existant. */
 export type CoMembrePayload =
 	| ({ responsableId: number; adhesionId: number } & MembrePayload)

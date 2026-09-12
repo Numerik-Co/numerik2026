@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/sections/PageHeader.astro';
+import FormGate from '../components/forms/FormGate.astro';
+import Button from '../components/ui/Button.astro';
+import InscriptionForm from '../components/inscription/InscriptionForm.vue';
+import { association } from '../lib/association';
+---
+
+<Layout
+	title={`Inscription à une activité · ${association.name}`}
+	description={`Inscrivez-vous à une activité de ${association.name}, que vous soyez déjà adhérent·e ou non.`}
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: 'Inscription à une activité' }]}
+>
+	<PageHeader
+		slot="page-header"
+		title="Inscription à une activité"
+		description="Adhérent·e ou non, inscrivez-vous en quelques instants."
+	/>
+
+	<section class="mx-auto max-w-6xl px-4 pt-4 pb-16 sm:px-6">
+		<FormGate form="inscription">
+			<InscriptionForm client:load />
+
+			<Button slot="fallback" href="/contact" variant="primary">Nous contacter</Button>
+		</FormGate>
+	</section>
+</Layout>

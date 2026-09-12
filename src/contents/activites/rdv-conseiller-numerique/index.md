@@ -3,6 +3,7 @@ title: "RDV Conseiller numérique"
 isPublish: true
 excerpt: "Un accompagnement numérique individuel et confidentiel, sur rendez-vous, avec notre conseillère numérique."
 category: "mediation-numerique"
+inscription: false
 order: 2
 ---
 

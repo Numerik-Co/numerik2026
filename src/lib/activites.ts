@@ -11,6 +11,8 @@ export interface Activity {
 	level?: string;
 	image?: any;
 	imageCredit?: string;
+	/** `false` masque le bouton « S'inscrire » (ex. activités sur rendez-vous). Défaut : `true`. */
+	inscription: boolean;
 	order: number;
 	headings: Heading[];
 	readingTime: number;
@@ -53,6 +55,7 @@ export function getAllActivities(): Activity[] {
 				title: frontmatter.title,
 				excerpt: frontmatter.excerpt,
 				level: frontmatter.level,
+				inscription: frontmatter.inscription !== false,
 				image: imagePath ? activityImages[imagePath] : undefined,
 				imageCredit: frontmatter.imageCredit || `Photo : ${association.name}`,
 				order: frontmatter.order ?? 999,

@@ -113,6 +113,7 @@ export {
 	STATUT_IMPAYE,
 	DISPO_INSCRIT,
 	DISPO_ATTENTE,
+	TYPE_ACTIVITE_ATELIERS,
 } from './choices';
 export type { GenreGrist } from './choices';
 
