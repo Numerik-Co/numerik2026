@@ -57,26 +57,26 @@ const presence = site.presence;
 			)}
 		</nav>
 
-		{cta.enabled && (
-			<div class="hidden md:block">
+		<div class="flex items-center gap-3">
+			{presence.enabled && (
+				<a
+					href={presence.href}
+					class="flex items-center gap-2 rounded-full border border-primary px-4 py-2 text-sm font-heading font-semibold text-primary transition-colors hover:bg-primary/5 lg:hidden"
+				>
+					<i class="fa-solid fa-clipboard-check text-xs" aria-hidden="true"></i>
+					{presence.label}
+				</a>
+			)}
+
+			{cta.enabled && (
 				<a
 					href={cta.href}
-					class="rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90"
+					class="hidden rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90 md:inline-block"
 				>
 					{cta.label}
 				</a>
-			</div>
-		)}
-
-		{presence.enabled && (
-			<a
-				href={presence.href}
-				class="flex items-center gap-2 rounded-full border border-primary px-4 py-2 text-sm font-heading font-semibold text-primary transition-colors hover:bg-primary/5 lg:hidden"
-			>
-				<i class="fa-solid fa-clipboard-check text-xs" aria-hidden="true"></i>
-				{presence.label}
-			</a>
-		)}
+			)}
+		</div>
 
 		<button
 			id="menu-toggle"
