@@ -57,26 +57,16 @@ const presence = site.presence;
 			)}
 		</nav>
 
-		<div class="flex items-center gap-3">
-			{presence.enabled && (
-				<a
-					href={presence.href}
-					class="flex items-center gap-2 rounded-full border border-primary px-4 py-2 text-sm font-heading font-semibold text-primary transition-colors hover:bg-primary/5 lg:hidden"
-				>
-					<i class="fa-solid fa-clipboard-check text-xs" aria-hidden="true"></i>
-					{presence.label}
-				</a>
-			)}
-
-			{cta.enabled && (
+		{cta.enabled && (
+			<div class="hidden md:block">
 				<a
 					href={cta.href}
-					class="hidden rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90 md:inline-block"
+					class="rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90"
 				>
 					{cta.label}
 				</a>
-			)}
-		</div>
+			</div>
+		)}
 
 		<button
 			id="menu-toggle"
@@ -111,14 +101,25 @@ const presence = site.presence;
 				</a>
 			)
 		)}
-		{cta.enabled && (
-			<a
-				href={cta.href}
-				class="w-fit rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white"
-			>
-				{cta.label}
-			</a>
-		)}
+		<div class="flex flex-wrap items-center gap-3">
+			{presence.enabled && (
+				<a
+					href={presence.href}
+					class="flex items-center gap-2 rounded-full border border-primary px-4 py-2 text-sm font-heading font-semibold text-primary hover:bg-primary/5"
+				>
+					<i class="fa-solid fa-clipboard-check text-xs" aria-hidden="true"></i>
+					{presence.label}
+				</a>
+			)}
+			{cta.enabled && (
+				<a
+					href={cta.href}
+					class="w-fit rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white"
+				>
+					{cta.label}
+				</a>
+			)}
+		</div>
 	</nav>
 
 	<BrandStripe />
