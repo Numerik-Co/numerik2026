@@ -27,6 +27,7 @@ async function post<T>(url: string, body: unknown): Promise<T> {
 }
 
 export const presenceApi = {
-	seances: () => get<SeanceCourante[]>('/api/presence/seances'),
+	seances: (membreId: number) =>
+		get<SeanceCourante[]>(`/api/presence/seances?membreId=${membreId}`),
 	inscrire: (payload: PresencePayload) => post<PresenceResult>('/api/presence/inscrire', payload),
 };

@@ -147,7 +147,7 @@ l'adhésion (`Nom`, `Saison`…) :
 
 ### Détection de la séance en cours
 
-`fetchSeancesCourantes()` (`src/lib/adhesion/presence.ts`) reprend les lignes `Activite` publiées de la saison en cours (mêmes critères que le planning) et ne retient que celles dont l'horaire couvre l'instant présent (marge de 15 min avant le début, jusqu'à la fin). 0, 1 ou plusieurs séances peuvent correspondre à la fois (ex. deux créneaux qui se chevauchent) — la page affiche alors un bouton « Je participe » / « Je ne pourrai pas venir » par séance candidate.
+`fetchSeancesCourantes(membreId)` (`src/lib/adhesion/presence.ts`) reprend les lignes `Activite` publiées de la saison en cours (mêmes critères que le planning), **restreintes à celles où le membre a une `Inscription`** (table `Inscription`, cf. parcours d'adhésion), et ne retient que celles dont l'horaire couvre l'instant présent (marge de 15 min avant le début, jusqu'à la fin). 0, 1 ou plusieurs séances peuvent correspondre à la fois (ex. deux créneaux qui se chevauchent) — la page affiche alors un bouton « Je participe » / « Je ne pourrai pas venir » par séance candidate. `enregistrerPresence()` revérifie cette inscription avant d'écrire (au cas où la liste affichée serait périmée) et renvoie `non-inscrit` sinon.
 
 ### Table `Presence`
 
@@ -166,8 +166,8 @@ Une ligne par **séance** (`Activite` × `Date`, calculée côté serveur = aujo
 
 | Route | Méthode | Rôle |
 | :--- | :--- | :--- |
-| `/api/presence/seances` | GET | Séance(s) en cours (`{ activiteId, label }[]`), 0 à N. |
-| `/api/presence/inscrire` | POST | `{ membreId, activiteId, statut: 'present' \| 'absent' }` → `{ status: 'ok' \| 'deja' }`. |
+| `/api/presence/seances` | GET | `?membreId=` (obligatoire) → séance(s) en cours où ce membre est inscrit (`{ activiteId, label }[]`), 0 à N. |
+| `/api/presence/inscrire` | POST | `{ membreId, activiteId, statut: 'present' \| 'absent' }` → `{ status: 'ok' \| 'deja' \| 'non-inscrit' }`. |
 
 ### Mapping Grist — le seul point à ajuster
 

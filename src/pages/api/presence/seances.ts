@@ -5,10 +5,15 @@ import { json } from '../../../lib/adhesion/http';
 
 export const prerender = false;
 
-/** Séance(s) en cours (0, 1 ou plusieurs) pour le dispositif « Je participe ». */
-export const GET: APIRoute = async () => {
+/** Séance(s) en cours (0, 1 ou plusieurs) auxquelles `membreId` est inscrit·e. */
+export const GET: APIRoute = async ({ url }) => {
+	const membreId = Number(url.searchParams.get('membreId'));
+	if (!Number.isInteger(membreId) || membreId <= 0) {
+		return json({ error: 'membreId manquant ou invalide.' }, 400);
+	}
+
 	try {
-		const seances = await fetchSeancesCourantes();
+		const seances = await fetchSeancesCourantes(membreId);
 		return json(seances);
 	} catch (err) {
 		const status = err instanceof GristError ? err.status : 500;

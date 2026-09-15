@@ -194,5 +194,5 @@ export interface PresencePayload {
 }
 
 export interface PresenceResult {
-	status: 'ok' | 'deja';
+	status: 'ok' | 'deja' | 'non-inscrit';
 }

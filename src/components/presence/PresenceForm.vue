@@ -11,7 +11,14 @@ interface MembreChoisi {
 	label: string;
 }
 
-type StatutSeance = 'idle' | 'busy' | 'present' | 'absent' | 'deja-present' | 'deja-absent';
+type StatutSeance =
+	| 'idle'
+	| 'busy'
+	| 'present'
+	| 'absent'
+	| 'deja-present'
+	| 'deja-absent'
+	| 'non-inscrit';
 
 const membre = ref<MembreChoisi | null>(null);
 
@@ -85,7 +92,7 @@ watch(
 		if (!m) return;
 		etatSeances.value = 'chargement';
 		try {
-			seances.value = await presenceApi.seances();
+			seances.value = await presenceApi.seances(m.membreId);
 			for (const s of seances.value) statuts[s.activiteId] = 'idle';
 			etatSeances.value = 'ok';
 		} catch {
@@ -104,8 +111,13 @@ async function repondre(seance: SeanceCourante, statut: PresenceStatut) {
 			activiteId: seance.activiteId,
 			statut,
 		});
-		statuts[seance.activiteId] =
-			res.status === 'deja' ? (statut === 'present' ? 'deja-present' : 'deja-absent') : statut;
+		if (res.status === 'deja') {
+			statuts[seance.activiteId] = statut === 'present' ? 'deja-present' : 'deja-absent';
+		} else if (res.status === 'non-inscrit') {
+			statuts[seance.activiteId] = 'non-inscrit';
+		} else {
+			statuts[seance.activiteId] = statut;
+		}
 	} catch {
 		statuts[seance.activiteId] = 'idle';
 	}
@@ -121,6 +133,8 @@ function message(s: SeanceCourante): string {
 			return 'Vous étiez déjà noté·e présent·e à cette séance.';
 		case 'deja-absent':
 			return 'Vous aviez déjà signalé votre absence à cette séance.';
+		case 'non-inscrit':
+			return "Vous n'êtes pas inscrit·e à cette activité — contactez l'association.";
 		default:
 			return '';
 	}
@@ -198,8 +212,16 @@ function message(s: SeanceCourante): string {
 						</button>
 					</div>
 					<p v-else-if="statuts[s.activiteId] === 'busy'" class="mt-3 text-sm text-gray-500">Envoi…</p>
-					<p v-else class="mt-3 flex items-center gap-2 text-sm text-gray-700">
-						<i class="fa-solid fa-circle-check text-primary" aria-hidden="true"></i>
+					<p
+						v-else
+						class="mt-3 flex items-center gap-2 text-sm"
+						:class="statuts[s.activiteId] === 'non-inscrit' ? 'text-red-600' : 'text-gray-700'"
+					>
+						<i
+							class="fa-solid"
+							:class="statuts[s.activiteId] === 'non-inscrit' ? 'fa-circle-exclamation' : 'fa-circle-check text-primary'"
+							aria-hidden="true"
+						></i>
 						{{ message(s) }}
 					</p>
 				</li>

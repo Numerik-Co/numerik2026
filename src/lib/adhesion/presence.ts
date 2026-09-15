@@ -57,19 +57,37 @@ function toMinutes(hhmm: string): number {
 	return h * 60 + (m || 0);
 }
 
-/** Séances Activite (publiées, saison en cours) dont l'horaire couvre le moment présent. */
-export async function fetchSeancesCourantes(date = new Date()): Promise<SeanceCourante[]> {
+/** Activités auxquelles `membreId` a une Inscription (peu importe la disponibilité). */
+async function activitesInscrites(membreId: number): Promise<Set<number>> {
+	const inscriptions = await listRecords(TABLES.inscriptions, {
+		[COLS.inscription.membre]: [membreId],
+	});
+	return new Set(inscriptions.map((r) => r.fields[COLS.inscription.activite] as number));
+}
+
+/**
+ * Séances Activite (publiées, saison en cours) dont l'horaire couvre le
+ * moment présent, restreintes à celles où `membreId` est inscrit.
+ */
+export async function fetchSeancesCourantes(
+	membreId: number,
+	date = new Date(),
+): Promise<SeanceCourante[]> {
 	const saisonId = await currentSaisonId();
 	const jour = jourActuel(date);
 	const minutes = minutesActuelles(date);
 
-	const records = await listRecords(TABLES.activites, {
-		[COLS.activite.saison]: [saisonId],
-		[COLS.activite.publiee]: [true],
-		[COLS.activite.jour]: [jour],
-	});
+	const [records, inscrites] = await Promise.all([
+		listRecords(TABLES.activites, {
+			[COLS.activite.saison]: [saisonId],
+			[COLS.activite.publiee]: [true],
+			[COLS.activite.jour]: [jour],
+		}),
+		activitesInscrites(membreId),
+	]);
 
 	return records
+		.filter((r) => inscrites.has(r.id))
 		.filter((r) => {
 			const debut = toMinutes(String(r.fields[COLS.activite.debuteA] ?? ''));
 			const fin = toMinutes(String(r.fields[COLS.activite.finiA] ?? ''));
@@ -81,13 +99,20 @@ export async function fetchSeancesCourantes(date = new Date()): Promise<SeanceCo
 		}));
 }
 
-/** Ajoute `membreId` à la liste Presents ou Absents de la séance du jour, sans doublon. */
+/**
+ * Ajoute `membreId` à la liste Presents ou Absents de la séance du jour,
+ * sans doublon. Revérifie que le membre est bien inscrit à cette activité
+ * (au cas où la liste affichée serait périmée).
+ */
 export async function enregistrerPresence(
 	membreId: number,
 	activiteId: number,
 	statut: PresenceStatut,
 	date = new Date(),
-): Promise<'ok' | 'deja'> {
+): Promise<'ok' | 'deja' | 'non-inscrit'> {
+	const inscrites = await activitesInscrites(membreId);
+	if (!inscrites.has(activiteId)) return 'non-inscrit';
+
 	const dateEpoch = dateToEpochSeconds(dateDuJourIso(date));
 	const colonne = statut === 'present' ? COLS.presence.presents : COLS.presence.absents;
 
