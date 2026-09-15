@@ -35,6 +35,19 @@ export const site = {
 	},
 
 	/**
+	 * Lien rapide vers le dispositif de présence (« Je participe »).
+	 * Pensé pour un usage « téléphone en main » pendant un atelier : affiché
+	 * uniquement sur mobile/tablette (`lg:hidden` dans `Header.astro`), jamais
+	 * dans la navbar desktop ni dans le menu déroulant mobile. Ce n'est pas
+	 * une entrée de `builtinNav`.
+	 */
+	presence: {
+		label: 'Je participe',
+		href: '/je-participe',
+		enabled: true,
+	},
+
+	/**
 	 * Pages applicatives fournies par le template (listing d'activités,
 	 * liste d'actualités, formulaire de contact…). Elles n'ont pas de
 	 * frontmatter éditable : on les déclare ici.
@@ -47,7 +60,6 @@ export const site = {
 		{ label: 'Activités', href: '/activites', order: 20 },
 		{ label: 'Actualités', href: '/actualites', order: 30 },
 		{ label: 'Contact', href: '/contact', order: 40 },
-		{ label: 'Je participe à mon atelier', href: '/je-participe', order: 50 },
 	] satisfies BuiltinNavItem[],
 
 	/**

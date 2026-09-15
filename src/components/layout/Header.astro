@@ -10,6 +10,7 @@ import BrandStripe from './BrandStripe.astro';
 // `menu:` des pages de src/contents/pages/ (voir src/contents/README.md).
 const navLinks = getNavTree();
 const cta = site.cta;
+const presence = site.presence;
 ---
 
 <header class="sticky top-0 z-50 isolate bg-white/90 backdrop-blur">
@@ -65,6 +66,16 @@ const cta = site.cta;
 					{cta.label}
 				</a>
 			</div>
+		)}
+
+		{presence.enabled && (
+			<a
+				href={presence.href}
+				class="flex items-center gap-2 rounded-full border border-primary px-4 py-2 text-sm font-heading font-semibold text-primary transition-colors hover:bg-primary/5 lg:hidden"
+			>
+				<i class="fa-solid fa-clipboard-check text-xs" aria-hidden="true"></i>
+				{presence.label}
+			</a>
 		)}
 
 		<button
