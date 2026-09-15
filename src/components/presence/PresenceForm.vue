@@ -164,7 +164,6 @@ function message(s: SeanceCourante): string {
 						@click="choisirMembre(c)"
 					>
 						<span class="font-medium text-gray-900">{{ c.prenom }} {{ c.nom }}</span>
-						<span v-if="c.indice" class="text-gray-500"> — {{ c.indice }}</span>
 					</button>
 				</li>
 			</ul>
