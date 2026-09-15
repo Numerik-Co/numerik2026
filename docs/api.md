@@ -108,6 +108,38 @@ Le process alimente **deux** tables, pas une :
 
 `Saison` est une **colonne formule** dans les deux ; de même `Tarif` / `Regle` (`Adhesions`) et `Eligible` / `Regle` (`Inscription`), ainsi que `Places_restantes` (`Activite`, décrément automatique). Ces colonnes ne sont **jamais écrites** par le code — Grist les calcule.
 
+## Planning hebdomadaire (Activite)
+
+`src/pages/activites.astro` (`prerender = false`) lit à chaque requête la
+table **`Activite`** via `src/lib/adhesion/planning.ts`
+(`fetchPlanningAgenda()`) et l'affiche avec `WeeklyAgenda.astro`. Chaque
+ligne `Activite` est déjà un créneau précis (jour, horaires, lieu,
+encadrant·e·s) — pas de table séparée : seules les lignes `Publiee = true`
+de la **saison en cours** sont retenues, et celles sans `Categorie_agenda`
+valide (colonne pas encore renseignée) sont ignorées.
+
+Les permanences du **Conseiller Numérique** restent générées en dur par
+`conseillerNumerique` (`src/lib/agenda.ts`) — dispositif géré à part de la
+programmation de l'association, jamais dans `Activite`. La page les
+recombine : `[...conseillerNumerique, ...(await fetchPlanningAgenda())]`.
+
+Si Grist est injoignable, la page se rabat sur `weeklyAgenda` (le planning
+en dur, désormais un simple filet de sécurité — plus la source affichée en
+fonctionnement normal).
+
+Colonnes du planning sur `Activite` (mapping `COLS.activite` dans
+`src/lib/adhesion/grist.ts`), en plus de celles déjà utilisées par
+l'adhésion (`Nom`, `Saison`…) :
+
+| Colonne | Type Grist | Rôle |
+| :--- | :--- | :--- |
+| `Publiee` | Bool | Visible sur le planning public si coché |
+| `Categorie_agenda` | Choice | `parcours` \| `fablab` \| `espace-jeune` \| `bidouille-repair` (cf. `AgendaKind`, `src/lib/agenda.ts`) |
+| `Jour` | Choice | `Lundi` … `Samedi` |
+| `Debute_a` / `Fini_a` | Text | Format `"16:30"`, converti en `"16h30"` à la lecture (cohérent avec le tri de `WeeklyAgenda.astro`) |
+| `Lieu` | Text | Facultatif |
+| `Encadrant` | RefList:Membres | Résolu en noms (« Prénom Nom ») via `membreLabel()`, facultatif |
+
 ### Mapping Grist — le seul point à ajuster
 
 `src/lib/adhesion/grist.ts` centralise tout ce qui dépend du schéma : `TABLES` (défauts = `Membres` / `Adhesions` / `Inscription` / `Cotisation` / `Activite` / `Saisons`, surchargeables par variables d'environnement), `COLS`, les valeurs de listes de choix (`GENRE_CHOICES`, `ROLE_*`, `STATUT_IMPAYE`, `DISPO_*`), et les helpers `dateToEpochSeconds` / `refList` / `parseRefList` / `currentSaisonId`.

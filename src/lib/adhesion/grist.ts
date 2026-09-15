@@ -93,6 +93,14 @@ export const COLS = {
 		placesRestantes: 'Places_restantes',
 		placesMax: 'Places_max',
 		adhesionRequise: 'Adhesion_requise',
+		// Planning hebdomadaire (/activites) — cf. src/lib/adhesion/planning.ts
+		publiee: 'Publiee', // Bool : visible sur le planning public
+		categorieAgenda: 'Categorie_agenda', // Choice: parcours | fablab | espace-jeune | bidouille-repair (cf. AgendaKind)
+		jour: 'Jour', // Choice: Lundi..Samedi
+		debuteA: 'Debute_a', // Text, format "16:30"
+		finiA: 'Fini_a', // Text, format "18:00"
+		lieu: 'Lieu', // Text
+		encadrant: 'Encadrant', // RefList:Membres
 	},
 	saison: {
 		nom: 'Nom',

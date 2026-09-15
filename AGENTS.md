@@ -52,29 +52,42 @@ Tout est statique (`output: 'static'`) : le menu est calculé au `build`.
 Affiche le planning des séances de la semaine, jour par jour, avec code
 couleur par famille d'activité.
 
-- `src/lib/agenda.ts` — données et types. `weeklyAgenda: AgendaSession[]` est
-  le planning par défaut (jour, horaires, intitulé, `animators` et `location`
-  facultatifs, `kind`, `note` facultative). `AGENDA_KIND_META` associe à
-  chaque `kind` (`parcours`, `fablab`, `espace-jeune`, `bidouille-repair`,
-  `conseiller-numerique`) un libellé, une icône Font Awesome et des classes /
-  hex de couleur ; ajouter un `kind` = ajouter une entrée ici. Les
-  permanences du Conseiller Numérique sont générées par le helper
-  `conseillerNumerique` (chaque matin de semaine, lieu variable). `groupByDay()`
-  regroupe et trie les séances selon `AGENDA_DAYS`. **Modifier le planning =
-  éditer `weeklyAgenda`** (fichier de code, pas de contenu Markdown).
+- `src/lib/agenda.ts` — types et données de repli. `AgendaSession` (jour,
+  horaires, intitulé, `animators` et `location` facultatifs, `kind`, `note`
+  facultative). `AGENDA_KIND_META` associe à chaque `kind` (`parcours`,
+  `fablab`, `espace-jeune`, `bidouille-repair`, `conseiller-numerique`) un
+  libellé, une icône Font Awesome et des classes / hex de couleur ; ajouter
+  un `kind` = ajouter une entrée ici. Les permanences du Conseiller
+  Numérique sont générées par le helper exporté `conseillerNumerique`
+  (chaque matin de semaine, lieu variable) — dispositif géré à part de la
+  programmation de l'association, jamais dans Grist. `groupByDay()`
+  regroupe et trie les séances selon `AGENDA_DAYS`. `weeklyAgenda` reste un
+  planning figé en dur : **filet de sécurité uniquement**, utilisé si Grist
+  est injoignable (voir ci-dessous) ou comme valeur par défaut du
+  composant.
+- **Source du planning affiché sur `/activites`** : la table Grist
+  `Activite` elle-même (chaque ligne est déjà un créneau précis : jour,
+  horaires, lieu, encadrant·e·s), lue à chaque requête par
+  `fetchPlanningAgenda()` (`src/lib/adhesion/planning.ts`) et recombinée
+  avec `conseillerNumerique`. Seules les lignes `Publiee = true` de la
+  saison en cours, avec une `Categorie_agenda` renseignée, sont affichées.
+  **Modifier le planning = éditer les lignes `Activite` dans Grist**, pas
+  le code. Détail des colonnes et du mapping : [docs/api.md](docs/api.md).
 - `src/components/sections/WeeklyAgenda.astro` — le composant.
-  `<WeeklyAgenda />` rend le planning par défaut ; props : `sessions`
-  (jeu de séances personnalisé), `showHeading`, `title`, `description`,
-  `showLegend`, `startHour` / `endHour` (bornes de l'axe horaire, défaut
-  9 → 20), `class` (utilitaires ajoutés au `<section>`). Rendu en grille
-  agenda : axe des heures à gauche, une colonne par jour, blocs positionnés
-  par `grid-row` calculé depuis les horaires (lignes de 30 min) ; scroll
-  horizontal sous ~44rem. Les horaires doivent tomber sur des multiples de
-  30 min et tenir dans `[startHour, endHour]`.
-- Consommé par `src/pages/activites.astro`. Réutilisable ailleurs :
+  `<WeeklyAgenda />` rend `weeklyAgenda` (le planning en dur) par défaut ;
+  props : `sessions` (jeu de séances personnalisé — c'est ce que passe
+  `/activites` avec les créneaux venus de Grist), `showHeading`, `title`,
+  `description`, `showLegend`, `startHour` / `endHour` (bornes de l'axe
+  horaire, défaut 9 → 20), `class` (utilitaires ajoutés au `<section>`).
+  Rendu en grille agenda : axe des heures à gauche, une colonne par jour,
+  blocs positionnés par `grid-row` calculé depuis les horaires (lignes de
+  30 min) ; scroll horizontal sous ~44rem. Les horaires doivent tomber sur
+  des multiples de 30 min et tenir dans `[startHour, endHour]`.
+- Consommé par `src/pages/activites.astro` (`prerender = false`, pour lire
+  Grist à chaque requête). Réutilisable ailleurs :
   `import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro'` puis
-  `<WeeklyAgenda showHeading={false} />` (ex. bloc dans une page d'accueil ou
-  filtré via `sessions`).
+  `<WeeklyAgenda showHeading={false} />` (ex. bloc dans une page d'accueil,
+  planning en dur par défaut sauf `sessions` fourni explicitement).
 
 ## Documentation
 

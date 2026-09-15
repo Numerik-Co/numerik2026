@@ -77,7 +77,7 @@ export const AGENDA_KIND_META: Record<
 };
 
 /** Permanences du Conseiller Numérique : chaque matin de semaine, 09h–12h. */
-const conseillerNumerique: AgendaSession[] = (
+export const conseillerNumerique: AgendaSession[] = (
 	['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'] as const
 ).map((day) => ({
 	day,
