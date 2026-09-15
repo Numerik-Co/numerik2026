@@ -29,6 +29,7 @@ const {
 	GRIST_TABLE_COTISATIONS,
 	GRIST_TABLE_ACTIVITES,
 	GRIST_TABLE_SAISONS,
+	GRIST_TABLE_PRESENCE,
 } = ENV;
 
 export const TABLES = {
@@ -38,6 +39,7 @@ export const TABLES = {
 	cotisations: GRIST_TABLE_COTISATIONS || 'Cotisation',
 	activites: GRIST_TABLE_ACTIVITES || 'Activite',
 	saisons: GRIST_TABLE_SAISONS || 'Saisons',
+	presence: GRIST_TABLE_PRESENCE || 'Presence',
 } as const;
 
 export const COLS = {
@@ -105,6 +107,12 @@ export const COLS = {
 	saison: {
 		nom: 'Nom',
 		actuelle: 'Actuelle',
+	},
+	presence: {
+		activite: 'Activite', // Ref:Activite -> rowId
+		date: 'Date', // Date (timestamp Unix, secondes) — jour de la séance
+		presents: 'Presents', // RefList:Membres
+		absents: 'Absents', // RefList:Membres
 	},
 } as const;
 

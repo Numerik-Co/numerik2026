@@ -47,6 +47,7 @@ export const site = {
 		{ label: 'Activités', href: '/activites', order: 20 },
 		{ label: 'Actualités', href: '/actualites', order: 30 },
 		{ label: 'Contact', href: '/contact', order: 40 },
+		{ label: 'Je participe à mon atelier', href: '/je-participe', order: 50 },
 	] satisfies BuiltinNavItem[],
 
 	/**

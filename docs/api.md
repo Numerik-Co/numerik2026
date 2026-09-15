@@ -51,6 +51,7 @@ Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner :
 | `GRIST_TABLE_INSCRIPTIONS` | Nom technique de la table des inscriptions (défaut `Inscriptions`) — optionnel |
 | `GRIST_TABLE_COTISATIONS` | Nom technique de la table des cotisations (défaut `Cotisations`) — optionnel |
 | `GRIST_TABLE_ACTIVITES` | Nom technique de la table des activités (défaut `Activites`) — optionnel |
+| `GRIST_TABLE_PRESENCE` | Nom technique de la table de présence aux ateliers (défaut `Presence`) — optionnel |
 | `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
 | `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |
 | `BULLETIN_SECRET` | Secret HMAC du lien de bulletin — **secret**, requis avec `GOTENBERG_URL` |
@@ -140,9 +141,37 @@ l'adhésion (`Nom`, `Saison`…) :
 | `Lieu` | Text | Facultatif |
 | `Encadrant` | RefList:Membres | Résolu en noms (« Prénom Nom ») via `membreLabel()`, facultatif |
 
+## Présence (« Je participe »)
+
+`/je-participe` (îlot Vue `src/components/presence/PresenceForm.vue`, `client:load`) permet à un membre de signaler sa présence — ou son absence — à la séance en cours, sans système de connexion : l'identification se fait par sélection dans une liste (recherche par nom, route déjà publique `/api/adhesion/membres`), mémorisée ensuite en `localStorage` sur l'appareil (`changerMembre()` permet de ré-choisir, ex. appareil partagé).
+
+### Détection de la séance en cours
+
+`fetchSeancesCourantes()` (`src/lib/adhesion/presence.ts`) reprend les lignes `Activite` publiées de la saison en cours (mêmes critères que le planning) et ne retient que celles dont l'horaire couvre l'instant présent (marge de 15 min avant le début, jusqu'à la fin). 0, 1 ou plusieurs séances peuvent correspondre à la fois (ex. deux créneaux qui se chevauchent) — la page affiche alors un bouton « Je participe » / « Je ne pourrai pas venir » par séance candidate.
+
+### Table `Presence`
+
+Une ligne par **séance** (`Activite` × `Date`, calculée côté serveur = aujourd'hui), pas par membre — pas besoin de pré-générer les dates de séance, la date du jour est calculée à l'écriture.
+
+| Colonne | Type Grist | Rôle |
+| :--- | :--- | :--- |
+| `Activite` | Ref:Activite | La séance concernée |
+| `Date` | Date | Jour de la séance (calculé serveur, fuseau `Europe/Paris`) |
+| `Presents` | RefList:Membres | Membres ayant signalé leur présence |
+| `Absents` | RefList:Membres | Membres ayant signalé leur absence |
+
+`enregistrerPresence()` relit la ligne de la séance (ou la crée si absente), vérifie que le membre n'est pas déjà dans la liste visée (`Presents` ou `Absents`) puis réécrit la liste complète — pas d'opération atomique « ajouter un élément » côté API Grist. Suffisant pour une petite association ; pas garanti à l'abri d'une double-écriture si deux personnes valident à la même seconde.
+
+### Routes API (`src/pages/api/presence/`)
+
+| Route | Méthode | Rôle |
+| :--- | :--- | :--- |
+| `/api/presence/seances` | GET | Séance(s) en cours (`{ activiteId, label }[]`), 0 à N. |
+| `/api/presence/inscrire` | POST | `{ membreId, activiteId, statut: 'present' \| 'absent' }` → `{ status: 'ok' \| 'deja' }`. |
+
 ### Mapping Grist — le seul point à ajuster
 
-`src/lib/adhesion/grist.ts` centralise tout ce qui dépend du schéma : `TABLES` (défauts = `Membres` / `Adhesions` / `Inscription` / `Cotisation` / `Activite` / `Saisons`, surchargeables par variables d'environnement), `COLS`, les valeurs de listes de choix (`GENRE_CHOICES`, `ROLE_*`, `STATUT_IMPAYE`, `DISPO_*`), et les helpers `dateToEpochSeconds` / `refList` / `parseRefList` / `currentSaisonId`.
+`src/lib/adhesion/grist.ts` centralise tout ce qui dépend du schéma : `TABLES` (défauts = `Membres` / `Adhesions` / `Inscription` / `Cotisation` / `Activite` / `Saisons` / `Presence`, surchargeables par variables d'environnement), `COLS`, les valeurs de listes de choix (`GENRE_CHOICES`, `ROLE_*`, `STATUT_IMPAYE`, `DISPO_*`), et les helpers `dateToEpochSeconds` / `refList` / `parseRefList` / `currentSaisonId`.
 
 `src/lib/adhesion/membre-fields.ts` porte la validation + conversion d'un membre **côté serveur** (partagée par `membre` et `co-membre`). `src/lib/adhesion/validation.ts` porte la validation **côté client** (`validateMembre` / `validateContact` / `validateRenouvellement`) : champs obligatoires, format courriel / code postal / téléphone (10 chiffres, au moins un des deux), date de naissance non future et plausible. Les composants passent le résultat à `MembreFields` via la prop `errors` et bloquent l'envoi tant qu'il reste une erreur ; le serveur revalide systématiquement.
 

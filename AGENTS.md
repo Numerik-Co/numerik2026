@@ -89,6 +89,19 @@ couleur par famille d'activité.
   `<WeeklyAgenda showHeading={false} />` (ex. bloc dans une page d'accueil,
   planning en dur par défaut sauf `sessions` fourni explicitement).
 
+### Présence (« Je participe »)
+
+Page `/je-participe` (lien de menu, `src/config/site.ts`), îlot Vue
+`src/components/presence/PresenceForm.vue`. Sans système de connexion :
+un membre se retrouve par recherche de nom (réutilise la route publique
+`/api/adhesion/membres`), mémorisé ensuite en `localStorage` sur
+l'appareil. La page détecte la (les) séance(s) en cours parmi les lignes
+`Activite` publiées (`fetchSeancesCourantes()`,
+`src/lib/adhesion/presence.ts`) et propose un bouton « Je participe » /
+« Je ne pourrai pas venir » par séance candidate — écrit dans la table
+Grist `Presence` (une ligne par séance, `Presents` / `Absents` en
+RefList:Membres). Détail : [docs/api.md](docs/api.md).
+
 ## Documentation
 
 Full documentation: https://docs.astro.build

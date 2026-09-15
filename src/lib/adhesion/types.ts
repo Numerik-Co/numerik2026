@@ -178,3 +178,21 @@ export interface ActiviteOption {
 export interface ApiError {
 	error: string;
 }
+
+/** Dispositif « Je participe » (planning en direct, cf. src/lib/adhesion/presence.ts). */
+export interface SeanceCourante {
+	activiteId: number;
+	label: string;
+}
+
+export type PresenceStatut = 'present' | 'absent';
+
+export interface PresencePayload {
+	membreId: number;
+	activiteId: number;
+	statut: PresenceStatut;
+}
+
+export interface PresenceResult {
+	status: 'ok' | 'deja';
+}
