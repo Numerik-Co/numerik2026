@@ -2,7 +2,7 @@
 title: "Le numerique fait partie de notre quotidien"
 isPublish: true
 publishAt: 2026-09-14
-excerpt: "Prolongation de la fermeture de l'association jusqu'au 5 mai, avec reprise progressive des ateliers et poursuite des activités du FabLab."
+excerpt: "Aujourd’hui, le numérique est partout : pour communiquer avec nos proches, faire nos démarches administratives, prendre un rendez-vous, faire des achats..."
 tag: "Association"
 author: "numérik&Co"
 ---
