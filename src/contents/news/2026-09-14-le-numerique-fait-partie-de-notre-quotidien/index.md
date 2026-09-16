@@ -1,7 +1,7 @@
 ---
 title: "Le numerique fait partie de notre quotidien"
 isPublish: true
-publishAt: 2025-09-14
+publishAt: 2026-09-14
 excerpt: "Prolongation de la fermeture de l'association jusqu'au 5 mai, avec reprise progressive des ateliers et poursuite des activités du FabLab."
 tag: "Association"
 author: "numérik&Co"
