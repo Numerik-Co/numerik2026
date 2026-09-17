@@ -1,9 +1,9 @@
 ---
-title: "Le numerique fait partie de notre quotidien"
+title: "Le numérique fait partie de notre quotidien"
 isPublish: true
 publishAt: 2026-09-14
 excerpt: "Aujourd’hui, le numérique est partout : pour communiquer avec nos proches, faire nos démarches administratives, prendre un rendez-vous, faire des achats..."
-tag: "Association"
+tag: "Conseiller Numérique"
 author: "numérik&Co"
 ---
 
