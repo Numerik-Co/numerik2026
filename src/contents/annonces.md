@@ -53,6 +53,16 @@ annonces:
     icon: "fa-hand-holding-heart"
     ctaLabel: "Nous contacter"
     ctaHref: "/contact"
+
+  - id: "ateliers-conseillere-numerique"
+    title: 'Prochain atelier collectif "conseillère numérique"'
+    message: "Ameli et Mon espace santé : Prenez en main l'espace de la Sécurité sociale"
+    startDate: "2026-09-18"
+    endDate: "2026-10-09"
+    tone: "info"
+    icon: "fa-solid fa-caduceus"
+    ctaLabel: "s'inscrire"
+    ctaHref: "/activites/mediation-numerique/mediation-numerique-ateliers"
 ---
 
 Ce fichier ne contient pas de texte libre : tout le contenu des annonces se
