@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/sections/PageHeader.astro';
+import FormGate from '../components/forms/FormGate.astro';
+import RdvForm from '../components/rdv/RdvForm.vue';
+import { association } from '../lib/association';
+---
+
+<Layout
+	title={`RDV Conseiller Numérique · ${association.name}`}
+	description="Prenez rendez-vous avec la conseillère numérique de l'association pour un accompagnement individuel."
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: 'RDV Conseiller Numérique' }]}
+>
+	<PageHeader
+		slot="page-header"
+		title="RDV avec le Conseiller Numérique"
+		description="Réservez un créneau de 30 minutes pour un accompagnement individuel — navigation, démarches administratives, e-mail, sécurité numérique…"
+	/>
+
+	<FormGate form="rdvConseillerNumerique">
+		<RdvForm client:load />
+	</FormGate>
+</Layout>
