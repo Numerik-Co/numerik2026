@@ -105,15 +105,18 @@ async function retrouverMembre(nom: string, prenom: string): Promise<MembreResul
 	if (matches.length === 0) return { status: 'introuvable' };
 	if (matches.length === 1) {
 		// Si la fiche saisie est un membre rattaché (présent dans le `Responsable_de`
-		// d'un·e autre membre), on bascule silencieusement sur le·la responsable :
-		// c'est lui/elle qui porte l'adhésion du groupe. Les membres liés sont
-		// ensuite listés à l'étape « Membres du groupe » (via `etatDe().groupe`).
-		const cible = trouverResponsable(records, matches[0].id) ?? matches[0];
+		// d'un·e autre membre), on bascule silencieusement sur le·la responsable pour
+		// la logique métier (adhésion, préférences partagées, groupe listé via
+		// `etatDe().groupe`) : c'est lui/elle qui porte l'adhésion du foyer. Mais on
+		// garde le prénom/nom de la fiche réellement saisie pour l'affichage — c'est
+		// elle que la personne a tapée, pas forcément le/la responsable du foyer.
+		const trouve = matches[0];
+		const cible = trouverResponsable(records, trouve.id) ?? trouve;
 		return {
 			status: 'ok',
 			membreId: cible.id,
-			prenom: String(cible.fields[c.prenom] ?? prenom),
-			nom: String(cible.fields[c.nom] ?? nom),
+			prenom: String(trouve.fields[c.prenom] ?? prenom),
+			nom: String(trouve.fields[c.nom] ?? nom),
 			genre: readGenre(cible.fields[c.genre]),
 			...etatDe(records, cible),
 		};
