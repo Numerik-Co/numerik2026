@@ -496,6 +496,14 @@ async function envoyer() {
 				<template v-if="step === 3">
 					<div class="mt-4 grid gap-4 sm:grid-cols-3">
 						<div>
+							<label class="text-sm font-medium text-gray-700">Civilité</label>
+							<select v-model="form.genre" :class="champCls('genre')">
+								<option value="">Autre</option>
+								<option value="Masculin">M.</option>
+								<option value="Féminin">Mme</option>
+							</select>
+						</div>
+						<div>
 							<label class="text-sm font-medium text-gray-700">Prénom</label>
 							<input v-model="form.prenom" type="text" :class="champCls('prenom')" />
 							<p v-if="errors.prenom" class="mt-1 text-xs text-red-600">{{ errors.prenom }}</p>
@@ -504,14 +512,6 @@ async function envoyer() {
 							<label class="text-sm font-medium text-gray-700">Nom</label>
 							<input v-model="form.nom" type="text" :class="champCls('nom')" />
 							<p v-if="errors.nom" class="mt-1 text-xs text-red-600">{{ errors.nom }}</p>
-						</div>
-						<div>
-							<label class="text-sm font-medium text-gray-700">Genre (facultatif)</label>
-							<select v-model="form.genre" :class="champCls('genre')">
-								<option value="">Autre</option>
-								<option value="Masculin">M.</option>
-								<option value="Féminin">Mme</option>
-							</select>
 						</div>
 					</div>
 
