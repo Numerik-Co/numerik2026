@@ -494,7 +494,7 @@ async function envoyer() {
 				</div>
 
 				<template v-if="step === 3">
-					<div class="mt-4 grid gap-4 sm:grid-cols-2">
+					<div class="mt-4 grid gap-4 sm:grid-cols-3">
 						<div>
 							<label class="text-sm font-medium text-gray-700">Prénom</label>
 							<input v-model="form.prenom" type="text" :class="champCls('prenom')" />
@@ -505,10 +505,22 @@ async function envoyer() {
 							<input v-model="form.nom" type="text" :class="champCls('nom')" />
 							<p v-if="errors.nom" class="mt-1 text-xs text-red-600">{{ errors.nom }}</p>
 						</div>
-						<p class="text-sm text-gray-600 sm:col-span-2">
-							Pour être prévenu·e en cas de besoin (confirmation, rappel, imprévu), indiquez au moins un e-mail ou un
-							numéro de téléphone — les deux ne sont pas obligatoires.
-						</p>
+						<div>
+							<label class="text-sm font-medium text-gray-700">Genre (facultatif)</label>
+							<select v-model="form.genre" :class="champCls('genre')">
+								<option value="">Autre</option>
+								<option value="Masculin">M.</option>
+								<option value="Féminin">Mme</option>
+							</select>
+						</div>
+					</div>
+
+					<p class="mt-4 text-sm text-gray-600">
+						Pour être prévenu·e en cas de besoin (confirmation, rappel, imprévu), indiquez au moins un e-mail ou un
+						numéro de téléphone — les deux ne sont pas obligatoires.
+					</p>
+
+					<div class="mt-4 grid gap-4 sm:grid-cols-2">
 						<div>
 							<label class="text-sm font-medium text-gray-700">E-mail</label>
 							<input v-model="form.email" type="email" :class="champCls('email')" />
@@ -518,13 +530,6 @@ async function envoyer() {
 							<label class="text-sm font-medium text-gray-700">Téléphone</label>
 							<input v-model="form.telephone" type="tel" :class="champCls('telephone')" />
 							<p v-if="errors.telephone" class="mt-1 text-xs text-red-600">{{ errors.telephone }}</p>
-						</div>
-						<div>
-							<label class="text-sm font-medium text-gray-700">Genre (facultatif)</label>
-							<select v-model="form.genre" :class="champCls('genre')">
-								<option value="">Non communiqué</option>
-								<option v-for="g in GENRE_CHOICES" :key="g" :value="g">{{ g }}</option>
-							</select>
 						</div>
 					</div>
 
