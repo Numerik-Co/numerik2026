@@ -21,8 +21,16 @@ function estValide(body: unknown): body is PriseRdvPayload {
 	const b = body as Record<string, unknown>;
 
 	if (!isNonEmptyString(b.nom) || !isNonEmptyString(b.prenom)) return false;
-	if (!isNonEmptyString(b.email) || !EMAIL_RE.test(b.email.trim())) return false;
-	if (!isNonEmptyString(b.telephone)) return false;
+
+	// Ni l'un ni l'autre n'est individuellement obligatoire, mais il en faut
+	// au moins un (cf. validation.ts côté client, revalidé ici).
+	if (b.email !== undefined && typeof b.email !== 'string') return false;
+	if (b.telephone !== undefined && typeof b.telephone !== 'string') return false;
+	const email = typeof b.email === 'string' ? b.email.trim() : '';
+	const telephone = typeof b.telephone === 'string' ? b.telephone.trim() : '';
+	if (email && !EMAIL_RE.test(email)) return false;
+	if (!email && !telephone) return false;
+
 	if (!isNonEmptyString(b.date) || !DATE_RE.test(b.date)) return false;
 	if (!isNonEmptyString(b.heure) || !HEURE_RE.test(b.heure)) return false;
 	if (b.consentement !== true) return false;

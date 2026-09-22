@@ -8,7 +8,8 @@ import type { PriseRdvPayload } from './types';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-function telNormalise(v: string): string {
+/** Exporté : réutilisé par `beneficiaires.ts` pour rapprocher par téléphone. */
+export function normaliserTelephone(v: string): string {
 	return v.replace(/[\s.\-]/g, '');
 }
 
@@ -18,12 +19,19 @@ export function validatePriseRdv(p: PriseRdvPayload): Errors<PriseRdvPayload> {
 	if (!p.nom.trim()) e.nom = 'Le nom est obligatoire.';
 	if (!p.prenom.trim()) e.prenom = 'Le prénom est obligatoire.';
 
-	if (!p.email.trim()) e.email = 'Le courriel est obligatoire.';
-	else if (!EMAIL_RE.test(p.email.trim())) e.email = 'Courriel invalide.';
+	const email = p.email.trim();
+	if (email && !EMAIL_RE.test(email)) e.email = 'Courriel invalide.';
 
-	const tel = telNormalise(p.telephone);
-	if (!tel) e.telephone = 'Le téléphone est obligatoire.';
-	else if (!/^0\d{9}$/.test(tel)) e.telephone = 'Numéro à 10 chiffres attendu.';
+	const tel = normaliserTelephone(p.telephone);
+	if (tel && !/^0\d{9}$/.test(tel)) e.telephone = 'Numéro à 10 chiffres attendu.';
+
+	// Ni l'un ni l'autre n'est individuellement obligatoire, mais il en faut
+	// au moins un pour pouvoir notifier le bénéficiaire de son RDV.
+	if (!email && !tel && !e.email && !e.telephone) {
+		const msg = 'Indiquez au moins un e-mail ou un téléphone pour être notifié·e de votre RDV.';
+		e.email = msg;
+		e.telephone = msg;
+	}
 
 	if (!p.date || !p.heure) e.heure = 'Choisissez un créneau.';
 

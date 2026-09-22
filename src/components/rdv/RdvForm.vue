@@ -102,6 +102,15 @@ const demarchesResume = computed(() =>
 		.join(', '),
 );
 
+/** Documents à apporter pour la/les démarche(s) choisie(s) — une ligne par document, tous confondus. */
+const documentsRappel = computed(() =>
+	demarches.value
+		.filter((d) => form.demarcheIds.includes(d.id))
+		.flatMap((d) => d.documents.split('\n'))
+		.map((ligne) => ligne.trim())
+		.filter(Boolean),
+);
+
 /**
  * Valide `construirePayload()` pour les seuls champs de l'étape en cours.
  * En cas de succès, on repart d'un objet d'erreurs vide : sinon les erreurs
@@ -241,6 +250,8 @@ function choisirCommune(s: CommuneSuggestion) {
 	suggestionsCommune.value = [];
 }
 
+const coordonneesResume = computed(() => [form.email, form.telephone].filter(Boolean).join(' — '));
+
 const profilResume = computed(() => {
 	const items = [form.commune, form.zoneGeographique, form.trancheAge, form.statut].filter(Boolean);
 	return items.length ? items.join(' · ') : 'Non renseigné';
@@ -311,6 +322,16 @@ async function envoyer() {
 				<template v-if="creneauChoisi?.lieu"> — {{ creneauChoisi.lieu }}</template>. La conseillère numérique vous
 				attendra.
 			</p>
+
+			<div v-if="documentsRappel.length" class="mt-4 rounded-lg bg-primary/5 p-4 text-left text-sm text-gray-700">
+				<p class="font-medium text-gray-900">
+					<i class="fa-solid fa-clipboard-list mr-2 text-primary" aria-hidden="true"></i>Pensez à apporter le jour du
+					rendez-vous :
+				</p>
+				<ul class="mt-2 list-disc pl-5">
+					<li v-for="(doc, i) in documentsRappel" :key="i">{{ doc }}</li>
+				</ul>
+			</div>
 		</div>
 
 		<form v-else class="space-y-6" @submit.prevent="envoyer">
@@ -484,6 +505,10 @@ async function envoyer() {
 							<input v-model="form.nom" type="text" :class="champCls('nom')" />
 							<p v-if="errors.nom" class="mt-1 text-xs text-red-600">{{ errors.nom }}</p>
 						</div>
+						<p class="text-sm text-gray-600 sm:col-span-2">
+							Pour être prévenu·e en cas de besoin (confirmation, rappel, imprévu), indiquez au moins un e-mail ou un
+							numéro de téléphone — les deux ne sont pas obligatoires.
+						</p>
 						<div>
 							<label class="text-sm font-medium text-gray-700">E-mail</label>
 							<input v-model="form.email" type="email" :class="champCls('email')" />
@@ -512,7 +537,9 @@ async function envoyer() {
 					</button>
 				</template>
 				<p v-else-if="step > 3" class="mt-3 text-sm text-gray-600">
-					{{ form.prenom }} {{ form.nom }} — {{ form.email }} <span class="text-gray-400">— enregistré</span>
+					{{ form.prenom }} {{ form.nom }}
+					<template v-if="coordonneesResume"> — {{ coordonneesResume }}</template>
+					<span class="text-gray-400">— enregistré</span>
 				</p>
 			</div>
 
@@ -616,6 +643,16 @@ async function envoyer() {
 						5
 					</span>
 					<h2 class="font-heading text-lg text-gray-900">Dernière étape</h2>
+				</div>
+
+				<div v-if="documentsRappel.length" class="mt-4 rounded-lg bg-primary/5 p-4 text-sm text-gray-700">
+					<p class="font-medium text-gray-900">
+						<i class="fa-solid fa-clipboard-list mr-2 text-primary" aria-hidden="true"></i>Pensez à apporter le jour du
+						rendez-vous :
+					</p>
+					<ul class="mt-2 list-disc pl-5">
+						<li v-for="(doc, i) in documentsRappel" :key="i">{{ doc }}</li>
+					</ul>
 				</div>
 
 				<label class="mt-4 flex items-start gap-3 text-sm text-gray-700">

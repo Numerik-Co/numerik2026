@@ -31,6 +31,7 @@ export interface Demarche {
 	thematique: Thematique;
 	icone: string; // classe Font Awesome, ex. "fa-id-card" (préfixe "fa-solid" ajouté à l'affichage)
 	description: string;
+	documents: string; // documents à apporter le jour du RDV, une ligne par document — vide si non renseigné
 }
 
 /** Un créneau de 30 min sur une permanence du Conseiller Numérique. */
@@ -55,6 +56,9 @@ export interface BeneficiaireInfos {
 export interface PriseRdvPayload extends BeneficiaireInfos {
 	nom: string;
 	prenom: string;
+	// Aucun des deux n'est individuellement obligatoire — mais au moins l'un
+	// des deux doit être renseigné (validation.ts), pour pouvoir notifier le
+	// bénéficiaire de son RDV.
 	email: string;
 	telephone: string;
 	date: string; // ISO yyyy-mm-dd

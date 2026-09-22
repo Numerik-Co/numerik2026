@@ -102,6 +102,40 @@ l'appareil. La page détecte la (les) séance(s) en cours parmi les lignes
 Grist `Presence` (une ligne par séance, `Presents` / `Absents` en
 RefList:Membres). Détail : [docs/api.md](docs/api.md).
 
+### RDV avec le Conseiller Numérique
+
+Page `/rdv-conseiller-numerique` (lien de menu, `src/config/site.ts`, entre
+Activités et Actualités), formulaire public `src/components/rdv/RdvForm.vue`
+(`client:load`), gardé par `<FormGate form="rdvConseillerNumerique">`.
+Parcours en 5 étapes (même motif que `AdhesionForm.vue`) : démarche →
+créneau → coordonnées → profil facultatif → consentement/envoi.
+
+- `src/lib/rdv/demarches.ts` — catalogue de démarches (table Grist
+  `Demarches` : Nom, Thematique, Icone, Description, Documents), alimenté et
+  tenu à jour **directement dans Grist** par l'association, aucune admin
+  côté site. `Documents` (facultatif, une ligne par document à apporter) est
+  affiché en rappel à l'étape 5 et sur l'écran de confirmation de
+  `RdvForm.vue`.
+- `src/lib/rdv/creneaux.ts` — créneaux de 30 min dérivés de
+  `conseillerNumerique` (`src/lib/agenda.ts`).
+- `src/lib/rdv/beneficiaires.ts` — rapproche un bénéficiaire par **email OU
+  téléphone** (un seul des deux est obligatoire à la saisie, jamais aucun —
+  voir `validation.ts` — et le rapprochement ne compare que le champ
+  effectivement renseigné) ou en crée un nouveau.
+- `src/lib/rdv/reservation.ts` — revérifie la disponibilité puis écrit la
+  ligne `RDV` (même doc Grist que `Beneficiaires`/`Demarches`).
+- Routes : `GET /api/rdv/creneaux`, `GET /api/rdv/demarches`,
+  `GET /api/rdv/commune`, `POST /api/rdv/prendre`.
+
+Pistes de suite non traitées (à reprendre si redemandé) :
+1. Mécanisme de collecte de l'évaluation bénéficiaire (colonnes Grist
+   `Evaluation_satisfaction`/`Suggestions_beneficiaire` prêtes, rien de
+   branché côté formulaire).
+2. Notification email/SMS de confirmation ou de rappel de RDV.
+3. Vue admin pour lister/annuler des RDV (aujourd'hui uniquement gérable
+   depuis Grist directement).
+4. Suppression de `Table1` (table Grist vide créée par défaut, sans impact).
+
 ## Documentation
 
 Full documentation: https://docs.astro.build

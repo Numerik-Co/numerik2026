@@ -67,6 +67,7 @@ export const COLS = {
 		thematique: 'Thematique',
 		icone: 'Icone',
 		description: 'Description',
+		documents: 'Documents', // documents à apporter le jour du RDV, facultatif
 	},
 } as const;
 

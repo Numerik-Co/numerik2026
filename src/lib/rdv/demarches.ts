@@ -1,7 +1,7 @@
 /**
  * Catalogue des démarches proposées au bloc 1 du formulaire (table Grist
- * `Demarches` : Nom, Thematique, Icone, Description). Alimenté et tenu à
- * jour directement dans Grist par l'association — aucune interface
+ * `Demarches` : Nom, Thematique, Icone, Description, Documents). Alimenté et
+ * tenu à jour directement dans Grist par l'association — aucune interface
  * d'administration côté site.
  */
 
@@ -17,6 +17,7 @@ export async function fetchDemarches(): Promise<Demarche[]> {
 		thematique: String(r.fields[c.thematique] ?? '') as Thematique,
 		icone: String(r.fields[c.icone] ?? ''),
 		description: String(r.fields[c.description] ?? ''),
+		documents: String(r.fields[c.documents] ?? ''),
 	}));
 }
 
