@@ -1,14 +1,21 @@
 import type { APIRoute } from 'astro';
-import { COLS, currentSaisonId, GristError, listRecords, TABLES } from '../../../lib/adhesion/grist';
+import {
+	COLS,
+	currentSaisonId,
+	GristError,
+	listRecords,
+	TABLES,
+	TYPES_ACTIVITE_ADHESION,
+} from '../../../lib/adhesion/grist';
 import { json, toNumberOrNull } from '../../../lib/adhesion/http';
 import type { ActiviteOption } from '../../../lib/adhesion/types';
 
 export const prerender = false;
 
 /**
- * Étape 3 : activités de la saison en cours nécessitant une adhésion
- * (`Adhesion_requise = true`) + places restantes, pour le select. Les
- * activités sans adhésion requise (ex. ateliers Conseiller Numérique) se
+ * Étape 3 : activités de type Séances/Modules, publiées (`Publiee = true`)
+ * et de la saison en cours, + places restantes, pour le select. Les autres
+ * types (ex. ateliers Conseiller Numérique) et les lignes non publiées se
  * gèrent hors de ce formulaire.
  */
 export const GET: APIRoute = async () => {
@@ -16,7 +23,8 @@ export const GET: APIRoute = async () => {
 		const saisonId = await currentSaisonId();
 		const records = await listRecords(TABLES.activites, {
 			[COLS.activite.saison]: [saisonId],
-			[COLS.activite.adhesionRequise]: [true],
+			[COLS.activite.publiee]: [true],
+			[COLS.activite.type]: [...TYPES_ACTIVITE_ADHESION],
 		});
 
 		const options: ActiviteOption[] = records.map((r) => ({

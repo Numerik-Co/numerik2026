@@ -129,6 +129,7 @@ export {
 	STATUT_IMPAYE,
 	DISPO_INSCRIT,
 	DISPO_ATTENTE,
+	TYPES_ACTIVITE_ADHESION,
 } from './choices';
 export type { GenreGrist } from './choices';
 

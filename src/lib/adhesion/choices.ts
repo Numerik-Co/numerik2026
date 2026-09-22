@@ -20,3 +20,6 @@ export const ROLE_CONTACT = 'Contact';
 export const STATUT_IMPAYE = 'Impayé';
 export const DISPO_INSCRIT = 'Inscrit';
 export const DISPO_ATTENTE = "Liste d'attente";
+
+/** Liste de choix `Activite.Type` proposés par le formulaire d'inscription en ligne. */
+export const TYPES_ACTIVITE_ADHESION = ['Séances', 'Modules'] as const;
