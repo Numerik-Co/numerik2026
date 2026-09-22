@@ -20,6 +20,3 @@ export const ROLE_CONTACT = 'Contact';
 export const STATUT_IMPAYE = 'Impayé';
 export const DISPO_INSCRIT = 'Inscrit';
 export const DISPO_ATTENTE = "Liste d'attente";
-
-/** Liste de choix `Activite.Type`. Le formulaire d'inscription en ligne ne propose que les Ateliers. */
-export const TYPE_ACTIVITE_ATELIERS = 'Ateliers';
