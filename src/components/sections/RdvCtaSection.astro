@@ -8,6 +8,8 @@
 import Button from '../ui/Button.astro';
 import { conseillerNumerique } from '../../lib/agenda';
 import { isFormOpen } from '../../lib/forms';
+// Logo officiel du label (kit de communication ANCT, conseiller-numerique.gouv.fr) — ne pas modifier.
+import logoConseillerNumerique from '../../styles/img/logo-conseiller-numerique.svg';
 
 interface Props {
 	eyebrow?: string;
@@ -60,25 +62,37 @@ const plusieursLieux = lieux.size > 1;
 					<i class="fa-solid fa-headset mr-2" aria-hidden="true"></i>{eyebrow}
 				</p>
 				<h2 class="mt-2 text-3xl text-gray-900">{title}</h2>
-				<p class="mt-4 max-w-xl font-light text-gray-600">{description}</p>
+				<!-- Logo à gauche, texte + permanences à sa droite (empilés sur mobile) -->
+				<div class="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center">
+					<img
+						src={logoConseillerNumerique.src}
+						width={logoConseillerNumerique.width}
+						height={logoConseillerNumerique.height}
+						alt="Label Conseiller numérique"
+						class="h-24 w-auto shrink-0 self-start sm:self-center"
+					/>
+					<div>
+						<p class="max-w-xl font-light text-gray-600">{description}</p>
 
-				<ul class="mt-6 space-y-2 text-sm text-gray-700">
-					<li class="flex gap-3">
-						<i class="fa-regular fa-calendar mt-0.5 w-4 text-center text-primary" aria-hidden="true"></i>
-						<span>{libelleJours} · {plages.join(' / ')}</span>
-					</li>
-					{
-						[...lieux].map(([lieu, joursLieu]) => (
+						<ul class="mt-6 space-y-2 text-sm text-gray-700">
 							<li class="flex gap-3">
-								<i class="fa-solid fa-location-dot mt-0.5 w-4 text-center text-primary" aria-hidden="true" />
-								<span>
-									{lieu}
-									{plusieursLieux && <span class="text-gray-500"> ({joursLieu.join(', ')})</span>}
-								</span>
+								<i class="fa-regular fa-calendar mt-0.5 w-4 text-center text-primary" aria-hidden="true"></i>
+								<span>{libelleJours} · {plages.join(' / ')}</span>
 							</li>
-						))
-					}
-				</ul>
+							{
+								[...lieux].map(([lieu, joursLieu]) => (
+									<li class="flex gap-3">
+										<i class="fa-solid fa-location-dot mt-0.5 w-4 text-center text-primary" aria-hidden="true" />
+										<span>
+											{lieu}
+											{plusieursLieux && <span class="text-gray-500"> ({joursLieu.join(', ')})</span>}
+										</span>
+									</li>
+								))
+							}
+						</ul>
+					</div>
+				</div>
 			</div>
 			<div class="shrink-0 text-center md:text-right">
 				<Button href={buttonHref}>
