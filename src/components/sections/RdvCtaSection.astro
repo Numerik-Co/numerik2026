@@ -18,9 +18,9 @@ interface Props {
 }
 
 const {
-	eyebrow = 'Conseiller Numérique',
+	eyebrow = 'Conseiller.e Numérique',
 	title = 'Besoin d’aide pour une démarche en ligne ?',
-	description = 'Carte d’identité, CAF, impôts, messagerie, smartphone… Le conseiller numérique vous accompagne pas à pas, sur rendez-vous.',
+	description = 'Carte d’identité, CAF, impôts, messagerie, smartphone… Le.la conseiller.e numérique vous accompagne pas à pas, sur rendez-vous.',
 	buttonLabel = 'Prendre rendez-vous',
 	buttonHref = '/rdv-conseiller-numerique',
 } = Astro.props;
@@ -53,11 +53,8 @@ for (const s of conseillerNumerique) {
 const plusieursLieux = lieux.size > 1;
 ---
 
-<section class="bg-white py-16">
-	<div class="mx-auto max-w-5xl px-4 sm:px-6">
-		<div
-			class="grid gap-8 rounded-2xl border border-primary/15 bg-primary/5 p-6 sm:p-10 md:grid-cols-[1fr_auto] md:items-center"
-		>
+<section class="bg-gray-50 py-16">
+	<div class="mx-auto max-w-6xl px-4 sm:px-6">
 			<div>
 				<p class="text-sm font-semibold uppercase tracking-wider text-primary">
 					<i class="fa-solid fa-headset mr-2" aria-hidden="true"></i>{eyebrow}
@@ -91,6 +88,5 @@ const plusieursLieux = lieux.size > 1;
 				</Button>
 				<p class="mt-3 text-xs text-gray-500">Gratuit · 30 minutes</p>
 			</div>
-		</div>
 	</div>
 </section>
