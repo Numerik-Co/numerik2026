@@ -12,6 +12,8 @@ import {
 import { deduireZone } from '../../lib/rdv/geographie';
 import { validatePriseRdv, hasErrors } from '../../lib/rdv/validation';
 import type { Creneau, CommuneSuggestion, Demarche, PriseRdvPayload } from '../../lib/rdv/types';
+import { contenuQrCode, documentsDemarches, evenementRdv, type EvenementRdv } from '../../lib/rdv/ics';
+import QRCode from 'qrcode';
 import { rdvApi } from './client';
 
 function capitaliser(s: string): string {
@@ -104,11 +106,7 @@ const demarchesResume = computed(() =>
 
 /** Documents à apporter pour la/les démarche(s) choisie(s) — une ligne par document, tous confondus. */
 const documentsRappel = computed(() =>
-	demarches.value
-		.filter((d) => form.demarcheIds.includes(d.id))
-		.flatMap((d) => d.documents.split('\n'))
-		.map((ligne) => ligne.trim())
-		.filter(Boolean),
+	documentsDemarches(demarches.value.filter((d) => form.demarcheIds.includes(d.id))),
 );
 
 /**
@@ -240,6 +238,36 @@ const rappelHoraires = computed(() => {
 
 const demarchesChoisies = computed(() => demarches.value.filter((d) => form.demarcheIds.includes(d.id)));
 
+// --- Ajout à l'agenda du téléphone : fichier .ics + QR code ---
+const evenementCourant = computed<EvenementRdv | null>(() =>
+	creneauChoisi.value
+		? evenementRdv(creneauChoisi.value.date, creneauChoisi.value.heure, creneauChoisi.value.lieu, demarchesChoisies.value)
+		: null,
+);
+
+/** Le .ics est servi par `/api/rdv/ics` : iOS l'ouvre directement dans Calendrier. */
+const lienIcs = computed(() => {
+	if (!creneauChoisi.value) return '';
+	const q = new URLSearchParams({ date: creneauChoisi.value.date, heure: creneauChoisi.value.heure });
+	for (const id of form.demarcheIds) q.append('demarche', String(id));
+	return `/api/rdv/ics?${q}`;
+});
+
+const qrCodeSvg = ref('');
+
+async function genererQrCode() {
+	if (!evenementCourant.value) return;
+	try {
+		qrCodeSvg.value = await QRCode.toString(contenuQrCode(evenementCourant.value), {
+			type: 'svg',
+			errorCorrectionLevel: 'L',
+			margin: 1,
+		});
+	} catch {
+		qrCodeSvg.value = '';
+	}
+}
+
 // --- Autocomplétion commune (profil géographique) ---
 // `form.commune` est directement le champ de recherche — comme
 // `MembreFields.vue` (adhésion) pour `adresse` : si l'API n'a pas de
@@ -331,6 +359,7 @@ async function envoyer() {
 			return;
 		}
 		etatEnvoi.value = 'ok';
+		genererQrCode();
 	} catch (err) {
 		messageErreur.value = err instanceof Error ? err.message : 'Une erreur est survenue.';
 		etatEnvoi.value = 'erreur';
@@ -387,8 +416,25 @@ async function envoyer() {
 				</ul>
 			</div>
 
+			<div class="mt-6 text-center">
+				<a
+					:href="lienIcs"
+					class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-white hover:bg-primary/90"
+				>
+					<i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>Ajouter à mon agenda
+				</a>
+			</div>
+
+			<div v-if="qrCodeSvg" class="mt-6 hidden items-center gap-5 rounded-lg border border-gray-100 p-4 sm:flex">
+				<div class="h-36 w-36 shrink-0" v-html="qrCodeSvg" role="img" aria-label="QR code du rendez-vous"></div>
+				<p class="text-sm text-gray-600">
+					<span class="font-medium text-gray-900">Vous avez réservé sur un ordinateur ?</span><br />
+					Scannez ce code avec l’appareil photo de votre téléphone pour ajouter le rendez-vous à votre agenda.
+				</p>
+			</div>
+
 			<p class="mt-6 text-center text-xs text-gray-500">
-				Pensez à noter ce rendez-vous ou à faire une capture d’écran de ce rappel.
+				Vous pouvez aussi noter ce rendez-vous ou faire une capture d’écran de ce rappel.
 			</p>
 		</div>
 

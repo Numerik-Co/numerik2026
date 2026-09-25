@@ -125,7 +125,11 @@ créneau → coordonnées → profil facultatif → consentement/envoi.
 - `src/lib/rdv/reservation.ts` — revérifie la disponibilité puis écrit la
   ligne `RDV` (même doc Grist que `Beneficiaires`/`Demarches`).
 - Routes : `GET /api/rdv/creneaux`, `GET /api/rdv/demarches`,
-  `GET /api/rdv/commune`, `POST /api/rdv/prendre`.
+  `GET /api/rdv/commune`, `POST /api/rdv/prendre`, `GET /api/rdv/ics`
+  (`?date=&heure=&demarche=<id>` → fichier `.ics` ; lieu et documents
+  recalculés côté serveur).
+- `src/lib/rdv/ics.ts` — événement d'agenda partagé par la route `.ics` et
+  le QR code de l'écran de confirmation (heure Europe/Paris convertie en UTC).
 
 Pistes de suite non traitées (à reprendre si redemandé) :
 1. Mécanisme de collecte de l'évaluation bénéficiaire (colonnes Grist
