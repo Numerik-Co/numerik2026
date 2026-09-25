@@ -214,6 +214,32 @@ const creneauChoisiLabel = computed(() => {
 	return `${libelleJour(creneauChoisi.value.date)} à ${creneauChoisi.value.heure}`;
 });
 
+// --- Rappel affiché après envoi : date et horaires mis en exergue ---
+const rappelDate = computed(() => {
+	if (!creneauChoisi.value) return '';
+	return capitaliser(
+		new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(
+			isoToDate(creneauChoisi.value.date),
+		),
+	);
+});
+
+/** "09:00" -> "9 h" / "09:30" -> "9 h 30", avec la fin du créneau (30 min). */
+function libelleHeure(minutes: number): string {
+	const h = Math.floor(minutes / 60);
+	const m = minutes % 60;
+	return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`;
+}
+
+const rappelHoraires = computed(() => {
+	if (!creneauChoisi.value) return '';
+	const [h, m] = creneauChoisi.value.heure.split(':').map(Number);
+	const debut = h * 60 + m;
+	return `${libelleHeure(debut)} – ${libelleHeure(debut + 30)}`;
+});
+
+const demarchesChoisies = computed(() => demarches.value.filter((d) => form.demarcheIds.includes(d.id)));
+
 // --- Autocomplétion commune (profil géographique) ---
 // `form.commune` est directement le champ de recherche — comme
 // `MembreFields.vue` (adhésion) pour `adresse` : si l'API n'a pas de
@@ -314,24 +340,56 @@ async function envoyer() {
 
 <template>
 	<div class="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-		<div v-if="etatEnvoi === 'ok'" class="rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-sm">
-			<i class="fa-solid fa-circle-check text-3xl text-primary" aria-hidden="true"></i>
-			<h2 class="mt-4 font-heading text-lg text-gray-900">RDV confirmé !</h2>
-			<p class="mt-2 text-sm text-gray-600">
-				Rendez-vous {{ creneauChoisiLabel }}
-				<template v-if="creneauChoisi?.lieu"> — {{ creneauChoisi.lieu }}</template>. La conseillère numérique vous
-				attendra.
-			</p>
+		<div v-if="etatEnvoi === 'ok'" class="mx-auto max-w-2xl rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
+			<div class="text-center">
+				<i class="fa-solid fa-circle-check text-3xl text-primary" aria-hidden="true"></i>
+				<h2 class="mt-4 font-heading text-lg text-gray-900">RDV confirmé !</h2>
+				<p class="mt-1 text-sm text-gray-600">Voici le rappel de votre rendez-vous avec la conseillère numérique.</p>
+			</div>
 
-			<div v-if="documentsRappel.length" class="mt-4 rounded-lg bg-primary/5 p-4 text-left text-sm text-gray-700">
+			<!-- Date et heure mises en exergue -->
+			<div class="mt-6 rounded-xl bg-primary px-6 py-5 text-center text-white">
+				<p class="text-xs font-medium uppercase tracking-wider text-white/80">
+					<i class="fa-regular fa-calendar mr-1" aria-hidden="true"></i>Votre rendez-vous
+				</p>
+				<p class="mt-2 font-heading text-xl sm:text-2xl">{{ rappelDate }}</p>
+				<p class="mt-1 font-heading text-3xl sm:text-4xl">
+					<i class="fa-regular fa-clock mr-2 text-2xl sm:text-3xl" aria-hidden="true"></i>{{ rappelHoraires }}
+				</p>
+			</div>
+
+			<dl class="mt-6 space-y-3 text-sm">
+				<div v-if="creneauChoisi?.lieu" class="flex gap-3">
+					<dt class="w-5 shrink-0 text-center text-primary">
+						<i class="fa-solid fa-location-dot" aria-hidden="true"></i><span class="sr-only">Lieu</span>
+					</dt>
+					<dd class="text-gray-900">{{ creneauChoisi.lieu }}</dd>
+				</div>
+				<div v-for="d in demarchesChoisies" :key="d.id" class="flex gap-3">
+					<dt class="w-5 shrink-0 text-center text-primary">
+						<i class="fa-solid" :class="d.icone || 'fa-list-check'" aria-hidden="true"></i
+						><span class="sr-only">Démarche</span>
+					</dt>
+					<dd class="text-gray-900">
+						{{ d.nom }}
+						<span v-if="form.commentaire.trim()" class="mt-0.5 block text-gray-500">{{ form.commentaire.trim() }}</span>
+					</dd>
+				</div>
+			</dl>
+
+			<div v-if="documentsRappel.length" class="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-gray-700">
 				<p class="font-medium text-gray-900">
-					<i class="fa-solid fa-clipboard-list mr-2 text-primary" aria-hidden="true"></i>Pensez à apporter le jour du
-					rendez-vous :
+					<i class="fa-solid fa-clipboard-list mr-2 text-amber-600" aria-hidden="true"></i>Pièces à apporter pour
+					réaliser la démarche :
 				</p>
 				<ul class="mt-2 list-disc pl-5">
 					<li v-for="(doc, i) in documentsRappel" :key="i">{{ doc }}</li>
 				</ul>
 			</div>
+
+			<p class="mt-6 text-center text-xs text-gray-500">
+				Pensez à noter ce rendez-vous ou à faire une capture d’écran de ce rappel.
+			</p>
 		</div>
 
 		<form v-else class="space-y-6" @submit.prevent="envoyer">
