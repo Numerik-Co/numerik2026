@@ -109,6 +109,12 @@ Le process alimente **deux** tables, pas une :
 
 `Saison` est une **colonne formule** dans les deux ; de même `Tarif` / `Regle` (`Adhesions`) et `Eligible` / `Regle` (`Inscription`), ainsi que `Places_restantes` (`Activite`, décrément automatique). Ces colonnes ne sont **jamais écrites** par le code — Grist les calcule.
 
+## Prise de RDV avec le Conseiller Numérique
+
+Document Grist distinct (`GRIST_DOC_ID_RDV`), tables `Beneficiaires`, `RDV`,
+`Demarches`. Parcours, routes `/api/rdv/*` et mapping :
+[rdv-conseiller-numerique.md](rdv-conseiller-numerique.md).
+
 ## Planning hebdomadaire (Activite)
 
 `src/pages/activites.astro` (`prerender = false`) lit à chaque requête la

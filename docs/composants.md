@@ -83,6 +83,7 @@ Une section = un bloc complet de page (souvent une balise `<section>` pleine lar
 | `ActivitesSection.astro` | Grille des 4 catégories d'activités (`CategoryCard`, depuis `src/lib/categories.ts` — pas les activités individuelles). Prop `showHeading` (défaut `true`) : sur l'accueil, affiche le titre "Activités" + bouton "Accéder à la page" ; sur `activites.astro`, passé à `false` car la page a déjà son `PageHeader` | Accueil, page Activités |
 | `ActualitesSection.astro` | Les 3 actualités les plus récentes + lien "Voir toutes les actualités" | Accueil |
 | `CtaSection.astro` | Bandeau d'appel à l'action (dégradé primary→secondary) | Accueil |
+| `RdvCtaSection.astro` | Encart de prise de RDV avec le Conseiller Numérique : permanences (déduites de `conseillerNumerique`) + bouton. Props facultatives : `eyebrow`, `title`, `description`, `buttonLabel`, `buttonHref` | Accueil |
 | `PageHeader.astro` | Bannière de titre pour les pages internes (dégradé + titre + description). Props : `title`, `description` | Activités, Actualités, Adhérer, Contact |
 
 > ⚠️ Ne pas confondre **Activités** (`activites/`, `ActivitesSection`, `ActivityCard` — les parcours/ateliers proposés par l'association, contenu évergreen) et **Actualités** (`actualites/`, `ActualitesSection`, `ArticleCard` — les news datées). Deux systèmes de contenu distincts, avec le même fonctionnement (dossier + `index.md` + `cover.*`).
