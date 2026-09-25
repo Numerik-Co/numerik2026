@@ -1,6 +1,6 @@
 ---
 /**
- * Encart d'accueil « Prendre RDV avec le Conseiller Numérique », dans l'esprit
+ * Encart d'accueil « Prendre RDV avec le·la Conseiller·ère Numérique », dans l'esprit
  * de `CtaSection.astro` mais en carte claire, pour ne pas doubler le bandeau
  * dégradé « Envie de nous rejoindre ? » placé juste après.
  * Jours, horaires et lieux sont déduits de `conseillerNumerique` (agenda.ts).
@@ -18,9 +18,9 @@ interface Props {
 }
 
 const {
-	eyebrow = 'Conseiller.e Numérique',
+	eyebrow = 'Conseiller·ère Numérique',
 	title = 'Besoin d’aide pour une démarche en ligne ?',
-	description = 'Carte d’identité, CAF, impôts, messagerie, smartphone… Le.la conseiller.e numérique vous accompagne pas à pas, sur rendez-vous.',
+	description = 'Carte d’identité, CAF, impôts, messagerie, smartphone… Le·la conseiller·ère numérique vous accompagne pas à pas, sur rendez-vous.',
 	buttonLabel = 'Prendre rendez-vous',
 	buttonHref = '/rdv-conseiller-numerique',
 } = Astro.props;

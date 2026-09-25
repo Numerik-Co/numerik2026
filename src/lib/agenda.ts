@@ -68,7 +68,7 @@ export const AGENDA_KIND_META: Record<
 		hex: '#f59e0b',
 	},
 	'conseiller-numerique': {
-		label: 'Conseiller Numérique',
+		label: 'Conseiller·ère Numérique',
 		icon: 'fa-calendar-check',
 		dot: 'bg-violet-500',
 		text: 'text-violet-600',
@@ -83,7 +83,7 @@ export const conseillerNumerique: AgendaSession[] = (
 	day,
 	start: '09h00',
 	end: '12h00',
-	title: 'RDV du Conseiller Numérique',
+	title: 'RDV du·de la Conseiller·ère Numérique',
 	location: day === 'Mercredi' ? 'Quartier de la Moustey' : 'Ancienne mairie',
 	kind: 'conseiller-numerique' as const,
 }));

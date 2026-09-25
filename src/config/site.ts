@@ -98,7 +98,7 @@ export const site = {
 			enabled: true,
 			closedTitle: 'Prise de RDV en ligne momentanément fermée',
 			closedMessage:
-				"La prise de rendez-vous en ligne avec le Conseiller Numérique n'est pas ouverte actuellement. " +
+				"La prise de rendez-vous en ligne avec le·la Conseiller·ère Numérique n'est pas ouverte actuellement. " +
 				'Vous pouvez vous présenter directement à ses permanences ou nous contacter.',
 		},
 	} satisfies Record<string, FormToggle>,

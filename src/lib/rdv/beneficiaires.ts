@@ -4,7 +4,7 @@
  * Deux parcours dans le formulaire (étape « Vous ») :
  * - « C'est mon premier RDV » : `trouverOuCreerBeneficiaire()`, qui rapproche
  *   quand même par email/téléphone (filet anti-doublon) avant de créer ;
- * - « J'ai déjà rencontré le conseiller » : `rechercherBeneficiaires()` par
+ * - « J'ai déjà rencontré le·la conseiller·ère » : `rechercherBeneficiaires()` par
  *   prénom + nom exacts, puis `beneficiaireCorrespond()` à l'envoi.
  */
 

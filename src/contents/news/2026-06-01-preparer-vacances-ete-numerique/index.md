@@ -3,7 +3,7 @@ title: "Préparer ses vacances d'été grâce au numérique !"
 isPublish: true
 publishAt: 2026-06-01
 excerpt: "Réserver ses billets en ligne, télécharger ses documents, consulter la météo et les itinéraires... le numérique peut simplifier la préparation des vacances."
-tag: "Conseiller Numérique"
+tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
 ---
 

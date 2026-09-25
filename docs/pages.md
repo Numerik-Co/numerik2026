@@ -29,7 +29,7 @@ Deux mécanismes coexistent :
 | `src/contents/pages/association/_group.md` | — | contenu | Décrit le menu déroulant « Association » |
 | `src/contents/pages/association/notre-histoire/index.md` | `/association/notre-histoire` | contenu | Histoire de l'association |
 | `src/contents/pages/association/ethique-du-logiciel-libre/index.md` | `/association/ethique-du-logiciel-libre` | contenu | Éthique du logiciel libre |
-| `src/contents/pages/association/conseiller-numerique/index.md` | `/association/conseiller-numerique` | contenu | Conseiller numérique |
+| `src/contents/pages/association/conseiller-numerique/index.md` | `/association/conseiller-numerique` | contenu | Conseiller·ère numérique |
 
 ## Ajouter une page de contenu (cas courant)
 

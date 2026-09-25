@@ -3,7 +3,7 @@ title: "Comment reconnaître un mail frauduleux ?"
 isPublish: true
 publishAt: 2026-06-15
 excerpt: "Les tentatives de fraude par e-mail sont de plus en plus fréquentes, mais quelques signes permettent de les repérer facilement."
-tag: "Conseiller Numérique"
+tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
 ---
 

@@ -3,7 +3,7 @@ title: "Rentrée scolaire : attention aux arnaques numériques !"
 isPublish: true
 publishAt: 2026-08-25
 excerpt: "École, cantine, transport, bourses, fournitures... la rentrée est aussi une période où les arnaques peuvent se multiplier. Quelques réflexes simples pour s'en protéger."
-tag: "Conseiller Numérique"
+tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
 ---
 

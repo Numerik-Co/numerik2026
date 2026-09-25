@@ -3,7 +3,7 @@ title: "FranceConnect, c'est quoi ?"
 isPublish: true
 publishAt: 2026-06-22
 excerpt: "FranceConnect est un service officiel de l'État qui permet de se connecter à de nombreux sites administratifs (Ameli, impôts, CAF, retraite...) avec un seul identifiant."
-tag: "Conseiller Numérique"
+tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
 ---
 

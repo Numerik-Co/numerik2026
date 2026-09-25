@@ -3,7 +3,7 @@ title: "L'astuce numérique de la semaine : faites le ménage dans votre smartph
 isPublish: true
 publishAt: 2026-09-21
 excerpt: "Téléphone lent, manque de place ? Quelques gestes simples permettent de faire le tri et de retrouver un smartphone plus agréable à utiliser."
-tag: "Conseiller Numérique"
+tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
 ---
 

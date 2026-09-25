@@ -439,7 +439,7 @@ async function envoyer() {
 			<div class="text-center">
 				<i class="fa-solid fa-circle-check text-3xl text-primary" aria-hidden="true"></i>
 				<h2 class="mt-4 font-heading text-lg text-gray-900">RDV confirmé !</h2>
-				<p class="mt-1 text-sm text-gray-600">Voici le rappel de votre rendez-vous avec la conseillère numérique.</p>
+				<p class="mt-1 text-sm text-gray-600">Voici le rappel de votre rendez-vous avec le·la conseiller·ère numérique.</p>
 			</div>
 
 			<!-- Date et heure mises en exergue -->
@@ -582,7 +582,7 @@ async function envoyer() {
 				</div>
 
 				<template v-if="step === 2">
-					<p class="mt-1 text-sm text-gray-600">Permanences de 30 minutes avec la conseillère numérique.</p>
+					<p class="mt-1 text-sm text-gray-600">Permanences de 30 minutes avec le·la conseiller·ère numérique.</p>
 
 					<p v-if="etatCreneaux === 'chargement'" class="mt-4 text-sm text-gray-500">Chargement des créneaux…</p>
 					<p v-else-if="etatCreneaux === 'erreur'" class="mt-4 text-sm text-red-600">
@@ -668,7 +668,7 @@ async function envoyer() {
 						<button
 							v-for="choix in [
 								{ id: 'nouveau', icone: 'fa-user-plus', titre: 'C’est mon premier rendez-vous', aide: 'Je renseigne mes informations.' },
-								{ id: 'connu', icone: 'fa-user-check', titre: 'J’ai déjà rencontré le conseiller', aide: 'On retrouve ma fiche avec mon nom.' },
+								{ id: 'connu', icone: 'fa-user-check', titre: 'J’ai déjà rencontré le·la conseiller·ère', aide: 'On retrouve ma fiche avec mon nom.' },
 							] as const"
 							:key="choix.id"
 							type="button"

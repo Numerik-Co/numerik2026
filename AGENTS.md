@@ -126,8 +126,8 @@ seulement) → consentement/envoi.
 - `src/lib/rdv/creneaux.ts` — créneaux de 30 min dérivés de
   `conseillerNumerique` (`src/lib/agenda.ts`).
 - Étape 3 « Vous » : choix **« C'est mon premier rendez-vous »** (saisie
-  civilité/nom/coordonnées puis profil, étape 4) ou **« J'ai déjà rencontré le
-  conseiller »** (recherche prénom + nom, fiche existante réutilisée telle
+  civilité/nom/coordonnées puis profil, étape 4) ou **« J'ai déjà rencontré le·la
+  conseiller·ère »** (recherche prénom + nom, fiche existante réutilisée telle
   quelle, étape 4 profil sautée — la dernière étape s'affiche alors « 4 »).
   Objectif : pas de doublons dans `Beneficiaires`. Les pièces à apporter ne
   sont rappelées qu'après l'envoi (écran de confirmation).

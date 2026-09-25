@@ -55,7 +55,7 @@ annonces:
     ctaHref: "/contact"
 
   - id: "ateliers-conseillere-numerique"
-    title: 'Prochain atelier collectif "conseillère numérique"'
+    title: 'Prochain atelier collectif "conseiller·ère numérique"'
     message: "Ameli et Mon espace santé : Prenez en main l'espace de la Sécurité sociale"
     startDate: "2026-09-18"
     endDate: "2026-10-09"

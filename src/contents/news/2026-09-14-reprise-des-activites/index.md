@@ -13,7 +13,7 @@ C'est reparti ! Nos ateliers reprennent dès **ce lundi 14 septembre**, pour une
 
 Depuis plus de 30 ans, **NUMERIK&Co** est avant tout un espace de médiation numérique : un lieu où l'on peut, à son rythme et sans jugement, découvrir un ordinateur, se perfectionner ou trouver des réponses à ses questions. Nos ateliers sont animés par des bénévoles, dans un esprit convivial, pour que l'informatique reste un outil accessible à toutes et tous — quel que soit son âge ou son niveau de départ.
 
-C'est aussi la mission de notre [conseiller numérique](/association/conseiller-numerique), qui accompagne au quotidien celles et ceux pour qui le numérique reste une porte fermée : démarches administratives, recherche d'emploi, lien avec ses proches.
+C'est aussi la mission de notre [conseiller·ère numérique](/association/conseiller-numerique), qui accompagne au quotidien celles et ceux pour qui le numérique reste une porte fermée : démarches administratives, recherche d'emploi, lien avec ses proches.
 
 ## Le choix du logiciel libre
 

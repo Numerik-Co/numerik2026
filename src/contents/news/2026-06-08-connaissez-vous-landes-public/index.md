@@ -3,7 +3,7 @@ title: "Connaissez-vous le site Landes Public ?"
 isPublish: true
 publishAt: 2026-06-08
 excerpt: "landespublic.org, une plateforme en ligne qui permet d'accéder facilement à de nombreux services et informations utiles du quotidien."
-tag: "Conseiller Numérique"
+tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
 ---
 

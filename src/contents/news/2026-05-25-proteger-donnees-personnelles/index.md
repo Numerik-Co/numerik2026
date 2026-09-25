@@ -3,7 +3,7 @@ title: "Protéger ses données personnelles, c'est essentiel !"
 isPublish: true
 publishAt: 2026-05-25
 excerpt: "Nom, adresse, coordonnées bancaires... vos informations peuvent être exposées sur Internet si vous n'êtes pas vigilant. Quelques bons réflexes pour vous protéger."
-tag: "Conseiller Numérique"
+tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
 ---
 

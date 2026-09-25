@@ -1,4 +1,4 @@
-# La prise de RDV avec le Conseiller Numérique (former les collègues)
+# La prise de RDV avec le·la Conseiller·ère Numérique (former les collègues)
 
 Formulaire public : **`/rdv-conseiller-numerique`** (lien dans le menu, entre
 Activités et Actualités, et encart sur la page d'accueil). Il enregistre
@@ -18,7 +18,7 @@ directement dans le document Grist **« RDV Conseiller Numérique »** (tables
 
 ```mermaid
 flowchart TD
-    A(["Page « RDV Conseiller Numérique »<br/>/rdv-conseiller-numerique"]) --> B["Étape 1 · Démarche<br/>catalogue Grist Demarches + commentaire facultatif"]
+    A(["Page « RDV Conseiller·ère Numérique »<br/>/rdv-conseiller-numerique"]) --> B["Étape 1 · Démarche<br/>catalogue Grist Demarches + commentaire facultatif"]
     B --> C["Étape 2 · Créneau<br/>calendrier (3 semaines) + horaires libres du jour"]
     C --> D{"Étape 3 · Vous"}
 
@@ -26,7 +26,7 @@ flowchart TD
     E --> F["Étape 4 · Profil (facultatif)<br/>commune, origine géographique,<br/>tranche d'âge, statut"]
     F --> G
 
-    D -->|"J'ai déjà rencontré le conseiller"| H["Prénom + nom → « Me retrouver »"]
+    D -->|"J'ai déjà rencontré le·la conseiller·ère"| H["Prénom + nom → « Me retrouver »"]
     H -->|"1 fiche"| H1["Fiche présélectionnée"] --> G
     H -->|"Plusieurs fiches"| H2["Choisir la sienne<br/>(indice masqué : j•••@… · 06 •• •• •• 78 · commune)"] --> G
     H -->|"Aucune fiche"| H3["Vérifier l'orthographe<br/>ou passer en « premier rendez-vous »"] --> E
@@ -68,7 +68,7 @@ Deux choix, pour **ne pas créer de doublons** dans `Beneficiaires` :
 | Choix | Ce que ça fait |
 | :--- | :--- |
 | **C'est mon premier rendez-vous** | On saisit civilité, prénom, nom et **au moins un** e-mail ou téléphone (pour pouvoir prévenir la personne). Une fiche est créée à l'envoi. |
-| **J'ai déjà rencontré le conseiller** | On saisit seulement **prénom + nom**, le formulaire retrouve la fiche existante. |
+| **J'ai déjà rencontré le·la conseiller·ère** | On saisit seulement **prénom + nom**, le formulaire retrouve la fiche existante. |
 
 - **Déjà venu·e** — trois cas après « Me retrouver » :
   - **1 fiche** → présélectionnée, on continue ;
@@ -134,7 +134,7 @@ dans le formulaire au chargement suivant de la page.
 | Déjà venu·e | `Beneficiaires` | **Rien** — la fiche existante est réutilisée telle quelle |
 | Chaque RDV | `RDV` | `Beneficiaire`, `Date`, `Heure`, `Lieu`, `Demarche`, `Thematiques` (déduites de la démarche), `Commentaire_beneficiaire`, `Statut_rdv` = « Confirmé », `Cree_le` |
 
-Après le rendez-vous, la conseillère complète la ligne `RDV` **dans Grist**
+Après le rendez-vous, le·la conseiller·ère complète la ligne `RDV` **dans Grist**
 (statut Honoré / Absent / Annulé, matériel utilisé, niveau d'autonomie,
 orientation, notes…) : ces colonnes ne sont jamais écrites par le site.
 

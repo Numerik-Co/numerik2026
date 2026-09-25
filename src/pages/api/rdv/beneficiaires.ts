@@ -6,7 +6,7 @@ import { json } from '../../../lib/adhesion/http';
 export const prerender = false;
 
 /**
- * Parcours « J'ai déjà rencontré le conseiller » : fiches dont le prénom et
+ * Parcours « J'ai déjà rencontré le·la conseiller·ère » : fiches dont le prénom et
  * le nom correspondent exactement, avec un indice masqué pour départager.
  */
 export const GET: APIRoute = async ({ url }) => {

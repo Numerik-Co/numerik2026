@@ -1,14 +1,14 @@
 ---
-title: "Ateliers du Conseiller Numérique"
+title: "Ateliers du·de la Conseiller·ère Numérique"
 isPublish: true
-excerpt: "Un atelier collectif gratuit chaque mois, animé par notre conseillère numérique, pour prendre en main vos outils du quotidien."
+excerpt: "Un atelier collectif gratuit chaque mois, animé par notre conseiller·ère numérique, pour prendre en main vos outils du quotidien."
 category: "mediation-numerique"
 imageCredit: "Photo : Kampus / Pexels"
 inscription: false
 order: 3
 ---
 
-Que ce soit pour gérer vos démarches, naviguer sereinement sur internet en sécurité, ou obtenir des conseils et des explications, notre conseillère numérique organise chaque mois un atelier collectif. Prenez en main vos outils du quotidien et gagnez en autonomie dès aujourd'hui !
+Que ce soit pour gérer vos démarches, naviguer sereinement sur internet en sécurité, ou obtenir des conseils et des explications, notre conseiller·ère numérique organise chaque mois un atelier collectif. Prenez en main vos outils du quotidien et gagnez en autonomie dès aujourd'hui !
 
 Les ateliers se déroulent de 9h30 à 11h30, sont **gratuits, ouverts à tous et sans engagement**, sur inscription.
 
@@ -25,7 +25,7 @@ Les ateliers se déroulent de 9h30 à 11h30, sont **gratuits, ouverts à tous et
 
 ## Bon à savoir
 
-Le conseiller numérique n'est pas habilité à créer de dossier administratif : c'est un accompagnement aux outils numériques, pas une aide à la constitution de dossiers. Pour un accompagnement individuel sur rendez-vous, voir la page [conseiller numérique](/association/conseiller-numerique).
+Le·la conseiller·ère numérique n'est pas habilité·e à créer de dossier administratif : c'est un accompagnement aux outils numériques, pas une aide à la constitution de dossiers. Pour un accompagnement individuel sur rendez-vous, voir la page [conseiller numérique](/association/conseiller-numerique).
 
 ## Contact
 

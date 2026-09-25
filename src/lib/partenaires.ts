@@ -8,11 +8,11 @@ export interface Partenaire {
 export const partenaires: Partenaire[] = [
 	{
 		name: 'Mairie de Saint-Pierre-du-Mont',
-		role: "Co-porte le poste de conseiller numérique et soutient l'inclusion numérique sur la commune.",
+		role: "Co-porte le poste de conseiller·ère numérique et soutient l'inclusion numérique sur la commune.",
 	},
 	{
 		name: "ALPI — Agence Landaise Pour l'Informatique",
-		role: "Coordonne le réseau des conseillers numériques et le portail landais de l'inclusion numérique.",
+		role: "Coordonne le réseau des conseiller·ère·s numériques et le portail landais de l'inclusion numérique.",
 	},
 	{
 		name: 'Informatique40',

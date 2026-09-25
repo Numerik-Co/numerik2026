@@ -40,7 +40,7 @@ export function evenementRdv(
 		...(demarches.length ? [`Démarche : ${demarches.map((d) => d.nom).join(', ')}`] : []),
 		...(documents.length ? ['', 'À apporter :', ...documents.map((d) => `- ${d}`)] : []),
 	].join('\n');
-	return { date, heure, lieu, titre: 'RDV Conseiller Numérique', description };
+	return { date, heure, lieu, titre: 'RDV Conseiller·ère Numérique', description };
 }
 
 /** Heure locale Europe/Paris -> instant UTC (gère l'heure d'été). */

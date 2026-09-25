@@ -22,7 +22,7 @@ export const categories: Category[] = [
 		slug: 'mediation-numerique',
 		label: 'Médiation numérique',
 		icon: 'fa-people-group',
-		description: "Un accompagnement individuel ou collectif animé par notre conseillère numérique.",
+		description: "Un accompagnement individuel ou collectif animé par notre conseiller·ère numérique.",
 	},
 	{
 		slug: 'fablab',

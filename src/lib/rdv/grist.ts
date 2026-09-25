@@ -56,7 +56,7 @@ export const COLS = {
 		creeLe: 'Cree_le',
 		// Demarche_nom : ancien champ libre, remplacé par `demarche` (catalogue
 		// structuré) — colonne conservée dans Grist mais plus jamais écrite.
-		// Colonnes complétées ensuite par la conseillère directement dans
+		// Colonnes complétées ensuite par le·la conseiller·ère directement dans
 		// Grist (jamais écrites par ce code) : Materiel_utilise,
 		// Sous_thematique_demarche, Niveau_autonomie, Oriente_autre_structure,
 		// Notes_accompagnement, Lieu_reel, Evaluation_satisfaction,

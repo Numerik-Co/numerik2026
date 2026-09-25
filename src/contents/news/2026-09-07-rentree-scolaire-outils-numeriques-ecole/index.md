@@ -3,7 +3,7 @@ title: "Rentrée scolaire : besoin d'aide avec les outils numériques de l'écol
 isPublish: true
 publishAt: 2026-09-07
 excerpt: "ENT, Pronote, espace famille, messagerie scolaire... la rentrée est le bon moment pour vérifier que tout fonctionne et prendre en main les outils numériques de l'école."
-tag: "Conseiller Numérique"
+tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
 ---
 

@@ -53,7 +53,7 @@ export interface BeneficiaireInfos {
 	statut?: StatutBeneficiaire;
 }
 
-/** Résultat de recherche « J'ai déjà rencontré le conseiller » — jamais de coordonnées en clair. */
+/** Résultat de recherche « J'ai déjà rencontré le·la conseiller·ère » — jamais de coordonnées en clair. */
 export interface BeneficiaireRecherche {
 	beneficiaireId: number;
 	indice: string; // ex. "j•••@gmail.com · 06 •• •• •• 78 · Lannion"

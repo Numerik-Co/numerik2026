@@ -1,5 +1,5 @@
 ---
-title: "Conseiller numérique"
+title: "Conseiller·ère numérique"
 description: "Le numérique, ça se partage ensemble : un accompagnement gratuit et sur mesure."
 menu:
   show: true
@@ -19,7 +19,7 @@ Ce poste, fruit d'une collaboration entre l'association et la Mairie de Saint-Pi
 - Des **suivis individuels** pour avancer sur vos besoins concrets.
 - Des **ateliers collectifs** pour apprendre et échanger en groupe.
 
-## Où rencontrer la conseillère numérique ?
+## Où rencontrer le·la conseiller·ère numérique ?
 
 **Au Pôle Citoyenneté** (ancienne mairie)
 Les lundis, mardis, jeudis et vendredis, de 9h00 à 12h00.
@@ -27,11 +27,11 @@ Les lundis, mardis, jeudis et vendredis, de 9h00 à 12h00.
 **Sur le quartier de La Moustey**
 Les mercredis, de 9h00 à 12h00.
 
-> **Attention :** la conseillère numérique se rencontre uniquement sur rendez-vous.
+> **Attention :** le·la conseiller·ère numérique se rencontre uniquement sur rendez-vous.
 
 ## Contact
 
 - Courriel : [conseiller-numerique@clubmicrosaintpierre.fr](mailto:conseiller-numerique@clubmicrosaintpierre.fr)
 - Téléphone : 09 51 93 77 06
 
-Vous pouvez suivre l'actualité de notre conseillère numérique sur la [page Facebook de l'association](https://www.facebook.com/clubmicrosaintpierre).
+Vous pouvez suivre l'actualité de notre conseiller·ère numérique sur la [page Facebook de l'association](https://www.facebook.com/clubmicrosaintpierre).

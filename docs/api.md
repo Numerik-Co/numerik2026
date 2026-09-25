@@ -109,7 +109,7 @@ Le process alimente **deux** tables, pas une :
 
 `Saison` est une **colonne formule** dans les deux ; de même `Tarif` / `Regle` (`Adhesions`) et `Eligible` / `Regle` (`Inscription`), ainsi que `Places_restantes` (`Activite`, décrément automatique). Ces colonnes ne sont **jamais écrites** par le code — Grist les calcule.
 
-## Prise de RDV avec le Conseiller Numérique
+## Prise de RDV avec le·la Conseiller·ère Numérique
 
 Document Grist distinct (`GRIST_DOC_ID_RDV`), tables `Beneficiaires`, `RDV`,
 `Demarches`. Parcours, routes `/api/rdv/*` et mapping :
@@ -125,7 +125,7 @@ encadrant·e·s) — pas de table séparée : seules les lignes `Publiee = true`
 de la **saison en cours** sont retenues, et celles sans `Categorie_agenda`
 valide (colonne pas encore renseignée) sont ignorées.
 
-Les permanences du **Conseiller Numérique** restent générées en dur par
+Les permanences du·de la **Conseiller·ère Numérique** restent générées en dur par
 `conseillerNumerique` (`src/lib/agenda.ts`) — dispositif géré à part de la
 programmation de l'association, jamais dans `Activite`. La page les
 recombine : `[...conseillerNumerique, ...(await fetchPlanningAgenda())]`.
