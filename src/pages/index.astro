@@ -4,6 +4,7 @@ import Hero from '../components/sections/Hero.astro';
 import ActivitesSection from '../components/sections/ActivitesSection.astro';
 import ActualitesSection from '../components/sections/ActualitesSection.astro';
 import CtaSection from '../components/sections/CtaSection.astro';
+import RdvCtaSection from '../components/sections/RdvCtaSection.astro';
 import heroImage from '../styles/img/hero-mediation-numerique.jpg';
 import { association } from '../lib/association';
 ---
@@ -32,6 +33,7 @@ import { association } from '../lib/association';
 		ctaLabel="Accéder à la page"
 		ctaHref="/activites"
 	/>
+	<RdvCtaSection />
 	<CtaSection
 		title="Envie de nous rejoindre ?"
 		description={`Bénévoles, adhérent·e·s ou partenaires : chacun·e a sa place chez ${association.name}.`}

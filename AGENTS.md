@@ -117,6 +117,12 @@ seulement) → consentement/envoi.
   côté site. `Documents` (facultatif, une ligne par document à apporter) est
   affiché en rappel sur l'écran de confirmation de `RdvForm.vue` (après
   envoi uniquement).
+- `src/components/sections/RdvCtaSection.astro` — encart d'accueil
+  (`src/pages/index.astro`, juste avant « Envie de nous rejoindre ? ») :
+  jours, horaires et lieux déduits de `conseillerNumerique`, bouton vers
+  `/rdv-conseiller-numerique` (« Voir les permanences » si le formulaire est
+  fermé dans `site.forms`). Props facultatives : `eyebrow`, `title`,
+  `description`, `buttonLabel`, `buttonHref`.
 - `src/lib/rdv/creneaux.ts` — créneaux de 30 min dérivés de
   `conseillerNumerique` (`src/lib/agenda.ts`).
 - Étape 3 « Vous » : choix **« C'est mon premier rendez-vous »** (saisie

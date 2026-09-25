@@ -1,0 +1,96 @@
+---
+/**
+ * Encart d'accueil « Prendre RDV avec le Conseiller Numérique », dans l'esprit
+ * de `CtaSection.astro` mais en carte claire, pour ne pas doubler le bandeau
+ * dégradé « Envie de nous rejoindre ? » placé juste après.
+ * Jours, horaires et lieux sont déduits de `conseillerNumerique` (agenda.ts).
+ */
+import Button from '../ui/Button.astro';
+import { conseillerNumerique } from '../../lib/agenda';
+import { isFormOpen } from '../../lib/forms';
+
+interface Props {
+	eyebrow?: string;
+	title?: string;
+	description?: string;
+	buttonLabel?: string;
+	buttonHref?: string;
+}
+
+const {
+	eyebrow = 'Conseiller Numérique',
+	title = 'Besoin d’aide pour une démarche en ligne ?',
+	description = 'Carte d’identité, CAF, impôts, messagerie, smartphone… Le conseiller numérique vous accompagne pas à pas, sur rendez-vous.',
+	buttonLabel = 'Prendre rendez-vous',
+	buttonHref = '/rdv-conseiller-numerique',
+} = Astro.props;
+
+// Prise de RDV en ligne fermée : l'encart reste utile (permanences), le
+// bouton mène à la page qui affiche le message de fermeture.
+const ouvert = isFormOpen('rdvConseillerNumerique');
+
+/** « 09h00 » -> « 9 h », « 09h30 » -> « 9 h 30 » */
+function heure(h: string): string {
+	const [hh, mm] = h.split('h');
+	return mm && mm !== '00' ? `${Number(hh)} h ${mm}` : `${Number(hh)} h`;
+}
+
+const jours = conseillerNumerique.map((s) => s.day.toLowerCase());
+const semaine = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
+const libelleJours =
+	jours.length === 5 && semaine.every((j) => jours.includes(j)) ? 'Du lundi au vendredi' : jours.join(', ');
+
+const plages = [...new Set(conseillerNumerique.map((s) => `${heure(s.start)} – ${heure(s.end)}`))];
+
+// Lieu -> jours concernés, dans l'ordre de la semaine.
+const lieux = new Map<string, string[]>();
+for (const s of conseillerNumerique) {
+	const lieu = s.location ?? '';
+	if (!lieu) continue;
+	if (!lieux.has(lieu)) lieux.set(lieu, []);
+	lieux.get(lieu)!.push(s.day.toLowerCase());
+}
+const plusieursLieux = lieux.size > 1;
+---
+
+<section class="bg-white py-16">
+	<div class="mx-auto max-w-5xl px-4 sm:px-6">
+		<div
+			class="grid gap-8 rounded-2xl border border-primary/15 bg-primary/5 p-6 sm:p-10 md:grid-cols-[1fr_auto] md:items-center"
+		>
+			<div>
+				<p class="text-sm font-semibold uppercase tracking-wider text-primary">
+					<i class="fa-solid fa-headset mr-2" aria-hidden="true"></i>{eyebrow}
+				</p>
+				<h2 class="mt-2 text-3xl text-gray-900">{title}</h2>
+				<p class="mt-4 max-w-xl font-light text-gray-600">{description}</p>
+
+				<ul class="mt-6 space-y-2 text-sm text-gray-700">
+					<li class="flex gap-3">
+						<i class="fa-regular fa-calendar mt-0.5 w-4 text-center text-primary" aria-hidden="true"></i>
+						<span>{libelleJours} · {plages.join(' / ')}</span>
+					</li>
+					{
+						[...lieux].map(([lieu, joursLieu]) => (
+							<li class="flex gap-3">
+								<i class="fa-solid fa-location-dot mt-0.5 w-4 text-center text-primary" aria-hidden="true" />
+								<span>
+									{lieu}
+									{plusieursLieux && <span class="text-gray-500"> ({joursLieu.join(', ')})</span>}
+								</span>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+
+			<div class="text-center md:text-right">
+				<Button href={buttonHref}>
+					<i class={`fa-solid ${ouvert ? 'fa-calendar-plus' : 'fa-circle-info'} mr-2`} aria-hidden="true"></i>
+					{ouvert ? buttonLabel : 'Voir les permanences'}
+				</Button>
+				<p class="mt-3 text-xs text-gray-500">Gratuit · 30 minutes</p>
+			</div>
+		</div>
+	</div>
+</section>
