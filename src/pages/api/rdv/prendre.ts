@@ -29,7 +29,10 @@ function estValide(body: unknown): body is PriseRdvPayload {
 	const email = typeof b.email === 'string' ? b.email.trim() : '';
 	const telephone = typeof b.telephone === 'string' ? b.telephone.trim() : '';
 	if (email && !EMAIL_RE.test(email)) return false;
-	if (!email && !telephone) return false;
+	const beneficiaireId = b.beneficiaireId;
+	if (beneficiaireId !== undefined && !(typeof beneficiaireId === 'number' && Number.isInteger(beneficiaireId) && beneficiaireId > 0))
+		return false;
+	if (beneficiaireId === undefined && !email && !telephone) return false;
 
 	if (!isNonEmptyString(b.date) || !DATE_RE.test(b.date)) return false;
 	if (!isNonEmptyString(b.heure) || !HEURE_RE.test(b.heure)) return false;
@@ -67,6 +70,9 @@ export const POST: APIRoute = async ({ request }) => {
 		const resultat = await prendreRendezVous(body);
 		if (resultat.status === 'complet') {
 			return json({ error: 'Ce créneau vient d’être pris, merci d’en choisir un autre.' }, 409);
+		}
+		if (resultat.status === 'beneficiaire_inconnu') {
+			return json({ error: 'Nous ne retrouvons pas votre fiche, merci de refaire la recherche.' }, 400);
 		}
 		if (resultat.status === 'demarches_invalides') {
 			return json({ error: 'Démarche(s) inconnue(s), merci de recharger la page.' }, 400);

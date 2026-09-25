@@ -1,5 +1,5 @@
 /** Fines enveloppes typées autour des routes /api/rdv/*. */
-import type { Creneau, CommuneSuggestion, Demarche, PriseRdvPayload, PriseRdvResult } from '../../lib/rdv/types';
+import type { BeneficiaireRecherche, Creneau, CommuneSuggestion, Demarche, PriseRdvPayload, PriseRdvResult } from '../../lib/rdv/types';
 
 async function get<T>(url: string): Promise<T> {
 	const res = await fetch(url);
@@ -27,5 +27,9 @@ export const rdvApi = {
 	creneaux: () => get<Creneau[]>('/api/rdv/creneaux'),
 	demarches: () => get<Demarche[]>('/api/rdv/demarches'),
 	communes: (q: string) => get<CommuneSuggestion[]>(`/api/rdv/commune?q=${encodeURIComponent(q)}`),
+	beneficiaires: (prenom: string, nom: string) =>
+		get<BeneficiaireRecherche[]>(
+			`/api/rdv/beneficiaires?prenom=${encodeURIComponent(prenom)}&nom=${encodeURIComponent(nom)}`,
+		),
 	prendre: (payload: PriseRdvPayload) => post<PriseRdvResult>('/api/rdv/prendre', payload),
 };

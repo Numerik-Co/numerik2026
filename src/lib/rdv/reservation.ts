@@ -5,7 +5,7 @@
  * puis crée la ligne `RDV`.
  */
 
-import { trouverOuCreerBeneficiaire } from './beneficiaires';
+import { beneficiaireCorrespond, trouverOuCreerBeneficiaire } from './beneficiaires';
 import { creneauEstLibre, lieuPourDate } from './creneaux';
 import { demarchesParIds } from './demarches';
 import { COLS, createRecord, dateToEpochSeconds, refList, TABLES } from './grist';
@@ -16,10 +16,15 @@ export async function prendreRendezVous(payload: PriseRdvPayload): Promise<Prise
 	const demarches = await demarchesParIds(payload.demarcheIds);
 	if (!demarches.length) return { status: 'demarches_invalides' };
 
+	if (payload.beneficiaireId && !(await beneficiaireCorrespond(payload.beneficiaireId, payload.prenom, payload.nom))) {
+		return { status: 'beneficiaire_inconnu' };
+	}
+
 	const libre = await creneauEstLibre(payload.date, payload.heure);
 	if (!libre) return { status: 'complet' };
 
-	const beneficiaireId = await trouverOuCreerBeneficiaire({
+	// Parcours « déjà venu » : fiche existante laissée telle quelle.
+	const beneficiaireId = payload.beneficiaireId ?? (await trouverOuCreerBeneficiaire({
 		nom: payload.nom,
 		prenom: payload.prenom,
 		email: payload.email,
@@ -31,7 +36,7 @@ export async function prendreRendezVous(payload: PriseRdvPayload): Promise<Prise
 		trancheAge: payload.trancheAge,
 		statut: payload.statut,
 		consentement: payload.consentement,
-	});
+	}));
 
 	const lieu = lieuPourDate(payload.date);
 	const thematiques = [...new Set(demarches.map((d) => d.thematique))];

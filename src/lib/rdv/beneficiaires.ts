@@ -1,13 +1,17 @@
 /**
- * Rapprochement / création d'un bénéficiaire (table `Beneficiaires`), par
- * email — la seule clé stable dont on dispose côté public (pas de compte,
- * pas de lien Grist inter-documents avec `Membres`).
+ * Rapprochement / création d'un bénéficiaire (table `Beneficiaires`).
+ *
+ * Deux parcours dans le formulaire (étape « Vous ») :
+ * - « C'est mon premier RDV » : `trouverOuCreerBeneficiaire()`, qui rapproche
+ *   quand même par email/téléphone (filet anti-doublon) avant de créer ;
+ * - « J'ai déjà rencontré le conseiller » : `rechercherBeneficiaires()` par
+ *   prénom + nom exacts, puis `beneficiaireCorrespond()` à l'envoi.
  */
 
 import { normalize } from '../adhesion/http';
 import { normaliserTelephone } from './validation';
 import { COLS, createRecord, dateToEpochSeconds, listRecords, TABLES, updateRecord } from './grist';
-import type { BeneficiaireInfos } from './types';
+import type { BeneficiaireInfos, BeneficiaireRecherche } from './types';
 
 export interface BeneficiaireIdentite extends BeneficiaireInfos {
 	nom: string;
@@ -66,4 +70,53 @@ export async function trouverOuCreerBeneficiaire(infos: BeneficiaireIdentite): P
 		...champsRenseignes(infos),
 		[COLS.beneficiaire.creeLe]: dateToEpochSeconds(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date())),
 	});
+}
+
+/** Nom/prénom comparables : sans accents, casse, tirets ni espaces multiples. */
+function cleNom(v: string): string {
+	return normalize(v.replace(/[-'’]/g, ' '));
+}
+
+/** "jean.dupont@gmail.com" -> "j•••@gmail.com" */
+function masquerEmail(email: string): string {
+	const [local, domaine] = email.split('@');
+	return domaine ? `${local.charAt(0)}•••@${domaine}` : '';
+}
+
+/** "0612345678" -> "06 •• •• •• 78" */
+function masquerTelephone(tel: string): string {
+	const t = normaliserTelephone(tel);
+	return t.length >= 4 ? `${t.slice(0, 2)} •• •• •• ${t.slice(-2)}` : '';
+}
+
+/**
+ * Fiches dont le prénom ET le nom correspondent exactement (hors accents,
+ * casse, tirets) — pas de recherche partielle, pour ne pas permettre de
+ * parcourir la liste des bénéficiaires depuis la page publique. Seul un
+ * indice masqué (email/téléphone) est renvoyé, pour départager des homonymes.
+ */
+export async function rechercherBeneficiaires(prenom: string, nom: string): Promise<BeneficiaireRecherche[]> {
+	const p = cleNom(prenom);
+	const n = cleNom(nom);
+	if (!p || !n) return [];
+	const c = COLS.beneficiaire;
+	const records = await listRecords(TABLES.beneficiaires);
+	return records
+		.filter((r) => cleNom(String(r.fields[c.prenom] ?? '')) === p && cleNom(String(r.fields[c.nom] ?? '')) === n)
+		.slice(0, 5)
+		.map((r) => {
+			const email = masquerEmail(String(r.fields[c.email] ?? '').trim());
+			const tel = masquerTelephone(String(r.fields[c.telephone] ?? '').trim());
+			const commune = String(r.fields[c.commune] ?? '').trim();
+			return { beneficiaireId: r.id, indice: [email, tel, commune].filter(Boolean).join(' · ') };
+		});
+}
+
+/**
+ * Revérifie à l'envoi que la fiche choisie porte bien ce prénom + nom : un id
+ * seul (devinable) ne suffit pas à prendre RDV au nom de quelqu'un.
+ */
+export async function beneficiaireCorrespond(id: number, prenom: string, nom: string): Promise<boolean> {
+	const resultats = await rechercherBeneficiaires(prenom, nom);
+	return resultats.some((r) => r.beneficiaireId === id);
 }

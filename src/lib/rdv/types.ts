@@ -53,12 +53,21 @@ export interface BeneficiaireInfos {
 	statut?: StatutBeneficiaire;
 }
 
+/** Résultat de recherche « J'ai déjà rencontré le conseiller » — jamais de coordonnées en clair. */
+export interface BeneficiaireRecherche {
+	beneficiaireId: number;
+	indice: string; // ex. "j•••@gmail.com · 06 •• •• •• 78 · Lannion"
+}
+
 export interface PriseRdvPayload extends BeneficiaireInfos {
+	/** Fiche existante retrouvée (parcours « déjà venu ») — sinon fiche créée/rapprochée. */
+	beneficiaireId?: number;
 	nom: string;
 	prenom: string;
 	// Aucun des deux n'est individuellement obligatoire — mais au moins l'un
 	// des deux doit être renseigné (validation.ts), pour pouvoir notifier le
-	// bénéficiaire de son RDV.
+	// bénéficiaire de son RDV. Ni l'un ni l'autre n'est demandé si
+	// `beneficiaireId` est fourni (fiche déjà connue).
 	email: string;
 	telephone: string;
 	date: string; // ISO yyyy-mm-dd
@@ -71,4 +80,5 @@ export interface PriseRdvPayload extends BeneficiaireInfos {
 export type PriseRdvResult =
 	| { status: 'ok'; rdvId: number }
 	| { status: 'complet' }
-	| { status: 'demarches_invalides' };
+	| { status: 'demarches_invalides' }
+	| { status: 'beneficiaire_inconnu' };

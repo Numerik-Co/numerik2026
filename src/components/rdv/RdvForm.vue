@@ -11,7 +11,13 @@ import {
 } from '../../lib/rdv/choices';
 import { deduireZone } from '../../lib/rdv/geographie';
 import { validatePriseRdv, hasErrors } from '../../lib/rdv/validation';
-import type { Creneau, CommuneSuggestion, Demarche, PriseRdvPayload } from '../../lib/rdv/types';
+import type {
+	BeneficiaireRecherche,
+	Creneau,
+	CommuneSuggestion,
+	Demarche,
+	PriseRdvPayload,
+} from '../../lib/rdv/types';
 import { contenuQrCode, documentsDemarches, evenementRdv, type EvenementRdv } from '../../lib/rdv/ics';
 import QRCode from 'qrcode';
 import { rdvApi } from './client';
@@ -131,8 +137,60 @@ function continuerCreneau() {
 }
 
 function continuerCoordonnees() {
+	if (parcours.value === 'connu') {
+		if (!beneficiaireChoisi.value) {
+			errors.value = { beneficiaire: 'Sélectionnez votre fiche, ou faites une nouvelle recherche.' };
+			return;
+		}
+		errors.value = {};
+		step.value = 5; // Profil déjà connu : on saute l'étape 4.
+		return;
+	}
 	if (peutAvancer(['nom', 'prenom', 'email', 'telephone'])) step.value = 4;
 }
+
+// --- Étape « Vous » : premier RDV (fiche créée) ou déjà venu (fiche
+// recherchée par prénom + nom), pour ne pas créer de doublons dans Grist. ---
+const parcours = ref<'' | 'nouveau' | 'connu'>('');
+const resultatsRecherche = ref<BeneficiaireRecherche[]>([]);
+const etatRecherche = ref<'idle' | 'busy' | 'ok' | 'erreur'>('idle');
+const beneficiaireChoisi = ref<number | null>(null);
+
+function choisirParcours(p: 'nouveau' | 'connu') {
+	parcours.value = p;
+	errors.value = {};
+	reinitialiserRecherche();
+}
+
+function reinitialiserRecherche() {
+	resultatsRecherche.value = [];
+	etatRecherche.value = 'idle';
+	beneficiaireChoisi.value = null;
+}
+
+// Nom modifié après une recherche : le résultat affiché ne correspond plus.
+watch(
+	() => [form.prenom, form.nom],
+	() => {
+		if (parcours.value === 'connu' && etatRecherche.value !== 'idle') reinitialiserRecherche();
+	},
+);
+
+async function rechercherFiche() {
+	if (!peutAvancer(['prenom', 'nom'])) return;
+	etatRecherche.value = 'busy';
+	try {
+		resultatsRecherche.value = await rdvApi.beneficiaires(form.prenom.trim(), form.nom.trim());
+		// Un seul résultat : présélectionné, la personne n'a plus qu'à continuer.
+		beneficiaireChoisi.value = resultatsRecherche.value.length === 1 ? resultatsRecherche.value[0].beneficiaireId : null;
+		etatRecherche.value = 'ok';
+	} catch {
+		etatRecherche.value = 'erreur';
+	}
+}
+
+/** Dernière étape numérotée 4 quand le profil (étape 4) est sauté. */
+const numeroDerniereEtape = computed(() => (parcours.value === 'connu' ? 4 : 5));
 
 function continuerProfil() {
 	errors.value = {};
@@ -315,22 +373,30 @@ const etatEnvoi = ref<'idle' | 'busy' | 'ok' | 'erreur'>('idle');
 const messageErreur = ref('');
 
 function construirePayload(): PriseRdvPayload {
+	const connu = parcours.value === 'connu';
 	return {
+		beneficiaireId: connu ? (beneficiaireChoisi.value ?? undefined) : undefined,
 		nom: form.nom.trim(),
 		prenom: form.prenom.trim(),
-		email: form.email.trim(),
-		telephone: form.telephone.trim(),
+		email: connu ? '' : form.email.trim(),
+		telephone: connu ? '' : form.telephone.trim(),
 		date: creneauChoisi.value?.date ?? '',
 		heure: creneauChoisi.value?.heure ?? '',
+		...(connu ? {} : profilPayload()),
+		demarcheIds: form.demarcheIds,
+		commentaire: form.commentaire.trim() || undefined,
+		consentement: form.consentement,
+	};
+}
+
+function profilPayload() {
+	return {
 		genre: form.genre || undefined,
 		commune: form.commune.trim() || undefined,
 		codePostal: form.codePostal.trim() || undefined,
 		zoneGeographique: form.zoneGeographique || undefined,
 		trancheAge: form.trancheAge || undefined,
 		statut: form.statut || undefined,
-		demarcheIds: form.demarcheIds,
-		commentaire: form.commentaire.trim() || undefined,
-		consentement: form.consentement,
 	};
 }
 
@@ -587,57 +653,144 @@ async function envoyer() {
 				</p>
 			</div>
 
-			<!-- 3. Coordonnées -->
+			<!-- 3. Vous : premier RDV ou déjà venu -->
 			<div v-if="step >= 3" class="rounded-2xl border bg-white p-6 shadow-sm" :class="cardCls(3)">
 				<div class="flex items-center gap-3">
 					<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-heading text-sm" :class="badgeCls(3)">
 						<i v-if="step > 3" class="fa-solid fa-check" aria-hidden="true"></i>
 						<span v-else>3</span>
 					</span>
-					<h2 class="font-heading text-lg text-gray-900">Vos coordonnées</h2>
+					<h2 class="font-heading text-lg text-gray-900">Vous</h2>
 				</div>
 
 				<template v-if="step === 3">
-					<div class="mt-4 grid gap-4 sm:grid-cols-3">
-						<div>
-							<label class="text-sm font-medium text-gray-700">Civilité</label>
-							<select v-model="form.genre" :class="champCls('genre')">
-								<option value="">Autre</option>
-								<option value="Masculin">M.</option>
-								<option value="Féminin">Mme</option>
-							</select>
-						</div>
-						<div>
-							<label class="text-sm font-medium text-gray-700">Prénom</label>
-							<input v-model="form.prenom" type="text" :class="champCls('prenom')" />
-							<p v-if="errors.prenom" class="mt-1 text-xs text-red-600">{{ errors.prenom }}</p>
-						</div>
-						<div>
-							<label class="text-sm font-medium text-gray-700">Nom</label>
-							<input v-model="form.nom" type="text" :class="champCls('nom')" />
-							<p v-if="errors.nom" class="mt-1 text-xs text-red-600">{{ errors.nom }}</p>
-						</div>
+					<div class="mt-4 grid gap-3 sm:grid-cols-2">
+						<button
+							v-for="choix in [
+								{ id: 'nouveau', icone: 'fa-user-plus', titre: 'C’est mon premier rendez-vous', aide: 'Je renseigne mes informations.' },
+								{ id: 'connu', icone: 'fa-user-check', titre: 'J’ai déjà rencontré le conseiller', aide: 'On retrouve ma fiche avec mon nom.' },
+							] as const"
+							:key="choix.id"
+							type="button"
+							class="flex items-start gap-3 rounded-xl border p-4 text-left transition-colors"
+							:class="
+								parcours === choix.id
+									? 'border-primary bg-primary/5'
+									: 'border-gray-200 hover:border-primary'
+							"
+							:aria-pressed="parcours === choix.id"
+							@click="choisirParcours(choix.id)"
+						>
+							<i class="fa-solid mt-0.5 text-lg text-primary" :class="choix.icone" aria-hidden="true"></i>
+							<span>
+								<span class="block font-medium text-gray-900">{{ choix.titre }}</span>
+								<span class="block text-sm text-gray-500">{{ choix.aide }}</span>
+							</span>
+						</button>
 					</div>
 
-					<p class="mt-4 text-sm text-gray-600">
-						Pour être prévenu·e en cas de besoin (confirmation, rappel, imprévu), indiquez au moins un e-mail ou un
-						numéro de téléphone — les deux ne sont pas obligatoires.
-					</p>
+					<!-- Premier RDV : on alimente la fiche -->
+					<template v-if="parcours === 'nouveau'">
+						<div class="mt-6 grid gap-4 sm:grid-cols-3">
+							<div>
+								<label class="text-sm font-medium text-gray-700">Civilité</label>
+								<select v-model="form.genre" :class="champCls('genre')">
+									<option value="">Autre</option>
+									<option value="Masculin">M.</option>
+									<option value="Féminin">Mme</option>
+								</select>
+							</div>
+							<div>
+								<label class="text-sm font-medium text-gray-700">Prénom</label>
+								<input v-model="form.prenom" type="text" :class="champCls('prenom')" />
+								<p v-if="errors.prenom" class="mt-1 text-xs text-red-600">{{ errors.prenom }}</p>
+							</div>
+							<div>
+								<label class="text-sm font-medium text-gray-700">Nom</label>
+								<input v-model="form.nom" type="text" :class="champCls('nom')" />
+								<p v-if="errors.nom" class="mt-1 text-xs text-red-600">{{ errors.nom }}</p>
+							</div>
+						</div>
 
-					<div class="mt-4 grid gap-4 sm:grid-cols-2">
-						<div>
-							<label class="text-sm font-medium text-gray-700">E-mail</label>
-							<input v-model="form.email" type="email" :class="champCls('email')" />
-							<p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
+						<p class="mt-4 text-sm text-gray-600">
+							Pour être prévenu·e en cas de besoin (confirmation, rappel, imprévu), indiquez au moins un e-mail ou un
+							numéro de téléphone — les deux ne sont pas obligatoires.
+						</p>
+
+						<div class="mt-4 grid gap-4 sm:grid-cols-2">
+							<div>
+								<label class="text-sm font-medium text-gray-700">E-mail</label>
+								<input v-model="form.email" type="email" :class="champCls('email')" />
+								<p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
+							</div>
+							<div>
+								<label class="text-sm font-medium text-gray-700">Téléphone</label>
+								<input v-model="form.telephone" type="tel" :class="champCls('telephone')" />
+								<p v-if="errors.telephone" class="mt-1 text-xs text-red-600">{{ errors.telephone }}</p>
+							</div>
 						</div>
-						<div>
-							<label class="text-sm font-medium text-gray-700">Téléphone</label>
-							<input v-model="form.telephone" type="tel" :class="champCls('telephone')" />
-							<p v-if="errors.telephone" class="mt-1 text-xs text-red-600">{{ errors.telephone }}</p>
+					</template>
+
+					<!-- Déjà venu : recherche sur prénom + nom -->
+					<template v-else-if="parcours === 'connu'">
+						<div class="mt-6 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+							<div>
+								<label class="text-sm font-medium text-gray-700">Prénom</label>
+								<input v-model="form.prenom" type="text" :class="champCls('prenom')" @keydown.enter.prevent="rechercherFiche" />
+								<p v-if="errors.prenom" class="mt-1 text-xs text-red-600">{{ errors.prenom }}</p>
+							</div>
+							<div>
+								<label class="text-sm font-medium text-gray-700">Nom</label>
+								<input v-model="form.nom" type="text" :class="champCls('nom')" @keydown.enter.prevent="rechercherFiche" />
+								<p v-if="errors.nom" class="mt-1 text-xs text-red-600">{{ errors.nom }}</p>
+							</div>
+							<button
+								type="button"
+								:disabled="etatRecherche === 'busy'"
+								@click="rechercherFiche"
+								class="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white disabled:opacity-50"
+							>
+								<i class="fa-solid fa-magnifying-glass mr-1" aria-hidden="true"></i>
+								{{ etatRecherche === 'busy' ? 'Recherche…' : 'Me retrouver' }}
+							</button>
 						</div>
-					</div>
+
+						<p v-if="etatRecherche === 'erreur'" class="mt-4 text-sm text-red-600">
+							La recherche est indisponible pour le moment, merci de réessayer.
+						</p>
+
+						<div v-else-if="etatRecherche === 'ok' && resultatsRecherche.length" class="mt-4">
+							<p class="text-sm text-gray-600">
+								{{ resultatsRecherche.length === 1 ? 'Nous avons retrouvé votre fiche :' : 'Plusieurs fiches portent ce nom, laquelle est la vôtre ?' }}
+							</p>
+							<div class="mt-2 space-y-2">
+								<label
+									v-for="r in resultatsRecherche"
+									:key="r.beneficiaireId"
+									class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm"
+									:class="beneficiaireChoisi === r.beneficiaireId ? 'border-primary bg-primary/5' : 'border-gray-200'"
+								>
+									<input v-model="beneficiaireChoisi" type="radio" :value="r.beneficiaireId" class="accent-primary" />
+									<span>
+										<span class="block font-medium text-gray-900">{{ form.prenom.trim() }} {{ form.nom.trim() }}</span>
+										<span v-if="r.indice" class="block text-gray-500">{{ r.indice }}</span>
+									</span>
+								</label>
+							</div>
+							<p v-if="errors.beneficiaire" class="mt-1 text-xs text-red-600">{{ errors.beneficiaire }}</p>
+						</div>
+
+						<div v-else-if="etatRecherche === 'ok'" class="mt-4 rounded-lg bg-amber-50 p-4 text-sm text-gray-700">
+							Nous ne retrouvons pas de fiche à ce nom. Vérifiez l’orthographe (nom de naissance ou d’usage ?), ou
+							<button type="button" class="font-medium text-primary underline" @click="choisirParcours('nouveau')">
+								renseignez vos informations
+							</button>
+							comme pour un premier rendez-vous.
+						</div>
+					</template>
 
 					<button
+						v-if="parcours === 'nouveau' || (parcours === 'connu' && resultatsRecherche.length)"
 						type="button"
 						class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
 						@click="continuerCoordonnees"
@@ -647,13 +800,14 @@ async function envoyer() {
 				</template>
 				<p v-else-if="step > 3" class="mt-3 text-sm text-gray-600">
 					{{ form.prenom }} {{ form.nom }}
-					<template v-if="coordonneesResume"> — {{ coordonneesResume }}</template>
+					<template v-if="parcours === 'connu'"> — fiche retrouvée</template>
+					<template v-else-if="coordonneesResume"> — {{ coordonneesResume }}</template>
 					<span class="text-gray-400">— enregistré</span>
 				</p>
 			</div>
 
 			<!-- 4. Profil (facultatif) -->
-			<div v-if="step >= 4" class="rounded-2xl border bg-white p-6 shadow-sm" :class="cardCls(4)">
+			<div v-if="step >= 4 && parcours !== 'connu'" class="rounded-2xl border bg-white p-6 shadow-sm" :class="cardCls(4)">
 				<div class="flex items-center gap-3">
 					<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-heading text-sm" :class="badgeCls(4)">
 						<i v-if="step > 4" class="fa-solid fa-check" aria-hidden="true"></i>
@@ -749,19 +903,9 @@ async function envoyer() {
 			<div v-if="step >= 5" class="rounded-2xl border bg-white p-6 shadow-sm" :class="cardCls(5)">
 				<div class="flex items-center gap-3">
 					<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-heading text-sm" :class="badgeCls(5)">
-						5
+						{{ numeroDerniereEtape }}
 					</span>
 					<h2 class="font-heading text-lg text-gray-900">Dernière étape</h2>
-				</div>
-
-				<div v-if="documentsRappel.length" class="mt-4 rounded-lg bg-primary/5 p-4 text-sm text-gray-700">
-					<p class="font-medium text-gray-900">
-						<i class="fa-solid fa-clipboard-list mr-2 text-primary" aria-hidden="true"></i>Pensez à apporter le jour du
-						rendez-vous :
-					</p>
-					<ul class="mt-2 list-disc pl-5">
-						<li v-for="(doc, i) in documentsRappel" :key="i">{{ doc }}</li>
-					</ul>
 				</div>
 
 				<label class="mt-4 flex items-start gap-3 text-sm text-gray-700">

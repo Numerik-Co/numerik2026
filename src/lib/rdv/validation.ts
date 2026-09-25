@@ -27,7 +27,7 @@ export function validatePriseRdv(p: PriseRdvPayload): Errors<PriseRdvPayload> {
 
 	// Ni l'un ni l'autre n'est individuellement obligatoire, mais il en faut
 	// au moins un pour pouvoir notifier le bénéficiaire de son RDV.
-	if (!email && !tel && !e.email && !e.telephone) {
+	if (!p.beneficiaireId && !email && !tel && !e.email && !e.telephone) {
 		const msg = 'Indiquez au moins un e-mail ou un téléphone pour être notifié·e de votre RDV.';
 		e.email = msg;
 		e.telephone = msg;

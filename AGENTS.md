@@ -108,24 +108,37 @@ Page `/rdv-conseiller-numerique` (lien de menu, `src/config/site.ts`, entre
 Activités et Actualités), formulaire public `src/components/rdv/RdvForm.vue`
 (`client:load`), gardé par `<FormGate form="rdvConseillerNumerique">`.
 Parcours en 5 étapes (même motif que `AdhesionForm.vue`) : démarche →
-créneau → coordonnées → profil facultatif → consentement/envoi.
+créneau → vous (premier RDV ou déjà venu) → profil facultatif (premier RDV
+seulement) → consentement/envoi.
 
 - `src/lib/rdv/demarches.ts` — catalogue de démarches (table Grist
   `Demarches` : Nom, Thematique, Icone, Description, Documents), alimenté et
   tenu à jour **directement dans Grist** par l'association, aucune admin
   côté site. `Documents` (facultatif, une ligne par document à apporter) est
-  affiché en rappel à l'étape 5 et sur l'écran de confirmation de
-  `RdvForm.vue`.
+  affiché en rappel sur l'écran de confirmation de `RdvForm.vue` (après
+  envoi uniquement).
 - `src/lib/rdv/creneaux.ts` — créneaux de 30 min dérivés de
   `conseillerNumerique` (`src/lib/agenda.ts`).
-- `src/lib/rdv/beneficiaires.ts` — rapproche un bénéficiaire par **email OU
-  téléphone** (un seul des deux est obligatoire à la saisie, jamais aucun —
-  voir `validation.ts` — et le rapprochement ne compare que le champ
-  effectivement renseigné) ou en crée un nouveau.
+- Étape 3 « Vous » : choix **« C'est mon premier rendez-vous »** (saisie
+  civilité/nom/coordonnées puis profil, étape 4) ou **« J'ai déjà rencontré le
+  conseiller »** (recherche prénom + nom, fiche existante réutilisée telle
+  quelle, étape 4 profil sautée — la dernière étape s'affiche alors « 4 »).
+  Objectif : pas de doublons dans `Beneficiaires`. Les pièces à apporter ne
+  sont rappelées qu'après l'envoi (écran de confirmation).
+- `src/lib/rdv/beneficiaires.ts` — premier RDV : rapproche un bénéficiaire
+  par **email OU téléphone** (un seul des deux est obligatoire à la saisie,
+  jamais aucun — voir `validation.ts` — et le rapprochement ne compare que
+  le champ effectivement renseigné, filet anti-doublon) ou en crée un
+  nouveau. Déjà venu : `rechercherBeneficiaires()` = prénom ET nom **exacts**
+  (hors accents/casse/tirets, jamais de recherche partielle), ne renvoie
+  qu'un indice masqué (`j•••@gmail.com · 06 •• •• •• 78 · commune`) ;
+  `beneficiaireCorrespond()` revérifie à l'envoi que l'id choisi porte bien
+  ce nom (un id seul ne suffit pas).
 - `src/lib/rdv/reservation.ts` — revérifie la disponibilité puis écrit la
   ligne `RDV` (même doc Grist que `Beneficiaires`/`Demarches`).
 - Routes : `GET /api/rdv/creneaux`, `GET /api/rdv/demarches`,
-  `GET /api/rdv/commune`, `POST /api/rdv/prendre`, `GET /api/rdv/ics`
+  `GET /api/rdv/commune`, `GET /api/rdv/beneficiaires` (`?prenom=&nom=`),
+  `POST /api/rdv/prendre`, `GET /api/rdv/ics`
   (`?date=&heure=&demarche=<id>` → fichier `.ics` ; lieu et documents
   recalculés côté serveur).
 - `src/lib/rdv/ics.ts` — événement d'agenda partagé par la route `.ics` et
