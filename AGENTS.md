@@ -89,6 +89,28 @@ couleur par famille d'activité.
   `<WeeklyAgenda showHeading={false} />` (ex. bloc dans une page d'accueil,
   planning en dur par défaut sauf `sessions` fourni explicitement).
 
+### Outils de partage (actualités et pages)
+
+`src/components/article/ShareTools.astro` — encart à bordure complète et
+coins arrondis (`rounded-2xl border`), sans titre : icône « partage »
+(couleur du texte, `text-gray-700`) à gauche, puis à droite une icône de marque par outil,
+sans fond (libellé en `aria-label`/`title`). Placé dans la colonne de droite (slot
+`sidebar`) de `src/pages/actualites/[slug].astro` (sous le temps de
+lecture) et de `src/pages/[...slug].astro` (au-dessus du sommaire) ; la
+colonne étant masquée sous `lg`, une seconde instance `lg:hidden` est
+rendue sous le contenu. La colonne de droite est donc toujours présente
+sur ces pages. `<ShareTools title={…} />`, prop `url` facultative (défaut =
+URL publique de la page). Premier outil : partage Facebook (simple lien `sharer.php`,
+aucun SDK ni cookie, ouvert en popup si JS). Activation par outil dans
+`site.share` (`src/config/site.ts`) ; nouvel outil = une entrée dans
+`tools` du composant + une clé dans `site.share`. L'aperçu Facebook vient
+des balises Open Graph ajoutées dans `ArticleLayout.astro` (props `image`
+→ `og:image` 1200×630 via `getImage`, `ogType`) — elles s'appuient sur
+`site` d'`astro.config.mjs` pour les URL absolues. L'icône « partage » est
+un SVG inline au trait fin (Font Awesome gratuit ne l'a qu'en plein), les
+icônes font 24 px et sont centrées verticalement. Détail :
+[docs/partage.md](docs/partage.md).
+
 ### Présence (« Je participe »)
 
 Page `/je-participe` (lien de menu, `src/config/site.ts`), îlot Vue

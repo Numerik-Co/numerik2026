@@ -3,6 +3,7 @@ import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import Breadcrumb from '../components/layout/Breadcrumb.astro';
 import Article from '../components/article/Article.astro';
+import { getImage } from 'astro:assets';
 import '../styles/global.css';
 import { association } from '../lib/association';
 
@@ -10,13 +11,26 @@ interface Props {
 	title?: string;
 	description?: string;
 	breadcrumbs?: { label: string; href?: string }[];
+	/** Image d'aperçu (Open Graph) utilisée lors d'un partage sur les réseaux sociaux. */
+	image?: any;
+	/** `og:type` : `article` pour une actualité, `website` sinon. */
+	ogType?: 'article' | 'website';
 }
 
 const {
 	title = association.name,
 	description = association.description,
 	breadcrumbs,
+	image,
+	ogType = 'website',
 } = Astro.props;
+
+// Balises Open Graph : Facebook en tire le titre, le résumé et l'image
+// de l'aperçu lors d'un partage (voir `ShareTools.astro`).
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
+const ogImage = image
+	? new URL((await getImage({ src: image, width: 1200, height: 630, format: 'jpg' })).src, canonicalUrl).href
+	: undefined;
 ---
 
 <!doctype html>
@@ -29,6 +43,16 @@ const {
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<title>{title}</title>
+		<link rel="canonical" href={canonicalUrl} />
+		<meta property="og:site_name" content={association.name} />
+		<meta property="og:locale" content="fr_FR" />
+		<meta property="og:type" content={ogType} />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		{ogImage && <meta property="og:image" content={ogImage} />}
+		{ogImage && <meta property="og:image:width" content="1200" />}
+		{ogImage && <meta property="og:image:height" content="630" />}
 	</head>
 	<body class="flex min-h-screen flex-col bg-white">
 		<Header />

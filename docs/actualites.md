@@ -54,6 +54,10 @@ C'est tout : l'article apparaît immédiatement (en dev) sur :
 - sa propre page de détail **`/actualites/<nom-du-dossier>`**,
 - le **flux RSS** `/rss.xml`.
 
+La page de détail propose aussi un bouton de partage Facebook, dont l'aperçu
+reprend le titre, l'`excerpt` et l'image de couverture — voir
+[partage.md](partage.md).
+
 ## Modifier ou supprimer un article
 
 - Modifier : éditer directement le `index.md` du dossier concerné.

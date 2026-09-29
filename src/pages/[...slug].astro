@@ -3,6 +3,7 @@ import ArticleLayout from '../layouts/ArticleLayout.astro';
 import PageHeader from '../components/sections/PageHeader.astro';
 import TableOfContents from '../components/article/TableOfContents.astro';
 import FigureImage from '../components/article/FigureImage.astro';
+import ShareTools from '../components/article/ShareTools.astro';
 import { association } from '../lib/association';
 import { getContentPages, getGroupLabel } from '../lib/content-pages';
 
@@ -33,10 +34,14 @@ breadcrumbs.push({ label: page.title });
 	title={`${page.title} · ${association.name}`}
 	description={page.description ?? `${page.title} — ${association.name}.`}
 	breadcrumbs={breadcrumbs}
+	image={page.image}
 >
 	<PageHeader slot="page-header" title={page.title} description={page.description} />
 
-	{headings.length > 1 && <TableOfContents slot="sidebar" headings={headings} />}
+	<Fragment slot="sidebar">
+		<ShareTools title={page.title} class="mb-6" />
+		{headings.length > 1 && <TableOfContents headings={headings} />}
+	</Fragment>
 
 	{page.image && (
 		<FigureImage
@@ -51,4 +56,7 @@ breadcrumbs.push({ label: page.title });
 	<div class="markdown-content font-light text-gray-700">
 		<Content />
 	</div>
+
+	{/* La colonne de droite est masquée sous `lg` : on y replace le partage. */}
+	<ShareTools title={page.title} class="mt-12 lg:hidden" />
 </ArticleLayout>

@@ -5,6 +5,7 @@ import ArticleLayout from '../../layouts/ArticleLayout.astro';
 import TableOfContents from '../../components/article/TableOfContents.astro';
 import ReadingProgress from '../../components/article/ReadingProgress.astro';
 import PageHeader from '../../components/sections/PageHeader.astro';
+import ShareTools from '../../components/article/ShareTools.astro';
 import { getAllNews, type NewsArticle } from '../../lib/news';
 import { association } from '../../lib/association';
 
@@ -38,6 +39,8 @@ const { Content } = article;
 <ArticleLayout
 	title={`${article.title} · ${association.name}`}
 	description={article.excerpt}
+	image={article.image}
+	ogType="article"
 	breadcrumbs={[
 		{ label: 'Accueil', href: '/' },
 		{ label: 'Actualités', href: '/actualites' },
@@ -50,12 +53,11 @@ const { Content } = article;
 		description={article.author ? `${article.date} · ${article.author}` : article.date}
 	/>
 
-	{article.headings.length > 1 && (
-		<Fragment slot="sidebar">
-			<ReadingProgress minutes={article.readingTime} />
-			<TableOfContents headings={article.headings} />
-		</Fragment>
-	)}
+	<Fragment slot="sidebar">
+		{article.headings.length > 1 && <ReadingProgress minutes={article.readingTime} />}
+		<ShareTools title={article.title} class="mb-6" />
+		{article.headings.length > 1 && <TableOfContents headings={article.headings} />}
+	</Fragment>
 
 	{article.image && (
 		<FigureImage
@@ -76,6 +78,9 @@ const { Content } = article;
 	<div class="markdown-content mt-6 font-light text-gray-700">
 		<Content />
 	</div>
+
+	{/* La colonne de droite est masquée sous `lg` : on y replace le partage. */}
+	<ShareTools title={article.title} class="mt-12 lg:hidden" />
 
 	<div class="mt-12 border-t border-gray-100 pt-8">
 		<PrevNextNav prev={prev} next={next} />

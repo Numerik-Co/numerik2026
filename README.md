@@ -34,6 +34,7 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 | Changer les couleurs, les polices ou le logo | [docs/theme.md](docs/theme.md) |
 | Savoir quels composants réutiliser (boutons, cartes, sections...) | [docs/composants.md](docs/composants.md) |
 | Modifier les liens du menu ou du pied de page | [docs/navigation.md](docs/navigation.md) |
+| Partager une actualité ou une page sur Facebook, activer/désactiver le partage | [docs/partage.md](docs/partage.md) |
 | Ouvrir / fermer un formulaire (adhésion, contact…) | [docs/composants.md](docs/composants.md#forms) |
 | Comprendre / présenter le parcours d'adhésion en ligne | [docs/adhesion-parcours.md](docs/adhesion-parcours.md) |
 | Comprendre / présenter la prise de RDV avec le·la Conseiller·ère Numérique, gérer les démarches | [docs/rdv-conseiller-numerique.md](docs/rdv-conseiller-numerique.md) |
@@ -47,7 +48,7 @@ src/
 │   ├── ui/             # Primitives génériques (Button, Card)
 │   ├── layout/         # Chrome du site (Header, Footer, BrandStripe, AnnonceBanner, Breadcrumb)
 │   ├── cards/          # Cartes de contenu (ArticleCard, ActivityCard, CategoryCard)
-│   ├── article/        # Briques de page de lecture (Article, TableOfContents, ReadingProgress, FigureImage, PrevNextNav)
+│   ├── article/        # Briques de page de lecture (Article, TableOfContents, ReadingProgress, FigureImage, PrevNextNav, ShareTools)
 │   └── sections/       # Sections de page assemblées à partir des briques (Hero, CtaSection...)
 ├── config/             # site.ts : config par déploiement (CTA « Adhérer », menu des pages applicatives)
 ├── contents/

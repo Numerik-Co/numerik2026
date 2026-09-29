@@ -1,0 +1,82 @@
+---
+import { site } from '../../config/site';
+
+/**
+ * Boîte à outils de partage affichée en bas des actualités et des pages
+ * de contenu. Chaque outil est un simple lien (aucun SDK tiers chargé,
+ * aucun cookie déposé) ; l'aperçu affiché par le réseau social est
+ * construit à partir des balises Open Graph de `ArticleLayout.astro`.
+ *
+ * Activer/désactiver un outil : `site.share` (`src/config/site.ts`).
+ * Ajouter un outil : une entrée dans `tools` ci-dessous + une clé dans
+ * `site.share`.
+ */
+interface Props {
+	/** Titre du contenu partagé (utilisé par les futurs outils : e-mail, copie…). */
+	title: string;
+	/** URL absolue à partager ; par défaut l'URL publique de la page courante. */
+	url?: string;
+	class?: string;
+}
+
+const { title, url = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href, class: className } = Astro.props;
+
+const tools = [
+	{
+		key: 'facebook',
+		label: 'Facebook',
+		icon: 'fa-brands fa-facebook',
+		href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+		ariaLabel: `Partager « ${title} » sur Facebook (nouvelle fenêtre)`,
+		classes: 'text-[#1877F2] hover:text-[#166FE5]',
+	},
+].filter((tool) => site.share[tool.key as keyof typeof site.share]);
+---
+
+{tools.length > 0 && (
+	<aside
+		class:list={['flex items-center justify-between gap-3 rounded-2xl border border-gray-200 p-3', className]}
+		aria-label="Partager ce contenu"
+	>
+		<svg xmlns="http://www.w3.org/2000/svg" class="block h-6 w-6 shrink-0 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<circle cx="18" cy="5" r="3" />
+			<circle cx="6" cy="12" r="3" />
+			<circle cx="18" cy="19" r="3" />
+			<path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
+		</svg>
+		<ul class="flex flex-wrap items-center gap-3">
+			{tools.map((tool) => (
+				<li class="flex">
+					<a
+						href={tool.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						aria-label={tool.ariaLabel}
+						title={tool.label}
+						class:list={[
+							'flex h-6 w-6 items-center justify-center text-2xl leading-none transition-colors',
+							tool.classes,
+						]}
+						data-share-popup
+					>
+						<i class={tool.icon} aria-hidden="true"></i>
+					</a>
+				</li>
+			))}
+		</ul>
+	</aside>
+)}
+
+<script>
+	// Ouvre le partage dans une petite fenêtre plutôt qu'un nouvel onglet ;
+	// sans JS (ou si le popup est bloqué), le lien s'ouvre normalement.
+	document.querySelectorAll<HTMLAnchorElement>('a[data-share-popup]').forEach((link) => {
+		link.addEventListener('click', (event) => {
+			const popup = window.open(link.href, 'share', 'width=600,height=560');
+			if (popup) {
+				event.preventDefault();
+				popup.opener = null;
+			}
+		});
+	});
+</script>

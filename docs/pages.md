@@ -70,6 +70,9 @@ Deux mécanismes coexistent :
   La route attrape-tout lit les deux extensions indifféremment.
 - **Sommaire** : `src/pages/[...slug].astro` affiche automatiquement le sommaire
   « Sur cette page » si le contenu a plus d'un titre (`<h2>`/`<h3>`).
+- **Partage** : chaque page affiche un bouton de partage Facebook (colonne de
+  droite, ou sous le texte sur mobile) ; l'aperçu reprend le titre, la
+  `description` et l'image de couverture. Voir [partage.md](partage.md).
 
 ### Comment ça marche
 

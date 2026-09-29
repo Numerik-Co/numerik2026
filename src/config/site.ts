@@ -63,6 +63,15 @@ export const site = {
 	] satisfies BuiltinNavItem[],
 
 	/**
+	 * Outils de partage affichés en bas des actualités et des pages de
+	 * contenu (`src/components/article/ShareTools.astro`). `false` masque
+	 * l'outil ; si tous sont à `false`, l'encart disparaît.
+	 */
+	share: {
+		facebook: true,
+	},
+
+	/**
 	 * Ouverture/fermeture des formulaires du site.
 	 *
 	 * `enabled: false` → le formulaire est remplacé par un encart informatif
