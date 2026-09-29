@@ -24,12 +24,17 @@ page déjà renseignée. Facebook affiche un aperçu construit à partir de :
 | :--- | :--- |
 | Titre | titre de la page (`title` du frontmatter) + nom de l'association |
 | Texte | `excerpt` (actualité) ou `description` (page) du frontmatter |
-| Image | image de couverture (`cover.jpg/png/webp`), recadrée en 1200×630 |
+| Image | image de couverture (`cover.jpg/png/webp`), recadrée au format paysage 1,91:1 (1200×630 au plus) |
 | Adresse | URL publique de la page |
 
 Pour un bel aperçu, il suffit donc de soigner le résumé et de fournir une
 image de couverture (voir [actualites.md](actualites.md) et
 [pages.md](pages.md)). Sans image, Facebook affiche un aperçu texte seul.
+
+**Taille de la couverture** : prévoir au moins **1200 × 630 px** (format
+paysage). Le site ne l'agrandit jamais : une image de moins de 600 px de
+large donne une petite vignette, et sous 200 px Facebook l'ignore et
+publie le lien sans image.
 
 > Facebook garde l'aperçu en cache. Après avoir modifié le titre, le résumé
 > ou l'image d'un contenu déjà partagé, forcer la mise à jour via le
@@ -86,10 +91,15 @@ domaine**, sinon les partages pointeront vers le mauvais site.
   ces pages ont toujours une colonne de droite, même sans sommaire.
 - **Balises Open Graph** : ajoutées dans `src/layouts/ArticleLayout.astro`
   (`og:title`, `og:description`, `og:url`, `og:type`, `og:image` +
-  dimensions, `og:site_name`, `og:locale`, plus `<link rel="canonical">`).
-  Props du layout : `image` (image de couverture, convertie en JPEG 1200×630
-  via `getImage`) et `ogType` (`article` pour une actualité, `website` par
-  défaut). Elles profitent aussi aux autres réseaux et messageries (LinkedIn,
+  type, dimensions et texte alternatif, `og:site_name`, `og:locale`, plus
+  `<link rel="canonical">`).
+  Props du layout : `image` et `ogType` (`article` pour une actualité,
+  `website` par défaut). L'image de couverture est convertie en JPEG recadré
+  en 1,91:1, 1200×630 au plus, sans agrandissement ; elle est envoyée
+  entière si le recadrage ferait moins de 600 px de large.
+  `og:image:width`/`height` reprennent les dimensions **réelles** du fichier
+  produit : les déclarer fausses fait publier le lien sans image. Ces balises
+  profitent aussi aux autres réseaux et messageries (LinkedIn,
   WhatsApp, Signal…) qui lisent le même protocole.
 
 ## Ajouter un outil (LinkedIn, e-mail, copier le lien…)

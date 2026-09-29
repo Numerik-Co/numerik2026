@@ -28,9 +28,21 @@ const {
 // Balises Open Graph : Facebook en tire le titre, le résumé et l'image
 // de l'aperçu lors d'un partage (voir `ShareTools.astro`).
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
-const ogImage = image
-	? new URL((await getImage({ src: image, width: 1200, height: 630, format: 'jpg' })).src, canonicalUrl).href
+// Recadrage au ratio paysage recommandé par Facebook (1,91:1, grand
+// aperçu dès 600 px de large), sans agrandir une couverture plus petite
+// que 1200 px. Une couverture trop petite pour ce recadrage est envoyée
+// entière. Les dimensions déclarées doivent être celles du fichier
+// réellement produit, sinon Facebook peut publier le lien sans son image.
+const OG_RATIO = 1200 / 630;
+const og = image
+	? await (() => {
+			const width = Math.min(1200, image.width, Math.round(image.height * OG_RATIO));
+			return width >= 600
+				? getImage({ src: image, width, height: Math.round(width / OG_RATIO), fit: 'cover', format: 'jpg' })
+				: getImage({ src: image, width: image.width, height: image.height, format: 'jpg' });
+		})()
 	: undefined;
+const ogImage = og ? new URL(og.src, canonicalUrl).href : undefined;
 ---
 
 <!doctype html>
@@ -50,9 +62,15 @@ const ogImage = image
 		<meta property="og:url" content={canonicalUrl} />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
-		{ogImage && <meta property="og:image" content={ogImage} />}
-		{ogImage && <meta property="og:image:width" content="1200" />}
-		{ogImage && <meta property="og:image:height" content="630" />}
+		{og && ogImage && (
+			<>
+				<meta property="og:image" content={ogImage} />
+				<meta property="og:image:type" content="image/jpeg" />
+				<meta property="og:image:width" content={String(og.attributes.width)} />
+				<meta property="og:image:height" content={String(og.attributes.height)} />
+				<meta property="og:image:alt" content={title} />
+			</>
+		)}
 	</head>
 	<body class="flex min-h-screen flex-col bg-white">
 		<Header />

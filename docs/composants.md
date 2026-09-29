@@ -132,7 +132,7 @@ Props :
 | `title`, `description`, `breadcrumbs` | Transmis tels quels à `Layout` (balise `<title>`, meta description, fil d'Ariane). |
 | `pageHeaderTitle`, `pageHeaderDescription` | Transmis à `PageHeader` (bannière dégradée en haut de page). |
 | `headings` | Optionnel, tableau `Heading[]`. Si plus d'une entrée, `ArticleLayout` affiche automatiquement `ReadingProgress` (si `readingTime` est fourni) + `TableOfContents` dans la colonne latérale — sinon la page reste en une seule colonne. |
-| `image` | Optionnel. Image de couverture utilisée pour la balise `og:image` (aperçu Facebook et autres réseaux), convertie en JPEG 1200×630. Voir [partage.md](partage.md). |
+| `image` | Optionnel. Image de couverture utilisée pour la balise `og:image` (aperçu Facebook et autres réseaux), convertie en JPEG paysage 1,91:1 (1200×630 au plus, sans agrandissement, dimensions réelles déclarées). Voir [partage.md](partage.md). |
 | `ogType` | Optionnel, `'article'` \| `'website'` (défaut). Valeur de `og:type`. |
 | `readingTime` | Optionnel (`number`, en minutes). Sans valeur, pas de module temps de lecture même si `headings` en a plusieurs. |
 

@@ -105,7 +105,7 @@ aucun SDK ni cookie, ouvert en popup si JS). Activation par outil dans
 `site.share` (`src/config/site.ts`) ; nouvel outil = une entrée dans
 `tools` du composant + une clé dans `site.share`. L'aperçu Facebook vient
 des balises Open Graph ajoutées dans `ArticleLayout.astro` (props `image`
-→ `og:image` 1200×630 via `getImage`, `ogType`) — elles s'appuient sur
+→ `og:image` recadrée 1,91:1, 1200×630 au plus, dimensions réelles déclarées, via `getImage` ; `ogType`) — elles s'appuient sur
 `site` d'`astro.config.mjs` pour les URL absolues. L'icône « partage » est
 un SVG inline au trait fin (Font Awesome gratuit ne l'a qu'en plein), les
 icônes font 24 px et sont centrées verticalement. Détail :
