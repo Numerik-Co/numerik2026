@@ -16,9 +16,8 @@ automatiquement sur toute nouvelle actualité ou page.
 
 ## Ce que voit la personne qui partage
 
-Un clic sur l'icône Facebook ouvre la fenêtre de partage de Facebook (petite
-fenêtre, ou nouvel onglet si les popups sont bloqués), avec l'adresse de la
-page déjà renseignée. Facebook affiche un aperçu construit à partir de :
+Un clic sur l'icône Facebook ouvre la fenêtre de partage de Facebook dans un
+nouvel onglet, avec l'adresse de la page déjà renseignée. Facebook affiche un aperçu construit à partir de :
 
 | Aperçu Facebook | Provient de |
 | :--- | :--- |
@@ -74,11 +73,13 @@ domaine**, sinon les partages pointeront vers le mauvais site.
 - **Partage Facebook** : simple lien vers
   `https://www.facebook.com/sharer/sharer.php?u=<url>`. Aucun SDK Facebook
   n'est chargé et aucun cookie n'est déposé tant que la personne ne clique
-  pas — pas besoin de bandeau de consentement pour cet encart. Un petit
-  script ouvre le lien en popup ; sans JavaScript, le lien fonctionne
-  normalement (nouvel onglet).
+  pas — pas besoin de bandeau de consentement pour cet encart. Le lien
+  s'ouvre dans un **onglet normal** (`target="_blank"`), jamais en popup :
+  une popup (`window.open`) bloquait la publication au nom de certaines
+  Pages Facebook (attente sans fin, sans message d'erreur), alors que le
+  même lien fonctionne dans un onglet.
 - **Accessibilité** : les icônes n'ont pas de texte visible ; chaque lien
-  porte un `aria-label` (« Partager « … » sur Facebook (nouvelle fenêtre) »)
+  porte un `aria-label` (« Partager « … » sur Facebook (nouvel onglet) »)
   et un `title` (bulle au survol). L'icône « partage » de gauche est
   décorative (`aria-hidden`).
 - **Icônes** : l'icône « partage » est un SVG au trait fin (la version
@@ -112,7 +113,7 @@ domaine**, sinon les partages pointeront vers le mauvais site.
    	label: 'LinkedIn',
    	icon: 'fa-brands fa-linkedin',
    	href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
-   	ariaLabel: `Partager « ${title} » sur LinkedIn (nouvelle fenêtre)`,
+   	ariaLabel: `Partager « ${title} » sur LinkedIn (nouvel onglet)`,
    	classes: 'text-[#0A66C2] hover:text-[#004182]',
    },
    ```

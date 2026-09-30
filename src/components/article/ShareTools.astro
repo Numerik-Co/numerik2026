@@ -27,7 +27,7 @@ const tools = [
 		label: 'Facebook',
 		icon: 'fa-brands fa-facebook',
 		href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-		ariaLabel: `Partager « ${title} » sur Facebook (nouvelle fenêtre)`,
+		ariaLabel: `Partager « ${title} » sur Facebook (nouvel onglet)`,
 		classes: 'text-[#1877F2] hover:text-[#166FE5]',
 	},
 ].filter((tool) => site.share[tool.key as keyof typeof site.share]);
@@ -57,7 +57,6 @@ const tools = [
 							'flex h-6 w-6 items-center justify-center text-2xl leading-none transition-colors',
 							tool.classes,
 						]}
-						data-share-popup
 					>
 						<i class={tool.icon} aria-hidden="true"></i>
 					</a>
@@ -66,17 +65,3 @@ const tools = [
 		</ul>
 	</aside>
 )}
-
-<script>
-	// Ouvre le partage dans une petite fenêtre plutôt qu'un nouvel onglet ;
-	// sans JS (ou si le popup est bloqué), le lien s'ouvre normalement.
-	document.querySelectorAll<HTMLAnchorElement>('a[data-share-popup]').forEach((link) => {
-		link.addEventListener('click', (event) => {
-			const popup = window.open(link.href, 'share', 'width=600,height=560');
-			if (popup) {
-				event.preventDefault();
-				popup.opener = null;
-			}
-		});
-	});
-</script>
