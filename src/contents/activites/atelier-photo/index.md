@@ -25,4 +25,4 @@ Toute personne souhaitant mieux gérer et mettre en valeur ses photos personnell
 4 séances de 1h30.
 
 ## Dates
-Retrouvez-nous pour ces ateliers, les jeudis 10 Mars 2027, 18 Mars 2027, 25 Mars 2027 et 1 Avr 2027 de 18h30 à 19h30.
+Retrouvez-nous pour ces ateliers, les jeudis 11 Mars 2027, 18 Mars 2027, 25 Mars 2027 et 1 Avr 2027 de 18h30 à 19h30.
