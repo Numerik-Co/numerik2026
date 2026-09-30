@@ -90,6 +90,7 @@ export const COLS = {
 		nom: 'Nom',
 		type: 'Type',
 		prix: 'Tarif',
+		prixNonAdherent: 'Tarif_non_adherent', // Numeric facultatif : prix total pour un·e non-adhérent·e
 		payant: 'Payant',
 		saison: 'Saison',
 		placesRestantes: 'Places_restantes',

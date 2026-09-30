@@ -121,10 +121,12 @@ profil (adhérent·e retrouvé·e par nom + prénom via
 → activité (`/api/adhesion/offre-inscription` : saison en cours, type
 `Séances`/`Ateliers`/`Atelier CN` — `TYPES_ACTIVITE_INSCRIPTION` ; les
 activités de la fiche d'origine si l'une est publiée, sinon tous les
-publiés ; si `Activite.Adhesion_requise`, prix non-adhérent·e = adhésion
-« Individuelle » de la saison + `Tarif`, détaillé, mis en avant selon
-`Adhesion_en_cours`) → récap (`/api/adhesion/inscription`, montant dû =
-`Tarif`, `Liste d'attente` si complet, règlement et adhésion sur place). Activités visées **toutes non publiées**
+publiés ; si `Activite.Tarif_non_adherent` renseigné : total adhérent·e =
+adhésion « Individuelle » de la saison + `Tarif` (détaillé, adhésion comptée
+si `Adhesion_requise`) et total non-adhérent·e = `Tarif_non_adherent`, mis
+en avant selon `Adhesion_en_cours`) → récap (`/api/adhesion/inscription`,
+montant dû = `Tarif_non_adherent` sans adhésion en cours, sinon `Tarif` ;
+`Liste d'attente` si complet, règlement sur place). Activités visées **toutes non publiées**
 → « Me préinscrire » (`/api/adhesion/preinscription`, ligne ajoutée à
 `Membres.Commentaires`, pas d'`Inscription`). Bouton « S'inscrire » dans la
 sidebar de `src/pages/activites/[category]/[slug].astro` →

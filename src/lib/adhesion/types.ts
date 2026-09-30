@@ -181,7 +181,9 @@ export interface ActiviteOption {
 	id: number;
 	label: string;
 	prix: number | null;
-	/** `Adhesion_requise` : un·e non-adhérent·e devra aussi adhérer (prix affiché = adhésion + `prix`). */
+	/** `Tarif_non_adherent` : prix total pour un·e non-adhérent·e ; null = pas de tarif distinct. */
+	prixNonAdherent: number | null;
+	/** `Adhesion_requise` : le prix adhérent·e affiché inclut l'adhésion (adhésion + `prix`). */
 	adhesionRequise: boolean;
 	placesRestantes: number | null; // null = non plafonnée / inconnu
 }
@@ -196,7 +198,7 @@ export interface OffreInscription {
 	activites: ActiviteOption[];
 	/** La fiche visait une activité (ou un type) sans correspondance : liste complète par défaut. */
 	cibleIntrouvable: boolean;
-	/** Prix de l'adhésion individuelle de la saison, ajouté pour un·e non-adhérent·e ; null si introuvable. */
+	/** Prix de l'adhésion individuelle de la saison, inclus dans le total adhérent·e affiché ; null si introuvable. */
 	prixAdhesion: number | null;
 }
 

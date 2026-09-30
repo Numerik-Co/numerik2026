@@ -37,20 +37,25 @@ function placesLabel(o: ActiviteOption): string {
 	return `${o.placesRestantes} places restantes`;
 }
 
-/** Activité réservée aux adhérent·es et adhésion payante : on affiche aussi le total non-adhérent·e. */
+/** `Tarif_non_adherent` renseigné : on affiche le total adhérent·e et le prix non-adhérent·e. */
 function doubleTarif(o: ActiviteOption): boolean {
+	return o.prixNonAdherent !== null;
+}
+
+/** L'adhésion entre dans le total adhérent·e affiché (activité `Adhesion_requise`, adhésion payante). */
+function avecAdhesion(o: ActiviteOption): boolean {
 	return o.adhesionRequise && props.prixAdhesion !== null && props.prixAdhesion > 0;
 }
 
-function totalNonAdherent(o: ActiviteOption): number {
-	return (props.prixAdhesion ?? 0) + (o.prix ?? 0);
+/** Ce que paie au total un·e adhérent·e : adhésion + activité. */
+function totalAdherent(o: ActiviteOption): number {
+	return (avecAdhesion(o) ? (props.prixAdhesion ?? 0) : 0) + (o.prix ?? 0);
 }
 
-/** « 30 € adhésion + 45 € activité » (montants entiers sans décimales). */
-function detailNonAdherent(o: ActiviteOption): string {
+/** « 30 € + 45 € » (adhésion + activité, montants sans décimales inutiles). */
+function detailAdherent(o: ActiviteOption): string {
 	const euros = (v: number) => `${new Intl.NumberFormat('fr-FR').format(v)} €`;
-	const activite = o.prix ? `${euros(o.prix)} activité` : 'activité gratuite';
-	return `${euros(props.prixAdhesion ?? 0)} adhésion + ${activite}`;
+	return `${euros(props.prixAdhesion ?? 0)} adhésion + ${o.prix ? `${euros(o.prix)} activité` : 'activité gratuite'}`;
 }
 
 function valider() {
@@ -120,16 +125,18 @@ function valider() {
 									class="block text-sm"
 									:class="estAdherent ? 'font-heading font-semibold text-gray-900' : 'text-gray-400'"
 								>
-									{{ formatPrix(o.prix) }} <span class="text-xs font-normal">adhérent·e</span>
+									{{ formatPrix(totalAdherent(o)) }}
+									<span class="text-xs font-normal">
+										adhérent·e<template v-if="avecAdhesion(o)"> ({{ detailAdherent(o) }})</template>
+									</span>
 								</span>
 								<span
 									class="block text-sm"
 									:class="estAdherent ? 'text-gray-400' : 'font-heading font-semibold text-gray-900'"
 								>
-									{{ formatPrix(totalNonAdherent(o)) }}
+									{{ formatPrix(o.prixNonAdherent) }}
 									<span class="text-xs font-normal">non-adhérent·e</span>
 								</span>
-								<span class="block text-xs text-gray-500">({{ detailNonAdherent(o) }})</span>
 							</template>
 							<span v-else class="block font-heading font-semibold text-gray-900">
 								{{ formatPrix(o.prix) }}

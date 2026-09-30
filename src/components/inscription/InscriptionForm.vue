@@ -37,8 +37,6 @@ const activites = ref<ActiviteOption[]>([]);
 const activiteId = ref<number | null>(null);
 const activiteLabel = ref('');
 const prix = ref<number | null>(null);
-/** Adhésion à formaliser en plus du tarif (non-adhérent·e, activité `Adhesion_requise`) ; null sinon. */
-const adhesionDue = ref<number | null>(null);
 /** Prix de l'adhésion individuelle de la saison (`/api/adhesion/offre-inscription`). */
 const prixAdhesion = ref<number | null>(null);
 const disponibilite = ref('');
@@ -165,8 +163,9 @@ async function submitActivite(id: number) {
 		const res = await adhesionApi.enregistrerActivite({ membreId: membreId.value, activiteId: id });
 		const option = activites.value.find((a) => a.id === id);
 		activiteLabel.value = option?.label ?? '';
-		prix.value = option?.prix ?? null;
-		adhesionDue.value = !estAdherent.value && option?.adhesionRequise ? prixAdhesion.value : null;
+		// Même règle que le montant dû côté serveur (/api/adhesion/inscription).
+		prix.value =
+			!estAdherent.value && option?.prixNonAdherent != null ? option.prixNonAdherent : (option?.prix ?? null);
 		disponibilite.value = res.disponibilite;
 		step.value = 'recap';
 	} catch (e) {
@@ -188,7 +187,6 @@ function recommencer() {
 	activiteId.value = null;
 	activiteLabel.value = '';
 	prix.value = null;
-	adhesionDue.value = null;
 	disponibilite.value = '';
 	preinscrit.value = false;
 	estAdherent.value = false;
@@ -242,7 +240,6 @@ function annuler() {
 				:exterieur="profil === 'exterieur'"
 				:activite-label="activiteLabel"
 				:prix="prix"
-				:adhesion-due="adhesionDue"
 				:disponibilite="disponibilite"
 				:preinscription="preinscrit"
 				@recommencer="recommencer"

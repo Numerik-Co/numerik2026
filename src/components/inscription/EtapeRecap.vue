@@ -7,8 +7,6 @@ defineProps<{
 	exterieur: boolean;
 	activiteLabel: string;
 	prix: number | null;
-	/** Adhésion à formaliser en plus (non-adhérent·e, activité `Adhesion_requise`) ; null sinon. */
-	adhesionDue: number | null;
 	disponibilite: string;
 	/** Préinscription (atelier non publié) : aucune inscription créée, intérêt noté. */
 	preinscription: boolean;
@@ -50,33 +48,13 @@ const emit = defineEmits<{ recommencer: [] }>();
 					</span>
 				</dd>
 			</div>
-			<template v-if="adhesionDue">
-				<div class="flex justify-between px-4 py-2">
-					<dt class="text-gray-600">Activité</dt>
-					<dd class="text-gray-900">{{ formatPrix(prix ?? 0) }}</dd>
-				</div>
-				<div class="flex justify-between px-4 py-2">
-					<dt class="text-gray-600">Adhésion à l'association</dt>
-					<dd class="text-gray-900">{{ formatPrix(adhesionDue) }}</dd>
-				</div>
-				<div class="flex justify-between px-4 py-3">
-					<dt class="font-heading font-semibold text-gray-900">Total</dt>
-					<dd class="font-heading font-semibold text-gray-900">
-						{{ formatPrix((prix ?? 0) + adhesionDue) }}
-					</dd>
-				</div>
-			</template>
-			<div v-else-if="prix !== null" class="flex justify-between px-4 py-3">
+			<div v-if="prix !== null" class="flex justify-between px-4 py-3">
 				<dt class="font-heading font-semibold text-gray-900">Tarif</dt>
 				<dd class="font-heading font-semibold text-gray-900">{{ formatPrix(prix) }}</dd>
 			</div>
 		</dl>
 
-		<p v-if="adhesionDue" class="mt-4 text-sm text-gray-700">
-			Cette activité est réservée aux adhérent·es : l'adhésion sera formalisée avec l'animateur·rice
-			lors de la première séance, où s'effectue aussi le règlement.
-		</p>
-		<p v-else-if="prix" class="mt-4 text-sm text-gray-700">
+		<p v-if="prix" class="mt-4 text-sm text-gray-700">
 			Règlement à effectuer sur place, lors de la première séance.
 		</p>
 		</template>

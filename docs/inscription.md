@@ -62,24 +62,25 @@ Trois cas :
 
 #### Tarif adhérent·e / non-adhérent·e
 
-Pour une activité réservée aux adhérent·es (case Grist
-**`Activite.Adhesion_requise`** cochée), l'étape 2 affiche deux prix :
+Quand la colonne Grist facultative **`Activite.Tarif_non_adherent`**
+(Numérique) est renseignée, l'étape 2 affiche ce que paie **au total**
+chacun·e, pour éviter tout malentendu :
 
-- **adhérent·e** : `Tarif` ;
-- **non-adhérent·e** : adhésion individuelle + `Tarif`, avec le détail, ex.
-  « 75,00 € (30 € adhésion + 45 € activité) ».
+- **adhérent·e** : adhésion individuelle + `Tarif`, avec le détail, ex.
+  « 75,00 € adhérent·e (30 € adhésion + 45 € activité) ». L'adhésion n'est
+  comptée que si `Adhesion_requise` est cochée ; son prix est celui de la
+  cotisation de la saison dont le libellé contient « Individuelle » (table
+  `Cotisation`, `Tarif_conseille`) ;
+- **non-adhérent·e** : `Tarif_non_adherent`, ex. « 90,00 € non-adhérent·e ».
 
-Le prix de l'adhésion est celui de la cotisation de la saison en cours dont
-le libellé contient « Individuelle » (table `Cotisation`, `Tarif_conseille`).
-Le prix qui s'applique à la personne est en gras, l'autre en gris :
-adhérent·e si la fiche a une adhésion en cours (`Membres.Adhesion_en_cours`),
-non-adhérent·e sinon (donc toujours pour un·e extérieur·e). Activité sans
-`Adhesion_requise` (ex. ateliers CN) : un seul prix.
+Le prix qui concerne la personne est en gras, l'autre en gris : adhérent·e
+si la fiche a une adhésion en cours (`Membres.Adhesion_en_cours`),
+non-adhérent·e sinon (donc toujours pour un·e extérieur·e). Colonne vide :
+un seul prix, `Tarif`.
 
-Le récapitulatif d'un·e non-adhérent·e détaille activité + adhésion + total
-et rappelle que l'adhésion est formalisée avec l'animateur·rice à la
-première séance. Le **montant dû** enregistré dans `Inscription` reste le
-`Tarif` de l'activité seul.
+Le récapitulatif et le **montant dû** enregistré dans `Inscription` suivent
+la même règle : `Tarif_non_adherent` pour un·e non-adhérent·e, sinon `Tarif`
+(l'adhésion d'un·e adhérent·e est déjà réglée à part).
 
 Chaque activité affiche ses **places restantes** en direct (colonne
 `Places_restantes`) : « 3 places restantes », « 1 place restante » ou
@@ -97,8 +98,8 @@ d'inscription, montant dû, disponibilité). L'écran de confirmation affiche :
 - **« en liste d'attente »** si l'activité est devenue complète entre-temps
   (`Disponibilite = Liste d'attente`, sinon `Inscrit`) — l'association
   recontacte la personne dès qu'une place se libère ;
-- le **tarif** (0 si l'activité n'est pas payante) — pour un·e
-  non-adhérent·e, détail activité + adhésion + total —, avec le rappel
+- le **tarif** (`Tarif_non_adherent` pour un·e non-adhérent·e, sinon
+  `Tarif` ; 0 si l'activité n'est pas payante), avec le rappel
   « Règlement à effectuer sur place, lors de la première séance » quand il y
   a un montant à payer ;
 - pour un·e extérieur·e, une mention sur l'usage des données transmises ;
@@ -233,7 +234,7 @@ Routes API utilisées (communes avec le parcours d'adhésion, client
 | `/api/adhesion/participant-exterieur` | POST | Étape 1 extérieur·e : créer la fiche `Membres` minimale (rôle `Contact`). Propre à ce formulaire. |
 | `/api/adhesion/offre-inscription` | GET | Étape 2 : activités proposées (`?activite=` répétable, `?type=`) → `{ mode, activites, cibleIntrouvable }`. Propre à ce formulaire. |
 | `/api/adhesion/preinscription` | POST | Étape 2, mode préinscription : note l'intérêt dans `Membres.Commentaires`. Propre à ce formulaire. |
-| `/api/adhesion/inscription` | POST | Passage à l'étape 3 : crée la ligne `Inscription` (activité publiée uniquement, montant dû = `Tarif`) ; `Liste d'attente` si `Places_restantes <= 0`, sinon `Inscrit`. |
+| `/api/adhesion/inscription` | POST | Passage à l'étape 3 : crée la ligne `Inscription` (activité publiée uniquement, montant dû = `Tarif_non_adherent` sans adhésion en cours, sinon `Tarif`) ; `Liste d'attente` si `Places_restantes <= 0`, sinon `Inscrit`. |
 
 ## Limites connues
 
