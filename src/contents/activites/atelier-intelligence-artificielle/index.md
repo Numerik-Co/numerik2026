@@ -24,4 +24,8 @@ Toute personne curieuse ou déjà utilisatrice de l'IA au quotidien et qui veut 
 
 4 séances de 1h30.
 
+## Dates
+Retrouvez-nous pour ces ateliers, les jeudis 26 Nov 2026, 3 Dec 2026, 10 Dec 2026 et 17 Dec 2026 de 18h30 à 19h30.
+
+
 Pour connaître les prochaines dates, [contactez-nous](/contact).

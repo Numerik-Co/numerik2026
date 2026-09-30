@@ -24,4 +24,5 @@ Curieux de découvrir une alternative libre, ou possesseurs d'un ordinateur anci
 
 4 séances de 1h30.
 
-Pour connaître les prochaines dates, [contactez-nous](/contact).
+## Dates
+Retrouvez-nous pour ces ateliers, les jeudis 15 Oct 2026, 22 Oct 2026, 29 Oct 2026 et 5 Nov 2026 de 18h30 à 19h30.

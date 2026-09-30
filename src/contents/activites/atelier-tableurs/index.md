@@ -24,4 +24,8 @@ Toute personne souhaitant gérer un budget, une liste ou un planning à l'aide d
 
 4 séances de 1h30.
 
+## Dates
+Retrouvez-nous pour ces ateliers, les jeudis 14 Janv 2027, 21 Janv 2027, 28 Janv 2027 et 4 Fev 2027 de 18h30 à 19h30.
+
+
 Pour connaître les prochaines dates, [contactez-nous](/contact).

@@ -24,4 +24,6 @@ Toute personne souhaitant créer ou monter des vidéos personnelles (famille, vo
 
 4 séances de 1h30.
 
-Pour connaître les prochaines dates, [contactez-nous](/contact).
+## Dates
+Retrouvez-nous pour ces ateliers, les jeudis 20 Mai 2027, 27 Mai 2027, 3 Juin 2027 et 10 Juin 2027 de 18h30 à 19h30.
+
