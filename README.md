@@ -39,6 +39,7 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 | Comprendre l'inscription en ligne à une activité (bouton « S'inscrire »), l'ouvrir / la fermer | [docs/inscription.md](docs/inscription.md) |
 | Comprendre / présenter le parcours d'adhésion en ligne | [docs/adhesion-parcours.md](docs/adhesion-parcours.md) |
 | Comprendre / présenter la prise de RDV avec le·la Conseiller·ère Numérique, gérer les démarches | [docs/rdv-conseiller-numerique.md](docs/rdv-conseiller-numerique.md) |
+| Copier un bloc prêt à l'emploi (frontmatter, bouton, cartes, formulaire, route API…) | [docs/snippets.md](docs/snippets.md) |
 | Comprendre l'organisation technique du projet | [docs/developpement.md](docs/developpement.md) |
 
 ## Structure du projet (vue rapide)

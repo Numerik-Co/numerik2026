@@ -209,6 +209,9 @@ Pistes de suite non traitées (à reprendre si redemandé) :
 
 ## Documentation
 
+Snippets prêts à copier (frontmatter, blocs MDX, FormGate, route API Grist…) :
+[docs/snippets.md](docs/snippets.md) — à tenir à jour quand un motif change.
+
 Full documentation: https://docs.astro.build
 
 Consult these guides before working on related tasks:
