@@ -15,6 +15,8 @@ const props = defineProps<{
 	cibleIntrouvable: boolean;
 	/** Adhésion en cours : met en avant le tarif adhérent·e, sinon le tarif non-adhérent·e. */
 	estAdherent: boolean;
+	/** Prix de l'adhésion individuelle, ajouté au tarif pour un·e non-adhérent·e. */
+	prixAdhesion: number | null;
 }>();
 
 const emit = defineEmits<{ submit: [activiteId: number]; preinscrire: [activiteId: number] }>();
@@ -35,9 +37,20 @@ function placesLabel(o: ActiviteOption): string {
 	return `${o.placesRestantes} places restantes`;
 }
 
-/** Tarif non-adhérent distinct du tarif adhérent : on affiche les deux. */
+/** Activité réservée aux adhérent·es et adhésion payante : on affiche aussi le total non-adhérent·e. */
 function doubleTarif(o: ActiviteOption): boolean {
-	return o.prixNonAdherent !== null && o.prixNonAdherent !== o.prix;
+	return o.adhesionRequise && props.prixAdhesion !== null && props.prixAdhesion > 0;
+}
+
+function totalNonAdherent(o: ActiviteOption): number {
+	return (props.prixAdhesion ?? 0) + (o.prix ?? 0);
+}
+
+/** « 30 € adhésion + 45 € activité » (montants entiers sans décimales). */
+function detailNonAdherent(o: ActiviteOption): string {
+	const euros = (v: number) => `${new Intl.NumberFormat('fr-FR').format(v)} €`;
+	const activite = o.prix ? `${euros(o.prix)} activité` : 'activité gratuite';
+	return `${euros(props.prixAdhesion ?? 0)} adhésion + ${activite}`;
 }
 
 function valider() {
@@ -113,9 +126,10 @@ function valider() {
 									class="block text-sm"
 									:class="estAdherent ? 'text-gray-400' : 'font-heading font-semibold text-gray-900'"
 								>
-									{{ formatPrix(o.prixNonAdherent) }}
+									{{ formatPrix(totalNonAdherent(o)) }}
 									<span class="text-xs font-normal">non-adhérent·e</span>
 								</span>
+								<span class="block text-xs text-gray-500">({{ detailNonAdherent(o) }})</span>
 							</template>
 							<span v-else class="block font-heading font-semibold text-gray-900">
 								{{ formatPrix(o.prix) }}

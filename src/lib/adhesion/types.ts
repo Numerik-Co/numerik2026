@@ -156,8 +156,6 @@ export interface AdresseSuggestion {
 export interface InscriptionResult {
 	inscriptionId: number;
 	disponibilite: string; // "Inscrit" | "Liste d'attente"
-	/** Montant dû enregistré (tarif non-adhérent si le membre n'a pas d'adhésion en cours). */
-	montant: number;
 }
 
 /** Une inscription activité enregistrée pendant le parcours (affichage étape 3 + récap). */
@@ -183,8 +181,8 @@ export interface ActiviteOption {
 	id: number;
 	label: string;
 	prix: number | null;
-	/** `Tarif_non_adherent` ; null = pas de tarif distinct (on applique `prix`). */
-	prixNonAdherent: number | null;
+	/** `Adhesion_requise` : un·e non-adhérent·e devra aussi adhérer (prix affiché = adhésion + `prix`). */
+	adhesionRequise: boolean;
 	placesRestantes: number | null; // null = non plafonnée / inconnu
 }
 
@@ -198,6 +196,8 @@ export interface OffreInscription {
 	activites: ActiviteOption[];
 	/** La fiche visait une activité (ou un type) sans correspondance : liste complète par défaut. */
 	cibleIntrouvable: boolean;
+	/** Prix de l'adhésion individuelle de la saison, ajouté pour un·e non-adhérent·e ; null si introuvable. */
+	prixAdhesion: number | null;
 }
 
 /** Inscription en ligne — intérêt pour une activité non publiée (note dans `Membres.Commentaires`). */

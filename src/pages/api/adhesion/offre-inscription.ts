@@ -9,7 +9,7 @@ import {
 	type GristRecord,
 } from '../../../lib/adhesion/grist';
 import { toActiviteOption } from '../../../lib/adhesion/activite-option';
-import { json, normalize } from '../../../lib/adhesion/http';
+import { json, normalize, toNumberOrNull } from '../../../lib/adhesion/http';
 import type { OffreInscription } from '../../../lib/adhesion/types';
 
 export const prerender = false;
@@ -19,6 +19,16 @@ function correspond(nom: string, motif: string): boolean {
 	const n = normalize(nom);
 	const m = normalize(motif);
 	return m.endsWith('*') ? n.startsWith(m.slice(0, -1).trim()) : n === m;
+}
+
+/** Prix de l'adhésion individuelle de la saison (cotisation dont le libellé contient « individuel »). */
+async function prixAdhesionIndividuelle(saisonId: number): Promise<number | null> {
+	const c = COLS.cotisation;
+	const cotisations = await listRecords(TABLES.cotisations, { [c.saison]: [saisonId] });
+	const individuelle = cotisations.find((r) =>
+		normalize(`${r.fields[c.label] ?? ''} ${r.fields[c.type] ?? ''}`).includes('individuel'),
+	);
+	return individuelle ? toNumberOrNull(individuelle.fields[c.prix]) : null;
 }
 
 /**
@@ -36,10 +46,13 @@ export const GET: APIRoute = async ({ url }) => {
 
 	try {
 		const saisonId = await currentSaisonId();
-		const records = await listRecords(TABLES.activites, {
-			[COLS.activite.saison]: [saisonId],
-			[COLS.activite.type]: [...TYPES_ACTIVITE_INSCRIPTION],
-		});
+		const [records, prixAdhesion] = await Promise.all([
+			listRecords(TABLES.activites, {
+				[COLS.activite.saison]: [saisonId],
+				[COLS.activite.type]: [...TYPES_ACTIVITE_INSCRIPTION],
+			}),
+			prixAdhesionIndividuelle(saisonId),
+		]);
 		const publiee = (r: GristRecord) => r.fields[COLS.activite.publiee] === true;
 		const nomDe = (r: GristRecord) => String(r.fields[COLS.activite.nom] ?? '');
 
@@ -54,14 +67,25 @@ export const GET: APIRoute = async ({ url }) => {
 
 		let result: OffreInscription;
 		if (visees.some(publiee)) {
-			result = { mode: 'inscription', activites: visees.filter(publiee).map(toActiviteOption), cibleIntrouvable: false };
+			result = {
+				mode: 'inscription',
+				activites: visees.filter(publiee).map(toActiviteOption),
+				cibleIntrouvable: false,
+				prixAdhesion,
+			};
 		} else if (visees.length > 0) {
-			result = { mode: 'preinscription', activites: visees.map(toActiviteOption), cibleIntrouvable: false };
+			result = {
+				mode: 'preinscription',
+				activites: visees.map(toActiviteOption),
+				cibleIntrouvable: false,
+				prixAdhesion,
+			};
 		} else {
 			result = {
 				mode: 'inscription',
 				activites: records.filter(publiee).map(toActiviteOption),
 				cibleIntrouvable: cible,
+				prixAdhesion,
 			};
 		}
 		return json(result);

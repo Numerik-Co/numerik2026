@@ -37,6 +37,10 @@ const activites = ref<ActiviteOption[]>([]);
 const activiteId = ref<number | null>(null);
 const activiteLabel = ref('');
 const prix = ref<number | null>(null);
+/** Adhésion à formaliser en plus du tarif (non-adhérent·e, activité `Adhesion_requise`) ; null sinon. */
+const adhesionDue = ref<number | null>(null);
+/** Prix de l'adhésion individuelle de la saison (`/api/adhesion/offre-inscription`). */
+const prixAdhesion = ref<number | null>(null);
 const disponibilite = ref('');
 /** `preinscription` : l'activité visée n'est pas publiée, on note seulement l'intérêt. */
 const mode = ref<'inscription' | 'preinscription'>('inscription');
@@ -122,6 +126,7 @@ async function identifier(id: number, label: string, adhesionEnCours: boolean) {
 			activites.value = res.activites;
 			mode.value = res.mode;
 			cibleIntrouvable.value = res.cibleIntrouvable;
+			prixAdhesion.value = res.prixAdhesion;
 			offreChargee.value = true;
 		} catch (e) {
 			error.value = messageOf(e);
@@ -160,7 +165,8 @@ async function submitActivite(id: number) {
 		const res = await adhesionApi.enregistrerActivite({ membreId: membreId.value, activiteId: id });
 		const option = activites.value.find((a) => a.id === id);
 		activiteLabel.value = option?.label ?? '';
-		prix.value = res.montant;
+		prix.value = option?.prix ?? null;
+		adhesionDue.value = !estAdherent.value && option?.adhesionRequise ? prixAdhesion.value : null;
 		disponibilite.value = res.disponibilite;
 		step.value = 'recap';
 	} catch (e) {
@@ -182,6 +188,7 @@ function recommencer() {
 	activiteId.value = null;
 	activiteLabel.value = '';
 	prix.value = null;
+	adhesionDue.value = null;
 	disponibilite.value = '';
 	preinscrit.value = false;
 	estAdherent.value = false;
@@ -224,6 +231,7 @@ function annuler() {
 				:mode="mode"
 				:cible-introuvable="cibleIntrouvable"
 				:est-adherent="estAdherent"
+				:prix-adhesion="prixAdhesion"
 				@submit="submitActivite"
 				@preinscrire="submitPreinscription"
 			/>
@@ -234,6 +242,7 @@ function annuler() {
 				:exterieur="profil === 'exterieur'"
 				:activite-label="activiteLabel"
 				:prix="prix"
+				:adhesion-due="adhesionDue"
 				:disponibilite="disponibilite"
 				:preinscription="preinscrit"
 				@recommencer="recommencer"

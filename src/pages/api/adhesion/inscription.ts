@@ -17,8 +17,8 @@ export const prerender = false;
 /**
  * Étape 3 — inscrit le membre à une activité (table Inscription).
  * `Saison` est une colonne formule → calculée par Grist. Si plus de place,
- * l'inscription est créée en « Liste d'attente ». Montant dû : `Tarif_non_adherent`
- * s'il est renseigné et que le membre n'a pas d'adhésion en cours, sinon `Tarif`.
+ * l'inscription est créée en « Liste d'attente ». Montant dû : le tarif de
+ * l'activité seul — l'adhésion d'un·e non-adhérent·e se règle à part.
  */
 export const POST: APIRoute = async ({ request }) => {
 	const body = await request.json().catch(() => null);
@@ -40,13 +40,7 @@ export const POST: APIRoute = async ({ request }) => {
 		const places = toNumberOrNull(activite.fields[COLS.activite.placesRestantes]);
 		const disponibilite = places !== null && places <= 0 ? DISPO_ATTENTE : DISPO_INSCRIT;
 
-		const [membre] = await listRecords(TABLES.membres, { id: [membreId] });
-		if (!membre) {
-			return json({ error: 'Membre inconnu.' }, 400);
-		}
-		const adherent = membre.fields[COLS.membre.adhesionEnCours] === true;
-		const { prix, prixNonAdherent } = toActiviteOption(activite);
-		const montant = (!adherent && prixNonAdherent !== null ? prixNonAdherent : prix) ?? 0;
+		const montant = toActiviteOption(activite).prix ?? 0;
 
 		const i = COLS.inscription;
 		const inscriptionId = await createRecord(TABLES.inscriptions, {
@@ -57,7 +51,7 @@ export const POST: APIRoute = async ({ request }) => {
 			[i.disponibilite]: disponibilite,
 		});
 
-		const result: InscriptionResult = { inscriptionId, disponibilite, montant };
+		const result: InscriptionResult = { inscriptionId, disponibilite };
 		return json(result);
 	} catch (err) {
 		const status = err instanceof GristError ? err.status : 500;
