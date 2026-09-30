@@ -4,6 +4,7 @@ isPublish: true
 excerpt: "Vos photos méritent mieux qu'un simple recadrage."
 imageCredit: "Photo : Kawe Rodrigues / Pexels"
 category: "ateliers"
+activiteGrist: "Module Photo"
 order: 11
 ---
 

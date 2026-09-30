@@ -80,6 +80,7 @@ async function creerMembre(data: Record<string, unknown>): Promise<MembreResult 
 	return {
 		status: 'ok',
 		membreId,
+		ficheId: membreId,
 		prenom: payload.prenom,
 		nom: payload.nom,
 		genre: payload.genre,
@@ -115,6 +116,7 @@ async function retrouverMembre(nom: string, prenom: string): Promise<MembreResul
 		return {
 			status: 'ok',
 			membreId: cible.id,
+			ficheId: trouve.id,
 			prenom: String(trouve.fields[c.prenom] ?? prenom),
 			nom: String(trouve.fields[c.nom] ?? nom),
 			genre: readGenre(cible.fields[c.genre]),

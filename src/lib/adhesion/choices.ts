@@ -21,5 +21,8 @@ export const STATUT_IMPAYE = 'Impayé';
 export const DISPO_INSCRIT = 'Inscrit';
 export const DISPO_ATTENTE = "Liste d'attente";
 
-/** Liste de choix `Activite.Type` proposés par le formulaire d'inscription en ligne. */
+/** Liste de choix `Activite.Type` proposés à l'étape « activité » du parcours d'adhésion. */
 export const TYPES_ACTIVITE_ADHESION = ['Séances', 'Modules'] as const;
+
+/** Liste de choix `Activite.Type` proposés par l'inscription en ligne (`/inscription`). */
+export const TYPES_ACTIVITE_INSCRIPTION = ['Séances', 'Ateliers', 'Atelier CN'] as const;

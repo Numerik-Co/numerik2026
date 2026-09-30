@@ -4,6 +4,7 @@ isPublish: true
 excerpt: "Découvrir un autre système d'exploitation, libre et gratuit."
 imageCredit: "Photo : Real Tough Candy / Pexels"
 category: "ateliers"
+activiteGrist: "Module Linux"
 order: 14
 ---
 

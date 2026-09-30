@@ -4,6 +4,7 @@ isPublish: true
 excerpt: "Organiser, calculer, visualiser : le tableur au quotidien."
 imageCredit: "Photo : Tima Miroshnichenko / Pexels"
 category: "ateliers"
+activiteGrist: "Module Tableur"
 order: 13
 ---
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import type { ActiviteOption } from '../../lib/adhesion/types';
 import { formatPrix } from '../adhesion/format';
 
@@ -9,29 +9,41 @@ const props = defineProps<{
 	done: boolean;
 	busy: boolean;
 	activiteLabel: string;
+	/** `preinscription` : activité(s) visée(s) non publiée(s), on note l'intérêt au lieu d'inscrire. */
+	mode: 'inscription' | 'preinscription';
+	/** La fiche d'origine visait une activité sans correspondance dans Grist. */
+	cibleIntrouvable: boolean;
+	/** Adhésion en cours : met en avant le tarif adhérent·e, sinon le tarif non-adhérent·e. */
+	estAdherent: boolean;
 }>();
 
-const emit = defineEmits<{ submit: [activiteId: number] }>();
+const emit = defineEmits<{ submit: [activiteId: number]; preinscrire: [activiteId: number] }>();
 
 const activiteId = defineModel<number | null>('activiteId', { required: true });
 
 const montreErreur = ref(false);
+const preinscription = computed(() => props.mode === 'preinscription');
 
 function complet(o: ActiviteOption): boolean {
-	return o.placesRestantes !== null && o.placesRestantes <= 0;
+	return !preinscription.value && o.placesRestantes !== null && o.placesRestantes <= 0;
 }
 
 function placesLabel(o: ActiviteOption): string {
-	if (o.placesRestantes === null) return '';
+	if (preinscription.value || o.placesRestantes === null) return '';
 	if (o.placesRestantes <= 0) return 'Complet';
 	if (o.placesRestantes === 1) return '1 place restante';
 	return `${o.placesRestantes} places restantes`;
 }
 
+/** Tarif non-adhérent distinct du tarif adhérent : on affiche les deux. */
+function doubleTarif(o: ActiviteOption): boolean {
+	return o.prixNonAdherent !== null && o.prixNonAdherent !== o.prix;
+}
+
 function valider() {
 	montreErreur.value = true;
 	if (activiteId.value === null) return;
-	emit('submit', activiteId.value);
+	emit(preinscription.value ? 'preinscrire' : 'submit', activiteId.value);
 }
 </script>
 
@@ -59,6 +71,16 @@ function valider() {
 			</template>
 
 			<template v-else>
+				<p v-if="preinscription" class="mb-4 text-sm text-gray-700">
+					{{ options.length > 1 ? 'Ces créneaux ne sont' : "Cette activité n'est" }} pas encore
+					ouvert{{ options.length > 1 ? 's' : 'e' }} à l'inscription. Vous pouvez vous préinscrire :
+					nous notons votre intérêt et vous recontactons dès l'ouverture des inscriptions.
+				</p>
+				<p v-else-if="cibleIntrouvable" class="mb-4 text-sm text-gray-600">
+					Cette activité ne se réserve pas via ce formulaire. Voici les activités ouvertes à
+					l'inscription :
+				</p>
+
 				<div class="space-y-2">
 					<label
 						v-for="o in options"
@@ -79,8 +101,25 @@ function valider() {
 							/>
 							<span class="text-sm text-gray-900">{{ o.label }}</span>
 						</span>
-						<span class="text-right">
-							<span class="block font-heading font-semibold text-gray-900">{{ formatPrix(o.prix) }}</span>
+						<span v-if="!preinscription" class="text-right">
+							<template v-if="doubleTarif(o)">
+								<span
+									class="block text-sm"
+									:class="estAdherent ? 'font-heading font-semibold text-gray-900' : 'text-gray-400'"
+								>
+									{{ formatPrix(o.prix) }} <span class="text-xs font-normal">adhérent·e</span>
+								</span>
+								<span
+									class="block text-sm"
+									:class="estAdherent ? 'text-gray-400' : 'font-heading font-semibold text-gray-900'"
+								>
+									{{ formatPrix(o.prixNonAdherent) }}
+									<span class="text-xs font-normal">non-adhérent·e</span>
+								</span>
+							</template>
+							<span v-else class="block font-heading font-semibold text-gray-900">
+								{{ formatPrix(o.prix) }}
+							</span>
 							<span class="block text-xs" :class="complet(o) ? 'text-red-600' : 'text-gray-400'">
 								{{ placesLabel(o) }}
 							</span>
@@ -89,7 +128,7 @@ function valider() {
 				</div>
 
 				<p v-if="montreErreur && activiteId === null" class="mt-3 text-sm text-red-600">
-					Choisissez une activité.
+					Choisissez {{ preinscription ? 'un créneau' : 'une activité' }}.
 				</p>
 
 				<button
@@ -97,14 +136,14 @@ function valider() {
 					class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
 					:disabled="busy"
 				>
-					{{ busy ? 'Envoi…' : "Valider l'inscription" }}
+					{{ busy ? 'Envoi…' : preinscription ? 'Me préinscrire' : "Valider l'inscription" }}
 				</button>
 			</template>
 		</form>
 
 		<p v-else-if="done" class="mt-3 text-sm text-gray-600">
 			{{ activiteLabel }}
-			<span class="text-gray-400">— enregistré</span>
+			<span class="text-gray-400">— {{ mode === 'preinscription' ? 'préinscription' : 'enregistré' }}</span>
 		</p>
 	</li>
 </template>

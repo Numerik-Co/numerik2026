@@ -3,8 +3,8 @@ title: "Ateliers du·de la Conseiller·ère Numérique"
 isPublish: true
 excerpt: "Un atelier collectif gratuit chaque mois, animé par notre conseiller·ère numérique, pour prendre en main vos outils du quotidien."
 category: "mediation-numerique"
+typeGrist: "Atelier CN"
 imageCredit: "Photo : Kampus / Pexels"
-inscription: false
 order: 3
 ---
 

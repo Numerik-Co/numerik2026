@@ -7,7 +7,8 @@ import {
 	TABLES,
 	TYPES_ACTIVITE_ADHESION,
 } from '../../../lib/adhesion/grist';
-import { json, toNumberOrNull } from '../../../lib/adhesion/http';
+import { toActiviteOption } from '../../../lib/adhesion/activite-option';
+import { json } from '../../../lib/adhesion/http';
 import type { ActiviteOption } from '../../../lib/adhesion/types';
 
 export const prerender = false;
@@ -27,15 +28,7 @@ export const GET: APIRoute = async () => {
 			[COLS.activite.type]: [...TYPES_ACTIVITE_ADHESION],
 		});
 
-		const options: ActiviteOption[] = records.map((r) => ({
-			id: r.id,
-			label: String(r.fields[COLS.activite.nom] ?? `Activité ${r.id}`),
-			prix:
-				r.fields[COLS.activite.payant] === false
-					? 0
-					: toNumberOrNull(r.fields[COLS.activite.prix]),
-			placesRestantes: toNumberOrNull(r.fields[COLS.activite.placesRestantes]),
-		}));
+		const options: ActiviteOption[] = records.map(toActiviteOption);
 
 		return json(options);
 	} catch (err) {

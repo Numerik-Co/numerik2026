@@ -13,6 +13,13 @@ export interface Activity {
 	imageCredit?: string;
 	/** `false` masque le bouton « S'inscrire » (ex. activités sur rendez-vous). Défaut : `true`. */
 	inscription: boolean;
+	/**
+	 * Lien `/inscription` du bouton « S'inscrire », ciblant les activités Grist
+	 * de la fiche : frontmatter `activiteGrist` (nom `Activite.Nom` ou liste de
+	 * noms, `*` final = préfixe) et/ou `typeGrist` (`Activite.Type`). Sans l'un
+	 * ni l'autre : le titre de la fiche.
+	 */
+	inscriptionHref: string;
 	order: number;
 	headings: Heading[];
 	readingTime: number;
@@ -40,6 +47,15 @@ function slugFromPath(path: string) {
 	return path.split('/').slice(-2, -1)[0];
 }
 
+function inscriptionHref(frontmatter: Record<string, any>): string {
+	const params = new URLSearchParams();
+	const noms = [frontmatter.activiteGrist ?? []].flat().filter(Boolean);
+	if (noms.length === 0 && !frontmatter.typeGrist) noms.push(frontmatter.title);
+	noms.forEach((n: string) => params.append('activite', n));
+	if (frontmatter.typeGrist) params.set('type', frontmatter.typeGrist);
+	return `/inscription?${params}`;
+}
+
 export function getAllActivities(): Activity[] {
 	return Object.entries(activityFiles)
 		.filter(([, mod]) => mod.frontmatter.isPublish !== false)
@@ -56,6 +72,7 @@ export function getAllActivities(): Activity[] {
 				excerpt: frontmatter.excerpt,
 				level: frontmatter.level,
 				inscription: frontmatter.inscription !== false,
+				inscriptionHref: inscriptionHref(frontmatter),
 				image: imagePath ? activityImages[imagePath] : undefined,
 				imageCredit: frontmatter.imageCredit || `Photo : ${association.name}`,
 				order: frontmatter.order ?? 999,

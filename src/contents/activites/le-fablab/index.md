@@ -3,6 +3,7 @@ title: "Le FabLab"
 isPublish: true
 excerpt: "Un espace de fabrication numérique ouvert à tous, chaque lundi soir, pour concevoir, imprimer, découper et réparer vos projets."
 category: "fablab"
+activiteGrist: "Espace FABLAB"
 imageCredit: "Photo : Jakub Zerdzicki / Pexels"
 order: 1
 ---

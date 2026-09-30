@@ -4,6 +4,7 @@ isPublish: true
 excerpt: "L'IA, oui — mais laquelle, et pour quoi faire ?"
 imageCredit: "Photo : Pavel Danilyuk / Pexels"
 category: "ateliers"
+activiteGrist: "Module IA"
 order: 10
 ---
 

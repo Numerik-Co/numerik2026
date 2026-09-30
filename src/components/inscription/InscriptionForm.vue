@@ -38,24 +38,27 @@ const activiteId = ref<number | null>(null);
 const activiteLabel = ref('');
 const prix = ref<number | null>(null);
 const disponibilite = ref('');
+/** `preinscription` : l'activité visée n'est pas publiée, on note seulement l'intérêt. */
+const mode = ref<'inscription' | 'preinscription'>('inscription');
+const cibleIntrouvable = ref(false);
+const offreChargee = ref(false);
+const preinscrit = ref(false);
+/** Adhésion en cours : décide du tarif mis en avant à l'étape 2 (adhérent·e / non-adhérent·e). */
+const estAdherent = ref(false);
 
 const busy = ref(false);
 const error = ref('');
 
-/** Nom de l'activité passé en paramètre depuis la page d'une activité, pour présélection. */
-const activitePreselection = ref('');
+/** Cible transmise par le bouton « S'inscrire » d'une fiche (`activite=…` répétable, `type=…`). */
+const cible = ref(new URLSearchParams());
 
 onMounted(() => {
-	activitePreselection.value = new URLSearchParams(window.location.search).get('activite') ?? '';
+	const params = new URLSearchParams(window.location.search);
+	const c = new URLSearchParams();
+	params.getAll('activite').forEach((a) => c.append('activite', a));
+	if (params.get('type')) c.set('type', params.get('type')!);
+	cible.value = c;
 });
-
-function normalize(v: string): string {
-	return v
-		.normalize('NFD')
-		.replace(/\p{Diacritic}/gu, '')
-		.toLowerCase()
-		.trim();
-}
 
 function messageOf(e: unknown): string {
 	return e instanceof Error ? e.message : 'Une erreur est survenue, réessayez.';
@@ -76,10 +79,10 @@ async function submitAdherent() {
 			candidats.value = res.candidats;
 			return;
 		}
-		// `res.prenom`/`res.nom` peuvent être ceux du·de la responsable du foyer
-		// (résolution silencieuse côté API, pour l'adhésion) : on affiche ici le
-		// nom du membre réellement inscrit à l'activité, tel que saisi.
-		identifier(res.membreId, `${adherent.prenom} ${adherent.nom}`.trim());
+		// `res.membreId` désigne le·la responsable du foyer quand la fiche trouvée
+		// est rattachée à une adhésion familiale (logique de l'adhésion) : on
+		// inscrit ici la personne elle-même, via `res.ficheId`.
+		identifier(res.ficheId, `${res.prenom} ${res.nom}`.trim(), res.adhesionEnCours);
 	} catch (e) {
 		error.value = messageOf(e);
 	} finally {
@@ -89,7 +92,7 @@ async function submitAdherent() {
 
 function choisirCandidat(c: MembreCandidat) {
 	candidats.value = [];
-	identifier(c.membreId, `${c.prenom} ${c.nom}`.trim());
+	identifier(c.membreId, `${c.prenom} ${c.nom}`.trim(), c.adhesionEnCours);
 }
 
 async function submitExterieur() {
@@ -97,7 +100,7 @@ async function submitExterieur() {
 	error.value = '';
 	try {
 		const res = await adhesionApi.creerParticipantExterieur({ ...exterieur });
-		identifier(res.membreId, `${res.prenom} ${res.nom}`.trim());
+		identifier(res.membreId, `${res.prenom} ${res.nom}`.trim(), false);
 	} catch (e) {
 		error.value = messageOf(e);
 	} finally {
@@ -105,30 +108,48 @@ async function submitExterieur() {
 	}
 }
 
-async function identifier(id: number, label: string) {
+async function identifier(id: number, label: string, adhesionEnCours: boolean) {
 	membreId.value = id;
 	membreLabel.value = label;
+	estAdherent.value = adhesionEnCours;
 	step.value = 'activite';
-	if (activites.value.length === 0) {
+	if (!offreChargee.value) {
 		busy.value = true;
 		try {
-			activites.value = await adhesionApi.activites();
-			preselectionnerActivite();
+			// Le serveur restreint la liste aux activités visées par la fiche d'origine
+			// ou bascule en préinscription si aucune n'est publiée.
+			const res = await adhesionApi.offreInscription(cible.value);
+			activites.value = res.activites;
+			mode.value = res.mode;
+			cibleIntrouvable.value = res.cibleIntrouvable;
+			offreChargee.value = true;
 		} catch (e) {
 			error.value = messageOf(e);
 		} finally {
 			busy.value = false;
 		}
-	} else {
-		preselectionnerActivite();
+	}
+	// Une seule activité proposée pour la fiche visée : on la coche d'office.
+	if (cible.value.size > 0 && !cibleIntrouvable.value && activites.value.length === 1) {
+		activiteId.value = activites.value[0].id;
 	}
 }
 
-function preselectionnerActivite() {
-	if (!activitePreselection.value || activiteId.value !== null) return;
-	const cible = normalize(activitePreselection.value);
-	const match = activites.value.find((o) => normalize(o.label) === cible);
-	if (match) activiteId.value = match.id;
+async function submitPreinscription(id: number) {
+	if (membreId.value === null) return;
+	busy.value = true;
+	error.value = '';
+	try {
+		await adhesionApi.preinscrire({ membreId: membreId.value, activiteId: id });
+		activiteLabel.value = activites.value.find((a) => a.id === id)?.label ?? '';
+		prix.value = null;
+		preinscrit.value = true;
+		step.value = 'recap';
+	} catch (e) {
+		error.value = messageOf(e);
+	} finally {
+		busy.value = false;
+	}
 }
 
 async function submitActivite(id: number) {
@@ -139,7 +160,7 @@ async function submitActivite(id: number) {
 		const res = await adhesionApi.enregistrerActivite({ membreId: membreId.value, activiteId: id });
 		const option = activites.value.find((a) => a.id === id);
 		activiteLabel.value = option?.label ?? '';
-		prix.value = option?.prix ?? null;
+		prix.value = res.montant;
 		disponibilite.value = res.disponibilite;
 		step.value = 'recap';
 	} catch (e) {
@@ -162,6 +183,8 @@ function recommencer() {
 	activiteLabel.value = '';
 	prix.value = null;
 	disponibilite.value = '';
+	preinscrit.value = false;
+	estAdherent.value = false;
 	error.value = '';
 }
 
@@ -198,7 +221,11 @@ function annuler() {
 				:done="step === 'recap'"
 				:busy="busy"
 				:activite-label="activiteLabel"
+				:mode="mode"
+				:cible-introuvable="cibleIntrouvable"
+				:est-adherent="estAdherent"
 				@submit="submitActivite"
+				@preinscrire="submitPreinscription"
 			/>
 
 			<EtapeRecap
@@ -208,6 +235,7 @@ function annuler() {
 				:activite-label="activiteLabel"
 				:prix="prix"
 				:disponibilite="disponibilite"
+				:preinscription="preinscrit"
 				@recommencer="recommencer"
 			/>
 		</ol>

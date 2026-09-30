@@ -19,6 +19,8 @@ import type {
 	MembrePayload,
 	MembreRecherche,
 	MembreResult,
+	OffreInscription,
+	PreinscriptionPayload,
 	RenouvellementPayload,
 	RenouvPreferencesPayload,
 } from '../../lib/adhesion/types';
@@ -48,6 +50,11 @@ async function get<T>(url: string): Promise<T> {
 export const adhesionApi = {
 	cotisations: () => get<CotisationOption[]>('/api/adhesion/cotisations'),
 	activites: () => get<ActiviteOption[]>('/api/adhesion/activites'),
+	/** `cible` : la query string reçue par /inscription (`activite=…&type=…`), relayée telle quelle. */
+	offreInscription: (cible: URLSearchParams) =>
+		get<OffreInscription>(`/api/adhesion/offre-inscription?${cible}`),
+	preinscrire: (payload: PreinscriptionPayload) =>
+		post<{ ok: true }>('/api/adhesion/preinscription', payload),
 
 	creerMembre: (payload: MembrePayload) =>
 		post<MembreResult>('/api/adhesion/membre', { mode: 'nouveau', ...payload }),

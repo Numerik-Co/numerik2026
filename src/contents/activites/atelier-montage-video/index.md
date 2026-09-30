@@ -4,6 +4,7 @@ isPublish: true
 excerpt: "Donnez vie à vos souvenirs en vidéo."
 imageCredit: "Photo : Nicolas Rueda / Pexels"
 category: "ateliers"
+activiteGrist: "Module Video"
 order: 12
 ---
 

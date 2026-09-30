@@ -90,6 +90,7 @@ export const COLS = {
 		nom: 'Nom',
 		type: 'Type',
 		prix: 'Tarif',
+		prixNonAdherent: 'Tarif_non_adherent', // Numeric facultatif : tarif sans adhésion en cours (vide = même tarif)
 		payant: 'Payant',
 		saison: 'Saison',
 		placesRestantes: 'Places_restantes',
@@ -130,6 +131,7 @@ export {
 	DISPO_INSCRIT,
 	DISPO_ATTENTE,
 	TYPES_ACTIVITE_ADHESION,
+	TYPES_ACTIVITE_INSCRIPTION,
 } from './choices';
 export type { GenreGrist } from './choices';
 

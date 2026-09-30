@@ -111,6 +111,30 @@ un SVG inline au trait fin (Font Awesome gratuit ne l'a qu'en plein), les
 icônes font 24 px et sont centrées verticalement. Détail :
 [docs/partage.md](docs/partage.md).
 
+### Inscription en ligne à une activité
+
+Page `/inscription`, îlot Vue `src/components/inscription/InscriptionForm.vue`
+(`client:load`), gardé par `<FormGate form="inscription">`. 3 étapes :
+profil (adhérent·e retrouvé·e par nom + prénom via
+`/api/adhesion/membre` `mode:'renouvellement'`, ou extérieur·e → fiche
+`Membres` minimale rôle `Contact` via `/api/adhesion/participant-exterieur`)
+→ activité (`/api/adhesion/offre-inscription` : saison en cours, type
+`Séances`/`Ateliers`/`Atelier CN` — `TYPES_ACTIVITE_INSCRIPTION` ; les
+activités de la fiche d'origine si l'une est publiée, sinon tous les
+publiés ; double tarif si `Activite.Tarif_non_adherent` renseigné, mis en
+avant selon `Adhesion_en_cours`) → récap (`/api/adhesion/inscription`,
+montant dû au tarif non-adhérent sans adhésion en cours, `Liste d'attente`
+si complet, règlement sur place). Activités visées **toutes non publiées**
+→ « Me préinscrire » (`/api/adhesion/preinscription`, ligne ajoutée à
+`Membres.Commentaires`, pas d'`Inscription`). Bouton « S'inscrire » dans la
+sidebar de `src/pages/activites/[category]/[slug].astro` →
+`activity.inscriptionHref` (`src/lib/activites.ts`, depuis le frontmatter
+`activiteGrist` = nom(s) Grist, `*` final = préfixe, et/ou `typeGrist` ;
+défaut `title`) ; masqué par `inscription: false` dans le frontmatter de la
+fiche ou si `site.forms.inscription` est fermé. Inscrit la fiche trouvée
+(`ficheId` de `/api/adhesion/membre`), pas `membreId` qui désigne le·la
+responsable du foyer pour un membre rattaché. Détail : [docs/inscription.md](docs/inscription.md).
+
 ### Présence (« Je participe »)
 
 Page `/je-participe` (lien de menu, `src/config/site.ts`), îlot Vue

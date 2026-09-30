@@ -80,7 +80,16 @@ export interface DetacherMembrePayload {
 }
 
 export type MembreResult =
-	| ({ status: 'ok'; membreId: number; prenom: string; nom: string; genre: Genre | null } & MembreEtat)
+	| ({
+			status: 'ok';
+			/** Fiche qui porte l'adhésion : le·la responsable du foyer si la fiche trouvée est rattachée. */
+			membreId: number;
+			/** Fiche réellement trouvée par nom + prénom (= `membreId` si elle n'est pas rattachée). */
+			ficheId: number;
+			prenom: string;
+			nom: string;
+			genre: Genre | null;
+	  } & MembreEtat)
 	| { status: 'ambigu'; candidats: MembreCandidat[] }
 	| { status: 'introuvable' };
 
@@ -147,6 +156,8 @@ export interface AdresseSuggestion {
 export interface InscriptionResult {
 	inscriptionId: number;
 	disponibilite: string; // "Inscrit" | "Liste d'attente"
+	/** Montant dû enregistré (tarif non-adhérent si le membre n'a pas d'adhésion en cours). */
+	montant: number;
 }
 
 /** Une inscription activité enregistrée pendant le parcours (affichage étape 3 + récap). */
@@ -172,7 +183,27 @@ export interface ActiviteOption {
 	id: number;
 	label: string;
 	prix: number | null;
+	/** `Tarif_non_adherent` ; null = pas de tarif distinct (on applique `prix`). */
+	prixNonAdherent: number | null;
 	placesRestantes: number | null; // null = non plafonnée / inconnu
+}
+
+/** Inscription en ligne — activités proposées à l'étape 2 (`/api/adhesion/offre-inscription`). */
+export interface OffreInscription {
+	/**
+	 * `inscription` : activités ouvertes (publiées) à choisir.
+	 * `preinscription` : l'activité visée existe mais n'est pas publiée — on note l'intérêt.
+	 */
+	mode: 'inscription' | 'preinscription';
+	activites: ActiviteOption[];
+	/** La fiche visait une activité (ou un type) sans correspondance : liste complète par défaut. */
+	cibleIntrouvable: boolean;
+}
+
+/** Inscription en ligne — intérêt pour une activité non publiée (note dans `Membres.Commentaires`). */
+export interface PreinscriptionPayload {
+	membreId: number;
+	activiteId: number;
 }
 
 export interface ApiError {
