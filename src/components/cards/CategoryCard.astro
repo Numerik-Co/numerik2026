@@ -4,6 +4,7 @@ interface Props {
 		slug: string;
 		label: string;
 		icon: string;
+		description: string;
 	};
 }
 
@@ -20,4 +21,5 @@ const { category } = Astro.props;
 	<span class="font-heading text-sm font-semibold uppercase tracking-wide text-gray-900">
 		{category.label}
 	</span>
+	<span>{category.description}</span>
 </a>
