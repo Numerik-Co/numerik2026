@@ -148,7 +148,10 @@ l'adhésion (`Nom`, `Saison`…) :
 | `Jour` | Choice | `Lundi` … `Samedi` |
 | `Debute_a` / `Fini_a` | Text | Format `"16:30"`, converti en `"16h30"` à la lecture (cohérent avec le tri de `WeeklyAgenda.astro`) |
 | `Lieu` | Text | Facultatif |
-| `Encadrant` | RefList:Membres | Résolu en noms (« Prénom Nom ») via `membreLabel()`, facultatif |
+| `Encadrant` | RefList:Membres | Résolu en prénoms seuls (nom complet via `membreLabel()` si prénom vide), facultatif |
+| `Ouverture` | Date | Facultatif : date de la première séance. Renseignée, la ligne n'apparaît qu'à partir de la semaine (lundi → dimanche, heure de Paris) de cette date ; vide = affichée chaque semaine |
+| `Places_max` / `Places_restantes` | Int | Si `Places_max` > 0, le bloc porte la note « n place(s) restante(s) » ou « Complet » |
+| `Nombre_de_seances` | Int | Facultatif, lu seulement avec `Ouverture` : la ligne disparaît après ce nombre de semaines (0 ou vide = sans fin). |
 
 ## Présence (« Je participe »)
 

@@ -18,6 +18,8 @@ interface Props {
 	/** Première / dernière heure affichée sur l'axe (défaut 9 → 20). */
 	startHour?: number;
 	endHour?: number;
+	/** Jours toujours affichés, même sans séance (défaut : lundi → samedi). */
+	alwaysShowDays?: readonly string[];
 	/** Classes utilitaires supplémentaires sur le `<section>`. */
 	class?: string;
 }
@@ -30,10 +32,11 @@ const {
 	showLegend = true,
 	startHour = 9,
 	endHour = 20,
+	alwaysShowDays = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
 	class: className = '',
 } = Astro.props;
 
-const days = groupByDay(sessions);
+const days = groupByDay(sessions, alwaysShowDays);
 const usedKinds = [...new Set(sessions.map((s) => s.kind))];
 
 const startMin = startHour * 60;
@@ -49,6 +52,25 @@ function toMin(hhmm: string): number {
 function row(hhmm: string): number {
 	return Math.round((toMin(hhmm) - startMin) / 30) + 2;
 }
+
+/**
+ * Rang de chevauchement de chaque séance d'un jour (0 = aucune séance
+ * antérieure encore en cours à son début) : sert à décaler en cascade les
+ * blocs qui se superposent. Les séances arrivent triées par `groupByDay()`.
+ */
+function overlapLanes(daySessions: AgendaSession[]): number[] {
+	const laneEnds: number[] = [];
+	return daySessions.map((s) => {
+		const start = toMin(s.start);
+		let lane = laneEnds.findIndex((end) => end <= start);
+		if (lane === -1) lane = laneEnds.length;
+		laneEnds[lane] = toMin(s.end);
+		return lane;
+	});
+}
+
+/** Empilement des blocs décalés (classes littérales pour Tailwind). */
+const LANE_Z = ['z-10', 'z-[11]', 'z-[12]', 'z-[13]', 'z-[14]', 'z-[15]'];
 
 const gridStyle = [
 	'--agenda-slot: 2.25rem',
@@ -116,13 +138,17 @@ const gridStyle = [
 			})}
 
 			{/* Blocs activité */}
-			{days.map((d, i) =>
-				d.sessions.map((s) => {
+			{days.map((d, i) => {
+				const lanes = overlapLanes(d.sessions);
+				return d.sessions.map((s, j) => {
 					const meta = AGENDA_KIND_META[s.kind];
+					const lane = lanes[j];
+					// Décalage en cascade (droite + bas) des blocs superposés.
+					const offset = lane > 0 ? `margin-left: ${0.125 + lane * 0.75}rem; margin-top: ${0.125 + lane * 0.5}rem;` : '';
 					return (
 						<div
-							class="z-10 m-0.5 flex flex-col overflow-hidden rounded-xl border border-l-4 border-gray-100 bg-white p-2 shadow-sm"
-							style={`grid-column: ${i + 2}; grid-row: ${row(s.start)} / ${row(s.end)}; border-left-color: ${meta.hex};`}
+							class={`${LANE_Z[Math.min(lane, LANE_Z.length - 1)]} m-0.5 flex flex-col overflow-hidden rounded-xl border border-l-4 border-gray-100 bg-white p-2 transition-shadow hover:z-30 hover:shadow-lg ${lane > 0 ? 'shadow-md' : 'shadow-sm'}`}
+							style={`grid-column: ${i + 2}; grid-row: ${row(s.start)} / ${row(s.end)}; border-left-color: ${meta.hex}; ${offset}`}
 							title={[
 								`${s.start} – ${s.end}`,
 								s.title,
@@ -153,8 +179,8 @@ const gridStyle = [
 							)}
 						</div>
 					);
-				})
-			)}
+				});
+			})}
 		</div>
 	</div>
 </section>

@@ -70,7 +70,10 @@ couleur par famille d'activité.
   horaires, lieu, encadrant·e·s), lue à chaque requête par
   `fetchPlanningAgenda()` (`src/lib/adhesion/planning.ts`) et recombinée
   avec `conseillerNumerique`. Seules les lignes `Publiee = true` de la
-  saison en cours, avec une `Categorie_agenda` renseignée, sont affichées.
+  saison en cours, avec une `Categorie_agenda` renseignée, et qui ont lieu
+  dans la semaine en cours (`Ouverture` = date de 1re séance, puis
+  `Nombre_de_seances` semaines ; sans `Ouverture` = chaque semaine) sont
+  affichées.
   **Modifier le planning = éditer les lignes `Activite` dans Grist**, pas
   le code. Détail des colonnes et du mapping : [docs/api.md](docs/api.md).
 - `src/components/sections/WeeklyAgenda.astro` — le composant.
@@ -78,11 +81,14 @@ couleur par famille d'activité.
   props : `sessions` (jeu de séances personnalisé — c'est ce que passe
   `/activites` avec les créneaux venus de Grist), `showHeading`, `title`,
   `description`, `showLegend`, `startHour` / `endHour` (bornes de l'axe
-  horaire, défaut 9 → 20), `class` (utilitaires ajoutés au `<section>`).
+  horaire, défaut 9 → 20), `alwaysShowDays` (jours affichés même vides,
+  défaut lundi → samedi), `class` (utilitaires ajoutés au `<section>`).
   Rendu en grille agenda : axe des heures à gauche, une colonne par jour,
   blocs positionnés par `grid-row` calculé depuis les horaires (lignes de
   30 min) ; scroll horizontal sous ~44rem. Les horaires doivent tomber sur
   des multiples de 30 min et tenir dans `[startHour, endHour]`.
+  Les créneaux qui se chevauchent un même jour sont décalés en cascade
+  (droite + bas, `overlapLanes()`), le survol ramène le bloc au premier plan.
 - Consommé par `src/pages/activites.astro` (`prerender = false`, pour lire
   Grist à chaque requête). Réutilisable ailleurs :
   `import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro'` puis

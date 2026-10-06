@@ -167,12 +167,15 @@ export const weeklyAgenda: AgendaSession[] = [
 	},
 ];
 
-/** Regroupe les séances par jour, dans l'ordre de `AGENDA_DAYS`. */
-export function groupByDay(sessions: AgendaSession[]) {
+/**
+ * Regroupe les séances par jour, dans l'ordre de `AGENDA_DAYS`. Les jours
+ * sans séance sont omis, sauf ceux listés dans `keepDays` (colonne vide).
+ */
+export function groupByDay(sessions: AgendaSession[], keepDays: readonly string[] = []) {
 	return AGENDA_DAYS.map((day) => ({
 		day,
 		sessions: sessions
 			.filter((session) => session.day === day)
 			.sort((a, b) => a.start.localeCompare(b.start)),
-	})).filter((group) => group.sessions.length > 0);
+	})).filter((group) => group.sessions.length > 0 || keepDays.includes(group.day));
 }

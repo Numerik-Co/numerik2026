@@ -104,6 +104,8 @@ export const COLS = {
 		finiA: 'Fini_a', // Text, format "18:00"
 		lieu: 'Lieu', // Text
 		encadrant: 'Encadrant', // RefList:Membres
+		ouverture: 'Ouverture', // Date (timestamp Unix, secondes) facultative : première séance
+		nombreSeances: 'Nombre_de_seances', // Int facultatif : 0/vide = sans fin
 	},
 	saison: {
 		nom: 'Nom',
