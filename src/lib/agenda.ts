@@ -3,6 +3,7 @@ export type AgendaKind =
 	| 'fablab'
 	| 'espace-jeune'
 	| 'bidouille-repair'
+	| 'ateliers'
 	| 'conseiller-numerique';
 
 export interface AgendaSession {
@@ -67,6 +68,13 @@ export const AGENDA_KIND_META: Record<
 		text: 'text-amber-600',
 		hex: '#f59e0b',
 	},
+	ateliers: {
+		label: 'Ateliers',
+		icon: 'fa-calendar-check',
+		dot: 'bg-violet-500',
+		text: 'text-violet-600',
+		hex: '#8b5cf6',
+	},
 	'conseiller-numerique': {
 		label: 'Conseiller·ère Numérique',
 		icon: 'fa-calendar-check',
@@ -74,6 +82,7 @@ export const AGENDA_KIND_META: Record<
 		text: 'text-violet-600',
 		hex: '#8b5cf6',
 	},
+
 };
 
 /** Permanences du Conseiller Numérique : chaque matin de semaine, 09h–12h. */
