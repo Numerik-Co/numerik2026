@@ -9,24 +9,24 @@
  * Les valeurs de listes de choix vivent dans `./choices.ts` (module pur,
  * chargeable côté navigateur).
  *
- * Lecture à l'EXÉCUTION via `process.env` (adaptateur Node) : `import.meta.env`
- * est figé au build. Voir `src/lib/adhesion/grist.ts` pour le même pattern.
+ * Configuration lue au DÉMARRAGE du serveur (`astro:env`, cf.
+ * `src/lib/adhesion/grist.ts`) : jamais figée dans dist/.
  */
 
+import {
+	GRIST_API_KEY,
+	GRIST_BASE_URL,
+	GRIST_DOC_ID_RDV,
+	GRIST_TABLE_BENEFICIAIRES,
+	GRIST_TABLE_DEMARCHES,
+	GRIST_TABLE_RDV,
+} from 'astro:env/server';
 import { GristError } from '../adhesion/grist';
 
-const ENV = {
-	...(import.meta.env as unknown as Record<string, string | undefined>),
-	...(process.env as Record<string, string | undefined>),
-};
-
-const { GRIST_BASE_URL, GRIST_DOC_ID_RDV, GRIST_API_KEY, GRIST_TABLE_BENEFICIAIRES, GRIST_TABLE_RDV, GRIST_TABLE_DEMARCHES } =
-	ENV;
-
 export const TABLES = {
-	beneficiaires: GRIST_TABLE_BENEFICIAIRES || 'Beneficiaires',
-	rdv: GRIST_TABLE_RDV || 'RDV',
-	demarches: GRIST_TABLE_DEMARCHES || 'Demarches',
+	beneficiaires: GRIST_TABLE_BENEFICIAIRES,
+	rdv: GRIST_TABLE_RDV,
+	demarches: GRIST_TABLE_DEMARCHES,
 } as const;
 
 export const COLS = {

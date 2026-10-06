@@ -6,21 +6,19 @@
  *   - relayer le HTML (colonne Formule de Grist) à Gotenberg -> PDF.
  *
  * `GOTENBERG_URL` et `BULLETIN_SECRET` ne doivent jamais atteindre le navigateur.
- * Lecture à l'exécution via `process.env` (adaptateur Node), `import.meta.env` en
- * repli — même logique que grist.ts.
+ * Configuration lue au démarrage du serveur (`astro:env`, variables `secret`
+ * de `astro.config.mjs`) : jamais figée dans dist/.
  */
 
+import {
+	BULLETIN_SECRET,
+	GOTENBERG_PASSWORD,
+	GOTENBERG_USERNAME,
+	GOTENBERG_URL as GOTENBERG_URL_RAW,
+} from 'astro:env/server';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-const ENV = {
-	...(import.meta.env as unknown as Record<string, string | undefined>),
-	...(process.env as Record<string, string | undefined>),
-};
-
-const GOTENBERG_URL = ENV.GOTENBERG_URL?.replace(/\/+$/, '');
-const GOTENBERG_USERNAME = ENV.GOTENBERG_USERNAME;
-const GOTENBERG_PASSWORD = ENV.GOTENBERG_PASSWORD;
-const BULLETIN_SECRET = ENV.BULLETIN_SECRET;
+const GOTENBERG_URL = GOTENBERG_URL_RAW?.replace(/\/+$/, '');
 
 /** En-tête d'auth HTTP Basic si l'instance Gotenberg en exige une, sinon rien. */
 function gotenbergAuthHeaders(): Record<string, string> {

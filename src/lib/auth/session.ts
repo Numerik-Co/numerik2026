@@ -7,16 +7,10 @@
  */
 
 import type { AstroCookies } from 'astro';
+import { AUTH_SECRET } from 'astro:env/server';
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { readAccount, type Account } from './accounts.ts';
 import type { AuthGroup } from './groups.ts';
-
-const ENV = {
-	...(import.meta.env as unknown as Record<string, string | undefined>),
-	...(process.env as Record<string, string | undefined>),
-};
-
-const AUTH_SECRET = ENV.AUTH_SECRET;
 const COOKIE_NAME = 'numerik_session';
 /**
  * Indicateur lisible en JavaScript, sans aucune donnée : signale aux pages

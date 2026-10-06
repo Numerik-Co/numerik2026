@@ -1,32 +1,8 @@
 /// <reference types="astro/client" />
 
-interface ImportMetaEnv {
-	readonly GRIST_BASE_URL: string;
-	readonly GRIST_DOC_ID: string;
-	readonly GRIST_API_KEY: string;
-	readonly GRIST_TABLE_MEMBRES?: string;
-	readonly GRIST_TABLE_ADHESIONS?: string;
-	readonly GRIST_TABLE_INSCRIPTIONS?: string;
-	readonly GRIST_TABLE_COTISATIONS?: string;
-	readonly GRIST_TABLE_ACTIVITES?: string;
-	readonly GRIST_TABLE_SAISONS?: string;
-	readonly GRIST_TABLE_PRESENCE?: string;
-	/** Bulletin d'adhésion en PDF (cf. docs/bulletin-pdf.md) — GOTENBERG_URL + BULLETIN_SECRET requis pour activer. */
-	readonly GOTENBERG_URL?: string;
-	readonly GOTENBERG_USERNAME?: string; // auth HTTP Basic Gotenberg, optionnel
-	readonly GOTENBERG_PASSWORD?: string;
-	readonly BULLETIN_SECRET?: string;
-	/** Authentification à plat (cf. docs/auth.md) — secret de signature du cookie de session, ≥ 32 caractères. */
-	readonly AUTH_SECRET?: string;
-	/** Dossier des données vivantes : comptes, actualités de l'admin (défaut `./data`). */
-	readonly DATA_DIR?: string;
-	/** Ancien nom de `DATA_DIR`, toujours accepté. */
-	readonly AUTH_DATA_DIR?: string;
-}
-
-interface ImportMeta {
-	readonly env: ImportMetaEnv;
-}
+// Variables d'environnement : déclarées (et typées) dans `astro.config.mjs`
+// (`env.schema`), lues via `astro:env/server`. `DATA_DIR` (ex-`AUTH_DATA_DIR`)
+// est lue par `process.env` dans `src/lib/data-dir.ts`, partagé avec le CLI.
 
 declare namespace App {
 	interface Locals {

@@ -9,37 +9,32 @@
  * La clé Grist ne vit QUE côté serveur, jamais exposée au navigateur.
  * Voir docs/api.md.
  *
- * Lecture à l'EXÉCUTION via `process.env` (adaptateur Node) : `import.meta.env`
- * est figé au build — donc vide quand on construit l'image Docker sans `.env`.
- * `import.meta.env` reste en repli (utile en dev / autres contextes).
+ * Configuration lue au DÉMARRAGE du serveur (`astro:env`, variables
+ * `secret` déclarées dans `astro.config.mjs`) : jamais figée dans dist/, un
+ * changement de `.env` ne demande qu'un redémarrage.
  */
 
-const ENV = {
-	...(import.meta.env as unknown as Record<string, string | undefined>),
-	...(process.env as Record<string, string | undefined>),
-};
-
-const {
+import {
+	GRIST_API_KEY,
 	GRIST_BASE_URL,
 	GRIST_DOC_ID,
-	GRIST_API_KEY,
-	GRIST_TABLE_MEMBRES,
-	GRIST_TABLE_ADHESIONS,
-	GRIST_TABLE_INSCRIPTIONS,
-	GRIST_TABLE_COTISATIONS,
 	GRIST_TABLE_ACTIVITES,
-	GRIST_TABLE_SAISONS,
+	GRIST_TABLE_ADHESIONS,
+	GRIST_TABLE_COTISATIONS,
+	GRIST_TABLE_INSCRIPTIONS,
+	GRIST_TABLE_MEMBRES,
 	GRIST_TABLE_PRESENCE,
-} = ENV;
+	GRIST_TABLE_SAISONS,
+} from 'astro:env/server';
 
 export const TABLES = {
-	membres: GRIST_TABLE_MEMBRES || 'Membres',
-	adhesions: GRIST_TABLE_ADHESIONS || 'Adhesions',
-	inscriptions: GRIST_TABLE_INSCRIPTIONS || 'Inscription',
-	cotisations: GRIST_TABLE_COTISATIONS || 'Cotisation',
-	activites: GRIST_TABLE_ACTIVITES || 'Activite',
-	saisons: GRIST_TABLE_SAISONS || 'Saisons',
-	presence: GRIST_TABLE_PRESENCE || 'Presence',
+	membres: GRIST_TABLE_MEMBRES,
+	adhesions: GRIST_TABLE_ADHESIONS,
+	inscriptions: GRIST_TABLE_INSCRIPTIONS,
+	cotisations: GRIST_TABLE_COTISATIONS,
+	activites: GRIST_TABLE_ACTIVITES,
+	saisons: GRIST_TABLE_SAISONS,
+	presence: GRIST_TABLE_PRESENCE,
 } as const;
 
 export const COLS = {

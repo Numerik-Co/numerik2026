@@ -8,6 +8,20 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
+Production sans Docker : `npm run build` puis `npm start`
+(`node --env-file-if-exists=.env dist/server/entry.mjs`).
+
+### Variables d'environnement
+
+Déclarées dans `astro.config.mjs` (`env.schema`, `astro:env`), **toutes en
+`access: 'secret'`** : lues au démarrage du serveur, jamais recopiées dans
+`dist/` (vérifié : aucun secret dans le build). Lire via
+`import { X } from 'astro:env/server'` — **jamais `import.meta.env.X`** pour
+un secret (Vite le figerait dans le build). Toutes facultatives : une fonction
+non configurée se désactive. Changer le `.env` = redémarrer, pas rebuild.
+Exception : `DATA_DIR` (`process.env`, `src/lib/data-dir.ts`, partagé avec le
+CLI). Détail : [docs/api.md](docs/api.md#variables-denvironnement).
+
 ## Contenu & navigation
 
 Ce projet est un template déployé pour plusieurs structures. Les pages
