@@ -3,8 +3,8 @@
 Deux mécanismes coexistent :
 
 - **Pages de contenu** (éditoriales) — un simple fichier Markdown dans
-  `src/contents/pages/`. Aucune ligne de code à écrire. **C'est le cas courant.**
-  Guide pas-à-pas pour les éditeurs : [`src/contents/README.md`](../src/contents/README.md).
+  `src/content/pages/`. Aucune ligne de code à écrire. **C'est le cas courant.**
+  Guide pas-à-pas pour les éditeurs : [`src/content/README.md`](../src/content/README.md).
 - **Pages applicatives** — un `.astro` dans `src/pages/` (routage par fichiers
   d'Astro), pour tout ce qui a une logique propre (listes, filtres, formulaires).
 
@@ -15,29 +15,29 @@ Deux mécanismes coexistent :
 | `src/pages/index.astro` | `/` | applicative | Accueil (Hero, Actualités, Activités, CTA) |
 | `src/pages/activites.astro` | `/activites` | applicative | Les 4 catégories d'activités |
 | `src/pages/activites/[category].astro` | `/activites/<categorie>` | applicative | Liste des activités d'une catégorie (`src/lib/categories.ts`) |
-| `src/pages/activites/[category]/[slug].astro` | `/activites/<categorie>/<slug>` | applicative | Détail d'une activité (`src/contents/activites/`) |
+| `src/pages/activites/[category]/[slug].astro` | `/activites/<categorie>/<slug>` | applicative | Détail d'une activité (`src/content/activites/`) |
 | `src/pages/actualites.astro` | `/actualites` | applicative | Liste des actualités + filtres + RSS |
-| `src/pages/actualites/[slug].astro` | `/actualites/<slug>` | applicative | Détail d'un article (`src/contents/news/`) |
+| `src/pages/actualites/[slug].astro` | `/actualites/<slug>` | applicative | Détail d'un article (`src/content/news/`) |
 | `src/pages/adherer.astro` | `/adherer` | applicative | Adhésion à l'association |
 | `src/pages/contact.astro` | `/contact` | applicative | Coordonnées + formulaire de contact |
 | `src/pages/[...slug].astro` | (voir ci-dessous) | applicative | **Route attrape-tout** qui rend les pages de contenu |
 | `src/pages/404.astro` | (toute URL inconnue) | applicative | Page « en construction » |
 | `src/pages/rss.xml.js` | `/rss.xml` | applicative | Flux RSS des actualités |
-| `src/contents/pages/statuts/index.md` | `/statuts` | contenu | Statuts (lien de pied de page) |
-| `src/contents/pages/reglement-interieur/index.md` | `/reglement-interieur` | contenu | Règlement intérieur (lien de pied de page) |
-| `src/contents/pages/mentions-legales/index.mdx` | `/mentions-legales` | contenu | Mentions légales (lien de pied de page) |
-| `src/contents/pages/association/_group.md` | — | contenu | Décrit le menu déroulant « Association » |
-| `src/contents/pages/association/notre-histoire/index.md` | `/association/notre-histoire` | contenu | Histoire de l'association |
-| `src/contents/pages/association/ethique-du-logiciel-libre/index.md` | `/association/ethique-du-logiciel-libre` | contenu | Éthique du logiciel libre |
-| `src/contents/pages/association/conseiller-numerique/index.md` | `/association/conseiller-numerique` | contenu | Conseiller·ère numérique |
+| `src/content/pages/statuts/index.md` | `/statuts` | contenu | Statuts (lien de pied de page) |
+| `src/content/pages/reglement-interieur/index.md` | `/reglement-interieur` | contenu | Règlement intérieur (lien de pied de page) |
+| `src/content/pages/mentions-legales/index.mdx` | `/mentions-legales` | contenu | Mentions légales (lien de pied de page) |
+| `src/content/pages/association/_group.md` | — | contenu | Décrit le menu déroulant « Association » |
+| `src/content/pages/association/notre-histoire/index.md` | `/association/notre-histoire` | contenu | Histoire de l'association |
+| `src/content/pages/association/ethique-du-logiciel-libre/index.md` | `/association/ethique-du-logiciel-libre` | contenu | Éthique du logiciel libre |
+| `src/content/pages/association/conseiller-numerique/index.md` | `/association/conseiller-numerique` | contenu | Conseiller·ère numérique |
 
 ## Ajouter une page de contenu (cas courant)
 
-1. Créer `src/contents/pages/<slug>/index.md` (le chemin du dossier = l'URL) :
+1. Créer `src/content/pages/<slug>/index.md` (le chemin du dossier = l'URL) :
 
    ```
-   src/contents/pages/notre-projet/index.md        -> /notre-projet
-   src/contents/pages/association/partenaires/index.md  -> /association/partenaires (dans le dropdown)
+   src/content/pages/notre-projet/index.md        -> /notre-projet
+   src/content/pages/association/partenaires/index.md  -> /association/partenaires (dans le dropdown)
    ```
 
 2. Frontmatter :
@@ -76,7 +76,7 @@ Deux mécanismes coexistent :
 
 ### Comment ça marche
 
-`src/lib/content-pages.ts` scanne `src/contents/pages/**/index.{md,mdx}` avec
+`src/lib/content-pages.ts` scanne `src/content/pages/**/index.{md,mdx}` avec
 `import.meta.glob` (au build), en déduit le `slug` (= chemin relatif sans
 `/index.md`) et lit le frontmatter. `src/pages/[...slug].astro` génère une route
 par page via `getStaticPaths()` et la rend avec `ArticleLayout`. Les fichiers
@@ -86,14 +86,14 @@ par page via `getStaticPaths()` et la rend avec `ArticleLayout`. Les fichiers
 
 ### Changer seulement le titre affiché (URL inchangée)
 
-Un seul endroit : `title:` dans `src/contents/pages/<slug>/index.md`. L'onglet,
+Un seul endroit : `title:` dans `src/content/pages/<slug>/index.md`. L'onglet,
 le `PageHeader`, le fil d'Ariane et le libellé de menu (s'il n'y a pas de
 `menu.label`) se mettent à jour automatiquement.
 
 ### Changer le slug (l'URL change)
 
-1. Renommer le dossier : `src/contents/pages/historique/` →
-   `src/contents/pages/notre-histoire/` (ou le déplacer dans un sous-dossier
+1. Renommer le dossier : `src/content/pages/historique/` →
+   `src/content/pages/notre-histoire/` (ou le déplacer dans un sous-dossier
    pour le faire passer dans un dropdown).
 2. `title:` du frontmatter si besoin.
 3. Liens entrants : `grep -rn "/historique" src/` — fils d'Ariane d'autres

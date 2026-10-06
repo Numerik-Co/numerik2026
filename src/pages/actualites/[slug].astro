@@ -6,7 +6,7 @@ import TableOfContents from '../../components/article/TableOfContents.astro';
 import ReadingProgress from '../../components/article/ReadingProgress.astro';
 import PageHeader from '../../components/sections/PageHeader.astro';
 import ShareTools from '../../components/article/ShareTools.astro';
-import { getAllNews, type NewsArticle } from '../../lib/news';
+import { getAllNews, renderNews, type NewsArticle } from '../../lib/news';
 import { association } from '../../lib/association';
 
 export async function getStaticPaths() {
@@ -20,7 +20,7 @@ export async function getStaticPaths() {
 		};
 	}
 
-	const allNews = getAllNews();
+	const allNews = await getAllNews();
 
 	return allNews.map((article, index) => ({
 		params: { slug: article.slug },
@@ -33,7 +33,7 @@ export async function getStaticPaths() {
 }
 
 const { article, prev, next } = Astro.props;
-const { Content } = article;
+const { Content, headings } = await renderNews(article);
 ---
 
 <ArticleLayout
@@ -54,9 +54,9 @@ const { Content } = article;
 	/>
 
 	<Fragment slot="sidebar">
-		{article.headings.length > 1 && <ReadingProgress minutes={article.readingTime} />}
+		{headings.length > 1 && <ReadingProgress minutes={article.readingTime} />}
 		<ShareTools title={article.title} class="mb-6" />
-		{article.headings.length > 1 && <TableOfContents headings={article.headings} />}
+		{headings.length > 1 && <TableOfContents headings={headings} />}
 	</Fragment>
 
 	{article.image && (

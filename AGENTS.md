@@ -11,13 +11,13 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 ## Contenu & navigation
 
 Ce projet est un template déployé pour plusieurs structures. Les pages
-éditoriales et le menu se pilotent **uniquement** depuis `src/contents/` — voir
-`src/contents/README.md` (guide destiné aux éditeurs).
+éditoriales et le menu se pilotent **uniquement** depuis `src/content/` — voir
+`src/content/README.md` (guide destiné aux éditeurs).
 
 Fonctionnement technique :
 
 - `src/pages/[...slug].astro` — route attrape-tout ; rend toute page
-  `src/contents/pages/<...>/index.{md,mdx}`. Aucun wrapper `.astro` par page.
+  `src/content/pages/<...>/index.{md,mdx}`. Aucun wrapper `.astro` par page.
 - `src/lib/content-pages.ts` — découverte des pages via `import.meta.glob`
   (build-time), lecture du frontmatter `menu:` et des fichiers `_group.md`.
 - `src/lib/navigation.ts` — `getNavTree()` fusionne `site.builtinNav` et les
@@ -29,10 +29,11 @@ Fonctionnement technique :
 - `src/components/layout/Header.astro` — consomme `getNavTree()` ; markup
   inchangé, structure `{ label, href, children }`.
 
-Le menu est calculé au `build`. Les pages de contenu sont rendues à la
-demande (`[...slug].astro`, `prerender = false`) pour appliquer `access:`
-(pages réservées, voir « Espace bénévoles ») ; les autres pages statiques
-restent prérendues.
+Le menu est calculé au `build`. Rendus à la demande (`prerender = false`) :
+les pages de contenu (`[...slug].astro`, pour appliquer `access:`, voir
+« Espace bénévoles ») et tout ce qui affiche des actualités (accueil,
+`/actualites`, `/actualites/<slug>`, `rss.xml`), qui inclut celles publiées
+depuis l'admin ; les autres pages statiques restent prérendues.
 
 ### Formulaires
 
@@ -50,10 +51,11 @@ restent prérendues.
 
 ## Espace bénévoles (authentification à plat)
 
-Connexion du bureau et des animateur·rice·s **sans base de données**, façon
-Grav : un YAML par compte dans `data/accounts/<login>.yaml`
-(`AUTH_DATA_DIR`, volume Docker `./data`), cookie de session signé HMAC
-(`AUTH_SECRET`), groupes `admin` / `animateur` (`src/lib/auth/groups.ts`).
+Connexion du bureau, des rédacteur·rice·s et des animateur·rice·s **sans
+base de données**, façon Grav : un YAML par compte dans
+`data/accounts/<login>.yaml` (`DATA_DIR`, volume Docker `./data`), cookie de
+session signé HMAC (`AUTH_SECRET`), groupes `admin` / `animateur` /
+`redacteur` (`src/lib/auth/groups.ts`).
 
 **Pas de pages d'administration** : tout se superpose au site. Lien
 « Espace bénévoles » du pied de page (`[data-auth-open]`) → modale de
@@ -67,7 +69,11 @@ sous `/api/admin/`).
   indicateur `numerik_connecte` existe ou au clic : rien pour un visiteur.
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
-  connexion, `/api/admin/comptes*` le groupe `admin`.
+  connexion ; `GUARDS` réserve des préfixes à des groupes
+  (`/api/admin/comptes` → `admin` ; `redacteur` est prévu pour le futur
+  module Actualités, qui écrira dans `src/content/news/` puis relancera le
+  build).
+- Modules : Pages réservées, Comptes, Mon mot de passe.
 - Page de contenu réservée : `access: true | <groupe> | [groupes]` dans le
   frontmatter (`parseAccess`/`canAccess`, `src/lib/auth/access.ts`) ;
   jamais dans le menu, 401 + bouton « Se connecter » sans session, 403 si
@@ -81,6 +87,22 @@ sous `/api/admin/`).
 Détail : [docs/auth.md](docs/auth.md) ; guide déploiement + utilisation
 (à tenir à jour avec chaque nouveau module) :
 [docs/guide-espace-benevoles.md](docs/guide-espace-benevoles.md).
+
+### Contenu = collections Astro
+
+Tout le contenu éditorial vit dans `src/content/` et `npm run build` produit
+le site complet (déposable tel quel pour la partie contenu). Les collections
+sont déclarées dans `src/content.config.ts` (Content Layer, loader `glob`,
+schéma `zod` via `astro/zod`) — suivre la doc Astro
+(https://docs.astro.build/en/guides/content-collections/). **Ne pas stocker de
+contenu hors de `src/content/`.**
+
+- `news` — `src/content/news/<AAAA-MM-JJ-slug>/index.md`, id = nom du
+  dossier, `cover: ./cover.jpg` validé par `image()`. `src/lib/news.ts` :
+  `getAllNews()` (async, `getCollection`), `renderNews()` (`render()`).
+  Pages prérendues. Détail : [docs/actualites.md](docs/actualites.md).
+- À migrer sur le même modèle : pages (`content-pages.ts`, encore en
+  `import.meta.glob`), activités (`activites.ts`), annonces (`annonces.ts`).
 
 ## Composants réutilisables
 

@@ -26,7 +26,7 @@ export interface Activity {
 	Content: any;
 }
 
-const activityFiles = import.meta.glob('../contents/activites/*/index.md', {
+const activityFiles = import.meta.glob('../content/activites/*/index.md', {
 	eager: true,
 }) as Record<
 	string,
@@ -38,7 +38,7 @@ const activityFiles = import.meta.glob('../contents/activites/*/index.md', {
 	}
 >;
 
-const activityImages = import.meta.glob('../contents/activites/*/cover.*', {
+const activityImages = import.meta.glob('../content/activites/*/cover.*', {
 	eager: true,
 	import: 'default',
 }) as Record<string, any>;

@@ -16,11 +16,11 @@ assemblée générale à venir, recherche de bénévoles, fermeture exceptionnel
   visiteur a demandé « animations réduites » dans son système.
 
 Toutes les annonces sont regroupées dans **un seul fichier** :
-`src/contents/annonces.md`. Aucune base de données, aucun dossier à créer.
+`src/content/annonces.md`. Aucune base de données, aucun dossier à créer.
 
 ## Ajouter une annonce
 
-Ouvrir `src/contents/annonces.md` et ajouter une entrée dans la liste `annonces`
+Ouvrir `src/content/annonces.md` et ajouter une entrée dans la liste `annonces`
 de l'en-tête (la partie entre les `---`) :
 
 ```markdown
@@ -84,7 +84,7 @@ première ligne du `<Layout>` de `src/pages/index.astro`.
 
 ## Comment ça marche techniquement
 
-- `src/contents/annonces.md` — le contenu (frontmatter uniquement).
+- `src/content/annonces.md` — le contenu (frontmatter uniquement).
 - `src/lib/annonces.ts` — `getAnnonces()` lit le frontmatter, valide les champs
   (erreur de build explicite si `id` / `title` / `message` / dates manquants ou
   mal formés), écarte les `active: false`.

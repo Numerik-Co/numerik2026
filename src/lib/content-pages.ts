@@ -4,14 +4,14 @@ import { parseAccess, type PageAccess } from './auth/access';
 /**
  * Découverte automatique des pages de contenu.
  *
- * Toute page rangée dans `src/contents/pages/<...>/index.{md,mdx}` devient
+ * Toute page rangée dans `src/content/pages/<...>/index.{md,mdx}` devient
  * automatiquement une route (`/<...>`) grâce à `src/pages/[...slug].astro`,
  * et peut apparaître dans la navigation via son frontmatter `menu:`.
  *
  * L'arborescence de dossiers pilote l'URL ET le menu :
- *   src/contents/pages/statuts/index.md               -> /statuts
- *   src/contents/pages/association/_group.md           -> libellé du menu déroulant « Association »
- *   src/contents/pages/association/notre-histoire/...  -> /association/notre-histoire (dans le dropdown)
+ *   src/content/pages/statuts/index.md               -> /statuts
+ *   src/content/pages/association/_group.md           -> libellé du menu déroulant « Association »
+ *   src/content/pages/association/notre-histoire/...  -> /association/notre-histoire (dans le dropdown)
  */
 
 export interface PageMenuMeta {
@@ -61,17 +61,17 @@ interface GroupModule {
 	frontmatter: { label?: string; order?: number };
 }
 
-const PAGES_DIR = '../contents/pages/';
+const PAGES_DIR = '../content/pages/';
 
-const pageModules = import.meta.glob('../contents/pages/**/index.{md,mdx}', {
+const pageModules = import.meta.glob('../content/pages/**/index.{md,mdx}', {
 	eager: true,
 }) as Record<string, PageModule>;
 
-const groupModules = import.meta.glob('../contents/pages/**/_group.{md,mdx}', {
+const groupModules = import.meta.glob('../content/pages/**/_group.{md,mdx}', {
 	eager: true,
 }) as Record<string, GroupModule>;
 
-const pageImages = import.meta.glob('../contents/pages/**/cover.*', {
+const pageImages = import.meta.glob('../content/pages/**/cover.*', {
 	eager: true,
 	import: 'default',
 }) as Record<string, any>;

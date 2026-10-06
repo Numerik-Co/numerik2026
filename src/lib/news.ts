@@ -1,69 +1,65 @@
+/**
+ * Actualités : collection `news` (`src/content.config.ts`), un dossier par
+ * article dans `src/content/news/`. Tout est résolu au build : les pages
+ * qui les affichent sont prérendues.
+ */
+
+import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { association } from './association';
-import type { Heading } from './headings';
 import { estimateReadingTime } from './reading-time';
+
+export type NewsEntry = CollectionEntry<'news'>;
 
 export interface NewsArticle {
 	slug: string;
 	href: string;
+	/** Date affichée, ex. « 6 octobre 2026 ». */
 	date: string;
+	/** Date de publication au format AAAA-MM-JJ. */
 	publishAt: string;
 	author?: string;
 	title: string;
 	excerpt: string;
 	tag?: string;
-	image?: any;
-	imageCredit?: string;
-	headings: Heading[];
+	image?: NewsEntry['data']['cover'];
+	imageCredit: string;
 	readingTime: number;
-	Content: any;
+	/** Entrée brute de la collection (pour `render()` sur la page de détail). */
+	entry: NewsEntry;
 }
 
-const newsFiles = import.meta.glob('../contents/news/*/index.md', { eager: true }) as Record<
-	string,
-	{
-		frontmatter: Record<string, any>;
-		Content: any;
-		getHeadings: () => Heading[];
-		rawContent: () => string;
-	}
->;
-
-const newsImages = import.meta.glob('../contents/news/*/cover.*', {
-	eager: true,
-	import: 'default',
-}) as Record<string, any>;
-
-function slugFromPath(path: string) {
-	return path.split('/').slice(-2, -1)[0];
+function toArticle(entry: NewsEntry): NewsArticle {
+	const { data } = entry;
+	return {
+		slug: entry.id,
+		href: `/actualites/${entry.id}`,
+		date: data.publishAt.toLocaleDateString('fr-FR', {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric',
+			timeZone: 'UTC',
+		}),
+		publishAt: data.publishAt.toISOString().slice(0, 10),
+		author: data.author,
+		title: data.title,
+		excerpt: data.excerpt,
+		tag: data.tag,
+		image: data.cover,
+		imageCredit: data.imageCredit || `Photo : ${association.name}`,
+		readingTime: estimateReadingTime(entry.body ?? ''),
+		entry,
+	};
 }
 
-export function getAllNews(): NewsArticle[] {
-	return Object.entries(newsFiles)
-		.filter(([, mod]) => mod.frontmatter.isPublish !== false)
-		.map(([path, mod]) => {
-			const { frontmatter, Content, getHeadings, rawContent } = mod;
-			const slug = slugFromPath(path);
-			const imagePath = Object.keys(newsImages).find((p) => slugFromPath(p) === slug);
+/** Actualités publiées (`isPublish` ≠ false), plus récentes d'abord. */
+export async function getAllNews(): Promise<NewsArticle[]> {
+	const entries = await getCollection('news', ({ data }) => data.isPublish);
+	return entries
+		.map(toArticle)
+		.sort((a, b) => b.publishAt.localeCompare(a.publishAt) || a.slug.localeCompare(b.slug));
+}
 
-			return {
-				slug,
-				href: `/actualites/${slug}`,
-				date: new Date(frontmatter.publishAt).toLocaleDateString('fr-FR', {
-					day: 'numeric',
-					month: 'long',
-					year: 'numeric',
-				}),
-				publishAt: frontmatter.publishAt,
-				author: frontmatter.author,
-				title: frontmatter.title,
-				excerpt: frontmatter.excerpt,
-				tag: frontmatter.tag,
-				image: imagePath ? newsImages[imagePath] : undefined,
-				imageCredit: frontmatter.imageCredit || `Photo : ${association.name}`,
-				headings: getHeadings(),
-				readingTime: estimateReadingTime(rawContent()),
-				Content,
-			};
-		})
-		.sort((a, b) => new Date(b.publishAt).getTime() - new Date(a.publishAt).getTime());
+/** Contenu rendu d'une actualité : composant `Content` et titres (sommaire). */
+export async function renderNews(article: NewsArticle) {
+	return render(article.entry);
 }

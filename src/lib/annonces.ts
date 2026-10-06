@@ -1,4 +1,4 @@
-import { frontmatter } from '../contents/annonces.md';
+import { frontmatter } from '../content/annonces.md';
 
 export type AnnonceTone = 'info' | 'accent' | 'urgent';
 
@@ -18,7 +18,7 @@ const TONES: AnnonceTone[] = ['info', 'accent', 'urgent'];
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * Toutes les annonces déclarées dans src/contents/annonces.md, hors brouillons
+ * Toutes les annonces déclarées dans src/content/annonces.md, hors brouillons
  * (`active: false`). Le filtrage par date de validité est fait côté navigateur
  * par le composant AnnoncesIlot afin de rester juste même sans reconstruction
  * du site.

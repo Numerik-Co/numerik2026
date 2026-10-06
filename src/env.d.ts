@@ -18,7 +18,9 @@ interface ImportMetaEnv {
 	readonly BULLETIN_SECRET?: string;
 	/** Authentification à plat (cf. docs/auth.md) — secret de signature du cookie de session, ≥ 32 caractères. */
 	readonly AUTH_SECRET?: string;
-	/** Dossier des comptes YAML (défaut `./data`). */
+	/** Dossier des données vivantes : comptes, actualités de l'admin (défaut `./data`). */
+	readonly DATA_DIR?: string;
+	/** Ancien nom de `DATA_DIR`, toujours accepté. */
 	readonly AUTH_DATA_DIR?: string;
 }
 

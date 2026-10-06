@@ -29,7 +29,7 @@ interface Bucket {
 /**
  * Construit l'arbre de navigation au build, à partir de :
  *  1. `site.builtinNav` — les pages applicatives du template ;
- *  2. les pages de `src/contents/pages/` dont le frontmatter porte `menu.show: true`.
+ *  2. les pages de `src/content/pages/` dont le frontmatter porte `menu.show: true`.
  *
  * L'arborescence de dossiers produit les menus déroulants : une page rangée
  * dans un sous-dossier (`association/notre-histoire`) devient un enfant du

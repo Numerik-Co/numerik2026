@@ -16,7 +16,7 @@ Mise en service et mode d'emploi pour les bénévoles :
 
 | Grav | Ici |
 | :--- | :--- |
-| `user/accounts/<login>.yaml` | `data/accounts/<login>.yaml` (`AUTH_DATA_DIR`) |
+| `user/accounts/<login>.yaml` | `data/accounts/<login>.yaml` (`DATA_DIR`) |
 | `user/config/groups.yaml` | `AUTH_GROUPS` dans `src/lib/auth/groups.ts` |
 | `bin/plugin login newuser` | `npm run auth:user -- add …` (`scripts/auth-user.ts`) |
 | Admin plugin > Utilisateurs | module « Comptes » de la barre admin (groupe `admin`) |
@@ -51,12 +51,13 @@ updated: 2026-10-06T10:00:00.000Z
 | :--- | :--- |
 | `admin` | Tout : toutes les pages réservées + tous les modules (dont « Comptes ») |
 | `animateur` | Pages réservées dont l'`access:` cite `animateur` (ou `true`) |
+| `redacteur` | Réservé au futur module « Actualités » (publication des actualités) |
 
 Ajouter un groupe = une entrée dans `AUTH_GROUPS` (`src/lib/auth/groups.ts`).
 
 ## Réserver une page de contenu
 
-Frontmatter de `src/contents/pages/<…>/index.md` :
+Frontmatter de `src/content/pages/<…>/index.md` :
 
 ```yaml
 access: true                 # toute personne connectée
@@ -101,8 +102,8 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 2. Une entrée dans `ADMIN_MODULES` (`modules.ts`) — `groups: []` = toute
    personne connectée ; `admin` voit tout.
 3. Ses routes JSON sous `src/pages/api/admin/<…>` : connexion déjà exigée
-   par le middleware ; si elles sont réservées à un groupe, ajouter la garde
-   dans `src/middleware.ts` (comme `/api/admin/comptes`). **Le contrôle
+   par le middleware ; si elles sont réservées à un groupe, ajouter une
+   entrée à `GUARDS` dans `src/middleware.ts` (comme `/api/admin/comptes`). **Le contrôle
    d'accès réel est toujours côté serveur.**
 
 ## Routes API
@@ -118,8 +119,8 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 
 Garde : `src/middleware.ts` — `/api/auth/*` et `/api/admin/*` n'acceptent
 que les requêtes du site lui-même (`Sec-Fetch-Site`, à défaut `Origin`),
-`/api/admin/*` exige une connexion (401), `/api/admin/comptes*` le groupe
-`admin` (403). `Astro.locals.user` est renseigné sur chaque requête rendue à
+`/api/admin/*` exige une connexion (401), et les préfixes de `GUARDS` un
+groupe (403) : `/api/admin/comptes*` → `admin` (`admin` passe toujours). `Astro.locals.user` est renseigné sur chaque requête rendue à
 la demande.
 
 Garde-fous des comptes : impossible de se retirer ses propres droits admin,
@@ -176,7 +177,7 @@ npm run auth:user -- reset xavier                       # nouveau mot de passe p
 ### En production (Docker)
 
 1. Ajouter `AUTH_SECRET=…` au `.env` du VPS.
-2. Le `docker-compose.yml` monte `./data` sur `/app/data` (`AUTH_DATA_DIR`) :
+2. Le `docker-compose.yml` monte `./data` sur `/app/data` (`DATA_DIR`) :
    les comptes survivent aux redéploiements. Sauvegarder ce dossier.
 3. Créer le premier admin, puis tout se fait depuis le module « Comptes » :
 

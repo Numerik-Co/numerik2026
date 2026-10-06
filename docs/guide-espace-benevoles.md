@@ -49,7 +49,7 @@ hors de l'image Docker. Le `docker-compose.yml` monte déjà ce dossier :
 
 ```yaml
 environment:
-  - AUTH_DATA_DIR=/app/data
+  - DATA_DIR=/app/data
 volumes:
   - ./data:/app/data
 ```
@@ -108,7 +108,7 @@ Autres commandes utiles :
 ```
 
 > L'identifiant : 2 à 32 caractères, minuscules, chiffres, `.`, `-` ou `_`
-> (ex. `prenom.nom`). Groupes possibles : `admin`, `animateur`.
+> (ex. `prenom.nom`). Groupes possibles : `admin`, `animateur`, `redacteur`.
 
 ### 5. Vérifier
 
@@ -170,11 +170,11 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 
 Les modules visibles dépendent de votre groupe :
 
-| Module | Bureau (`admin`) | Animateur·rice |
-| :--- | :---: | :---: |
-| Pages réservées | ✅ | ✅ |
-| Comptes | ✅ | — |
-| Mon mot de passe | ✅ | ✅ |
+| Module | Bureau (`admin`) | Rédacteur·rice | Animateur·rice |
+| :--- | :---: | :---: | :---: |
+| Pages réservées | ✅ | ✅ | ✅ |
+| Comptes | ✅ | — | — |
+| Mon mot de passe | ✅ | ✅ | ✅ |
 
 ### Pages réservées
 
@@ -208,9 +208,10 @@ Module **👥 Comptes**, réservé au groupe *Bureau / administration*.
    - **Identifiant** — ce que la personne tapera pour se connecter
      (ex. `marie.fruit`) ; il ne pourra plus être changé.
    - **Prénom et nom**, **email** (facultatif).
-   - **Groupes** — *Animateur·rice* pour les encadrant·e·s, *Bureau /
+   - **Groupes** — *Animateur·rice* pour les encadrant·e·s,
+     *Rédacteur·rice* (publication des actualités, module à venir), *Bureau /
      administration* pour les membres du bureau (accès à tout, dont la
-     gestion des comptes).
+     gestion des comptes). Plusieurs groupes peuvent être cochés.
    - **Mot de passe provisoire** — laisser vide pour en générer un.
 3. **Créer le compte**.
 
@@ -258,7 +259,7 @@ ordinateur partagé (médiathèque, salle d'atelier…).
 
 ## Pour les éditeurs : réserver une page
 
-Ajouter `access:` dans le frontmatter d'une page de `src/contents/pages/` :
+Ajouter `access:` dans le frontmatter d'une page de `src/content/pages/` :
 
 ```yaml
 ---
@@ -269,7 +270,7 @@ access: animateur        # ou : true (toute personne connectée), admin, [animat
 
 La page disparaît du menu public et apparaît dans **Pages réservées** pour
 les personnes autorisées. Comme tout contenu, elle est publiée au prochain
-déploiement. Détail : [src/contents/README.md](../src/contents/README.md).
+déploiement. Détail : [src/content/README.md](../src/content/README.md).
 
 ---
 

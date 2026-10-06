@@ -3,8 +3,8 @@
  * barre d'administration et s'ouvre dans le panneau latéral.
  *
  * Ajouter un module = un composant dans `./modules/` + une entrée ici
- * (+ ses routes `/api/admin/<…>`, gardées dans `src/middleware.ts` si elles
- * sont réservées à un groupe). `groups` vide = toute personne connectée ;
+ * (+ ses routes `/api/admin/<…>`, gardées par `GUARDS` dans
+ * `src/middleware.ts` si elles sont réservées à un groupe). `groups` vide = toute personne connectée ;
  * le groupe `admin` voit tous les modules. Le contrôle réel est côté serveur.
  */
 import { defineAsyncComponent, type Component } from 'vue';

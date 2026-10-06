@@ -3,7 +3,7 @@
  * à la demande et garde les routes de l'espace bénévoles :
  *  - `/api/auth/*`, `/api/admin/*` : requêtes du site lui-même uniquement ;
  *  - `/api/admin/*` : connexion obligatoire (401) ;
- *  - `/api/admin/comptes*` : groupe `admin` (403).
+ *  - préfixes de `GUARDS` : groupe requis (403), `admin` passe toujours.
  * L'interface (modale de connexion, barre et modules) est un îlot Vue
  * (`src/components/admin/AdminRoot.vue`) ; les pages de contenu restreintes
  * par `access:` sont contrôlées par `src/pages/[...slug].astro`.
@@ -12,8 +12,15 @@
 
 import { defineMiddleware } from 'astro:middleware';
 import { isAdmin } from './lib/auth/access';
+import type { AuthGroup } from './lib/auth/groups';
 import { isSameOrigin, jsonError } from './lib/auth/api';
 import { readSession } from './lib/auth/session';
+
+/** Routes réservées à certains groupes (en plus de la connexion). Tenir aligné avec `ADMIN_MODULES`. */
+const GUARDS: { prefix: string; groups: AuthGroup[]; message: string }[] = [
+	{ prefix: '/api/admin/comptes', groups: ['admin'], message: 'La gestion des comptes est réservée au bureau.' },
+	{ prefix: '/api/admin/actualites', groups: ['redacteur'], message: 'La publication des actualités est réservée aux rédacteur·rice·s.' },
+];
 
 function startsWithSegment(path: string, prefix: string): boolean {
 	return path === prefix || path.startsWith(`${prefix}/`);
@@ -31,8 +38,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	if (startsWithSegment(path, '/api/admin')) {
 		if (!user) return jsonError('Session expirée : reconnectez-vous.', 401);
-		if (startsWithSegment(path, '/api/admin/comptes') && !isAdmin(user)) {
-			return jsonError('La gestion des comptes est réservée au bureau.', 403);
+		const guard = GUARDS.find((g) => startsWithSegment(path, g.prefix));
+		if (guard && !isAdmin(user) && !guard.groups.some((g) => user.groups.includes(g))) {
+			return jsonError(guard.message, 403);
 		}
 	}
 

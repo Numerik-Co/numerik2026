@@ -14,10 +14,11 @@ services:
     ports:
       - "127.0.0.1:4321:4321"
 
-    # Seules données écrites sur disque : les comptes de l'espace bénévoles
-    # (auth à plat, un YAML par compte — cf. docs/auth.md). Tout le reste va
-    # dans Grist. Le dossier ./data du VPS survit aux redéploiements.
+    # Données vivantes écrites sur disque (hors Grist) : comptes de l'espace
+    # bénévoles (data/accounts) et actualités publiées depuis l'admin
+    # (data/news) — cf. docs/auth.md. Le dossier ./data du VPS survit aux
+    # redéploiements : à sauvegarder.
     environment:
-      - AUTH_DATA_DIR=/app/data
+      - DATA_DIR=/app/data
     volumes:
       - ./data:/app/data

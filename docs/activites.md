@@ -19,10 +19,10 @@ Ce registre vit dans **`src/lib/categories.ts`** — c'est la seule source de v�
 
 ## Créer une nouvelle activité
 
-1. Créer un dossier dans `src/contents/activites/`, nommé d'après le slug de l'activité :
+1. Créer un dossier dans `src/content/activites/`, nommé d'après le slug de l'activité :
 
    ```
-   src/contents/activites/atelier-photo-numerique/
+   src/content/activites/atelier-photo-numerique/
    ```
 
 2. À l'intérieur, créer un fichier `index.md` avec ce frontmatter :
@@ -68,7 +68,7 @@ Avant d'ajouter une photo trouvée sur le web : vérifier sa licence. Une image 
 ## Comment ça marche techniquement
 
 La logique de lecture est centralisée dans `src/lib/activites.ts` :
-- `getAllActivities()` — écarte les activités avec `isPublish: false`, scanne `src/contents/activites/*/index.md`, associe l'image par nom de dossier, trie par `order`. Calcule `href` en `/activites/<category>/<slug>`.
+- `getAllActivities()` — écarte les activités avec `isPublish: false`, scanne `src/content/activites/*/index.md`, associe l'image par nom de dossier, trie par `order`. Calcule `href` en `/activites/<category>/<slug>`.
 - `getActivitiesByCategory(categorySlug)` — filtre `getAllActivities()` par catégorie.
 
 Quatre endroits consomment ces fonctions :

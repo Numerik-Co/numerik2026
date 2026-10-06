@@ -3,7 +3,7 @@ import { getAllNews } from '../lib/news';
 import { association } from '../lib/association';
 
 export async function GET(context) {
-	const articles = getAllNews();
+	const articles = await getAllNews();
 
 	return rss({
 		title: `Actualités · ${association.name}`,

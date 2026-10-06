@@ -1,7 +1,7 @@
 # Partager une actualité ou une page (Facebook…)
 
 Chaque actualité (`/actualites/<slug>`) et chaque page de contenu
-(`src/contents/pages/…`) affiche un petit encart de partage :
+(`src/content/pages/…`) affiche un petit encart de partage :
 
 - **sur ordinateur** : dans la colonne de droite, juste sous « X min de
   lecture » pour une actualité, au-dessus du sommaire pour une page ;

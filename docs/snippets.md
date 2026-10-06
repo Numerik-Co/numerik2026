@@ -3,7 +3,7 @@
 Blocs prêts à copier-coller, **tirés du code réel du projet**. Chaque snippet
 renvoie à la doc qui détaille les champs. Deux parties :
 
-- [Contenu](#contenu-éditeurs) — ce qu'on écrit dans `src/contents/` (aucun
+- [Contenu](#contenu-éditeurs) — ce qu'on écrit dans `src/content/` (aucun
   code à toucher) ;
 - [Développement](#développement) — composants et motifs utilisés dans
   `src/pages/`, `src/components/` et les routes API.
@@ -17,8 +17,9 @@ renvoie à la doc qui détaille les champs. Deux parties :
 
 ### Frontmatter d'une actualité
 
-`src/contents/news/AAAA-MM-JJ-mon-titre/index.md` (+ `cover.jpg` facultatif
-dans le même dossier). Détail : [actualites.md](actualites.md).
+`src/content/news/AAAA-MM-JJ-mon-titre/index.md` (+ la photo citée par
+`cover:`, dans le même dossier). Schéma : `src/content.config.ts`. Détail :
+[actualites.md](actualites.md).
 
 ```markdown
 ---
@@ -28,13 +29,14 @@ publishAt: 2026-09-22
 excerpt: "Une phrase de résumé, reprise dans les cartes et le partage."
 tag: "Vie associative"
 author: "numérik&Co"
+cover: ./cover.jpg
 imageCredit: "Photo : Prénom Nom / Source"
 ---
 ```
 
 ### Frontmatter d'une activité
 
-`src/contents/activites/<slug>/index.md` (+ `cover.jpg` facultatif). Détail :
+`src/content/activites/<slug>/index.md` (+ `cover.jpg` facultatif). Détail :
 [activites.md](activites.md), bouton « S'inscrire » : [inscription.md](inscription.md#présélection).
 
 ```markdown
@@ -62,7 +64,7 @@ activiteGrist:
 
 ### Frontmatter d'une page de contenu
 
-`src/contents/pages/<slug>/index.md` → URL `/<slug>`. Détail :
+`src/content/pages/<slug>/index.md` → URL `/<slug>`. Détail :
 [pages.md](pages.md), menu : [navigation.md](navigation.md).
 
 ```markdown
@@ -89,7 +91,7 @@ access: animateur          # true = toute personne connectée ; [animateur, admi
 
 ### Menu déroulant (dossier de pages)
 
-`src/contents/pages/<dossier>/_group.md` — toutes les pages du dossier
+`src/content/pages/<dossier>/_group.md` — toutes les pages du dossier
 deviennent les entrées d'un menu déroulant. Détail : [navigation.md](navigation.md).
 
 ```markdown
@@ -102,7 +104,7 @@ order: 10
 
 ### Annonce dans la bannière
 
-À ajouter dans la liste `annonces` de `src/contents/annonces.md`. Détail :
+À ajouter dans la liste `annonces` de `src/content/annonces.md`. Détail :
 [annonces.md](annonces.md).
 
 ```yaml
@@ -136,7 +138,7 @@ Les titres `##` alimentent le sommaire de la colonne de droite.
 
 Pour utiliser les blocs ci-dessous, la page doit être un **`index.mdx`**
 (pas `.md`). Exemple complet :
-`src/contents/pages/association/adhesion-associations/index.mdx`.
+`src/content/pages/association/adhesion-associations/index.mdx`.
 
 #### Bouton
 
@@ -190,7 +192,7 @@ Liste à puces dans une carte :
 #### Valeur tirée de la configuration
 
 Évite de recopier nom, adresse… qui changent d'un déploiement à l'autre
-(voir `src/contents/pages/mentions-legales/index.mdx`).
+(voir `src/content/pages/mentions-legales/index.mdx`).
 
 ```mdx
 import { association, getFullAddress } from '../../../lib/association';

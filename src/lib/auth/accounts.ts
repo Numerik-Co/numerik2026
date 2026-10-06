@@ -1,6 +1,6 @@
 /**
  * Comptes « à plat », à la manière de Grav : un fichier YAML par compte dans
- * `<AUTH_DATA_DIR>/accounts/<login>.yaml` (défaut `./data/accounts`), aucune
+ * `<DATA_DIR>/accounts/<login>.yaml` (défaut `./data/accounts`), aucune
  * base de données. Exemple :
  *
  *   fullname: Marie Fruit
@@ -18,9 +18,12 @@
  */
 
 import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
+import { dataDir } from '../data-dir.ts';
 import { isAuthGroup, type AuthGroup } from './groups.ts';
+
+export { dataDir };
 
 export interface Account {
 	login: string;
@@ -43,10 +46,6 @@ export function normalizeLogin(value: string): string {
 
 export function isValidLogin(login: string): boolean {
 	return LOGIN_PATTERN.test(login);
-}
-
-export function dataDir(): string {
-	return resolve(process.env.AUTH_DATA_DIR || join(process.cwd(), 'data'));
 }
 
 function accountsDir(): string {
