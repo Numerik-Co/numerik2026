@@ -28,6 +28,13 @@ export const ADMIN_MODULES: AdminModule[] = [
 		component: defineAsyncComponent(() => import('./modules/PagesModule.vue')),
 	},
 	{
+		id: 'actualites',
+		label: 'Actualités',
+		icon: 'fa-newspaper',
+		groups: ['redacteur'],
+		component: defineAsyncComponent(() => import('./modules/NewsModule.vue')),
+	},
+	{
 		id: 'comptes',
 		label: 'Comptes',
 		icon: 'fa-users',

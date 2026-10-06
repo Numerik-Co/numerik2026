@@ -51,7 +51,7 @@ updated: 2026-10-06T10:00:00.000Z
 | :--- | :--- |
 | `admin` | Tout : toutes les pages réservées + tous les modules (dont « Comptes ») |
 | `animateur` | Pages réservées dont l'`access:` cite `animateur` (ou `true`) |
-| `redacteur` | Réservé au futur module « Actualités » (publication des actualités) |
+| `redacteur` | Module « Actualités » (publication des actualités, cf. [publication.md](publication.md)) |
 
 Ajouter un groupe = une entrée dans `AUTH_GROUPS` (`src/lib/auth/groups.ts`).
 
@@ -91,7 +91,7 @@ access: [animateur, admin]   # l'un de ces groupes
 | `src/components/admin/AdminOverlay.vue` | Calque générique : `variant="drawer"` (panneau à droite, plein écran sur mobile) ou `"modal"`. Échap / clic sur le fond ferment, focus piégé puis rendu, défilement de la page bloqué. |
 | `src/components/admin/LoginForm.vue` | Formulaire de la modale de connexion. |
 | `src/components/admin/modules.ts` | **Registre des modules** (`id`, `label`, icône, `groups`, composant chargé à la demande). |
-| `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `AccountsModule` (comptes, `admin`), `PasswordModule` (mon mot de passe). |
+| `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `NewsModule` (actualités, `redacteur`), `AccountsModule` (comptes, `admin`), `PasswordModule` (mon mot de passe). |
 | `src/components/admin/client.ts` | Appels typés aux routes ; `ApiError.status === 401` = session expirée (`sessionExpired()` du contexte rouvre la connexion). |
 | `src/components/admin/context.ts` | `provide/inject` (`user`, `pages`, `sessionExpired`) + classes des champs. |
 
@@ -118,12 +118,15 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `GET /api/auth/me` | `{ user, pages }` (pages réservées ouvertes) ou 401 |
 | `POST /api/admin/mot-de-passe` | `{ current, next }` — ferme les autres sessions |
 | `GET/POST /api/admin/comptes` | Liste / création (`password` provisoire renvoyé une fois) — `admin` |
+| `GET/POST /api/admin/actualites` | Liste (brouillons compris) + état de publication / dépôt `{ markdown, cover?: { type, data } }` → écrit `src/content/news/…` et reconstruit le site — `redacteur` |
+| `GET /api/admin/publication` | État de la dernière publication — `redacteur` |
 | `PATCH/POST/DELETE /api/admin/comptes/<login>` | Modification / réinitialisation du mot de passe / suppression (`{ confirm: <login> }`) — `admin` |
 
 Garde : `src/middleware.ts` — `/api/auth/*` et `/api/admin/*` n'acceptent
 que les requêtes du site lui-même (`Sec-Fetch-Site`, à défaut `Origin`),
 `/api/admin/*` exige une connexion (401), et les préfixes de `GUARDS` un
-groupe (403) : `/api/admin/comptes*` → `admin` (`admin` passe toujours). `Astro.locals.user` est renseigné sur chaque requête rendue à
+groupe (403) : `/api/admin/comptes*` → `admin`, `/api/admin/actualites*` et
+`/api/admin/publication` → `redacteur` (`admin` passe toujours). `Astro.locals.user` est renseigné sur chaque requête rendue à
 la demande.
 
 Garde-fous des comptes : impossible de se retirer ses propres droits admin,

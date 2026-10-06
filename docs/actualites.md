@@ -1,6 +1,6 @@
 # Publier une actualité
 
-Les actualités sont des fichiers **Markdown**, un dossier par article, dans `src/content/news/`. Aucune base de données : ajouter un dossier suffit pour que l'article apparaisse sur le site.
+Les actualités sont des fichiers **Markdown**, un dossier par article, dans `src/content/news/`. Deux façons d'en ajouter un : **depuis l'espace bénévoles** (module « Actualités » : dépôt du `.md` + photo, le serveur écrit le dossier et reconstruit le site — voir [publication.md](publication.md) et le [guide](guide-espace-benevoles.md#publier-une-actualité)), ou à la main comme décrit ci-dessous. Aucune base de données : ajouter un dossier suffit pour que l'article apparaisse sur le site.
 
 ## Créer un nouvel article
 

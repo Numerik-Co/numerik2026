@@ -14,11 +14,14 @@ services:
     ports:
       - "127.0.0.1:4321:4321"
 
-    # Données vivantes écrites sur disque (hors Grist) : comptes de l'espace
-    # bénévoles (data/accounts) et actualités publiées depuis l'admin
-    # (data/news) — cf. docs/auth.md. Le dossier ./data du VPS survit aux
-    # redéploiements : à sauvegarder.
+    # Données de l'espace bénévoles hors contenu (comptes data/accounts, état
+    # des publications data/publication) — cf. docs/auth.md. Le dossier ./data
+    # du VPS survit aux redéploiements : à sauvegarder.
     environment:
       - DATA_DIR=/app/data
     volumes:
       - ./data:/app/data
+      # Contenu publié depuis l'espace bénévoles (actualités…) : écrit dans la
+      # copie git du VPS, donc conservé au redéploiement (à commiter pour
+      # l'avoir aussi dans le dépôt). Cf. docs/publication.md.
+      - ./src/content:/app/src/content

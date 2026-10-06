@@ -11,6 +11,11 @@ import vue from '@astrojs/vue';
 
 // https://astro.build/config
 export default defineConfig({
+  // Dossier de sortie : `dist` ; la publication depuis l'espace bénévoles
+  // construit chaque nouvelle version dans `.releases/<horodatage>` (cf.
+  // src/lib/site-build.ts) puis fait pointer `dist` dessus.
+  outDir: process.env.ASTRO_OUT_DIR || './dist',
+
   // Nom de domaine public (URLs absolues du flux RSS, sitemap…).
   site: 'https://www.clubmicrosaintpierre.fr',
 
@@ -53,6 +58,13 @@ export default defineConfig({
       BULLETIN_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Espace bénévoles (docs/auth.md)
       AUTH_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Publication depuis l'espace bénévoles (docs/publication.md)
+      // Racine du projet (sources + node_modules) à reconstruire ; défaut : dossier de lancement.
+      SITE_ROOT: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // Commande lancée après chaque reconstruction réussie (ex. rsync de dist/client vers un hébergement statique).
+      PUBLISH_HOOK: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // `false` : ne pas redémarrer le serveur après publication (déconseillé, cf. doc).
+      PUBLISH_RESTART: envField.boolean({ context: 'server', access: 'secret', default: true }),
     },
   },
 

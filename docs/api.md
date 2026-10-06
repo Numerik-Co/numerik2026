@@ -63,7 +63,8 @@ configurée »), le reste du site fonctionne.
 | `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |
 | `BULLETIN_SECRET` | Secret HMAC du lien de bulletin — **secret**, requis avec `GOTENBERG_URL` |
 | `AUTH_SECRET` | Signature des sessions de l'espace bénévoles (≥ 32 caractères) — **secret**, voir [auth.md](auth.md) |
-| `DATA_DIR` | Dossier des comptes de l'espace bénévoles (défaut `./data`) — optionnel |
+| `DATA_DIR` | Dossier des comptes et de l'état des publications de l'espace bénévoles (défaut `./data`) — optionnel |
+| `SITE_ROOT` / `PUBLISH_HOOK` / `PUBLISH_RESTART` | Publication depuis l'espace bénévoles — optionnel, voir [publication.md](publication.md) |
 
 ### Lues au démarrage, jamais figées dans le build
 

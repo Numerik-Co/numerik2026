@@ -28,6 +28,26 @@ export interface AccountView {
 	updated: string;
 }
 
+export interface NewsItem {
+	slug: string;
+	href: string;
+	title: string;
+	publishAt: string;
+	isPublish: boolean;
+	tag: string | null;
+	thumbnail: string | null;
+}
+
+/** État de la dernière publication (reconstruction du site), cf. src/lib/site-build.ts. */
+export interface PublishStatus {
+	state: 'idle' | 'running' | 'succeeded' | 'failed';
+	label?: string;
+	href?: string;
+	startedAt?: string;
+	finishedAt?: string;
+	message?: string;
+}
+
 export interface AccountInput {
 	fullname: string;
 	email: string;
@@ -71,4 +91,15 @@ export const accountsApi = {
 		request<{ password: string }>('POST', `/api/admin/comptes/${encodeURIComponent(login)}`),
 	remove: (login: string, confirm: string) =>
 		request<{ ok: true }>('DELETE', `/api/admin/comptes/${encodeURIComponent(login)}`, { confirm }),
+};
+
+export const newsApi = {
+	list: () =>
+		request<{ news: NewsItem[]; status: PublishStatus; availability: { ok: boolean; reason?: string } }>(
+			'GET',
+			'/api/admin/actualites',
+		),
+	create: (markdown: string, cover: { type: string; data: string } | null) =>
+		request<{ slug: string; href: string }>('POST', '/api/admin/actualites', { markdown, cover: cover ?? undefined }),
+	status: () => request<PublishStatus>('GET', '/api/admin/publication'),
 };

@@ -173,6 +173,7 @@ Les modules visibles dépendent de votre groupe :
 | Module | Bureau (`admin`) | Rédacteur·rice | Animateur·rice |
 | :--- | :---: | :---: | :---: |
 | Pages réservées | ✅ | ✅ | ✅ |
+| Actualités | ✅ | ✅ | — |
 | Comptes | ✅ | — | — |
 | Mon mot de passe | ✅ | ✅ | ✅ |
 
@@ -183,6 +184,58 @@ Liste les pages du site qui ne sont visibles qu'une fois connecté·e
 
 Si vous arrivez sur une page réservée **sans être connecté·e**, elle affiche
 un encart **« Page réservée »** avec un bouton **Se connecter**.
+
+### Publier une actualité
+
+Module **📰 Actualités** (groupes *Rédacteur·rice* et *Bureau*). La liste
+montre toutes les actualités, les plus récentes d'abord (badge
+**Brouillon** pour celles non publiées) ; « Voir la page Actualités » ouvre la
+page publique.
+
+1. **+ Ajouter une actualité**, puis **Télécharger un modèle** : un fichier
+   `.md` déjà daté du jour, avec des exemples de mise en forme, à compléter
+   dans n'importe quel éditeur de texte. Il commence par cet en-tête :
+
+   ```markdown
+   ---
+   title: "Atelier retouche photo"
+   publishAt: 2026-10-15
+   excerpt: "Un court résumé affiché sur les cartes et l'accueil."
+   tag: "Ateliers"
+   author: "numérik&Co"
+   ---
+
+   Le texte de l'actualité. **Gras**, listes, sous-titres `## …`, liens…
+   ```
+
+   `title`, `publishAt` (AAAA-MM-JJ) et `excerpt` sont obligatoires ;
+   `tag`, `author`, `imageCredit` facultatifs ; `isPublish: false` pour un
+   brouillon. Détail des champs : [actualites.md](actualites.md).
+2. Glisser le fichier `.md` dans la première zone (ou cliquer pour le
+   choisir) : un aperçu (titre, date, résumé) s'affiche, un champ manquant
+   est signalé en rouge.
+3. Glisser la **photo** de couverture dans la seconde zone (JPEG, PNG ou
+   WebP, 10 Mo max) — facultative mais recommandée. Sa position GPS et ses
+   autres métadonnées sont retirées automatiquement.
+4. **Publier l'actualité** : le site est **reconstruit** (de quelques
+   secondes à une minute) ; un encadré « Publication en cours » suit
+   l'avancement, puis affiche le lien vers l'actualité en ligne. On peut
+   fermer le panneau pendant ce temps.
+
+Refusés à l'envoi, avec un message qui indique la ligne en cause : le
+**HTML** dans le texte, les liens autres que `http(s)`, `mailto:`, `tel:` ou
+internes, et les images dans le texte (seule la photo de couverture se
+dépose). Si la reconstruction échoue, rien n'est publié et le site reste tel
+quel.
+
+> Le titre et la date forment l'adresse de la page
+> (`/actualites/2026-10-15-atelier-retouche-photo`) : deux actualités ne
+> peuvent pas avoir la même date et le même titre. Corriger ou retirer une
+> actualité se fait pour l'instant dans `src/content/news/` (édition depuis
+> le module : prochaine étape).
+
+Côté serveur, la publication a des prérequis (sources du site, gestionnaire
+de process) : voir [publication.md](publication.md).
 
 ### Changer mon mot de passe
 
@@ -209,7 +262,7 @@ Module **👥 Comptes**, réservé au groupe *Bureau / administration*.
      (ex. `marie.fruit`) ; il ne pourra plus être changé.
    - **Prénom et nom**, **email** (facultatif).
    - **Groupes** — *Animateur·rice* pour les encadrant·e·s,
-     *Rédacteur·rice* (publication des actualités, module à venir), *Bureau /
+     *Rédacteur·rice* (publication des actualités), *Bureau /
      administration* pour les membres du bureau (accès à tout, dont la
      gestion des comptes). Plusieurs groupes peuvent être cochés.
    - **Mot de passe provisoire** — laisser vide pour en générer un.

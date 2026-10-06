@@ -88,10 +88,22 @@ sous `/api/admin/`).
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
-  (`/api/admin/comptes` → `admin` ; `redacteur` est prévu pour le futur
-  module Actualités, qui écrira dans `src/content/news/` puis relancera le
-  build).
-- Modules : Pages réservées, Comptes, Mon mot de passe.
+  (`/api/admin/comptes` → `admin`, `/api/admin/actualites` et
+  `/api/admin/publication` → `redacteur`).
+- Modules : Pages réservées, **Actualités**, Comptes, Mon mot de passe.
+
+### Publication (module Actualités)
+
+Le module écrit dans les **sources** (`src/content/news/<date-slug>/`,
+`src/lib/news-writer.ts` : validation identique au schéma, HTML/liens
+dangereux refusés, photo nettoyée par sharp) puis `src/lib/site-build.ts`
+relance `npm run build` sur le serveur dans `.releases/<horodatage>`
+(`ASTRO_OUT_DIR` → `outDir`), fait pointer `dist` dessus, lance
+`PUBLISH_HOOK` éventuel et **arrête le process** pour que son gestionnaire
+(Docker, PM2, systemd) le relance. Build en échec = contenu retiré, site
+intact. Prérequis : sources + `node_modules` complet + gestionnaire de
+process. Docker : l'image embarque tout le projet, `./src/content` monté
+depuis le VPS. Détail : [docs/publication.md](docs/publication.md).
 - Page de contenu réservée : rangée dans `src/content/pages/espace-benevoles/`
   (défaut : toute personne connectée ; `access: <groupe> | [groupes]` pour
   restreindre — `parseAccess`/`canAccess`, `src/lib/auth/access.ts`) ;
