@@ -72,8 +72,9 @@ sous `/api/admin/`).
   frontmatter (`parseAccess`/`canAccess`, `src/lib/auth/access.ts`) ;
   jamais dans le menu, 401 + bouton « Se connecter » sans session, 403 si
   mauvais groupe, groupe inconnu = build en échec.
-- Premier admin : `npm run auth:user -- add <login> "<Nom>" admin` (Docker :
-  `node dist/cli/auth-user.mjs …`, compilé par `build:cli`).
+- Premier admin : `npm run auth:user -- add <login> "<Nom>" admin` en local ;
+  sur le VPS `./auth-user.sh add …` (exécute `dist/cli/auth-user.mjs`,
+  compilé par `build:cli`, dans le conteneur avec `DOCKER_CONFIG`).
 - `astro.config.mjs` `security.allowedDomains` : indispensable derrière le
   proxy HTTPS.
 

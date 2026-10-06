@@ -181,12 +181,13 @@ npm run auth:user -- reset xavier                       # nouveau mot de passe p
 3. Créer le premier admin, puis tout se fait depuis le module « Comptes » :
 
    ```sh
-   docker compose exec web node dist/cli/auth-user.mjs add xavier "Xavier Burke" admin
+   ./auth-user.sh add xavier "Xavier Burke" admin   # = docker compose exec web node dist/cli/auth-user.mjs …
    ```
 
 Le CLI est compilé par esbuild pendant `npm run build` (`build:cli` →
 `dist/cli/auth-user.mjs`) : le Node de certains environnements n'exécute pas
-le TypeScript directement.
+le TypeScript directement. Le fichier est autonome (`yaml` inclus, `require`
+recréé par une bannière esbuild) : il ne dépend d'aucun `node_modules`.
 
 ## Fichiers
 

@@ -62,32 +62,49 @@ aux redéploiements** (`./deploy.sh`) et n'est jamais envoyé sur git.
 
 ### 3. Déployer
 
+Comme d'habitude :
+
 ```bash
 cd /opt/numerik2026
+git pull
 ./deploy.sh
 ```
 
+> Si le site tournait déjà et que seul le `.env` a changé, `./deploy.sh` ne
+> recrée pas forcément le conteneur (image identique) : le nouveau secret ne
+> serait pas lu. Dans ce cas :
+>
+> ```bash
+> DOCKER_CONFIG=$PWD/.dockercfg docker compose up -d --force-recreate
+> ```
+
 ### 4. Créer le premier compte administrateur
 
-Le premier compte se crée en ligne de commande (ensuite, tout se fait
-depuis le site) :
+Le premier compte se crée en ligne de commande, avec le script
+`./auth-user.sh` (à côté de `deploy.sh`) ; ensuite, tout se fait depuis le site :
 
 ```bash
-docker compose exec web node dist/cli/auth-user.mjs add xavier "Xavier Burke" admin
+cd /opt/numerik2026
+./auth-user.sh add xavier "Xavier Burke" admin
 ```
 
 La commande affiche un **mot de passe provisoire** (ex. `k7mp-q3zt-h9wx`),
 **une seule fois** : notez-le, connectez-vous, puis changez-le (voir
 [Changer mon mot de passe](#changer-mon-mot-de-passe)).
 
+> `./auth-user.sh` lance le CLI **dans le conteneur** (`docker compose exec`)
+> en posant `DOCKER_CONFIG` comme `deploy.sh` (`/root` est en lecture seule
+> sur le VPS). Ne lancez pas `node dist/cli/auth-user.mjs` directement sur le
+> VPS : le `dist/` du VPS n'est pas celui de l'image.
+
 Autres commandes utiles :
 
 ```bash
 # lister les comptes
-docker compose exec web node dist/cli/auth-user.mjs list
+./auth-user.sh list
 
 # nouveau mot de passe provisoire (et réactive le compte) — dépannage
-docker compose exec web node dist/cli/auth-user.mjs reset xavier
+./auth-user.sh reset xavier
 ```
 
 > L'identifiant : 2 à 32 caractères, minuscules, chiffres, `.`, `-` ou `_`
@@ -230,7 +247,7 @@ Pour éviter de bloquer l'association hors de son propre site :
 - il reste toujours **au moins un compte bureau actif**.
 
 En dernier recours (plus aucun admin ne peut se connecter), la personne qui
-gère le serveur utilise `auth-user.mjs reset` (voir Partie 1).
+gère le serveur utilise `./auth-user.sh reset <login>` (voir Partie 1).
 
 ### Se déconnecter
 
@@ -260,11 +277,13 @@ déploiement. Détail : [src/contents/README.md](../src/contents/README.md).
 
 | Symptôme | Cause probable | Solution |
 | :--- | :--- | :--- |
-| « La connexion n'est pas encore configurée sur ce serveur » | `AUTH_SECRET` absent ou trop court dans le `.env` | L'ajouter (≥ 32 caractères), puis `docker compose up -d --force-recreate` (un simple `up -d` ne relit pas le `.env`) |
+| « La connexion n'est pas encore configurée sur ce serveur » | `AUTH_SECRET` absent ou trop court dans le `.env` | L'ajouter (≥ 32 caractères), puis `DOCKER_CONFIG=$PWD/.dockercfg docker compose up -d --force-recreate` (voir §3) |
 | « Identifiant ou mot de passe incorrect » | Faute de frappe, majuscules, compte inexistant | Vérifier ; sinon réinitialisation par le bureau |
 | « Trop de tentatives » | 5 échecs en 15 min | Attendre 15 min (ou redémarrer le conteneur) |
 | « Ce compte est désactivé » | Désactivé par le bureau | Le réactiver dans **Comptes** |
 | Déconnecté·e sans raison | Mot de passe changé/réinitialisé, compte désactivé, `AUTH_SECRET` changé, 14 jours sans visite | Se reconnecter |
 | « Requête refusée » | Requête venant d'un autre site, ou domaine non prévu | Vérifier le domaine dans `astro.config.mjs` (`security.allowedDomains`) et l'en-tête `X-Forwarded-Host` de nginx |
 | Comptes disparus après un déploiement | Volume `./data` non monté | Vérifier `volumes:` dans `docker-compose.yml`, restaurer la sauvegarde de `data/` |
-| Plus aucun admin ne peut se connecter | — | Sur le VPS : `docker compose exec web node dist/cli/auth-user.mjs reset <login>` |
+| `Cannot find package 'yaml'` en lançant `auth-user.mjs` | `node dist/cli/auth-user.mjs` lancé **sur le VPS, hors du conteneur** (chemin `/opt/…`) | Utiliser `./auth-user.sh …` |
+| `docker` : erreur de permission / config en lecture seule | `DOCKER_CONFIG` non posé (`/root` en lecture seule) | Passer par `./auth-user.sh` ou `./deploy.sh`, ou préfixer par `DOCKER_CONFIG=$PWD/.dockercfg` |
+| Plus aucun admin ne peut se connecter | — | Sur le VPS : `./auth-user.sh reset <login>` |

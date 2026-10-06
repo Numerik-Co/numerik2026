@@ -7,8 +7,8 @@
  *   npm run auth:user -- add <login> "<Prénom Nom>" [groupe…]   (défaut : admin)
  *   npm run auth:user -- reset <login>
  *
- * En production (Docker) :
- *   docker compose exec web node dist/cli/auth-user.mjs add xavier "Xavier Burke" admin
+ * En production, sur le VPS (lance ce CLI dans le conteneur) :
+ *   ./auth-user.sh add xavier "Xavier Burke" admin
  *
  * Le mot de passe provisoire est généré et affiché une seule fois.
  * Comptes écrits dans `$AUTH_DATA_DIR/accounts` (défaut `./data/accounts`).

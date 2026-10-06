@@ -11,7 +11,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "auth:user": "npm run -s build:cli && node dist/cli/auth-user.mjs",
-    "build:cli": "esbuild scripts/auth-user.ts --bundle --platform=node --format=esm --packages=external --log-level=warning --outfile=dist/cli/auth-user.mjs"
+    "build:cli": "esbuild scripts/auth-user.ts --bundle --platform=node --format=esm --log-level=warning \"--banner:js=import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=dist/cli/auth-user.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.8",
