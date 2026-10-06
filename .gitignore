@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # Config Docker CLI locale (deploy.sh, VPS avec /root en lecture seule)
 .dockercfg/
+
+# Comptes de l'espace bénévoles (auth à plat, cf. docs/auth.md) — données, jamais versionnées
+/data/

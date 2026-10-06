@@ -16,8 +16,19 @@ interface ImportMetaEnv {
 	readonly GOTENBERG_USERNAME?: string; // auth HTTP Basic Gotenberg, optionnel
 	readonly GOTENBERG_PASSWORD?: string;
 	readonly BULLETIN_SECRET?: string;
+	/** Authentification à plat (cf. docs/auth.md) — secret de signature du cookie de session, ≥ 32 caractères. */
+	readonly AUTH_SECRET?: string;
+	/** Dossier des comptes YAML (défaut `./data`). */
+	readonly AUTH_DATA_DIR?: string;
 }
 
 interface ImportMeta {
 	readonly env: ImportMetaEnv;
+}
+
+declare namespace App {
+	interface Locals {
+		/** Personne connectée (`src/middleware.ts`), `null` sinon. Absent sur les pages prérendues. */
+		user: import('./lib/auth/session').SessionUser | null;
+	}
 }

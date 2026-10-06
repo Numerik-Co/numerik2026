@@ -47,7 +47,8 @@ export function getNavTree(): NavEntry[] {
 	const buckets = new Map<string, Bucket>();
 
 	for (const page of getContentPages()) {
-		if (!page.menu?.show) continue;
+		// Les pages réservées (`access:`) restent hors du menu public, calculé au build.
+		if (!page.menu?.show || page.access !== null) continue;
 
 		// Page à la racine -> lien de premier niveau
 		if (page.segments.length === 1) {

@@ -14,4 +14,10 @@ services:
     ports:
       - "127.0.0.1:4321:4321"
 
-    # Aucun volume de données : l'app n'écrit rien sur disque, tout va dans Grist.
+    # Seules données écrites sur disque : les comptes de l'espace bénévoles
+    # (auth à plat, un YAML par compte — cf. docs/auth.md). Tout le reste va
+    # dans Grist. Le dossier ./data du VPS survit aux redéploiements.
+    environment:
+      - AUTH_DATA_DIR=/app/data
+    volumes:
+      - ./data:/app/data

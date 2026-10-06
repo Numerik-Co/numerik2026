@@ -76,6 +76,17 @@ menu:
 ---
 ```
 
+### Page réservée (espace bénévoles)
+
+Frontmatter d'une page de contenu, cf. [auth.md](auth.md). Jamais dans le menu.
+
+```markdown
+---
+title: "Fiches animateur·rice·s"
+access: animateur          # true = toute personne connectée ; [animateur, admin]…
+---
+```
+
 ### Menu déroulant (dossier de pages)
 
 `src/contents/pages/<dossier>/_group.md` — toutes les pages du dossier
@@ -363,6 +374,35 @@ export const POST: APIRoute = async ({ request }) => {
 Toujours passer par `COLS.*` / `TABLES.*` plutôt que d'écrire les noms de
 colonnes Grist en dur ; une nouvelle colonne s'ajoute dans `COLS`
 (`src/lib/adhesion/grist.ts`).
+
+### Module de l'espace bénévoles
+
+Panneau latéral ouvert depuis la barre admin, cf. [auth.md](auth.md#ajouter-un-module).
+
+```ts
+// src/components/admin/modules.ts — entrée de ADMIN_MODULES
+{
+	id: 'rdv',
+	label: 'Rendez-vous',
+	icon: 'fa-calendar-check',
+	groups: ['admin'], // [] = toute personne connectée
+	component: defineAsyncComponent(() => import('./modules/RdvModule.vue')),
+},
+```
+
+```vue
+<!-- src/components/admin/modules/RdvModule.vue -->
+<script setup lang="ts">
+import { inject } from 'vue';
+import { ApiError } from '../client';
+import { ADMIN_CONTEXT } from '../context';
+
+const { user, sessionExpired } = inject(ADMIN_CONTEXT)!;
+// appel API : catch (e) { if (e instanceof ApiError && e.status === 401) sessionExpired(); }
+</script>
+```
+
+Bouton qui ouvre la connexion, n'importe où : `<button type="button" data-auth-open>Se connecter</button>`.
 
 ### Classes Tailwind récurrentes
 

@@ -75,6 +75,12 @@ const socialLinks = Object.entries(association.social)
 			<a href="/statuts" class="hover:text-white">Statuts</a>
 			<span aria-hidden="true">·</span>
 			<a href="/reglement-interieur" class="hover:text-white">Règlement intérieur</a>
+			<span aria-hidden="true">·</span>
+			<!-- Ouvre la modale de connexion (src/components/admin/AdminLoader.astro). -->
+			<a href="#connexion" data-auth-open class="hover:text-white">
+				<i class="fa-solid fa-lock text-[10px]" aria-hidden="true"></i>
+				Espace bénévoles
+			</a>
 		</p>
 	</div>
 </footer>

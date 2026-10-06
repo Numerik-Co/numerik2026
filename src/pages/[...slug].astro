@@ -6,20 +6,29 @@ import FigureImage from '../components/article/FigureImage.astro';
 import ShareTools from '../components/article/ShareTools.astro';
 import { association } from '../lib/association';
 import { getContentPages, getGroupLabel } from '../lib/content-pages';
+import { canAccess } from '../lib/auth/access';
 
 /**
  * Route attrape-tout : rend n'importe quelle page rangée dans
  * `src/contents/pages/<...>/index.{md,mdx}`. L'éditeur n'a qu'à créer
  * le fichier markdown, aucune page `.astro` à écrire.
+ *
+ * Rendue à la demande (et non prérendue) pour pouvoir appliquer le
+ * frontmatter `access:` : une page réservée affiche un encart « Se connecter »
+ * (401, ouvre la modale de connexion) si personne n'est connecté, et refuse
+ * l'accès (403) si le groupe ne convient pas. Après connexion, la modale
+ * recharge la page.
  */
-export function getStaticPaths() {
-	return getContentPages().map((page) => ({
-		params: { slug: page.slug },
-		props: { page },
-	}));
-}
+export const prerender = false;
 
-const { page } = Astro.props;
+const page = getContentPages().find((entry) => entry.slug === Astro.params.slug);
+// Réponse 404 vide : Astro sert alors la page 404 (prérendue, donc pas de rewrite possible).
+if (!page) return new Response(null, { status: 404 });
+
+const user = Astro.locals.user;
+const denied = canAccess(user, page.access) ? null : user ? 'forbidden' : 'login';
+if (denied) Astro.response.status = denied === 'login' ? 401 : 403;
+const restricted = page.access !== null;
 const { Content, headings } = page;
 
 const breadcrumbs: { label: string; href?: string }[] = [{ label: 'Accueil', href: '/' }];
@@ -35,28 +44,53 @@ breadcrumbs.push({ label: page.title });
 	description={page.description ?? `${page.title} — ${association.name}.`}
 	breadcrumbs={breadcrumbs}
 	image={page.image}
+	noindex={restricted}
 >
 	<PageHeader slot="page-header" title={page.title} description={page.description} />
 
 	<Fragment slot="sidebar">
-		<ShareTools title={page.title} class="mb-6" />
-		{headings.length > 1 && <TableOfContents headings={headings} />}
+		{/* Pas de partage sur une page réservée : le lien ne mènerait qu'à la connexion. */}
+		{!restricted && <ShareTools title={page.title} class="mb-6" />}
+		{!denied && headings.length > 1 && <TableOfContents headings={headings} />}
 	</Fragment>
 
-	{page.image && (
-		<FigureImage
-			image={page.image}
-			alt={page.title}
-			caption={page.imageCredit}
-			loading="eager"
-			class="mb-8"
-		/>
+	{denied ? (
+		<div class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800" role="alert">
+			<p class="font-semibold">
+				<i class="fa-solid fa-lock mr-1.5" aria-hidden="true"></i>
+				Page réservée
+			</p>
+			{denied === 'login' ? (
+				<>
+					<p class="mt-1 font-light">Cette page est réservée aux bénévoles de l'association.</p>
+					<button type="button" data-auth-open class="mt-3 font-medium text-primary hover:underline">
+						Se connecter
+					</button>
+				</>
+			) : (
+				<p class="mt-1 font-light">
+					Votre compte ne donne pas accès à cette page. Si c'est une erreur, contactez un membre du bureau.
+				</p>
+			)}
+		</div>
+	) : (
+		<>
+			{page.image && (
+				<FigureImage
+					image={page.image}
+					alt={page.title}
+					caption={page.imageCredit}
+					loading="eager"
+					class="mb-8"
+				/>
+			)}
+
+			<div class="markdown-content font-light text-gray-700">
+				<Content />
+			</div>
+		</>
 	)}
 
-	<div class="markdown-content font-light text-gray-700">
-		<Content />
-	</div>
-
 	{/* La colonne de droite est masquée sous `lg` : on y replace le partage. */}
-	<ShareTools title={page.title} class="mt-12 lg:hidden" />
+	{!restricted && <ShareTools title={page.title} class="mt-12 lg:hidden" />}
 </ArticleLayout>
