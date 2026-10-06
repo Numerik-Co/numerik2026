@@ -6,6 +6,7 @@ category: "fablab"
 activiteGrist: "Espace FABLAB"
 imageCredit: "Photo : Jakub Zerdzicki / Pexels"
 order: 1
+cover: ./cover.jpg
 ---
 
 Le FabLab est un espace de création, de partage et d'innovation, ouvert à toutes celles et ceux qui souhaitent explorer une idée et la concrétiser, essayer de faire le futur ensemble. On y expérimente, on invente et on réalise ses projets à partir de machines numériques : imprimantes 3D, découpe et gravure laser…

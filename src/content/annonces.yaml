@@ -1,4 +1,3 @@
----
 # =============================================================================
 #  Annonces affichées dans la bannière en haut de toutes les pages
 # =============================================================================
@@ -31,39 +30,37 @@
 #              (utile pour préparer un brouillon).
 #
 #  Pensez à toujours mettre les valeurs entre guillemets doubles.
+#  Le format est vérifié à la construction du site (src/content.config.ts) :
+#  un champ obligatoire manquant ou une date mal écrite bloque le build en
+#  indiquant l'annonce en cause.
 # =============================================================================
 
-annonces:
-  - id: "ag-2026"
-    title: "Assemblée générale 2026"
-    message: "Notre assemblée générale annuelle approche. Tous les adhérent·e·s sont convié·e·s : votre présence compte."
-    startDate: "2026-08-20"
-    endDate: "2026-09-18"
-    tone: "info"
-    icon: "fa-calendar-days"
-    ctaLabel: "Voir les détails"
-    ctaHref: "/actualites/2026-08-17-assemblee-generale-2026"
+- id: "ag-2026"
+  title: "Assemblée générale 2026"
+  message: "Notre assemblée générale annuelle approche. Tous les adhérent·e·s sont convié·e·s : votre présence compte."
+  startDate: "2026-08-20"
+  endDate: "2026-09-18"
+  tone: "info"
+  icon: "fa-calendar-days"
+  ctaLabel: "Voir les détails"
+  ctaHref: "/actualites/2026-08-17-assemblee-generale-2026"
 
-  - id: "recherche-animateurs-2026"
-    title: "Recherchons Animateur·rice·s"
-    message: "Vous aimez transmettre autour du numérique ? Rejoignez l'équipe qui anime nos ateliers, même quelques heures par mois."
-    startDate: "2026-08-25"
-    endDate: "2026-12-31"
-    tone: "accent"
-    icon: "fa-hand-holding-heart"
-    ctaLabel: "Nous contacter"
-    ctaHref: "/contact"
+- id: "recherche-animateurs-2026"
+  title: "Recherchons Animateur·rice·s"
+  message: "Vous aimez transmettre autour du numérique ? Rejoignez l'équipe qui anime nos ateliers, même quelques heures par mois."
+  startDate: "2026-08-25"
+  endDate: "2026-12-31"
+  tone: "accent"
+  icon: "fa-hand-holding-heart"
+  ctaLabel: "Nous contacter"
+  ctaHref: "/contact"
 
-  - id: "ateliers-conseillere-numerique"
-    title: 'Prochain atelier collectif "conseiller·ère numérique"'
-    message: "Ameli et Mon espace santé : Prenez en main l'espace de la Sécurité sociale"
-    startDate: "2026-09-18"
-    endDate: "2026-10-09"
-    tone: "info"
-    icon: "fa-solid fa-caduceus"
-    ctaLabel: "s'inscrire"
-    ctaHref: "/activites/mediation-numerique/mediation-numerique-ateliers"
----
-
-Ce fichier ne contient pas de texte libre : tout le contenu des annonces se
-règle dans l'en-tête ci-dessus (la partie entre les `---`).
+- id: "ateliers-conseillere-numerique"
+  title: 'Prochain atelier collectif "conseiller·ère numérique"'
+  message: "Ameli et Mon espace santé : Prenez en main l'espace de la Sécurité sociale"
+  startDate: "2026-09-18"
+  endDate: "2026-10-09"
+  tone: "info"
+  icon: "fa-solid fa-caduceus"
+  ctaLabel: "s'inscrire"
+  ctaHref: "/activites/mediation-numerique/mediation-numerique-ateliers"

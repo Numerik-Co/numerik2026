@@ -7,6 +7,7 @@ activiteGrist: "Espace Jeune"
 level: "Jusqu'à 16 ans"
 imageCredit: "Photo : Vanessa Loring / Pexels"
 order: 2
+cover: ./cover.jpg
 ---
 
 L'Espace Junior est le rendez-vous des jeunes curieux·ses de technologie. Toute l'année, on avance étape par étape : comprendre la logique du code, découvrir l'électronique, prendre en main les machines du FabLab… jusqu'à construire ensemble un robot.

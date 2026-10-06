@@ -1,6 +1,11 @@
-import { frontmatter } from '../content/annonces.md';
+/**
+ * Annonces de la bannière : collection `annonces` (`src/content.config.ts`,
+ * fichier `src/content/annonces.yaml`), validée au build.
+ */
 
-export type AnnonceTone = 'info' | 'accent' | 'urgent';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+export type AnnonceTone = CollectionEntry<'annonces'>['data']['tone'];
 
 export interface Annonce {
 	id: string;
@@ -14,54 +19,29 @@ export interface Annonce {
 	ctaHref?: string;
 }
 
-const TONES: AnnonceTone[] = ['info', 'accent', 'urgent'];
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
 /**
- * Toutes les annonces déclarées dans src/content/annonces.md, hors brouillons
- * (`active: false`). Le filtrage par date de validité est fait côté navigateur
- * par le composant AnnoncesIlot afin de rester juste même sans reconstruction
- * du site.
+ * Toutes les annonces de `src/content/annonces.yaml`, hors brouillons
+ * (`active: false`), dans l'ordre du fichier (`position`). Le filtrage par date de validité
+ * est fait côté navigateur par `AnnonceBanner.astro`, afin de rester juste
+ * même sans reconstruction du site. Le lien d'action n'est gardé que si
+ * `ctaLabel` ET `ctaHref` sont renseignés.
  */
-export function getAnnonces(): Annonce[] {
-	const raw = (frontmatter?.annonces ?? []) as Record<string, unknown>[];
-
-	return raw
-		.filter((entry) => entry.active !== false)
-		.map((entry, index) => {
-			const id = String(entry.id ?? '').trim();
-			const title = String(entry.title ?? '').trim();
-			const message = String(entry.message ?? '').trim();
-			const startDate = String(entry.startDate ?? '').trim();
-			const endDate = String(entry.endDate ?? '').trim();
-
-			if (!id) throw new Error(`annonces.md : l'annonce #${index + 1} n'a pas d'\`id\`.`);
-			if (!title || !message) {
-				throw new Error(`annonces.md : l'annonce "${id}" doit avoir un \`title\` et un \`message\`.`);
-			}
-			if (!DATE_RE.test(startDate) || !DATE_RE.test(endDate)) {
-				throw new Error(
-					`annonces.md : l'annonce "${id}" doit avoir \`startDate\` et \`endDate\` au format "AAAA-MM-JJ".`,
-				);
-			}
-
-			const tone = TONES.includes(entry.tone as AnnonceTone)
-				? (entry.tone as AnnonceTone)
-				: 'info';
-
-			const ctaLabel = entry.ctaLabel ? String(entry.ctaLabel).trim() : undefined;
-			const ctaHref = entry.ctaHref ? String(entry.ctaHref).trim() : undefined;
-
+export async function getAnnonces(): Promise<Annonce[]> {
+	const entries = await getCollection('annonces', ({ data }) => data.active);
+	return entries
+		.sort((a, b) => a.data.position - b.data.position)
+		.map(({ data }) => {
+			const cta = data.ctaLabel && data.ctaHref;
 			return {
-				id,
-				title,
-				message,
-				startDate,
-				endDate,
-				tone,
-				icon: entry.icon ? String(entry.icon).trim() : 'fa-bullhorn',
-				ctaLabel: ctaLabel && ctaHref ? ctaLabel : undefined,
-				ctaHref: ctaLabel && ctaHref ? ctaHref : undefined,
+				id: data.id,
+				title: data.title,
+				message: data.message,
+				startDate: data.startDate,
+				endDate: data.endDate,
+				tone: data.tone,
+				icon: data.icon,
+				ctaLabel: cta ? data.ctaLabel : undefined,
+				ctaHref: cta ? data.ctaHref : undefined,
 			} satisfies Annonce;
 		});
 }

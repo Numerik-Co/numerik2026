@@ -7,7 +7,7 @@ interface Props {
 }
 
 const { intervalMs = 7000 } = Astro.props;
-const annonces = getAnnonces();
+const annonces = await getAnnonces();
 
 // Le `tone` de l'annonce affichée colore toute la barre.
 const toneClass: Record<string, string> = {

@@ -5,15 +5,16 @@ import ArticleLayout from '../../../layouts/ArticleLayout.astro';
 import TableOfContents from '../../../components/article/TableOfContents.astro';
 import ReadingProgress from '../../../components/article/ReadingProgress.astro';
 import PageHeader from '../../../components/sections/PageHeader.astro';
-import { getActivitiesByCategory } from '../../../lib/activites';
+import { getActivitiesByCategory, renderActivity } from '../../../lib/activites';
 import { categories, getCategory } from '../../../lib/categories';
 import { association } from '../../../lib/association';
 import { isFormOpen } from '../../../lib/forms';
 
 export async function getStaticPaths() {
-	return categories.flatMap((cat) => {
-		const activities = getActivitiesByCategory(cat.slug);
-
+	const perCategory = await Promise.all(
+		categories.map(async (cat) => ({ cat, activities: await getActivitiesByCategory(cat.slug) })),
+	);
+	return perCategory.flatMap(({ cat, activities }) => {
 		return activities.map((activity, index) => ({
 			params: { category: cat.slug, slug: activity.slug },
 			props: {
@@ -26,7 +27,7 @@ export async function getStaticPaths() {
 }
 
 const { activity, prev, next } = Astro.props;
-const { Content } = activity;
+const { Content, headings } = await renderActivity(activity);
 const category = getCategory(activity.category);
 const inscriptionVisible = activity.inscription && isFormOpen('inscription');
 ---
@@ -44,10 +45,10 @@ const inscriptionVisible = activity.inscription && isFormOpen('inscription');
 	<PageHeader slot="page-header" title={activity.title} description={activity.excerpt} />
 
 	<Fragment slot="sidebar">
-		{activity.headings.length > 1 && (
+		{headings.length > 1 && (
 			<>
 				<ReadingProgress minutes={activity.readingTime} />
-				<TableOfContents headings={activity.headings} />
+				<TableOfContents headings={headings} />
 			</>
 		)}
 		{inscriptionVisible && (

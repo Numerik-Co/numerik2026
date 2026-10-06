@@ -6,6 +6,7 @@ category: "parcours"
 level: "Jusqu'à 15 ans"
 imageCredit: "Photo : cottonbro studio / Pexels"
 order: 4
+cover: ./cover.jpg
 ---
 
 Envie de savoir ce qu'il y a vraiment dans un ordinateur ? De fabriquer tes propres objets ? De percer les secrets des jeux vidéo et de créer ton propre jeu ou ton propre robot ? Cette année, on te propose cinq aventures numériques.

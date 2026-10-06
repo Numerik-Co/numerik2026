@@ -5,6 +5,7 @@ excerpt: "Un samedi tous les deux mois, numérik&Co vous accueille pour prendre 
 category: "ateliers"
 imageCredit: "Photo : bohed / Pexels"
 order: 2
+cover: ./cover.jpg
 ---
 
 Un samedi tous les deux mois, numérik&Co vous accueille pour prendre soin de vos équipements numériques.

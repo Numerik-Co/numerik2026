@@ -32,8 +32,8 @@ src/
 │   ├── Header.astro, Footer.astro                    # structure commune
 │   └── sections/                                     # blocs de page (Hero, CtaSection, PageHeader...)
 ├── content/
-│   ├── news/<slug>/                                  # un dossier par actualité (index.md + cover.*)
-│   ├── activites/<slug>/                             # un dossier par activité (index.md + cover.*)
+│   ├── news/<slug>/                                  # collection news : un dossier par actualité (index.md + photo cover:)
+│   ├── activites/<slug>/                             # collection activites : un dossier par activité (index.md + photo cover:)
 │   ├── pages/<...>/index.{md,mdx}                     # pages éditoriales : le chemin = l'URL, frontmatter menu: (voir pages.md)
 │   ├── pages/<dossier>/_group.md                     # libellé + ordre d'un menu déroulant
 │   └── README.md                                     # guide de rédaction destiné aux éditeurs
@@ -44,7 +44,7 @@ src/
 │   └── site.ts                                       # config par déploiement : CTA « Adhérer » + builtinNav
 ├── lib/
 │   ├── news.ts                                       # lecture/tri/formatage des actualités (getAllNews)
-│   ├── activites.ts                                  # lecture/tri des activités (getAllActivities, getActivitiesByCategory)
+│   ├── activites.ts                                  # collection activites (getAllActivities, getActivitiesByCategory, renderActivity)
 │   ├── content-pages.ts                              # collections pages / pageGroups (getContentPages, renderPage, getGroups)
 │   ├── navigation.ts                                 # construction du menu au build (getNavTree)
 │   ├── reading-time.ts                               # estimation du temps de lecture (~200 mots/minute)

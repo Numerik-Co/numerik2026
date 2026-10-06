@@ -6,6 +6,7 @@ category: "mediation-numerique"
 typeGrist: "Atelier CN"
 imageCredit: "Photo : Kampus / Pexels"
 order: 3
+cover: ./cover.jpg
 ---
 
 Que ce soit pour gérer vos démarches, naviguer sereinement sur internet en sécurité, ou obtenir des conseils et des explications, notre conseiller·ère numérique organise chaque mois un atelier collectif. Prenez en main vos outils du quotidien et gagnez en autonomie dès aujourd'hui !

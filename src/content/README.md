@@ -10,7 +10,7 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | `pages/` | Pages « éditoriales » (présentation, statuts, mentions légales…), photo citée par `cover:` ; `pages/espace-benevoles/` = pages réservées |
 | `news/` | Articles d'actualité (un dossier par article ; photo citée par `cover: ./cover.jpg` dans le frontmatter) — voir `docs/actualites.md` |
 | `activites/` | Fiches d'activité |
-| `annonces.md` | Bandeau d'annonce affiché en haut du site |
+| `annonces.yaml` | Annonces de la bannière en haut du site (liste, ordre = ordre de défilement) — voir `docs/annonces.md` |
 
 Le reste de la navigation (Accueil, Activités, Actualités, Contact) et le bouton
 **Adhérer** sont configurés une seule fois par l'intégrateur dans
@@ -166,6 +166,8 @@ Choisir un `order` intermédiaire (ex. `25`) pour intercaler une nouvelle page.
 | `menu.show` | non | `true` pour afficher dans la navigation (défaut : masqué) |
 | `menu.order` | non | Position dans son niveau (défaut : `99`) |
 | `menu.label` | non | Texte du menu si différent de `title` |
+| `cover` | non | Photo, chemin relatif au dossier (`./cover.jpg`) |
+| `imageCredit` | non | Crédit affiché sous la photo |
 
 ### Menu déroulant — `pages/<dossier>/_group.md`
 

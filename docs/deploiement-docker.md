@@ -14,7 +14,7 @@ change rien — il empaquette juste ce build.
 | **Actualités** (`src/content/news/…`) | fichiers Markdown compilés au build | ✅ **Oui** |
 | **Activités** (`src/content/activites/…`) | idem | ✅ Oui |
 | **Pages de contenu** (`src/content/pages/…`) | idem | ✅ Oui |
-| **Bannière d'annonces** (`src/content/annonces.md`) | idem | ✅ Oui |
+| **Bannière d'annonces** (`src/content/annonces.yaml`) | idem | ✅ Oui |
 | **Partenaires, catégories, infos asso** (`src/lib/*.ts`) | données en dur dans le code | ✅ Oui |
 | Composants, styles, structure | code | ✅ Oui |
 

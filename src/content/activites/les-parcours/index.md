@@ -4,6 +4,7 @@ isPublish: false
 excerpt: "Des parcours d'apprentissage progressifs et adaptés à votre niveau : grand débutant, initiation et perfectionnement."
 category: "parcours"
 order: 1
+cover: ./cover.jpg
 ---
 
 Nos parcours d'apprentissage vous offrent une exploration progressive et complète du numérique, adaptée à votre niveau et à vos besoins. Que vous soyez un grand débutant ou à la recherche de perfectionnement, nos cycles de formation vous guident, étape par étape, à travers des séances interactives et pratiques. Du maniement de l'ordinateur à la maîtrise des logiciels de bureautique, en passant par la protection de vos données, découvrez un éventail de compétences pour devenir autonome et confiant dans le monde numérique.

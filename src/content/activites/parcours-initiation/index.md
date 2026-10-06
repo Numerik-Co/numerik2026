@@ -7,6 +7,7 @@ activiteGrist: "Initiation*"
 level: "Tous niveaux"
 imageCredit: "Photo : Kampus / Pexels"
 order: 2
+cover: ./cover.jpg
 ---
 
 Lancez-vous dans une année de découverte numérique avec notre programme complet ! Participez à nos parcours d'initiation informatique, organisés les mardis et jeudis de 16h30 à 18h00. À travers 5 cycles thématiques, vous apprendrez à gérer votre ordinateur, à maîtriser le numérique au quotidien avec internet, à vous protéger en ligne et enfin d'aller plus loin dans vos compétences. Chaque séance est conçue pour vous accompagner à votre rythme, dans une ambiance conviviale et bienveillante.

@@ -6,6 +6,7 @@ imageCredit: "Photo : Pavel Danilyuk / Pexels"
 category: "ateliers"
 activiteGrist: "Module IA"
 order: 10
+cover: ./cover.jpg
 ---
 
 Chat GPT, assistants intégrés aux téléphones, générateurs d'images : l'IA générative s'est invitée partout, souvent sans qu'on comprenne vraiment ce qu'elle fait. Cet atelier propose de démystifier ces outils, d'en tester plusieurs (dont des alternatives libres et respectueuses des données comme Ollama ou LibreChat), et d'apprendre à repérer leurs limites : erreurs, biais, « hallucinations », impact environnemental.

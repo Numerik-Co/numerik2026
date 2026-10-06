@@ -6,6 +6,7 @@ imageCredit: "Photo : Kawe Rodrigues / Pexels"
 category: "ateliers"
 activiteGrist: "Module Photo"
 order: 11
+cover: ./cover.jpg
 ---
 
 Des centaines de photos s'accumulent sur nos téléphones et ordinateurs, souvent sans jamais être triées ni mises en valeur. Cet atelier, très pratique, permet d'apprendre à organiser sa photothèque, à retoucher simplement ses clichés avec un logiciel libre (GIMP), et à créer de jolis montages à partager ou à imprimer.

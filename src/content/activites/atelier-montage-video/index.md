@@ -6,6 +6,7 @@ imageCredit: "Photo : Nicolas Rueda / Pexels"
 category: "ateliers"
 activiteGrist: "Module Video"
 order: 12
+cover: ./cover.jpg
 ---
 
 Vacances, fêtes de famille, événements : nos téléphones regorgent de vidéos jamais exploitées. Cet atelier initie, pas à pas, au montage vidéo avec un logiciel libre (Kdenlive ou Shotcut), pour apprendre à assembler des séquences, ajouter musique et texte, et repartir avec une vraie petite vidéo montée soi-même.

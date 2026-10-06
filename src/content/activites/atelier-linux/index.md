@@ -6,6 +6,7 @@ imageCredit: "Photo : Real Tough Candy / Pexels"
 category: "ateliers"
 activiteGrist: "Module Linux"
 order: 14
+cover: ./cover.jpg
 ---
 
 Et si votre prochain ordinateur (ou votre vieux PC ralenti) tournait sous Linux ? Cet atelier fait découvrir ce système d'exploitation libre et gratuit, ses différences avec Windows ou macOS, et permet de le tester sans risque avant, éventuellement, de l'installer soi-même.

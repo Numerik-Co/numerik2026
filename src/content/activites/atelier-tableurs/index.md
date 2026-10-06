@@ -6,6 +6,7 @@ imageCredit: "Photo : Tima Miroshnichenko / Pexels"
 category: "ateliers"
 activiteGrist: "Module Tableur"
 order: 13
+cover: ./cover.jpg
 ---
 
 Le tableur n'est pas réservé aux comptables ! Budget familial, liste de courses, suivi d'activité, planning : cet atelier montre, avec le logiciel libre LibreOffice Calc, comment un tableur peut simplifier de nombreuses tâches du quotidien, sans jargon ni formules compliquées.

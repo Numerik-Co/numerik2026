@@ -4,14 +4,16 @@
  * site complet. Doc : https://docs.astro.build/en/guides/content-collections/
  *
  * Collections : `news` (actualités), `pages` + `pageGroups` (pages
- * éditoriales et menus déroulants). Les activités et annonces suivront le
- * même modèle.
+ * éditoriales et menus déroulants), `activites` (fiches d'activité),
+ * `annonces` (bannière en haut du site).
  */
 
 import { defineCollection } from 'astro:content';
-import { glob } from 'astro/loaders';
+import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { parse as parseYaml } from 'yaml';
 import { parseAccess } from './lib/auth/access';
+import { categories } from './lib/categories';
 
 /**
  * Actualités : un dossier par article, `src/content/news/<AAAA-MM-JJ-slug>/`
@@ -105,4 +107,75 @@ const pageGroups = defineCollection({
 	}),
 });
 
-export const collections = { news, pages, pageGroups };
+/**
+ * Fiches d'activité : `src/content/activites/<slug>/index.md` →
+ * `/activites/<category>/<slug>`. La catégorie doit exister dans
+ * `src/lib/categories.ts`.
+ */
+const categorySlugs = categories.map((c) => c.slug) as [string, ...string[]];
+
+const activites = defineCollection({
+	loader: glob({
+		pattern: '*/index.md',
+		base: './src/content/activites',
+		generateId: ({ entry }) => entry.replace(/\/index\.md$/, ''),
+	}),
+	schema: ({ image }) =>
+		z.object({
+			title: z.string(),
+			excerpt: z.string(),
+			category: z.enum(categorySlugs),
+			/** `false` = brouillon, absent du site. */
+			isPublish: z.boolean().default(true),
+			/** Public visé, affiché sur la carte (ex. « Tous niveaux »). */
+			level: z.string().optional(),
+			/** Position dans la catégorie (croissant). */
+			order: z.number().default(999),
+			/** `false` masque le bouton « S'inscrire » (ex. activité sur rendez-vous). */
+			inscription: z.boolean().default(true),
+			/** Nom(s) `Activite.Nom` dans Grist ciblés par « S'inscrire » ; `*` final = préfixe. */
+			activiteGrist: z.union([z.string(), z.array(z.string())]).optional(),
+			/** `Activite.Type` dans Grist ciblé par « S'inscrire ». */
+			typeGrist: z.string().optional(),
+			cover: image().optional(),
+			imageCredit: z.string().optional(),
+		}),
+});
+
+/**
+ * Annonces de la bannière : `src/content/annonces.yaml`, une liste d'entrées
+ * (`id` obligatoire). Le filtrage par dates est fait dans le navigateur
+ * (`AnnonceBanner.astro`) pour rester juste sans reconstruire le site.
+ * `position` (rang dans le fichier, ajouté à la lecture) conserve l'ordre de
+ * rotation voulu par l'éditeur : `getCollection()` ne le garantit pas.
+ */
+const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format attendu : "AAAA-MM-JJ".');
+
+const annonces = defineCollection({
+	loader: file('./src/content/annonces.yaml', {
+		parser: (text) => {
+			const list = parseYaml(text);
+			return Array.isArray(list) ? list.map((entry, position) => ({ ...entry, position })) : list;
+		},
+	}),
+	schema: z
+		.object({
+			id: z.string().min(1),
+			title: z.string().min(1),
+			message: z.string().min(1),
+			startDate: date,
+			/** Dernier jour d'affichage, inclus. */
+			endDate: date,
+			tone: z.enum(['info', 'accent', 'urgent']).default('info'),
+			/** Icône Font Awesome (solid). */
+			icon: z.string().default('fa-bullhorn'),
+			ctaLabel: z.string().optional(),
+			ctaHref: z.string().optional(),
+			/** `false` = brouillon, jamais affiché. */
+			active: z.boolean().default(true),
+			position: z.number(),
+		})
+		.refine((a) => a.endDate >= a.startDate, { message: '`endDate` doit être postérieure ou égale à `startDate`.' }),
+});
+
+export const collections = { news, pages, pageGroups, activites, annonces };

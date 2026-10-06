@@ -36,7 +36,7 @@ imageCredit: "Photo : Prénom Nom / Source"
 
 ### Frontmatter d'une activité
 
-`src/content/activites/<slug>/index.md` (+ `cover.jpg` facultatif). Détail :
+`src/content/activites/<slug>/index.md` (+ la photo citée par `cover:`). Schéma : `src/content.config.ts`. Détail :
 [activites.md](activites.md), bouton « S'inscrire » : [inscription.md](inscription.md#présélection).
 
 ```markdown
@@ -49,6 +49,7 @@ activiteGrist: "Module IA"      # nom Grist visé par « S'inscrire » (liste po
 # typeGrist: "Atelier CN"       # ou un type Grist entier
 # inscription: false            # masque le bouton « S'inscrire »
 level: "Initiation"
+cover: ./cover.jpg
 imageCredit: "Photo : Prénom Nom / Pexels"
 order: 10
 ---
@@ -105,19 +106,19 @@ order: 10
 
 ### Annonce dans la bannière
 
-À ajouter dans la liste `annonces` de `src/content/annonces.md`. Détail :
-[annonces.md](annonces.md).
+À ajouter dans la liste de `src/content/annonces.yaml` (ordre du fichier = ordre
+de défilement). Détail : [annonces.md](annonces.md).
 
 ```yaml
-  - id: "ag-2026"
-    title: "Assemblée générale 2026"
-    message: "Notre assemblée générale annuelle approche. Votre présence compte."
-    startDate: "2026-08-20"
-    endDate: "2026-09-18"
-    tone: "info"                 # info | accent | urgent
-    icon: "fa-calendar-days"
-    ctaLabel: "Voir les détails"
-    ctaHref: "/actualites/2026-08-17-assemblee-generale-2026"
+- id: "ag-2026"
+  title: "Assemblée générale 2026"
+  message: "Notre assemblée générale annuelle approche. Votre présence compte."
+  startDate: "2026-08-20"
+  endDate: "2026-09-18"
+  tone: "info"                 # info | accent | urgent
+  icon: "fa-calendar-days"
+  ctaLabel: "Voir les détails"
+  ctaHref: "/actualites/2026-08-17-assemblee-generale-2026"
 ```
 
 ### Markdown courant
