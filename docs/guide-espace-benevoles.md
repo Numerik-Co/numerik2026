@@ -259,9 +259,21 @@ ordinateur partagé (médiathèque, salle d'atelier…).
 
 ## Pour les éditeurs : réserver une page
 
-Ajouter `access:` dans le frontmatter d'une page de `src/content/pages/` :
+Ranger la page dans `src/content/pages/espace-benevoles/` (son adresse
+commence alors par `/espace-benevoles/`). Par défaut, toute personne
+connectée y a accès ; `access:` restreint à certains groupes :
 
 ```yaml
+---
+title: "Fiches animateur·rice·s"
+access: animateur        # ou : admin, redacteur, [animateur, admin]
+---
+```
+
+La page n'apparaît pas dans le menu public et figure dans **Pages réservées**
+pour les personnes autorisées. Comme tout contenu, elle est publiée au
+prochain build. Détail : [src/content/README.md](../src/content/README.md).
+
 ---
 title: "Fiches animateur·rice·s"
 access: animateur        # ou : true (toute personne connectée), admin, [animateur, admin]

@@ -5,6 +5,7 @@ menu:
   show: true
   order: 15
 imageCredit: "Photo : Annette Kintzi / Silberwissen, Universität Ulm (CC BY-SA 3.0)"
+cover: ./cover.jpg
 ---
 
 Le numérique est aujourd'hui incontournable : démarches administratives, recherche

@@ -5,6 +5,7 @@ menu:
   show: true
   order: 20
 imageCredit: "journaldunet.com/web-tech/guide-de-l-entreprise-digitale/1091588-kernel-linux-open-source-8/"
+cover: ./cover.png
 ---
 
 Comme de nombreuses structures associatives de médiation numérique en France — espaces publics numériques, ateliers solidaires de réemploi informatique, collectifs — **NUMERIK&Co** a fait le choix de s'appuyer sur Linux et les logiciels libres plutôt que sur des solutions propriétaires. Un choix cohérent avec nos [valeurs](/association/notre-histoire) : la maîtrise de ses outils, la formation et l'entraide, l'inclusion numérique.

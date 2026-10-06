@@ -57,10 +57,14 @@ Ajouter un groupe = une entrée dans `AUTH_GROUPS` (`src/lib/auth/groups.ts`).
 
 ## Réserver une page de contenu
 
-Frontmatter de `src/content/pages/<…>/index.md` :
+Les pages réservées se rangent dans **`src/content/pages/espace-benevoles/`**
+(URL `/espace-benevoles/<…>`). Ce dossier est le seul servi **à la demande**
+(`src/pages/espace-benevoles/[...slug].astro`, Node requis) : toutes les autres
+pages sont prérendues, donc publiques par nature. Frontmatter :
 
 ```yaml
-access: true                 # toute personne connectée
+# (absent)                   # toute personne connectée (défaut dans ce dossier)
+access: true                 # idem, explicite
 access: animateur            # un groupe
 access: [animateur, admin]   # l'un de ces groupes
 ```
@@ -71,12 +75,11 @@ access: [animateur, admin]   # l'un de ces groupes
 - Une page réservée n'apparaît **jamais dans le menu** (calculé au build) ;
   elle est listée dans le module « Pages réservées » des personnes autorisées.
 - Pas d'outils de partage, `noindex`, en-tête `Cache-Control: private, no-store`.
-- Un groupe inconnu dans `access:` fait **échouer le build** (une faute de
-  frappe ne doit jamais ouvrir une page).
-
-Conséquence technique : `src/pages/[...slug].astro` est rendue **à la
-demande** (`prerender = false`) pour toutes les pages de contenu, et non plus
-prérendue. Les autres pages statiques (accueil, actualités…) restent prérendues.
+- Le build **échoue** si `access:` cite un groupe inconnu, ou s'il est posé sur
+  une page hors de `espace-benevoles/` (elle serait prérendue, donc lisible par
+  tous). Une faute de frappe ne doit jamais ouvrir une page.
+- Le contenu de ces pages n'est jamais écrit dans `dist/client/` (vérifié) : il
+  n'existe que dans le serveur Node.
 
 ## Interface : modale, barre, modules
 

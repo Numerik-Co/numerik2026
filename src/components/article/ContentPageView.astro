@@ -1,0 +1,88 @@
+---
+/**
+ * Rendu d'une page de contenu (collection `pages`), partagé par
+ * `src/pages/[...slug].astro` (pages publiques, prérendues) et
+ * `src/pages/espace-benevoles/[...slug].astro` (pages réservées, à la demande).
+ * `denied` : `login` = personne connectée requise (encart « Se connecter »),
+ * `forbidden` = groupe insuffisant ; le contenu n'est alors pas rendu.
+ */
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import PageHeader from '../sections/PageHeader.astro';
+import TableOfContents from './TableOfContents.astro';
+import FigureImage from './FigureImage.astro';
+import ShareTools from './ShareTools.astro';
+import { association } from '../../lib/association';
+import { getGroups, groupMetaOf, renderPage, type ContentPage } from '../../lib/content-pages';
+
+interface Props {
+	page: ContentPage;
+	denied?: 'login' | 'forbidden' | null;
+}
+
+const { page, denied = null } = Astro.props;
+const restricted = page.access !== null;
+const { Content, headings } = denied ? { Content: null, headings: [] } : await renderPage(page);
+
+const breadcrumbs: { label: string; href?: string }[] = [{ label: 'Accueil', href: '/' }];
+if (page.segments.length > 1) {
+	// Libellé du dossier parent (menu déroulant), non cliquable.
+	breadcrumbs.push({ label: groupMetaOf(await getGroups(), page.segments[0]).label });
+}
+breadcrumbs.push({ label: page.title });
+---
+
+<ArticleLayout
+	title={`${page.title} · ${association.name}`}
+	description={page.description ?? `${page.title} — ${association.name}.`}
+	breadcrumbs={breadcrumbs}
+	image={page.image}
+	noindex={restricted}
+>
+	<PageHeader slot="page-header" title={page.title} description={page.description} />
+
+	<Fragment slot="sidebar">
+		{/* Pas de partage sur une page réservée : le lien ne mènerait qu'à la connexion. */}
+		{!restricted && <ShareTools title={page.title} class="mb-6" />}
+		{!denied && headings.length > 1 && <TableOfContents headings={headings} />}
+	</Fragment>
+
+	{denied ? (
+		<div class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-800" role="alert">
+			<p class="font-semibold">
+				<i class="fa-solid fa-lock mr-1.5" aria-hidden="true"></i>
+				Page réservée
+			</p>
+			{denied === 'login' ? (
+				<>
+					<p class="mt-1 font-light">Cette page est réservée aux bénévoles de l'association.</p>
+					<button type="button" data-auth-open class="mt-3 font-medium text-primary hover:underline">
+						Se connecter
+					</button>
+				</>
+			) : (
+				<p class="mt-1 font-light">
+					Votre compte ne donne pas accès à cette page. Si c'est une erreur, contactez un membre du bureau.
+				</p>
+			)}
+		</div>
+	) : (
+		<>
+			{page.image && (
+				<FigureImage
+					image={page.image}
+					alt={page.title}
+					caption={page.imageCredit}
+					loading="eager"
+					class="mb-8"
+				/>
+			)}
+
+			<div class="markdown-content font-light text-gray-700">
+				{Content && <Content />}
+			</div>
+		</>
+	)}
+
+	{/* La colonne de droite est masquée sous `lg` : on y replace le partage. */}
+	{!restricted && <ShareTools title={page.title} class="mt-12 lg:hidden" />}
+</ArticleLayout>

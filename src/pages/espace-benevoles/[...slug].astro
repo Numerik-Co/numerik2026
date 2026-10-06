@@ -1,0 +1,26 @@
+---
+/**
+ * Pages réservées : `src/content/pages/espace-benevoles/<...>/index.{md,mdx}`
+ * → `/espace-benevoles/<...>`. Rendues **à la demande** (Node requis) pour
+ * appliquer le contrôle d'accès : encart « Se connecter » (401, ouvre la
+ * modale ; la page se recharge après connexion) si personne n'est connecté,
+ * « Accès réservé » (403) si le groupe ne convient pas (frontmatter `access:`,
+ * défaut : toute personne connectée).
+ */
+import ContentPageView from '../../components/article/ContentPageView.astro';
+import { canAccess } from '../../lib/auth/access';
+import { getContentPages, RESERVED_FOLDER } from '../../lib/content-pages';
+
+export const prerender = false;
+
+const slug = `${RESERVED_FOLDER}/${Astro.params.slug ?? ''}`.replace(/\/+$/, '');
+const page = (await getContentPages()).find((entry) => entry.slug === slug);
+// Réponse 404 vide : Astro sert alors la page 404 (prérendue).
+if (!page) return new Response(null, { status: 404 });
+
+const user = Astro.locals.user;
+const denied = canAccess(user, page.access) ? null : user ? 'forbidden' : 'login';
+if (denied) Astro.response.status = denied === 'login' ? 401 : 403;
+---
+
+<ContentPageView page={page} denied={denied} />

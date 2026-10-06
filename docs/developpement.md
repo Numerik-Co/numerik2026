@@ -45,7 +45,7 @@ src/
 ├── lib/
 │   ├── news.ts                                       # lecture/tri/formatage des actualités (getAllNews)
 │   ├── activites.ts                                  # lecture/tri des activités (getAllActivities, getActivitiesByCategory)
-│   ├── content-pages.ts                              # découverte des pages de content/pages/ (getContentPages, getGroupMeta)
+│   ├── content-pages.ts                              # collections pages / pageGroups (getContentPages, renderPage, getGroups)
 │   ├── navigation.ts                                 # construction du menu au build (getNavTree)
 │   ├── reading-time.ts                               # estimation du temps de lecture (~200 mots/minute)
 │   └── categories.ts                                 # registre fixe des 4 catégories d'activités (label, icône)

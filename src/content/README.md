@@ -7,7 +7,7 @@ de toucher au code : créer une page = créer un fichier Markdown.
 
 | Dossier | Contenu |
 | --- | --- |
-| `pages/` | Pages « éditoriales » (présentation, statuts, mentions légales…), avec `cover.jpg` optionnel |
+| `pages/` | Pages « éditoriales » (présentation, statuts, mentions légales…), photo citée par `cover:` ; `pages/espace-benevoles/` = pages réservées |
 | `news/` | Articles d'actualité (un dossier par article ; photo citée par `cover: ./cover.jpg` dans le frontmatter) — voir `docs/actualites.md` |
 | `activites/` | Fiches d'activité |
 | `annonces.md` | Bandeau d'annonce affiché en haut du site |
@@ -46,17 +46,21 @@ Le reste de la navigation (Accueil, Activités, Actualités, Contact) et le bout
 
 ### Ajouter une image de couverture
 
-Placer un fichier `cover.jpg` (ou `.png`) à côté de `index.md` : il s'affiche
-automatiquement en haut de la page. Le frontmatter optionnel `imageCredit`
-affiche un crédit sous l'image (utile pour respecter la licence d'une photo
-libre de droit) :
+Placer la photo à côté de `index.md` et la citer dans le frontmatter avec
+`cover:` (chemin relatif au dossier) : elle s'affiche en haut de la page. Le
+champ optionnel `imageCredit` affiche un crédit sous l'image (utile pour
+respecter la licence d'une photo libre de droit) :
 
 ```md
 ---
 title: "Notre projet"
+cover: ./cover.jpg
 imageCredit: "Photo : Prénom Nom / Source (licence)"
 ---
 ```
+
+Si le fichier cité n'existe pas, le site refuse de se construire et indique
+la page en cause.
 
 ### Page accessible mais absente du menu
 
@@ -74,17 +78,29 @@ La page reste consultable via son URL (utile pour les liens de pied de page).
 
 ### Page réservée au bureau ou aux animateur·rice·s
 
-Ajouter `access:` dans le frontmatter : la page n'est visible qu'après
-connexion (lien « Espace bénévoles » en pied de page) et n'apparaît jamais
-dans le menu public. Les personnes autorisées la retrouvent dans « Pages
-réservées » de la barre d'administration.
+Ranger la page dans le dossier **`pages/espace-benevoles/`** : elle n'est
+visible qu'après connexion (lien « Espace bénévoles » en pied de page), son
+adresse commence par `/espace-benevoles/` et elle n'apparaît jamais dans le
+menu public. Les personnes autorisées la retrouvent dans « Pages réservées »
+de la barre d'administration.
+
+```
+src/content/pages/espace-benevoles/fiches-animateurs/index.md  ->  /espace-benevoles/fiches-animateurs
+```
+
+Par défaut, toute personne connectée y a accès. `access:` restreint à
+certains groupes :
 
 ```md
 ---
 title: "Fiches animateur·rice·s"
-access: animateur        # ou : true (toute personne connectée), admin, [animateur, admin]
+access: animateur        # ou : admin, redacteur, [animateur, admin]
 ---
 ```
+
+`access:` n'est accepté que dans ce dossier (ailleurs, la page serait publiée
+en clair : le site refuse alors de se construire). Ces pages demandent un
+serveur Node ; tout le reste du site est statique.
 
 Les comptes se gèrent dans le module « Comptes » de la barre d'administration (bureau uniquement).
 

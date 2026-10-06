@@ -80,12 +80,13 @@ menu:
 
 ### Page réservée (espace bénévoles)
 
-Frontmatter d'une page de contenu, cf. [auth.md](auth.md). Jamais dans le menu.
+`src/content/pages/espace-benevoles/<slug>/index.md` → `/espace-benevoles/<slug>`,
+cf. [auth.md](auth.md#réserver-une-page-de-contenu). Jamais dans le menu.
 
 ```markdown
 ---
 title: "Fiches animateur·rice·s"
-access: animateur          # true = toute personne connectée ; [animateur, admin]…
+access: animateur          # absent = toute personne connectée ; [animateur, admin]…
 ---
 ```
 

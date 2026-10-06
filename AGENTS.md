@@ -16,10 +16,14 @@ Ce projet est un template déployé pour plusieurs structures. Les pages
 
 Fonctionnement technique :
 
-- `src/pages/[...slug].astro` — route attrape-tout ; rend toute page
-  `src/content/pages/<...>/index.{md,mdx}`. Aucun wrapper `.astro` par page.
-- `src/lib/content-pages.ts` — découverte des pages via `import.meta.glob`
-  (build-time), lecture du frontmatter `menu:` et des fichiers `_group.md`.
+- `src/pages/[...slug].astro` — route attrape-tout **prérendue** ; rend toute
+  page publique `src/content/pages/<...>/index.{md,mdx}`. Aucun wrapper
+  `.astro` par page. Rendu partagé : `src/components/article/ContentPageView.astro`.
+- `src/pages/espace-benevoles/[...slug].astro` — pages réservées
+  (`src/content/pages/espace-benevoles/`), seules rendues à la demande.
+- `src/lib/content-pages.ts` — collections `pages` / `pageGroups`
+  (`getContentPages()`, `renderPage()`, `getGroups()`), frontmatter `menu:`
+  et fichiers `_group.md`.
 - `src/lib/navigation.ts` — `getNavTree()` fusionne `site.builtinNav` et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
@@ -29,11 +33,11 @@ Fonctionnement technique :
 - `src/components/layout/Header.astro` — consomme `getNavTree()` ; markup
   inchangé, structure `{ label, href, children }`.
 
-Le menu est calculé au `build`. Rendus à la demande (`prerender = false`) :
-les pages de contenu (`[...slug].astro`, pour appliquer `access:`, voir
-« Espace bénévoles ») et tout ce qui affiche des actualités (accueil,
-`/actualites`, `/actualites/<slug>`, `rss.xml`), qui inclut celles publiées
-depuis l'admin ; les autres pages statiques restent prérendues.
+Le menu est calculé au `build` (`getNavTree()` est async). Tout le contenu est
+**prérendu** : `npm run build` produit le site complet. Seules exceptions,
+qui exigent Node : les pages réservées (`/espace-benevoles/*`), les routes
+`/api/*` et les pages applicatives dynamiques (`/activites`, formulaires
+Grist…).
 
 ### Formulaires
 
@@ -74,10 +78,12 @@ sous `/api/admin/`).
   module Actualités, qui écrira dans `src/content/news/` puis relancera le
   build).
 - Modules : Pages réservées, Comptes, Mon mot de passe.
-- Page de contenu réservée : `access: true | <groupe> | [groupes]` dans le
-  frontmatter (`parseAccess`/`canAccess`, `src/lib/auth/access.ts`) ;
-  jamais dans le menu, 401 + bouton « Se connecter » sans session, 403 si
-  mauvais groupe, groupe inconnu = build en échec.
+- Page de contenu réservée : rangée dans `src/content/pages/espace-benevoles/`
+  (défaut : toute personne connectée ; `access: <groupe> | [groupes]` pour
+  restreindre — `parseAccess`/`canAccess`, `src/lib/auth/access.ts`) ;
+  jamais dans le menu ni dans `dist/client`, 401 + bouton « Se connecter »
+  sans session, 403 si mauvais groupe ; groupe inconnu ou `access:` hors de
+  ce dossier = build en échec.
 - Premier admin : `npm run auth:user -- add <login> "<Nom>" admin` en local ;
   sur le VPS `./auth-user.sh add …` (exécute `dist/cli/auth-user.mjs`,
   compilé par `build:cli`, dans le conteneur avec `DOCKER_CONFIG`).
@@ -101,8 +107,12 @@ contenu hors de `src/content/`.**
   dossier, `cover: ./cover.jpg` validé par `image()`. `src/lib/news.ts` :
   `getAllNews()` (async, `getCollection`), `renderNews()` (`render()`).
   Pages prérendues. Détail : [docs/actualites.md](docs/actualites.md).
-- À migrer sur le même modèle : pages (`content-pages.ts`, encore en
-  `import.meta.glob`), activités (`activites.ts`), annonces (`annonces.ts`).
+- `pages` + `pageGroups` — `src/content/pages/<chemin>/index.{md,mdx}`
+  (id = chemin = URL) et `_group.md` ; `cover:` via `image()`, `access:`
+  validé par `parseAccess`. `src/lib/content-pages.ts`. Détail :
+  [docs/pages.md](docs/pages.md).
+- À migrer sur le même modèle : activités (`activites.ts`), annonces
+  (`annonces.ts`).
 
 ## Composants réutilisables
 

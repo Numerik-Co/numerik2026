@@ -76,11 +76,24 @@ Deux mécanismes coexistent :
 
 ### Comment ça marche
 
-`src/lib/content-pages.ts` scanne `src/content/pages/**/index.{md,mdx}` avec
-`import.meta.glob` (au build), en déduit le `slug` (= chemin relatif sans
-`/index.md`) et lit le frontmatter. `src/pages/[...slug].astro` génère une route
-par page via `getStaticPaths()` et la rend avec `ArticleLayout`. Les fichiers
-`_group.md` ne produisent pas de route (uniquement des métadonnées de menu).
+Les pages forment la **content collection** `pages` (`src/content.config.ts`,
+[doc Astro](https://docs.astro.build/en/guides/content-collections/)) : loader
+`glob` sur `src/content/pages/**/index.{md,mdx}`, identifiant = chemin du
+dossier (= l'URL), schéma validé au build (`title`, `description`, `menu`,
+`cover` via `image()`, `imageCredit`, `access`). Les `_group.md` forment la
+collection `pageGroups` (libellé et ordre des menus déroulants) et ne
+produisent pas de route.
+
+`src/lib/content-pages.ts` expose `getContentPages()` (async,
+`getCollection`), `renderPage()` (`render()`) et `getGroups()` /
+`groupMetaOf()`. Le rendu est partagé par `src/components/article/ContentPageView.astro` :
+
+- `src/pages/[...slug].astro` — pages **publiques**, **prérendues** (une page
+  HTML par page via `getStaticPaths()`) ;
+- `src/pages/espace-benevoles/[...slug].astro` — pages **réservées**
+  (`src/content/pages/espace-benevoles/`), rendues **à la demande** avec
+  contrôle d'accès ([auth.md](auth.md#réserver-une-page-de-contenu)). Leur
+  contenu n'est jamais écrit dans le `dist/` statique.
 
 ## Renommer une page de contenu
 

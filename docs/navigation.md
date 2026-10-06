@@ -63,7 +63,7 @@ src/content/pages/
 
 ⚠️ Un libellé de dropdown n'ayant pas de page « hub » propre, tout fil d'Ariane
 qui le mentionne doit omettre son `href` — c'est ce que fait automatiquement
-`src/pages/[...slug].astro` (`{ label: getGroupLabel(folder) }` sans `href`).
+`src/components/article/ContentPageView.astro` (`{ label: groupMetaOf(groups, folder).label }` sans `href`).
 `Breadcrumb.astro` affiche alors ce libellé en texte simple.
 
 ## Fil d'Ariane
