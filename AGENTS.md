@@ -77,7 +77,9 @@ sous `/api/admin/`).
 - `astro.config.mjs` `security.allowedDomains` : indispensable derrière le
   proxy HTTPS.
 
-Détail : [docs/auth.md](docs/auth.md).
+Détail : [docs/auth.md](docs/auth.md) ; guide déploiement + utilisation
+(à tenir à jour avec chaque nouveau module) :
+[docs/guide-espace-benevoles.md](docs/guide-espace-benevoles.md).
 
 ## Composants réutilisables
 

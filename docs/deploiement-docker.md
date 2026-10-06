@@ -9,6 +9,7 @@ change rien — il empaquette juste ce build.
 | Élément | Où il vit | Ajout / modif = rebuild de l'image ? |
 | :--- | :--- | :--- |
 | **Adhésions, inscriptions, contacts** (formulaire) | **Grist** (via les routes `/api/adhesion/*`) | ❌ **Non.** C'est live, indépendant de l'image. |
+| **Comptes de l'espace bénévoles** | `data/accounts/` sur le VPS (volume) | ❌ Non — gérés depuis le site |
 | Autres données saisies via un futur formulaire | Grist / service externe | ❌ Non |
 | **Actualités** (`src/contents/news/…`) | fichiers Markdown compilés au build | ✅ **Oui** |
 | **Activités** (`src/contents/activites/…`) | idem | ✅ Oui |
@@ -52,8 +53,9 @@ plus bas, très simple.
   `localhost` **dans** le conteneur et n'est pas joignable.
 - **Port sur `127.0.0.1`** : le conteneur n'est pas exposé directement à
   Internet. Un reverse proxy (nginx/Traefik) fait le domaine + HTTPS (§5).
-- **Aucun volume** : l'application n'écrit rien sur le disque (tout va dans
-  Grist), donc pas de donnée à persister entre deux conteneurs.
+- **Un seul volume, `./data`** : les comptes de l'espace bénévoles (un
+  fichier YAML par compte). Tout le reste va dans Grist. À sauvegarder ;
+  mise en service : [guide-espace-benevoles.md](guide-espace-benevoles.md).
 
 ### Le `.env` : jamais dans l'image
 
@@ -153,6 +155,7 @@ server {
         proxy_set_header X-Real-IP         $remote_addr;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host  $host;
     }
 }
 ```

@@ -9,6 +9,9 @@ dans le frontmatter des pages à réserver.
 fois connecté·e, une **barre fixe en haut** donne accès aux **modules**, qui
 s'ouvrent en **panneau latéral** au-dessus de la page en cours.
 
+Mise en service et mode d'emploi pour les bénévoles :
+[guide-espace-benevoles.md](guide-espace-benevoles.md).
+
 ## En bref
 
 | Grav | Ici |
