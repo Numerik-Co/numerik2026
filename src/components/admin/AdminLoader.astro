@@ -1,0 +1,38 @@
+---
+/**
+ * Chargeur de l'espace bénévoles, inclus par `Layout.astro` et
+ * `ArticleLayout.astro`. Quelques lignes de JS seulement : l'îlot Vue
+ * (`mount.ts` → `AdminRoot.vue`) n'est téléchargé que
+ *  - si le cookie indicateur `numerik_connecte` est présent (session ouverte),
+ *  - ou au clic sur un élément `[data-auth-open]` (lien du pied de page,
+ *    encart des pages réservées), ou sur une URL `#connexion`.
+ * Un simple visiteur ne charge donc ni Vue ni l'administration.
+ */
+---
+
+<script>
+	let mounted: Promise<void> | null = null;
+
+	function load(open: boolean) {
+		if (!mounted) {
+			mounted = import('./mount').then((m) => m.mountAdmin(open));
+		} else if (open) {
+			mounted.then(() => window.dispatchEvent(new Event('numerik:auth-open')));
+		}
+	}
+
+	if (document.cookie.split('; ').includes('numerik_connecte=1')) {
+		// Réserve la place de la barre tout de suite (évite un saut de mise en page).
+		document.documentElement.classList.add('has-admin-bar');
+		load(false);
+	}
+
+	document.addEventListener('click', (event) => {
+		const trigger = (event.target as Element | null)?.closest('[data-auth-open]');
+		if (!trigger) return;
+		event.preventDefault();
+		load(true);
+	});
+
+	if (window.location.hash === '#connexion') load(true);
+</script>

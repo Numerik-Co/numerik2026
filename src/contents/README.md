@@ -72,6 +72,22 @@ menu:
 
 La page reste consultable via son URL (utile pour les liens de pied de page).
 
+### Page réservée au bureau ou aux animateur·rice·s
+
+Ajouter `access:` dans le frontmatter : la page n'est visible qu'après
+connexion (lien « Espace bénévoles » en pied de page) et n'apparaît jamais
+dans le menu public. Les personnes autorisées la retrouvent dans « Pages
+réservées » de la barre d'administration.
+
+```md
+---
+title: "Fiches animateur·rice·s"
+access: animateur        # ou : true (toute personne connectée), admin, [animateur, admin]
+---
+```
+
+Les comptes se gèrent dans le module « Comptes » de la barre d'administration (bureau uniquement).
+
 ---
 
 ## Créer un menu déroulant (sous-menu)

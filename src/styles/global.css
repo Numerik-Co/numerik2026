@@ -110,3 +110,12 @@ h6 {
 	padding-left: 1.5rem;
 	list-style: disc;
 }
+
+/* Barre de l'espace bénévoles (src/components/admin/AdminRoot.vue) : fixe en
+   haut, elle décale la page et le header collant (top: var(--admin-bar-h)). */
+html.has-admin-bar {
+	--admin-bar-h: 2.5rem;
+}
+html.has-admin-bar body {
+	padding-top: var(--admin-bar-h);
+}

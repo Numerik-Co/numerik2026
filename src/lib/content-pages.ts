@@ -1,4 +1,5 @@
 import type { Heading } from './headings';
+import { parseAccess, type PageAccess } from './auth/access';
 
 /**
  * Découverte automatique des pages de contenu.
@@ -36,6 +37,11 @@ export interface ContentPage {
 	/** Image de couverture, si un fichier `cover.*` existe dans le dossier de la page. */
 	image?: any;
 	imageCredit?: string;
+	/**
+	 * Restriction d'accès (frontmatter `access:`, cf. `src/lib/auth/access.ts`) ;
+	 * `null` = page publique. Une page restreinte n'apparaît jamais dans le menu.
+	 */
+	access: PageAccess;
 	headings: Heading[];
 	Content: any;
 }
@@ -114,6 +120,14 @@ export function getGroupLabel(folder: string): string {
 	return getGroupMeta(folder).label;
 }
 
+function parseAccessOf(slug: string, value: unknown): PageAccess {
+	try {
+		return parseAccess(value);
+	} catch (err) {
+		throw new Error(`Page "${slug}" : ${(err as Error).message}`);
+	}
+}
+
 let cache: ContentPage[] | null = null;
 
 /** Toutes les pages de contenu, triées par slug. Résultat mémoïsé. */
@@ -146,6 +160,7 @@ export function getContentPages(): ContentPage[] {
 				menu,
 				image: imagePath ? pageImages[imagePath] : undefined,
 				imageCredit: mod.frontmatter.imageCredit,
+				access: parseAccessOf(slug, mod.frontmatter.access),
 				headings: mod.getHeadings(),
 				Content: mod.Content,
 			} satisfies ContentPage;

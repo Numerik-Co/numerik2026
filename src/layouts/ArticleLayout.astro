@@ -1,6 +1,7 @@
 ---
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
+import AdminLoader from '../components/admin/AdminLoader.astro';
 import Breadcrumb from '../components/layout/Breadcrumb.astro';
 import Article from '../components/article/Article.astro';
 import { getImage } from 'astro:assets';
@@ -15,6 +16,8 @@ interface Props {
 	image?: any;
 	/** `og:type` : `article` pour une actualité, `website` sinon. */
 	ogType?: 'article' | 'website';
+	/** Page réservée (espace connecté) : exclue des moteurs de recherche. */
+	noindex?: boolean;
 }
 
 const {
@@ -23,6 +26,7 @@ const {
 	breadcrumbs,
 	image,
 	ogType = 'website',
+	noindex = false,
 } = Astro.props;
 
 // Balises Open Graph : Facebook en tire le titre, le résumé et l'image
@@ -55,6 +59,7 @@ const ogImage = og ? new URL(og.src, canonicalUrl).href : undefined;
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<title>{title}</title>
+		{noindex && <meta name="robots" content="noindex, nofollow" />}
 		<link rel="canonical" href={canonicalUrl} />
 		<meta property="og:site_name" content={association.name} />
 		<meta property="og:locale" content="fr_FR" />
@@ -83,5 +88,6 @@ const ogImage = og ? new URL(og.src, canonicalUrl).href : undefined;
 			</Article>
 		</main>
 		<Footer />
+		<AdminLoader />
 	</body>
 </html>

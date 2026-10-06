@@ -2,6 +2,7 @@
 import AnnonceBanner from '../components/layout/AnnonceBanner.astro';
 import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
+import AdminLoader from '../components/admin/AdminLoader.astro';
 import Breadcrumb from '../components/layout/Breadcrumb.astro';
 import '../styles/global.css';
 import { association } from '../lib/association';
@@ -10,12 +11,15 @@ interface Props {
 	title?: string;
 	description?: string;
 	breadcrumbs?: { label: string; href?: string }[];
+	/** Page réservée (espace connecté) : exclue des moteurs de recherche. */
+	noindex?: boolean;
 }
 
 const {
 	title = association.name,
 	description = association.description,
 	breadcrumbs,
+	noindex = false,
 } = Astro.props;
 ---
 
@@ -29,6 +33,7 @@ const {
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<title>{title}</title>
+		{noindex && <meta name="robots" content="noindex, nofollow" />}
 	</head>
 	<body class="flex min-h-screen flex-col bg-white">
 		<AnnonceBanner />
@@ -39,5 +44,6 @@ const {
 			<slot />
 		</main>
 		<Footer />
+		<AdminLoader />
 	</body>
 </html>

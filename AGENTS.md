@@ -29,7 +29,10 @@ Fonctionnement technique :
 - `src/components/layout/Header.astro` — consomme `getNavTree()` ; markup
   inchangé, structure `{ label, href, children }`.
 
-Tout est statique (`output: 'static'`) : le menu est calculé au `build`.
+Le menu est calculé au `build`. Les pages de contenu sont rendues à la
+demande (`[...slug].astro`, `prerender = false`) pour appliquer `access:`
+(pages réservées, voir « Espace bénévoles ») ; les autres pages statiques
+restent prérendues.
 
 ### Formulaires
 
@@ -44,6 +47,37 @@ Tout est statique (`output: 'static'`) : le menu est calculé au `build`.
 - Câblé sur `src/pages/adherer/formulaire.astro` (`adhesion`) et
   `src/pages/contact.astro` (`contact`). Nouveau formulaire : ajouter une clé
   dans `site.forms` puis l'entourer d'un `<FormGate>`.
+
+## Espace bénévoles (authentification à plat)
+
+Connexion du bureau et des animateur·rice·s **sans base de données**, façon
+Grav : un YAML par compte dans `data/accounts/<login>.yaml`
+(`AUTH_DATA_DIR`, volume Docker `./data`), cookie de session signé HMAC
+(`AUTH_SECRET`), groupes `admin` / `animateur` (`src/lib/auth/groups.ts`).
+
+**Pas de pages d'administration** : tout se superpose au site. Lien
+« Espace bénévoles » du pied de page (`[data-auth-open]`) → modale de
+connexion ; connecté·e → barre fixe en haut + **modules en panneau
+latéral**. Toute nouvelle fonction d'admin = un module (registre
+`src/components/admin/modules.ts`, composant dans `modules/`, routes JSON
+sous `/api/admin/`).
+
+- `src/components/admin/AdminLoader.astro` (dans les deux layouts) ne
+  charge l'îlot Vue (`mount.ts` → `AdminRoot.vue`) que si le cookie
+  indicateur `numerik_connecte` existe ou au clic : rien pour un visiteur.
+- `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
+  `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
+  connexion, `/api/admin/comptes*` le groupe `admin`.
+- Page de contenu réservée : `access: true | <groupe> | [groupes]` dans le
+  frontmatter (`parseAccess`/`canAccess`, `src/lib/auth/access.ts`) ;
+  jamais dans le menu, 401 + bouton « Se connecter » sans session, 403 si
+  mauvais groupe, groupe inconnu = build en échec.
+- Premier admin : `npm run auth:user -- add <login> "<Nom>" admin` (Docker :
+  `node dist/cli/auth-user.mjs …`, compilé par `build:cli`).
+- `astro.config.mjs` `security.allowedDomains` : indispensable derrière le
+  proxy HTTPS.
+
+Détail : [docs/auth.md](docs/auth.md).
 
 ## Composants réutilisables
 
