@@ -2,10 +2,11 @@
 
 Tout le contenu du site vit dans les sources (`src/content/`, collections
 Astro) et le site publié est **toujours** le produit d'un `npm run build`
-complet. Publier une actualité depuis la barre d'administration revient donc
-à faire, sur le serveur, ce qu'un·e développeur·se ferait à la main :
+complet. Publier (ou supprimer) une actualité depuis la barre d'administration revient
+donc à faire, sur le serveur, ce qu'un·e développeur·se ferait à la main :
 
-1. écrire `src/content/news/<AAAA-MM-JJ-slug>/` (`index.md` + `cover.jpg`) ;
+1. écrire `src/content/news/<AAAA-MM-JJ-slug>/` (`index.md` + `cover.jpg`) — ou,
+   pour une suppression, mettre ce dossier de côté (`.tmp-publication/`) ;
 2. reconstruire le site dans un dossier neuf, `.releases/<horodatage>/` — le
    site en ligne n'est pas touché pendant ce temps (≈ 10 s à 1 min) ;
 3. faire pointer `dist` sur cette nouvelle version (bascule atomique) ;
@@ -13,8 +14,8 @@ complet. Publier une actualité depuis la barre d'administration revient donc
 5. arrêter le process Node : son **gestionnaire** le relance aussitôt sur la
    nouvelle version (≈ 1 s d'interruption).
 
-Si la reconstruction échoue, le dossier de l'actualité est retiré, `dist`
-n'est pas modifié, le site reste en ligne tel quel, et le module affiche
+Si la reconstruction échoue, la modification est défaite (dossier ajouté
+retiré, ou dossier supprimé remis en place), `dist` n'est pas modifié, le site reste en ligne tel quel, et le module affiche
 l'erreur (journal complet : `<DATA_DIR>/publication/build.log`).
 
 Une seule publication à la fois. En développement (`astro dev`), rien n'est
@@ -121,7 +122,7 @@ que les deux dernières versions.
 ## Fichiers
 
 - `src/lib/site-build.ts` — reconstruction, bascule, redémarrage, état (`readStatus()`, `publish()`, `canPublish()`)
-- `src/lib/news-writer.ts` — validation et écriture d'une actualité
-- `src/pages/api/admin/actualites/index.ts`, `src/pages/api/admin/publication.ts`
+- `src/lib/news-writer.ts` — validation et écriture d'une actualité, mise de côté pour suppression (`setAsideNews`)
+- `src/pages/api/admin/actualites/index.ts` (liste, ajout), `src/pages/api/admin/actualites/[slug].ts` (suppression), `src/pages/api/admin/publication.ts` (état)
 - `src/components/admin/modules/NewsModule.vue`
 - `astro.config.mjs` — `outDir` piloté par `ASTRO_OUT_DIR` (utilisé par la publication)

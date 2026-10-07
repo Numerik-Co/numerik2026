@@ -188,8 +188,31 @@ export async function writeNews(markdown: string, cover?: Buffer): Promise<{ slu
 	}
 }
 
+const NEWS_SLUG = /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/;
+
 /** Retire le dossier d'une actualité (annulation si la publication échoue). */
 export async function removeNews(slug: string): Promise<void> {
-	if (!/^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/.test(slug)) return;
+	if (!NEWS_SLUG.test(slug)) return;
 	await rm(join(newsSourceDir(), slug), { recursive: true, force: true });
+}
+
+/**
+ * Suppression en deux temps : le dossier de l'actualité est d'abord mis de
+ * côté (hors de src/content, même disque), puis effacé (`purge`) une fois le
+ * site reconstruit, ou remis en place (`restore`) si la reconstruction échoue.
+ * `null` si l'actualité n'existe pas.
+ */
+export async function setAsideNews(
+	slug: string,
+): Promise<{ purge: () => Promise<void>; restore: () => Promise<void> } | null> {
+	if (!NEWS_SLUG.test(slug)) return null;
+	const source = join(newsSourceDir(), slug);
+	if (!(await stat(source).then((s) => s.isDirectory(), () => false))) return null;
+	const aside = join(siteRoot(), '.tmp-publication', `suppression-${slug}-${Date.now()}`);
+	await mkdir(join(siteRoot(), '.tmp-publication'), { recursive: true });
+	await rename(source, aside);
+	return {
+		purge: () => rm(aside, { recursive: true, force: true }),
+		restore: () => rename(aside, source),
+	};
 }

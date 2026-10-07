@@ -14,11 +14,27 @@ import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { json, jsonError, readJson } from '../../../../lib/auth/api';
 import { COVER_MAX_BYTES, MARKDOWN_MAX_BYTES, removeNews, writeNews } from '../../../../lib/news-writer';
-import { canPublish, isPublishing, publish, readStatus } from '../../../../lib/site-build';
+import { canPublish, isPublishing, publish, readStatus, type BuildStatus } from '../../../../lib/site-build';
 
 export const prerender = false;
 
 const COVER_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+/** Au-delà, le résultat de la dernière publication n'est plus rappelé dans le module. */
+const STATUS_RECALL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * État à afficher dans le module : une publication en cours toujours ; un
+ * résultat seulement s'il est récent, et — s'il a réussi — si l'actualité
+ * publiée existe encore (elle a pu être supprimée depuis).
+ */
+function statusToShow(status: BuildStatus, hrefs: Set<string>): BuildStatus {
+	if (status.state === 'idle' || status.state === 'running') return status;
+	const finished = status.finishedAt ? Date.parse(status.finishedAt) : 0;
+	if (Date.now() - finished > STATUS_RECALL_MS) return { state: 'idle' };
+	if (status.state === 'succeeded' && status.href && !hrefs.has(status.href)) return { state: 'idle' };
+	return status;
+}
 
 export const GET: APIRoute = async () => {
 	const entries = await getCollection('news');
@@ -34,7 +50,8 @@ export const GET: APIRoute = async () => {
 		})),
 	);
 	news.sort((a, b) => b.publishAt.localeCompare(a.publishAt) || a.slug.localeCompare(b.slug));
-	return json({ news, status: await readStatus(), availability: await canPublish() });
+	const status = statusToShow(await readStatus(), new Set(news.map((n) => n.href)));
+	return json({ news, status, availability: await canPublish() });
 };
 
 export const POST: APIRoute = async ({ request }) => {

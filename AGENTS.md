@@ -101,7 +101,9 @@ relance `npm run build` sur le serveur dans `.releases/<horodatage>`
 (`ASTRO_OUT_DIR` → `outDir`), fait pointer `dist` dessus, lance
 `PUBLISH_HOOK` éventuel et **arrête le process** pour que son gestionnaire
 (Docker, PM2, systemd) le relance. Build en échec = contenu retiré, site
-intact. Prérequis : sources + `node_modules` complet + gestionnaire de
+intact. Suppression (`DELETE /api/admin/actualites/<slug>`) : dossier mis de
+côté (`setAsideNews`), effacé après reconstruction réussie (`onSuccess`),
+remis en place sinon (`onFailure`). Prérequis : sources + `node_modules` complet + gestionnaire de
 process. Docker : l'image embarque tout le projet, `./src/content` monté
 depuis le VPS. Détail : [docs/publication.md](docs/publication.md).
 - Page de contenu réservée : rangée dans `src/content/pages/espace-benevoles/`

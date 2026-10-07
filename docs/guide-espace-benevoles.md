@@ -230,9 +230,18 @@ quel.
 
 > Le titre et la date forment l'adresse de la page
 > (`/actualites/2026-10-15-atelier-retouche-photo`) : deux actualités ne
-> peuvent pas avoir la même date et le même titre. Corriger ou retirer une
-> actualité se fait pour l'instant dans `src/content/news/` (édition depuis
-> le module : prochaine étape).
+> peuvent pas avoir la même date et le même titre.
+
+**Supprimer une actualité** : icône 🗑 au bout de sa ligne, puis
+**Supprimer** dans l'encadré rouge qui apparaît (ou **Annuler**). Le site est
+reconstruit comme pour un ajout ; l'actualité disparaît de la page
+Actualités, de l'accueil et du flux RSS. Si la reconstruction échoue, rien
+n'est supprimé. Pour **corriger** une actualité : la supprimer puis la
+redéposer corrigée (l'édition directe depuis le module viendra plus tard).
+
+> Supprimer à la main le dossier dans `src/content/news/` ne retire
+> l'actualité du site qu'à la prochaine reconstruction : passez par le
+> module.
 
 Côté serveur, la publication a des prérequis (sources du site, gestionnaire
 de process) : voir [publication.md](publication.md).

@@ -102,4 +102,6 @@ export const newsApi = {
 	create: (markdown: string, cover: { type: string; data: string } | null) =>
 		request<{ slug: string; href: string }>('POST', '/api/admin/actualites', { markdown, cover: cover ?? undefined }),
 	status: () => request<PublishStatus>('GET', '/api/admin/publication'),
+	remove: (slug: string) =>
+		request<{ ok: true }>('DELETE', `/api/admin/actualites/${encodeURIComponent(slug)}`, { confirm: slug }),
 };

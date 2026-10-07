@@ -12,7 +12,8 @@
  *  4. arrêt du process : le gestionnaire (Docker `restart`, PM2, systemd)
  *     le relance sur la nouvelle version (~1 s d'interruption).
  * En cas d'échec du build, `onFailure` défait la modification de contenu et
- * le site reste tel quel.
+ * le site reste tel quel ; en cas de succès, `onSuccess` la rend définitive
+ * (ex. effacer le dossier d'une actualité supprimée, gardé de côté jusque-là).
  *
  * En développement (`astro dev`), rien à construire : le contenu est relu à chaud.
  * Une seule publication à la fois ; l'état est gardé dans
@@ -143,6 +144,8 @@ export interface PublishRequest {
 	href?: string;
 	/** Annule la modification de contenu si la reconstruction échoue. */
 	onFailure?: () => Promise<void>;
+	/** Rend la modification définitive une fois le site reconstruit (avant le redémarrage). */
+	onSuccess?: () => Promise<void>;
 }
 
 /**
@@ -154,6 +157,7 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 	const startedAt = new Date().toISOString();
 
 	if (import.meta.env.DEV) {
+		await request.onSuccess?.().catch(() => {});
 		await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: startedAt, message: 'Mode développement : contenu relu à chaud, aucun build.' });
 		return { started: true };
 	}
@@ -167,6 +171,7 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 		try {
 			await run('npm', ['run', '-s', 'build'], { ASTRO_OUT_DIR: outDir }, log);
 			await swapDist(release);
+			await request.onSuccess?.().catch(() => {});
 			let message: string | undefined;
 			if (PUBLISH_HOOK) {
 				try {

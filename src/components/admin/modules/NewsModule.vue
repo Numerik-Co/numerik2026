@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /**
  * Module « Actualités » (groupes `redacteur` / `admin`) : liste des
- * actualités (brouillons compris) et ajout par dépôt d'un fichier `.md`
- * (frontmatter habituel, cf. docs/actualites.md) et d'une photo de couverture.
+ * actualités (brouillons compris), ajout par dépôt d'un fichier `.md`
+ * (frontmatter habituel, cf. docs/actualites.md) et d'une photo de
+ * couverture, suppression (confirmée dans la ligne, sans boîte de dialogue).
  *
  * Le serveur écrit `src/content/news/<AAAA-MM-JJ-slug>/` puis reconstruit le
  * site (≈ 1 min, cf. src/lib/site-build.ts) : le module suit la publication
@@ -30,6 +31,8 @@ const mdText = ref('');
 const photo = ref<File | null>(null);
 const photoUrl = ref('');
 const busy = ref(false);
+/** Actualité dont la suppression attend confirmation (slug). */
+const confirmingDelete = ref<string | null>(null);
 const dragOver = ref<'md' | 'photo' | null>(null);
 
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -210,6 +213,21 @@ Du texte en **gras** ou en *italique*, et un [lien](https://exemple.org).
 	URL.revokeObjectURL(url);
 }
 
+async function remove(item: NewsItem) {
+	error.value = '';
+	busy.value = true;
+	try {
+		await newsApi.remove(item.slug);
+		confirmingDelete.value = null;
+		status.value = { state: 'running', label: `Suppression : ${item.title}` };
+		follow();
+	} catch (e) {
+		fail(e);
+	} finally {
+		busy.value = false;
+	}
+}
+
 function openAdd() {
 	error.value = '';
 	reset();
@@ -238,12 +256,13 @@ onMounted(load);
 		</span>
 	</div>
 	<div
-		v-else-if="status.state === 'succeeded' && status.href"
+		v-else-if="status.state === 'succeeded'"
 		class="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
 		role="status"
 	>
 		Dernière publication en ligne :
-		<a :href="status.href" class="font-medium underline">{{ status.label }}</a>
+		<a v-if="status.href" :href="status.href" class="font-medium underline">{{ status.label }}</a>
+		<span v-else class="font-medium">{{ status.label }}</span>
 		<span v-if="status.message" class="mt-1 block text-amber-800">{{ status.message }}</span>
 	</div>
 	<p v-else-if="status.state === 'failed'" class="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700" role="alert">
@@ -276,22 +295,52 @@ onMounted(load);
 		<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 		<p v-else-if="news.length === 0" class="text-sm font-light text-gray-500">Aucune actualité pour l'instant.</p>
 		<ul v-else class="divide-y divide-gray-100 rounded-xl border border-gray-100">
-			<li v-for="a in news" :key="a.slug" class="flex items-center gap-3 px-4 py-3">
-				<span class="h-10 w-16 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-primary/10 to-secondary/10">
-					<img v-if="a.thumbnail" :src="a.thumbnail" alt="" class="h-full w-full object-cover" loading="lazy" />
-				</span>
-				<span class="min-w-0 flex-1">
-					<a
-						v-if="a.isPublish"
-						:href="a.href"
-						class="block truncate text-sm font-medium text-gray-900 hover:text-primary"
-					>{{ a.title }}</a>
-					<span v-else class="block truncate text-sm font-medium text-gray-500">{{ a.title }}</span>
-					<span class="block truncate text-xs font-light text-gray-500">
-						{{ formatDate(a.publishAt) }}<template v-if="a.tag"> · {{ a.tag }}</template>
+			<li v-for="a in news" :key="a.slug" class="px-4 py-3">
+				<div class="flex items-center gap-3">
+					<span class="h-10 w-16 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-primary/10 to-secondary/10">
+						<img v-if="a.thumbnail" :src="a.thumbnail" alt="" class="h-full w-full object-cover" loading="lazy" />
 					</span>
-				</span>
-				<span v-if="!a.isPublish" class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Brouillon</span>
+					<span class="min-w-0 flex-1">
+						<a
+							v-if="a.isPublish"
+							:href="a.href"
+							class="block truncate text-sm font-medium text-gray-900 hover:text-primary"
+						>{{ a.title }}</a>
+						<span v-else class="block truncate text-sm font-medium text-gray-500">{{ a.title }}</span>
+						<span class="block truncate text-xs font-light text-gray-500">
+							{{ formatDate(a.publishAt) }}<template v-if="a.tag"> · {{ a.tag }}</template>
+						</span>
+					</span>
+					<span v-if="!a.isPublish" class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Brouillon</span>
+					<button
+						type="button"
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+						:disabled="!availability.ok || following || busy"
+						:aria-label="`Supprimer « ${a.title} »`"
+						:title="`Supprimer « ${a.title} »`"
+						@click="confirmingDelete = confirmingDelete === a.slug ? null : a.slug"
+					>
+						<i class="fa-solid fa-trash-can text-sm" aria-hidden="true"></i>
+					</button>
+				</div>
+				<div
+					v-if="confirmingDelete === a.slug"
+					class="mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800"
+					role="alert"
+				>
+					<span class="min-w-0 flex-1">Supprimer définitivement cette actualité ? Le site sera reconstruit.</span>
+					<button
+						type="button"
+						:disabled="busy"
+						class="rounded-full bg-red-600 px-4 py-1.5 font-heading text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+						@click="remove(a)"
+					>
+						Supprimer
+					</button>
+					<button type="button" class="px-2 py-1.5 text-xs font-medium text-gray-600 hover:underline" @click="confirmingDelete = null">
+						Annuler
+					</button>
+				</div>
 			</li>
 		</ul>
 	</template>
