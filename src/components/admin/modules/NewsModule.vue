@@ -3,7 +3,8 @@
  * Module « Actualités » (groupes `redacteur` / `admin`) : liste des
  * actualités (brouillons compris), ajout par dépôt d'un fichier `.md`
  * (frontmatter habituel, cf. docs/actualites.md) et d'une photo de
- * couverture, suppression (confirmée dans la ligne, sans boîte de dialogue).
+ * couverture, édition dans un formulaire (le dossier, donc l'URL, ne change
+ * pas), suppression (confirmée dans la ligne, sans boîte de dialogue).
  *
  * Le serveur écrit `src/content/news/<AAAA-MM-JJ-slug>/` puis reconstruit le
  * site (≈ 1 min, cf. src/lib/site-build.ts) : le module suit la publication
@@ -11,13 +12,13 @@
  * bref redémarrage du serveur. L'aperçu du frontmatter est indicatif ; le
  * serveur fait la vraie validation.
  */
-import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue';
-import { ApiError, newsApi, type NewsItem, type PublishStatus } from '../client';
-import { ADMIN_CONTEXT } from '../context';
+import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem, type PublishStatus } from '../client';
+import { ADMIN_CONTEXT, inputClass } from '../context';
 
-const { sessionExpired } = inject(ADMIN_CONTEXT)!;
+const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
-const view = ref<'list' | 'add'>('list');
+const view = ref<'list' | 'add' | 'edit'>('list');
 const news = ref<NewsItem[]>([]);
 const loading = ref(true);
 const error = ref('');
@@ -87,7 +88,17 @@ function follow() {
 	pollTimer = setTimeout(tick, POLL_MS);
 }
 
-onBeforeUnmount(() => clearTimeout(pollTimer));
+// ✕ / Échap depuis un formulaire : retour à la liste plutôt que fermeture du panneau.
+const stopCloseRequest = onCloseRequest(() => {
+	if (view.value === 'list') return false;
+	backToList();
+	return true;
+});
+
+onBeforeUnmount(() => {
+	clearTimeout(pollTimer);
+	stopCloseRequest();
+});
 
 // --- Dépôt ---
 
@@ -228,6 +239,85 @@ async function remove(item: NewsItem) {
 	}
 }
 
+// --- Édition ---
+
+/** Actualité en cours d'édition (slug = dossier, inchangé). */
+const editing = ref<{ slug: string; coverUrl: string | null; hasCover: boolean } | null>(null);
+const editForm = reactive<NewsFields & { body: string }>({
+	title: '',
+	publishAt: '',
+	excerpt: '',
+	isPublish: true,
+	tag: '',
+	author: '',
+	imageCredit: '',
+	body: '',
+});
+const coverAction = ref<'keep' | 'replace' | 'remove'>('keep');
+
+async function openEdit(item: NewsItem) {
+	error.value = '';
+	confirmingDelete.value = null;
+	busy.value = true;
+	try {
+		const source = await newsApi.get(item.slug);
+		Object.assign(editForm, {
+			title: source.title,
+			publishAt: source.publishAt,
+			excerpt: source.excerpt,
+			isPublish: source.isPublish,
+			tag: source.tag,
+			author: source.author,
+			imageCredit: source.imageCredit,
+			body: source.body,
+		});
+		editing.value = { slug: source.slug, coverUrl: source.coverUrl, hasCover: Boolean(source.cover) };
+		coverAction.value = 'keep';
+		reset();
+		view.value = 'edit';
+	} catch (e) {
+		fail(e);
+	} finally {
+		busy.value = false;
+	}
+}
+
+function pickEditPhoto(file: File | undefined) {
+	pickPhoto(file);
+	if (photo.value) coverAction.value = 'replace';
+}
+
+async function saveEdit() {
+	if (!editing.value) return;
+	error.value = '';
+	busy.value = true;
+	try {
+		const { body, ...fields } = editForm;
+		let cover: CoverUpdate = { action: 'keep' };
+		if (coverAction.value === 'remove') cover = { action: 'remove' };
+		if (coverAction.value === 'replace' && photo.value) {
+			cover = { action: 'replace', type: photo.value.type, data: await toBase64(photo.value) };
+		}
+		await newsApi.update(editing.value.slug, fields, body, cover);
+		status.value = { state: 'running', label: `Modification : ${editForm.title}` };
+		reset();
+		editing.value = null;
+		view.value = 'list';
+		follow();
+	} catch (e) {
+		fail(e);
+	} finally {
+		busy.value = false;
+	}
+}
+
+function backToList() {
+	error.value = '';
+	reset();
+	editing.value = null;
+	view.value = 'list';
+}
+
 function openAdd() {
 	error.value = '';
 	reset();
@@ -314,6 +404,16 @@ onMounted(load);
 					<span v-if="!a.isPublish" class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Brouillon</span>
 					<button
 						type="button"
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-primary/10 hover:text-primary disabled:opacity-40"
+						:disabled="!availability.ok || following || busy"
+						:aria-label="`Modifier « ${a.title} »`"
+						:title="`Modifier « ${a.title} »`"
+						@click="openEdit(a)"
+					>
+						<i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
+					</button>
+					<button
+						type="button"
 						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
 						:disabled="!availability.ok || following || busy"
 						:aria-label="`Supprimer « ${a.title} »`"
@@ -346,8 +446,8 @@ onMounted(load);
 	</template>
 
 	<!-- Ajout -->
-	<form v-else class="space-y-5" @submit.prevent="submit">
-		<button type="button" class="text-sm font-medium text-primary hover:underline" @click="view = 'list'">
+	<form v-else-if="view === 'add'" class="space-y-5" @submit.prevent="submit">
+		<button type="button" class="text-sm font-medium text-primary hover:underline" @click="backToList">
 			← Toutes les actualités
 		</button>
 
@@ -432,6 +532,114 @@ onMounted(load);
 			class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
 		>
 			{{ busy ? 'Envoi…' : 'Publier l’actualité' }}
+		</button>
+	</form>
+
+	<!-- Édition -->
+	<form v-else-if="view === 'edit' && editing" class="space-y-4" @submit.prevent="saveEdit">
+		<button type="button" class="text-sm font-medium text-primary hover:underline" @click="backToList">
+			← Toutes les actualités
+		</button>
+		<p class="text-xs font-light text-gray-500">
+			Adresse de la page (inchangée) : <code class="font-mono">/actualites/{{ editing.slug }}</code>
+		</p>
+
+		<div>
+			<label for="ed-title" class="block text-sm font-medium text-gray-700">Titre</label>
+			<input id="ed-title" v-model="editForm.title" type="text" required :class="inputClass" />
+		</div>
+		<div class="grid gap-4 sm:grid-cols-2">
+			<div>
+				<label for="ed-date" class="block text-sm font-medium text-gray-700">Date de publication</label>
+				<input id="ed-date" v-model="editForm.publishAt" type="date" required :class="inputClass" />
+			</div>
+			<div>
+				<label for="ed-tag" class="block text-sm font-medium text-gray-700">
+					Catégorie <span class="font-light text-gray-500">(facultative)</span>
+				</label>
+				<input id="ed-tag" v-model="editForm.tag" type="text" placeholder="Ateliers" :class="inputClass" />
+			</div>
+		</div>
+		<div>
+			<label for="ed-excerpt" class="block text-sm font-medium text-gray-700">Résumé</label>
+			<textarea id="ed-excerpt" v-model="editForm.excerpt" rows="2" required :class="inputClass"></textarea>
+		</div>
+		<div>
+			<label for="ed-author" class="block text-sm font-medium text-gray-700">
+				Auteur·rice <span class="font-light text-gray-500">(facultatif)</span>
+			</label>
+			<input id="ed-author" v-model="editForm.author" type="text" :class="inputClass" />
+		</div>
+		<div>
+			<label for="ed-body" class="block text-sm font-medium text-gray-700">Texte (Markdown)</label>
+			<textarea id="ed-body" v-model="editForm.body" rows="14" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
+			<p class="mt-1 text-xs font-light text-gray-500">
+				<code>## Sous-titre</code>, <code>**gras**</code>, <code>*italique*</code>, <code>- liste</code>,
+				<code>[lien](https://…)</code>. Pas de HTML.
+			</p>
+		</div>
+
+		<!-- Photo -->
+		<fieldset>
+			<legend class="text-sm font-medium text-gray-700">Photo de couverture</legend>
+			<img
+				v-if="coverAction === 'keep' && editing.coverUrl"
+				:src="editing.coverUrl"
+				alt="Photo actuelle"
+				class="mt-2 aspect-video w-full rounded-xl object-cover"
+			/>
+			<img v-if="coverAction === 'replace' && photoUrl" :src="photoUrl" alt="Nouvelle photo" class="mt-2 aspect-video w-full rounded-xl object-cover" />
+			<p v-if="coverAction === 'remove' || (!editing.hasCover && coverAction === 'keep')" class="mt-2 text-sm font-light text-gray-500">
+				Pas de photo : une vignette de remplacement s'affichera.
+			</p>
+			<div class="mt-2 flex flex-wrap items-center gap-3 text-sm">
+				<label class="cursor-pointer font-medium text-primary hover:underline">
+					{{ editing.hasCover ? 'Remplacer la photo' : 'Ajouter une photo' }}
+					<input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" @change="pickEditPhoto(($event.target as HTMLInputElement).files?.[0])" />
+				</label>
+				<button
+					v-if="editing.hasCover && coverAction !== 'remove'"
+					type="button"
+					class="font-medium text-red-600 hover:underline"
+					@click="coverAction = 'remove'; reset()"
+				>
+					Retirer la photo
+				</button>
+				<button v-if="coverAction !== 'keep'" type="button" class="text-gray-600 hover:underline" @click="coverAction = 'keep'; reset()">
+					Annuler le changement de photo
+				</button>
+			</div>
+		</fieldset>
+		<div>
+			<label for="ed-credit" class="block text-sm font-medium text-gray-700">
+				Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
+			</label>
+			<input id="ed-credit" v-model="editForm.imageCredit" type="text" placeholder="Photo : Prénom Nom" :class="inputClass" />
+		</div>
+
+		<label class="flex items-start gap-2 text-sm text-gray-700">
+			<input
+				type="checkbox"
+				:checked="!editForm.isPublish"
+				class="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary"
+				@change="editForm.isPublish = !($event.target as HTMLInputElement).checked"
+			/>
+			<span>
+				<span class="font-medium">Brouillon</span>
+				<span class="block text-xs font-light text-gray-500">Retire l'actualité du site sans la supprimer (dépublication).</span>
+			</span>
+		</label>
+
+		<p class="text-xs font-light text-gray-500">
+			À l'enregistrement, le site est reconstruit (environ une minute) ; si la reconstruction échoue, la version
+			actuelle est conservée.
+		</p>
+		<button
+			type="submit"
+			:disabled="busy || !editForm.title || !editForm.publishAt || !editForm.excerpt || !editForm.body"
+			class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+		>
+			{{ busy ? 'Enregistrement…' : 'Enregistrer les modifications' }}
 		</button>
 	</form>
 </template>

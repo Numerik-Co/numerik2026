@@ -165,7 +165,8 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
-  la partie assombrie de la page.
+  la partie assombrie de la page. Dans un formulaire (ajout ou
+  modification d'une actualité), ces mêmes gestes ramènent d'abord à la liste.
 - Vous naviguez normalement sur le site : la barre vous suit sur toutes les pages.
 
 Les modules visibles dépendent de votre groupe :
@@ -236,8 +237,17 @@ quel.
 **Supprimer** dans l'encadré rouge qui apparaît (ou **Annuler**). Le site est
 reconstruit comme pour un ajout ; l'actualité disparaît de la page
 Actualités, de l'accueil et du flux RSS. Si la reconstruction échoue, rien
-n'est supprimé. Pour **corriger** une actualité : la supprimer puis la
-redéposer corrigée (l'édition directe depuis le module viendra plus tard).
+n'est supprimé.
+
+**Modifier une actualité** : icône ✏️ au bout de sa ligne. Un formulaire
+s'ouvre, prérempli : titre, date, catégorie, résumé, auteur·rice, texte (en
+Markdown), photo (**Remplacer** / **Retirer**), crédit photo, et la case
+**Brouillon** pour retirer l'actualité du site sans la supprimer (la décocher
+plus tard la republie). **Enregistrer les modifications** reconstruit le site ;
+si la reconstruction échoue, la version précédente est conservée.
+
+> L'adresse de la page ne change pas, même si le titre ou la date sont
+> modifiés : les liens déjà partagés continuent de fonctionner.
 
 > Supprimer à la main le dossier dans `src/content/news/` ne retire
 > l'actualité du site qu'à la prochaine reconstruction : passez par le

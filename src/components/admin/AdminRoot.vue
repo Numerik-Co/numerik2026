@@ -7,7 +7,7 @@
  * Connexion et déconnexion rechargent la page : les pages réservées et le
  * contenu rendu côté serveur reflètent ainsi le nouvel état.
  */
-import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
 import { ApiError, authApi, type AdminUser, type ReservedPage } from './client';
@@ -29,7 +29,20 @@ function sessionExpired() {
 	activeId.value = null;
 	loginOpen.value = true;
 }
-provide(ADMIN_CONTEXT, { user, pages, sessionExpired });
+/** Interception de la fermeture par le module ouvert (cf. `AdminContext.onCloseRequest`). */
+const closeHandler = shallowRef<(() => boolean) | null>(null);
+function onCloseRequest(handler: () => boolean) {
+	closeHandler.value = handler;
+	return () => {
+		if (closeHandler.value === handler) closeHandler.value = null;
+	};
+}
+function closeModule() {
+	if (closeHandler.value?.()) return;
+	activeId.value = null;
+}
+
+provide(ADMIN_CONTEXT, { user, pages, sessionExpired, onCloseRequest });
 
 /** Lien « Espace bénévoles » : connexion, ou premier module si déjà connecté·e. */
 function open() {
@@ -109,7 +122,7 @@ onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
 		</div>
 	</div>
 
-	<AdminOverlay v-if="activeModule" :key="activeModule.id" :title="activeModule.label" @close="activeId = null">
+	<AdminOverlay v-if="activeModule" :key="activeModule.id" :title="activeModule.label" @close="closeModule">
 		<component :is="activeModule.component" />
 	</AdminOverlay>
 

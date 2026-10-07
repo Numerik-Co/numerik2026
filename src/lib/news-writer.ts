@@ -18,7 +18,7 @@
 
 import type { Nodes } from 'mdast';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { mkdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { SITE_ROOT } from 'astro:env/server';
 import sharp from 'sharp';
@@ -28,6 +28,9 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 export const COVER_MAX_BYTES = 10 * 1024 * 1024;
 /** Taille maximale du fichier Markdown déposé (octets). */
 export const MARKDOWN_MAX_BYTES = 200 * 1024;
+
+/** Nom de dossier d'une actualité : `AAAA-MM-JJ-slug`. */
+const NEWS_SLUG = /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/;
 
 function siteRoot(): string {
 	return resolve(SITE_ROOT || process.cwd());
@@ -155,6 +158,22 @@ async function writeCover(dir: string, input: Buffer): Promise<void> {
  * Le frontmatter est réécrit à partir des champs validés : un `cover:` du
  * fichier déposé est ignoré (la photo est celle du formulaire).
  */
+/** Contenu de `index.md` : frontmatter validé (`cover:` éventuel) + corps. */
+function serializeNews(frontmatter: NewsFrontmatter, body: string, cover?: string): string {
+	const data: Record<string, unknown> = Object.fromEntries(
+		Object.entries({ ...frontmatter, cover }).filter(([, v]) => v !== undefined),
+	);
+	const yaml = stringifyYaml(data, { defaultStringType: 'QUOTE_DOUBLE', defaultKeyType: 'PLAIN', lineWidth: 0 });
+	return `---\n${yaml}---\n\n${body}\n`;
+}
+
+function workDir(name: string): string {
+	// Hors de src/content (même disque, renommage instantané) : jamais vu à moitié écrit.
+	return join(siteRoot(), '.tmp-publication', `${name}-${process.pid}-${Date.now()}`);
+}
+
+const COVER_ERROR = "La photo n'a pas pu être lue (formats acceptés : JPEG, PNG, WebP).";
+
 export async function writeNews(markdown: string, cover?: Buffer): Promise<{ slug?: string; title?: string; errors: string[] }> {
 	const { frontmatter, body, errors } = parseNewsMarkdown(markdown);
 	if (!frontmatter) return { errors };
@@ -165,22 +184,17 @@ export async function writeNews(markdown: string, cover?: Buffer): Promise<{ slu
 		return { errors: [`Une actualité « ${slug} » existe déjà (même date et même titre).`] };
 	}
 
-	const data: Record<string, unknown> = Object.fromEntries(
-		Object.entries({ ...frontmatter, cover: cover ? './cover.jpg' : undefined }).filter(([, v]) => v !== undefined),
-	);
-	// Préparé hors de src/content (même disque, renommage instantané) : jamais vu à moitié écrit.
-	const tmp = join(siteRoot(), '.tmp-publication', `${slug}-${process.pid}-${Date.now()}`);
+	const tmp = workDir(slug);
 	await mkdir(tmp, { recursive: true });
 	try {
 		if (cover) {
 			try {
 				await writeCover(tmp, cover);
 			} catch {
-				return { errors: ["La photo n'a pas pu être lue (formats acceptés : JPEG, PNG, WebP)."] };
+				return { errors: [COVER_ERROR] };
 			}
 		}
-		const yaml = stringifyYaml(data, { defaultStringType: 'QUOTE_DOUBLE', defaultKeyType: 'PLAIN' });
-		await writeFile(join(tmp, 'index.md'), `---\n${yaml}---\n\n${body}\n`, 'utf8');
+		await writeFile(join(tmp, 'index.md'), serializeNews(frontmatter, body, cover ? './cover.jpg' : undefined), 'utf8');
 		await rename(tmp, target);
 		return { slug, title: frontmatter.title, errors: [] };
 	} finally {
@@ -188,7 +202,114 @@ export async function writeNews(markdown: string, cover?: Buffer): Promise<{ slu
 	}
 }
 
-const NEWS_SLUG = /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/;
+/** Chemin `cover:` acceptable dans un fichier existant : un fichier du dossier (`./cover.png`). */
+const COVER_FIELD = /^\.\/[\w.-]+$/;
+
+export interface NewsSource {
+	slug: string;
+	title: string;
+	publishAt: string;
+	excerpt: string;
+	isPublish: boolean;
+	tag: string;
+	author: string;
+	imageCredit: string;
+	body: string;
+	/** Valeur `cover:` actuelle (`./cover.jpg`), ou `null` sans photo. */
+	cover: string | null;
+}
+
+/**
+ * Lit une actualité telle qu'elle est dans les sources (pour le formulaire
+ * d'édition). Lecture tolérante : un champ absent devient une chaîne vide.
+ */
+export async function readNewsSource(slug: string): Promise<NewsSource | null> {
+	if (!NEWS_SLUG.test(slug)) return null;
+	let text: string;
+	try {
+		text = await readFile(join(newsSourceDir(), slug, 'index.md'), 'utf8');
+	} catch {
+		return null;
+	}
+	text = text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+	const match = text.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
+	let raw: Record<string, unknown> = {};
+	try {
+		const parsed = match ? parseYaml(match[1]) : null;
+		if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) raw = parsed;
+	} catch {
+		// En-tête illisible : on laisse les champs vides, la personne les corrige.
+	}
+	const str = (v: unknown) => (v === undefined || v === null ? '' : v instanceof Date ? v.toISOString().slice(0, 10) : String(v));
+	const cover = typeof raw.cover === 'string' && COVER_FIELD.test(raw.cover) ? raw.cover : null;
+	return {
+		slug,
+		title: str(raw.title),
+		publishAt: str(raw.publishAt),
+		excerpt: str(raw.excerpt),
+		isPublish: raw.isPublish !== false,
+		tag: str(raw.tag),
+		author: str(raw.author),
+		imageCredit: str(raw.imageCredit),
+		body: match ? text.slice(match[0].length).trim() : text.trim(),
+		cover,
+	};
+}
+
+/** Photo lors d'une édition : garder l'actuelle, la remplacer, ou la retirer. */
+export type CoverChange = { action: 'keep' } | { action: 'replace'; data: Buffer } | { action: 'remove' };
+
+/**
+ * Remplace le contenu d'une actualité existante, sans changer son dossier
+ * (l'URL reste la même, même si le titre ou la date changent). Une copie de
+ * sauvegarde est faite d'abord : `restore` la remet en place si la
+ * reconstruction échoue, `purge` l'efface une fois la nouvelle version en ligne.
+ */
+export async function updateNews(
+	slug: string,
+	markdown: string,
+	coverChange: CoverChange,
+): Promise<{ title?: string; restore?: () => Promise<void>; purge?: () => Promise<void>; errors: string[] }> {
+	const current = await readNewsSource(slug);
+	if (!current) return { errors: ['Actualité introuvable dans les sources.'] };
+	const { frontmatter, body, errors } = parseNewsMarkdown(markdown);
+	if (!frontmatter) return { errors };
+
+	const dir = join(newsSourceDir(), slug);
+	const tmp = workDir(`edition-${slug}`);
+	await mkdir(tmp, { recursive: true });
+	try {
+		// Nouvelle version complète préparée à part : rien n'est touché tant que tout n'est pas prêt.
+		await cp(dir, tmp, { recursive: true });
+		let cover = current.cover ?? undefined;
+		if (coverChange.action !== 'keep' && current.cover) await rm(join(tmp, current.cover), { force: true });
+		if (coverChange.action === 'remove') cover = undefined;
+		if (coverChange.action === 'replace') {
+			try {
+				await writeCover(tmp, coverChange.data);
+			} catch {
+				return { errors: [COVER_ERROR] };
+			}
+			cover = './cover.jpg';
+		}
+		await writeFile(join(tmp, 'index.md'), serializeNews(frontmatter, body, cover), 'utf8');
+
+		const backup = workDir(`sauvegarde-${slug}`);
+		await rename(dir, backup);
+		await rename(tmp, dir);
+		return {
+			title: frontmatter.title,
+			errors: [],
+			restore: async () => {
+				await rm(dir, { recursive: true, force: true });
+				await rename(backup, dir);
+			},
+			purge: () => rm(backup, { recursive: true, force: true }),
+		};
+	} finally {
+		await rm(tmp, { recursive: true, force: true });
+	}
+}
 
 /** Retire le dossier d'une actualité (annulation si la publication échoue). */
 export async function removeNews(slug: string): Promise<void> {

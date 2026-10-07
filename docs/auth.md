@@ -93,7 +93,7 @@ access: [animateur, admin]   # l'un de ces groupes
 | `src/components/admin/modules.ts` | **Registre des modules** (`id`, `label`, icône, `groups`, composant chargé à la demande). |
 | `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `NewsModule` (actualités, `redacteur`), `AccountsModule` (comptes, `admin`), `PasswordModule` (mon mot de passe). |
 | `src/components/admin/client.ts` | Appels typés aux routes ; `ApiError.status === 401` = session expirée (`sessionExpired()` du contexte rouvre la connexion). |
-| `src/components/admin/context.ts` | `provide/inject` (`user`, `pages`, `sessionExpired`) + classes des champs. |
+| `src/components/admin/context.ts` | `provide/inject` (`user`, `pages`, `sessionExpired`, `onCloseRequest` : un module peut intercepter ✕/Échap, ex. retour à sa liste depuis un formulaire) + classes des champs. |
 
 N'importe quel élément peut ouvrir la connexion : `<button type="button" data-auth-open>…</button>`
 (une fois connecté·e, il ouvre le premier module).
@@ -119,6 +119,7 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `POST /api/admin/mot-de-passe` | `{ current, next }` — ferme les autres sessions |
 | `GET/POST /api/admin/comptes` | Liste / création (`password` provisoire renvoyé une fois) — `admin` |
 | `GET/POST /api/admin/actualites` | Liste (brouillons compris) + état de publication / dépôt `{ markdown, cover?: { type, data } }` → écrit `src/content/news/…` et reconstruit le site — `redacteur` |
+| `GET/PUT /api/admin/actualites/<slug>` | Lecture des sources (formulaire) / modification `{ fields, body, cover: { action: keep\|remove\|replace } }` : même dossier (URL inchangée), sauvegarde restaurée si le build échoue — `redacteur` |
 | `DELETE /api/admin/actualites/<slug>` | Suppression `{ confirm: <slug> }` : dossier mis de côté, site reconstruit, dossier effacé (ou remis en place si échec) — `redacteur` |
 | `GET /api/admin/publication` | État de la dernière publication — `redacteur` |
 | `PATCH/POST/DELETE /api/admin/comptes/<login>` | Modification / réinitialisation du mot de passe / suppression (`{ confirm: <login> }`) — `admin` |

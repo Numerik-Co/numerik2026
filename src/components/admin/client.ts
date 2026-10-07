@@ -38,6 +38,26 @@ export interface NewsItem {
 	thumbnail: string | null;
 }
 
+/** Actualité telle qu'elle est dans les sources (formulaire d'édition). */
+export interface NewsSource {
+	slug: string;
+	title: string;
+	publishAt: string;
+	excerpt: string;
+	isPublish: boolean;
+	tag: string;
+	author: string;
+	imageCredit: string;
+	body: string;
+	cover: string | null;
+	/** Aperçu de la photo actuelle (site construit). */
+	coverUrl: string | null;
+}
+
+export type NewsFields = Pick<NewsSource, 'title' | 'publishAt' | 'excerpt' | 'isPublish' | 'tag' | 'author' | 'imageCredit'>;
+
+export type CoverUpdate = { action: 'keep' } | { action: 'remove' } | { action: 'replace'; type: string; data: string };
+
 /** État de la dernière publication (reconstruction du site), cf. src/lib/site-build.ts. */
 export interface PublishStatus {
 	state: 'idle' | 'running' | 'succeeded' | 'failed';
@@ -102,6 +122,9 @@ export const newsApi = {
 	create: (markdown: string, cover: { type: string; data: string } | null) =>
 		request<{ slug: string; href: string }>('POST', '/api/admin/actualites', { markdown, cover: cover ?? undefined }),
 	status: () => request<PublishStatus>('GET', '/api/admin/publication'),
+	get: (slug: string) => request<NewsSource>('GET', `/api/admin/actualites/${encodeURIComponent(slug)}`),
+	update: (slug: string, fields: NewsFields, body: string, cover: CoverUpdate) =>
+		request<{ ok: true; href: string }>('PUT', `/api/admin/actualites/${encodeURIComponent(slug)}`, { fields, body, cover }),
 	remove: (slug: string) =>
 		request<{ ok: true }>('DELETE', `/api/admin/actualites/${encodeURIComponent(slug)}`, { confirm: slug }),
 };
