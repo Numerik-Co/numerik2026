@@ -7,7 +7,7 @@
  */
 
 import type { AstroCookies } from 'astro';
-import { AUTH_SECRET } from 'astro:env/server';
+import { getSecret } from 'astro:env/server';
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { readAccount, type Account } from './accounts.ts';
 import type { AuthGroup } from './groups.ts';
@@ -40,13 +40,23 @@ interface Payload {
 	e: number;
 }
 
+/**
+ * `AUTH_SECRET`, lu à chaque usage et non à l'import : en dev, ce module est
+ * chargé par le middleware AVANT qu'Astro n'ait chargé le `.env`, un import
+ * nommé y serait figé à `undefined`.
+ */
+function authSecret(): string | undefined {
+	return getSecret('AUTH_SECRET');
+}
+
 /** L'authentification n'est active que si `AUTH_SECRET` est renseigné (≥ 32 caractères). */
 export function isAuthConfigured(): boolean {
-	return Boolean(AUTH_SECRET && AUTH_SECRET.length >= 32);
+	const secret = authSecret();
+	return Boolean(secret && secret.length >= 32);
 }
 
 function sign(data: string): string {
-	return createHmac('sha256', AUTH_SECRET!).update(data).digest('base64url');
+	return createHmac('sha256', authSecret()!).update(data).digest('base64url');
 }
 
 function passwordVersion(account: Account): string {

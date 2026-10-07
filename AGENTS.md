@@ -19,6 +19,9 @@ Déclarées dans `astro.config.mjs` (`env.schema`, `astro:env`), **toutes en
 `import { X } from 'astro:env/server'` — **jamais `import.meta.env.X`** pour
 un secret (Vite le figerait dans le build). Toutes facultatives : une fonction
 non configurée se désactive. Changer le `.env` = redémarrer, pas rebuild.
+⚠️ Dans un module chargé par le **middleware** (ex. `src/lib/auth/session.ts`),
+lire le secret à l'usage avec `getSecret('X')`, pas par import nommé : en
+dev, le middleware est chargé avant le `.env` et l'import vaudrait `undefined`.
 Exception : `DATA_DIR` (`process.env`, `src/lib/data-dir.ts`, partagé avec le
 CLI). Détail : [docs/api.md](docs/api.md#variables-denvironnement).
 
