@@ -224,11 +224,18 @@ page publique.
    l'avancement, puis affiche le lien vers l'actualité en ligne. On peut
    fermer le panneau pendant ce temps.
 
-Refusés à l'envoi, avec un message qui indique la ligne en cause : le
-**HTML** dans le texte, les liens autres que `http(s)`, `mailto:`, `tel:` ou
-internes, et les images dans le texte (seule la photo de couverture se
-dépose). Si la reconstruction échoue, rien n'est publié et le site reste tel
-quel.
+Le texte accepte le **HTML** en plus du Markdown : tableaux, encadrés
+(`<div>`), mise en forme, détails dépliables, vidéos et cartes intégrées
+(`<iframe>` YouTube, Vimeo, PeerTube, OpenStreetMap). Par sécurité, tout code
+exécutable (`<script>`, `<style>`, attributs `onclick=`…, liens
+`javascript:`, iframes d'autres sites) est **retiré à l'affichage**, sans
+toucher au reste.
+
+Refusés à l'envoi, avec un message qui indique la ligne en cause : les liens
+Markdown autres que `http(s)`, `mailto:`, `tel:` ou internes, et les images
+Markdown locales (`![…](./photo.jpg)` : seule la photo de couverture se
+dépose ; une image en ligne `https://…` est acceptée). Si la reconstruction
+échoue, rien n'est publié et le site reste tel quel.
 
 > Le titre et la date forment l'adresse de la page
 > (`/actualites/2026-10-15-atelier-retouche-photo`) : deux actualités ne

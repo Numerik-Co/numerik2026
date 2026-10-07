@@ -4,9 +4,11 @@
  * qui les affichent sont prérendues.
  */
 
-import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 import { association } from './association';
+import type { Heading } from './headings';
 import { estimateReadingTime } from './reading-time';
+import { sanitizeNewsHtml } from './sanitize-news';
 
 export type NewsEntry = CollectionEntry<'news'>;
 
@@ -24,7 +26,7 @@ export interface NewsArticle {
 	image?: NewsEntry['data']['cover'];
 	imageCredit: string;
 	readingTime: number;
-	/** Entrée brute de la collection (pour `render()` sur la page de détail). */
+	/** Entrée brute de la collection (HTML rendu : `entry.rendered`). */
 	entry: NewsEntry;
 }
 
@@ -59,7 +61,15 @@ export async function getAllNews(): Promise<NewsArticle[]> {
 		.sort((a, b) => b.publishAt.localeCompare(a.publishAt) || a.slug.localeCompare(b.slug));
 }
 
-/** Contenu rendu d'une actualité : composant `Content` et titres (sommaire). */
-export async function renderNews(article: NewsArticle) {
-	return render(article.entry);
+/**
+ * Contenu d'une actualité prêt à afficher : HTML NETTOYÉ (balisage gardé,
+ * code exécutable retiré, cf. `sanitize-news.ts`) et titres (sommaire).
+ */
+export async function renderNews(article: NewsArticle): Promise<{ html: string; headings: Heading[] }> {
+	// HTML rendu au build par le Content Layer (loader glob, rendu non différé).
+	const rendered = article.entry.rendered;
+	return {
+		html: sanitizeNewsHtml(rendered?.html ?? ''),
+		headings: (rendered?.metadata?.headings as Heading[] | undefined) ?? [],
+	};
 }

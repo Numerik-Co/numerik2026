@@ -1,12 +1,12 @@
 ---
 title: "Assemblée générale 2026"
 isPublish: true
-publishAt: 2026-08-15
+publishAt: "2026-08-15"
 excerpt: "Rendez-vous samedi 29 août à 9h30 au forum de la culture et des loisirs de Saint-Pierre-du-Mont pour l'Assemblée générale de numérik&Co : bilan de l'année, élection du Conseil d'Administration et moment convivial entre adhérents."
-tag: "Association"
+tag: "Vie associative"
 author: "Numérik&Co"
 imageCredit: "Photo : Luis Quintero / Pexels"
-cover: ./cover.jpg
+cover: "./cover.jpg"
 ---
 
 ## L'assemblée générale, temps fort de la vie d'une association

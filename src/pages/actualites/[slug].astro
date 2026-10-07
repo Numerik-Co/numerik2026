@@ -33,7 +33,7 @@ export async function getStaticPaths() {
 }
 
 const { article, prev, next } = Astro.props;
-const { Content, headings } = await renderNews(article);
+const { html, headings } = await renderNews(article);
 ---
 
 <ArticleLayout
@@ -76,7 +76,8 @@ const { Content, headings } = await renderNews(article);
 	)}
 
 	<div class="markdown-content mt-6 font-light text-gray-700">
-		<Content />
+		{/* HTML nettoyé : balisage de l'auteur·rice gardé, code exécutable retiré. */}
+		<Fragment set:html={html} />
 	</div>
 
 	{/* La colonne de droite est masquée sous `lg` : on y replace le partage. */}

@@ -66,6 +66,17 @@ reprend le titre, l'`excerpt` et l'image de couverture — voir
 - Supprimer : supprimer le dossier entier.
 - Changer la date ou le slug (URL) : renommer le dossier — attention, cela change l'URL de la page de détail. Penser à mettre à jour `publishAt` en même temps si la date change, pour que le préfixe du dossier et le tri restent cohérents.
 
+## HTML dans une actualité
+
+Le corps accepte le **HTML** en plus du Markdown (tableaux, `<div class>`,
+styles, `<details>`, `<iframe>` de vidéo ou de carte…). À l'affichage, la page
+d'article le **nettoie** (`src/lib/sanitize-news.ts`) : le balisage est gardé,
+le code exécutable retiré — `<script>`, `<style>`, attributs `on…=`, liens
+`javascript:`, `<svg>`/`<math>`, et `<iframe>` dont la source n'est pas
+YouTube, Vimeo, PeerTube ou OpenStreetMap (`IFRAME_HOSTS`). Raison : les
+actualités sont publiables depuis l'espace bénévoles, sur le même site que
+l'administration.
+
 ## Comment ça marche techniquement
 
 Les actualités forment une **content collection** Astro, déclarée dans `src/content.config.ts` ([doc Astro](https://docs.astro.build/en/guides/content-collections/)) :

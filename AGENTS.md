@@ -92,11 +92,22 @@ sous `/api/admin/`).
   `/api/admin/publication` → `redacteur`).
 - Modules : Pages réservées, **Actualités**, Comptes, Mon mot de passe.
 
+### HTML des actualités
+
+Le HTML est **autorisé** dans les actualités (souhait explicite : ne jamais le
+bloquer). Il est **nettoyé à l'affichage** par la page d'article
+(`renderNews()` → `sanitizeNewsHtml()`, `src/lib/sanitize-news.ts`, sur
+`entry.rendered.html`) : balisage, classes, styles, tableaux gardés ; `<script>`,
+`<style>`, `on…=`, `javascript:`, svg/math et iframes hors `IFRAME_HOSTS`
+(YouTube, Vimeo, PeerTube, OpenStreetMap) retirés. Le moteur Markdown du site
+(Satteri, défaut d'Astro 7) n'est PAS modifié ; pages et activités non
+concernées.
+
 ### Publication (module Actualités)
 
 Le module écrit dans les **sources** (`src/content/news/<date-slug>/`,
-`src/lib/news-writer.ts` : validation identique au schéma, HTML/liens
-dangereux refusés, photo nettoyée par sharp) puis `src/lib/site-build.ts`
+`src/lib/news-writer.ts` : validation identique au schéma, liens Markdown
+dangereux et images locales refusés, photo nettoyée par sharp) puis `src/lib/site-build.ts`
 relance `npm run build` sur le serveur dans `.releases/<horodatage>`
 (`ASTRO_OUT_DIR` → `outDir`), fait pointer `dist` dessus, lance
 `PUBLISH_HOOK` éventuel et **arrête le process** pour que son gestionnaire

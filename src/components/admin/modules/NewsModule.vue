@@ -579,7 +579,8 @@ onMounted(load);
 			<textarea id="ed-body" v-model="editForm.body" rows="14" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
 			<p class="mt-1 text-xs font-light text-gray-500">
 				<code>## Sous-titre</code>, <code>**gras**</code>, <code>*italique*</code>, <code>- liste</code>,
-				<code>[lien](https://…)</code>. Pas de HTML.
+				<code>[lien](https://…)</code>. Le HTML est accepté (tableaux, encadrés, vidéos YouTube/Vimeo…) ; le code
+				exécutable (scripts…) est retiré à l'affichage.
 			</p>
 		</div>
 

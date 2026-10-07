@@ -9,9 +9,11 @@
  * publications suivantes.
  *
  * Sécurité : le fichier déposé est un `.md` (jamais de MDX, donc aucun code).
- * Le HTML brut et les liens/images non `http(s)`/`mailto:`/`tel:`/internes
- * sont refusés — une personne qui publie ne doit pas pouvoir injecter de
- * script exécuté chez les admins qui lisent l'actualité.
+ * Le HTML y est AUTORISÉ (tableaux, encadrés…) : il est nettoyé à l'affichage
+ * par `src/lib/sanitize-news.ts` (code exécutable retiré). Ici, on refuse
+ * seulement ce qui ferait échouer le build ou ce qu'on peut signaler
+ * clairement : liens Markdown non `http(s)`/`mailto:`/`tel:`/internes, et
+ * images Markdown locales (la seule photo est la couverture).
  *
  * Code serveur uniquement (node:fs, sharp).
  */
@@ -85,13 +87,12 @@ interface NewsFrontmatter {
 	imageCredit?: string;
 }
 
-/** Contrôle du corps : HTML brut, liens et images. Renvoie les problèmes trouvés. */
+/** Contrôle du corps (liens et images Markdown ; le HTML est nettoyé à l'affichage). Renvoie les problèmes trouvés. */
 function checkBody(body: string): string[] {
 	const problems = new Set<string>();
 	const walk = (node: Nodes) => {
 		const line = node.position?.start.line;
 		const where = line ? ` (ligne ${line} du texte)` : '';
-		if (node.type === 'html') problems.add(`Le HTML n'est pas autorisé dans une actualité${where} : utilisez la mise en forme Markdown.`);
 		if ((node.type === 'link' || node.type === 'definition') && !isSafeUrl(node.url)) {
 			problems.add(`Lien refusé${where} : seuls les liens http(s), mailto:, tel: et internes sont acceptés.`);
 		}
