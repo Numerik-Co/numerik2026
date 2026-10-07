@@ -124,7 +124,15 @@ convient telle quelle. Il est conseillé d'y ajouter une ligne :
 proxy_set_header X-Forwarded-Host  $host;
 ```
 
-et de vérifier que le domaine public figure dans `security.allowedDomains`
+et de **relever la taille maximale des requêtes** (photos des actualités :
+10 Mo max, ≈ 13,5 Mo une fois encodées ; défaut nginx : 1 Mo → erreur 413) :
+
+```nginx
+client_max_body_size 20m;
+```
+
+Puis `nginx -t && systemctl reload nginx`. Vérifier aussi que le domaine
+public figure dans `security.allowedDomains`
 (`astro.config.mjs`, aujourd'hui `www.clubmicrosaintpierre.fr`). Si le site
 répond aussi sur un autre domaine (sans `www`, autre nom…), l'y ajouter.
 
