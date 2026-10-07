@@ -365,7 +365,7 @@ onMounted(load);
 	>
 		<button
 			type="button"
-			class="absolute right-2 top-2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
+			class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
 			aria-label="Fermer ce message"
 			title="Fermer"
 			@click="statusDismissed = true"
@@ -384,7 +384,7 @@ onMounted(load);
 	>
 		<button
 			type="button"
-			class="absolute right-2 top-2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
+			class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
 			aria-label="Fermer ce message"
 			title="Fermer"
 			@click="statusDismissed = true"
