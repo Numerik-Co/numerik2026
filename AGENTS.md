@@ -8,18 +8,36 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
+Production sans Docker : `npm run build` puis `npm start`
+(`node --env-file-if-exists=.env dist/server/entry.mjs`).
+
+### Variables d'environnement
+
+Déclarées dans `astro.config.mjs` (`env.schema`, `astro:env`), **toutes en
+`access: 'secret'`** : lues au démarrage du serveur, jamais recopiées dans
+`dist/` (vérifié : aucun secret dans le build). Lire via
+`import { X } from 'astro:env/server'` — **jamais `import.meta.env.X`** pour
+un secret (Vite le figerait dans le build). Toutes facultatives : une fonction
+non configurée se désactive. Changer le `.env` = redémarrer, pas rebuild.
+Exception : `DATA_DIR` (`process.env`, `src/lib/data-dir.ts`, partagé avec le
+CLI). Détail : [docs/api.md](docs/api.md#variables-denvironnement).
+
 ## Contenu & navigation
 
 Ce projet est un template déployé pour plusieurs structures. Les pages
-éditoriales et le menu se pilotent **uniquement** depuis `src/contents/` — voir
-`src/contents/README.md` (guide destiné aux éditeurs).
+éditoriales et le menu se pilotent **uniquement** depuis `src/content/` — voir
+`src/content/README.md` (guide destiné aux éditeurs).
 
 Fonctionnement technique :
 
-- `src/pages/[...slug].astro` — route attrape-tout ; rend toute page
-  `src/contents/pages/<...>/index.{md,mdx}`. Aucun wrapper `.astro` par page.
-- `src/lib/content-pages.ts` — découverte des pages via `import.meta.glob`
-  (build-time), lecture du frontmatter `menu:` et des fichiers `_group.md`.
+- `src/pages/[...slug].astro` — route attrape-tout **prérendue** ; rend toute
+  page publique `src/content/pages/<...>/index.{md,mdx}`. Aucun wrapper
+  `.astro` par page. Rendu partagé : `src/components/article/ContentPageView.astro`.
+- `src/pages/espace-benevoles/[...slug].astro` — pages réservées
+  (`src/content/pages/espace-benevoles/`), seules rendues à la demande.
+- `src/lib/content-pages.ts` — collections `pages` / `pageGroups`
+  (`getContentPages()`, `renderPage()`, `getGroups()`), frontmatter `menu:`
+  et fichiers `_group.md`.
 - `src/lib/navigation.ts` — `getNavTree()` fusionne `site.builtinNav` et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
@@ -29,10 +47,11 @@ Fonctionnement technique :
 - `src/components/layout/Header.astro` — consomme `getNavTree()` ; markup
   inchangé, structure `{ label, href, children }`.
 
-Le menu est calculé au `build`. Les pages de contenu sont rendues à la
-demande (`[...slug].astro`, `prerender = false`) pour appliquer `access:`
-(pages réservées, voir « Espace bénévoles ») ; les autres pages statiques
-restent prérendues.
+Le menu est calculé au `build` (`getNavTree()` est async). Tout le contenu est
+**prérendu** : `npm run build` produit le site complet. Seules exceptions,
+qui exigent Node : les pages réservées (`/espace-benevoles/*`), les routes
+`/api/*` et les pages applicatives dynamiques (`/activites`, formulaires
+Grist…).
 
 ### Formulaires
 
@@ -50,10 +69,11 @@ restent prérendues.
 
 ## Espace bénévoles (authentification à plat)
 
-Connexion du bureau et des animateur·rice·s **sans base de données**, façon
-Grav : un YAML par compte dans `data/accounts/<login>.yaml`
-(`AUTH_DATA_DIR`, volume Docker `./data`), cookie de session signé HMAC
-(`AUTH_SECRET`), groupes `admin` / `animateur` (`src/lib/auth/groups.ts`).
+Connexion du bureau, des rédacteur·rice·s et des animateur·rice·s **sans
+base de données**, façon Grav : un YAML par compte dans
+`data/accounts/<login>.yaml` (`DATA_DIR`, volume Docker `./data`), cookie de
+session signé HMAC (`AUTH_SECRET`), groupes `admin` / `animateur` /
+`redacteur` (`src/lib/auth/groups.ts`).
 
 **Pas de pages d'administration** : tout se superpose au site. Lien
 « Espace bénévoles » du pied de page (`[data-auth-open]`) → modale de
@@ -67,11 +87,44 @@ sous `/api/admin/`).
   indicateur `numerik_connecte` existe ou au clic : rien pour un visiteur.
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
-  connexion, `/api/admin/comptes*` le groupe `admin`.
-- Page de contenu réservée : `access: true | <groupe> | [groupes]` dans le
-  frontmatter (`parseAccess`/`canAccess`, `src/lib/auth/access.ts`) ;
-  jamais dans le menu, 401 + bouton « Se connecter » sans session, 403 si
-  mauvais groupe, groupe inconnu = build en échec.
+  connexion ; `GUARDS` réserve des préfixes à des groupes
+  (`/api/admin/comptes` → `admin`, `/api/admin/actualites` et
+  `/api/admin/publication` → `redacteur`).
+- Modules : Pages réservées, **Actualités**, Comptes, Mon mot de passe.
+
+### HTML des actualités
+
+Le HTML est **autorisé** dans les actualités (souhait explicite : ne jamais le
+bloquer). Il est **nettoyé à l'affichage** par la page d'article
+(`renderNews()` → `sanitizeNewsHtml()`, `src/lib/sanitize-news.ts`, sur
+`entry.rendered.html`) : balisage, classes, styles, tableaux gardés ; `<script>`,
+`<style>`, `on…=`, `javascript:`, svg/math et iframes hors `IFRAME_HOSTS`
+(YouTube, Vimeo, PeerTube, OpenStreetMap) retirés. Le moteur Markdown du site
+(Satteri, défaut d'Astro 7) n'est PAS modifié ; pages et activités non
+concernées.
+
+### Publication (module Actualités)
+
+Le module écrit dans les **sources** (`src/content/news/<date-slug>/`,
+`src/lib/news-writer.ts` : validation identique au schéma, liens Markdown
+dangereux et images locales refusés, photo nettoyée par sharp) puis `src/lib/site-build.ts`
+relance `npm run build` sur le serveur dans `.releases/<horodatage>`
+(`ASTRO_OUT_DIR` → `outDir`), fait pointer `dist` dessus, lance
+`PUBLISH_HOOK` éventuel et **arrête le process** pour que son gestionnaire
+(Docker, PM2, systemd) le relance. Build en échec = contenu retiré, site
+intact. Modification (`PUT /api/admin/actualites/<slug>`, formulaire dans le
+module) : même dossier donc URL inchangée, sauvegarde restaurée si échec
+(`updateNews`). Suppression (`DELETE …/<slug>`) : dossier mis de
+côté (`setAsideNews`), effacé après reconstruction réussie (`onSuccess`),
+remis en place sinon (`onFailure`). Prérequis : sources + `node_modules` complet + gestionnaire de
+process. Docker : l'image embarque tout le projet, `./src/content` monté
+depuis le VPS. Détail : [docs/publication.md](docs/publication.md).
+- Page de contenu réservée : rangée dans `src/content/pages/espace-benevoles/`
+  (défaut : toute personne connectée ; `access: <groupe> | [groupes]` pour
+  restreindre — `parseAccess`/`canAccess`, `src/lib/auth/access.ts`) ;
+  jamais dans le menu ni dans `dist/client`, 401 + bouton « Se connecter »
+  sans session, 403 si mauvais groupe ; groupe inconnu ou `access:` hors de
+  ce dossier = build en échec.
 - Premier admin : `npm run auth:user -- add <login> "<Nom>" admin` en local ;
   sur le VPS `./auth-user.sh add …` (exécute `dist/cli/auth-user.mjs`,
   compilé par `build:cli`, dans le conteneur avec `DOCKER_CONFIG`).
@@ -81,6 +134,32 @@ sous `/api/admin/`).
 Détail : [docs/auth.md](docs/auth.md) ; guide déploiement + utilisation
 (à tenir à jour avec chaque nouveau module) :
 [docs/guide-espace-benevoles.md](docs/guide-espace-benevoles.md).
+
+### Contenu = collections Astro
+
+Tout le contenu éditorial vit dans `src/content/` et `npm run build` produit
+le site complet (déposable tel quel pour la partie contenu). Les collections
+sont déclarées dans `src/content.config.ts` (Content Layer, loader `glob`,
+schéma `zod` via `astro/zod`) — suivre la doc Astro
+(https://docs.astro.build/en/guides/content-collections/). **Ne pas stocker de
+contenu hors de `src/content/`.**
+
+- `news` — `src/content/news/<AAAA-MM-JJ-slug>/index.md`, id = nom du
+  dossier, `cover: ./cover.jpg` validé par `image()`. `src/lib/news.ts` :
+  `getAllNews()` (async, `getCollection`), `renderNews()` (`render()`).
+  Pages prérendues. Détail : [docs/actualites.md](docs/actualites.md).
+- `pages` + `pageGroups` — `src/content/pages/<chemin>/index.{md,mdx}`
+  (id = chemin = URL) et `_group.md` ; `cover:` via `image()`, `access:`
+  validé par `parseAccess`. `src/lib/content-pages.ts`. Détail :
+  [docs/pages.md](docs/pages.md).
+- `activites` — `src/content/activites/<slug>/index.md`, `category` limitée
+  aux slugs de `src/lib/categories.ts`, `cover:` via `image()`.
+  `src/lib/activites.ts` : `getAllActivities()`, `getActivitiesByCategory()`,
+  `renderActivity()` (async). Détail : [docs/activites.md](docs/activites.md).
+- `annonces` — `src/content/annonces.yaml` (loader `file()`, liste avec
+  `id`) ; `position` ajoutée par le parser du loader pour garder l'ordre du
+  fichier. `src/lib/annonces.ts` : `getAnnonces()` (async). Détail :
+  [docs/annonces.md](docs/annonces.md).
 
 ## Composants réutilisables
 

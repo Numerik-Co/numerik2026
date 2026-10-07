@@ -1,18 +1,24 @@
-import type { Heading } from './headings';
-import { parseAccess, type PageAccess } from './auth/access';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import type { PageAccess } from './auth/access';
 
 /**
- * Découverte automatique des pages de contenu.
+ * Pages de contenu : collections `pages` et `pageGroups`
+ * (`src/content.config.ts`).
  *
- * Toute page rangée dans `src/contents/pages/<...>/index.{md,mdx}` devient
- * automatiquement une route (`/<...>`) grâce à `src/pages/[...slug].astro`,
- * et peut apparaître dans la navigation via son frontmatter `menu:`.
+ * Toute page rangée dans `src/content/pages/<...>/index.{md,mdx}` devient
+ * automatiquement une route (`/<...>`) et peut apparaître dans la navigation
+ * via son frontmatter `menu:`. L'arborescence de dossiers pilote l'URL ET le menu :
+ *   src/content/pages/statuts/index.md               -> /statuts
+ *   src/content/pages/association/_group.md           -> libellé du menu déroulant « Association »
+ *   src/content/pages/association/notre-histoire/...  -> /association/notre-histoire (dans le dropdown)
  *
- * L'arborescence de dossiers pilote l'URL ET le menu :
- *   src/contents/pages/statuts/index.md               -> /statuts
- *   src/contents/pages/association/_group.md           -> libellé du menu déroulant « Association »
- *   src/contents/pages/association/notre-histoire/...  -> /association/notre-histoire (dans le dropdown)
+ * Pages publiques : prérendues par `src/pages/[...slug].astro`.
+ * Pages réservées : rangées dans `RESERVED_FOLDER`, rendues à la demande par
+ * `src/pages/espace-benevoles/[...slug].astro` (contrôle d'accès, Node requis).
  */
+
+/** Dossier (et préfixe d'URL) des pages réservées aux personnes connectées. */
+export const RESERVED_FOLDER = 'espace-benevoles';
 
 export interface PageMenuMeta {
 	/** `true` = la page apparaît dans la barre de navigation. */
@@ -34,47 +40,23 @@ export interface ContentPage {
 	description?: string;
 	/** `null` si le frontmatter ne contient pas de bloc `menu:`. */
 	menu: PageMenuMeta | null;
-	/** Image de couverture, si un fichier `cover.*` existe dans le dossier de la page. */
-	image?: any;
+	/** Image de couverture (frontmatter `cover:`). */
+	image?: CollectionEntry<'pages'>['data']['cover'];
 	imageCredit?: string;
 	/**
-	 * Restriction d'accès (frontmatter `access:`, cf. `src/lib/auth/access.ts`) ;
-	 * `null` = page publique. Une page restreinte n'apparaît jamais dans le menu.
+	 * Restriction d'accès ; `null` = page publique. Toute page de
+	 * `RESERVED_FOLDER` est réservée (`'connecte'` par défaut, ou les groupes
+	 * de `access:`), et n'apparaît jamais dans le menu.
 	 */
 	access: PageAccess;
-	headings: Heading[];
-	Content: any;
+	/** Entrée brute de la collection (pour `render()`). */
+	entry: CollectionEntry<'pages'>;
 }
 
 export interface GroupMeta {
 	label: string;
 	order: number;
 }
-
-interface PageModule {
-	frontmatter: Record<string, any>;
-	Content: any;
-	getHeadings: () => Heading[];
-}
-
-interface GroupModule {
-	frontmatter: { label?: string; order?: number };
-}
-
-const PAGES_DIR = '../contents/pages/';
-
-const pageModules = import.meta.glob('../contents/pages/**/index.{md,mdx}', {
-	eager: true,
-}) as Record<string, PageModule>;
-
-const groupModules = import.meta.glob('../contents/pages/**/_group.{md,mdx}', {
-	eager: true,
-}) as Record<string, GroupModule>;
-
-const pageImages = import.meta.glob('../contents/pages/**/cover.*', {
-	eager: true,
-	import: 'default',
-}) as Record<string, any>;
 
 function titleCase(segment: string): string {
 	return segment
@@ -83,97 +65,57 @@ function titleCase(segment: string): string {
 		.join(' ');
 }
 
-function relativePath(path: string): string {
-	return path.slice(path.indexOf(PAGES_DIR) + PAGES_DIR.length);
-}
+function toPage(entry: CollectionEntry<'pages'>): ContentPage {
+	const { data } = entry;
+	const slug = entry.id;
+	const segments = slug.split('/');
+	const title = data.title ?? titleCase(segments[segments.length - 1]);
+	const reserved = segments[0] === RESERVED_FOLDER;
 
-function slugFromPagePath(path: string): string {
-	return relativePath(path).replace(/\/index\.mdx?$/, '');
-}
+	if (data.access !== null && !reserved) {
+		// Une page publique ne peut pas être protégée : elle est prérendue, donc lisible par tous.
+		throw new Error(
+			`Page "${slug}" : \`access:\` n'est possible que pour les pages rangées dans src/content/pages/${RESERVED_FOLDER}/.`,
+		);
+	}
 
-/** Dossier contenant le fichier, pour associer une page à son éventuel `cover.*`. */
-function dirFromPath(path: string): string {
-	return path.slice(0, path.lastIndexOf('/'));
-}
-
-function folderFromGroupPath(path: string): string {
-	const withoutFile = relativePath(path).replace(/\/_group\.mdx?$/, '');
-	return withoutFile.split('/').pop() ?? withoutFile;
-}
-
-/** Métadonnées des menus déroulants, indexées par nom de dossier. */
-const groups: Record<string, GroupMeta> = {};
-for (const [path, mod] of Object.entries(groupModules)) {
-	const folder = folderFromGroupPath(path);
-	groups[folder] = {
-		label: mod.frontmatter.label ?? titleCase(folder),
-		order: mod.frontmatter.order ?? 50,
+	return {
+		slug,
+		segments,
+		url: `/${slug}`,
+		title,
+		description: data.description,
+		menu: data.menu ? { show: data.menu.show, order: data.menu.order, label: data.menu.label ?? title } : null,
+		image: data.cover,
+		imageCredit: data.imageCredit,
+		access: reserved ? (data.access ?? 'connecte') : null,
+		entry,
 	};
 }
 
+/** Toutes les pages de contenu, triées par slug. */
+export async function getContentPages(): Promise<ContentPage[]> {
+	const entries = await getCollection('pages');
+	return entries.map(toPage).sort((a, b) => a.slug.localeCompare(b.slug));
+}
+
+/** Contenu rendu d'une page : composant `Content` et titres (sommaire). */
+export async function renderPage(page: ContentPage) {
+	return render(page.entry);
+}
+
+/** Métadonnées des menus déroulants, indexées par nom de dossier. */
+export async function getGroups(): Promise<Map<string, GroupMeta>> {
+	const entries = await getCollection('pageGroups');
+	return new Map(
+		entries.map((entry) => {
+			const folder = entry.id.split('/').pop() ?? entry.id;
+			return [folder, { label: entry.data.label ?? titleCase(folder), order: entry.data.order }];
+		}),
+	);
+}
+
 /** Libellé + ordre d'un dropdown ; valeurs déduites du nom de dossier si aucun `_group.md`. */
-export function getGroupMeta(folder: string): GroupMeta {
-	return groups[folder] ?? { label: titleCase(folder), order: 50 };
-}
-
-export function getGroupLabel(folder: string): string {
-	return getGroupMeta(folder).label;
-}
-
-function parseAccessOf(slug: string, value: unknown): PageAccess {
-	try {
-		return parseAccess(value);
-	} catch (err) {
-		throw new Error(`Page "${slug}" : ${(err as Error).message}`);
-	}
-}
-
-let cache: ContentPage[] | null = null;
-
-/** Toutes les pages de contenu, triées par slug. Résultat mémoïsé. */
-export function getContentPages(): ContentPage[] {
-	if (cache) return cache;
-
-	cache = Object.entries(pageModules)
-		.map(([path, mod]) => {
-			const slug = slugFromPagePath(path);
-			const segments = slug.split('/');
-			const leaf = segments[segments.length - 1];
-			const title = mod.frontmatter.title ?? titleCase(leaf);
-			const rawMenu = mod.frontmatter.menu;
-			const imagePath = Object.keys(pageImages).find((p) => dirFromPath(p) === dirFromPath(path));
-
-			const menu: PageMenuMeta | null = rawMenu
-				? {
-						show: rawMenu.show === true,
-						order: typeof rawMenu.order === 'number' ? rawMenu.order : 99,
-						label: rawMenu.label ?? title,
-					}
-				: null;
-
-			return {
-				slug,
-				segments,
-				url: `/${slug}`,
-				title,
-				description: mod.frontmatter.description,
-				menu,
-				image: imagePath ? pageImages[imagePath] : undefined,
-				imageCredit: mod.frontmatter.imageCredit,
-				access: parseAccessOf(slug, mod.frontmatter.access),
-				headings: mod.getHeadings(),
-				Content: mod.Content,
-			} satisfies ContentPage;
-		})
-		.sort((a, b) => a.slug.localeCompare(b.slug));
-
-	return cache;
-}
-
-export function getContentPage(slug: string): ContentPage {
-	const page = getContentPages().find((entry) => entry.slug === slug);
-	if (!page) {
-		throw new Error(`Page de contenu introuvable pour le slug "${slug}"`);
-	}
-	return page;
+export function groupMetaOf(groups: Map<string, GroupMeta>, folder: string): GroupMeta {
+	return groups.get(folder) ?? { label: titleCase(folder), order: 50 };
 }

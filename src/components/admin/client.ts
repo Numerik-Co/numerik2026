@@ -28,6 +28,46 @@ export interface AccountView {
 	updated: string;
 }
 
+export interface NewsItem {
+	slug: string;
+	href: string;
+	title: string;
+	publishAt: string;
+	isPublish: boolean;
+	tag: string | null;
+	thumbnail: string | null;
+}
+
+/** Actualité telle qu'elle est dans les sources (formulaire d'édition). */
+export interface NewsSource {
+	slug: string;
+	title: string;
+	publishAt: string;
+	excerpt: string;
+	isPublish: boolean;
+	tag: string;
+	author: string;
+	imageCredit: string;
+	body: string;
+	cover: string | null;
+	/** Aperçu de la photo actuelle (site construit). */
+	coverUrl: string | null;
+}
+
+export type NewsFields = Pick<NewsSource, 'title' | 'publishAt' | 'excerpt' | 'isPublish' | 'tag' | 'author' | 'imageCredit'>;
+
+export type CoverUpdate = { action: 'keep' } | { action: 'remove' } | { action: 'replace'; type: string; data: string };
+
+/** État de la dernière publication (reconstruction du site), cf. src/lib/site-build.ts. */
+export interface PublishStatus {
+	state: 'idle' | 'running' | 'succeeded' | 'failed';
+	label?: string;
+	href?: string;
+	startedAt?: string;
+	finishedAt?: string;
+	message?: string;
+}
+
 export interface AccountInput {
 	fullname: string;
 	email: string;
@@ -71,4 +111,20 @@ export const accountsApi = {
 		request<{ password: string }>('POST', `/api/admin/comptes/${encodeURIComponent(login)}`),
 	remove: (login: string, confirm: string) =>
 		request<{ ok: true }>('DELETE', `/api/admin/comptes/${encodeURIComponent(login)}`, { confirm }),
+};
+
+export const newsApi = {
+	list: () =>
+		request<{ news: NewsItem[]; status: PublishStatus; availability: { ok: boolean; reason?: string } }>(
+			'GET',
+			'/api/admin/actualites',
+		),
+	create: (markdown: string, cover: { type: string; data: string } | null) =>
+		request<{ slug: string; href: string }>('POST', '/api/admin/actualites', { markdown, cover: cover ?? undefined }),
+	status: () => request<PublishStatus>('GET', '/api/admin/publication'),
+	get: (slug: string) => request<NewsSource>('GET', `/api/admin/actualites/${encodeURIComponent(slug)}`),
+	update: (slug: string, fields: NewsFields, body: string, cover: CoverUpdate) =>
+		request<{ ok: true; href: string }>('PUT', `/api/admin/actualites/${encodeURIComponent(slug)}`, { fields, body, cover }),
+	remove: (slug: string) =>
+		request<{ ok: true }>('DELETE', `/api/admin/actualites/${encodeURIComponent(slug)}`, { confirm: slug }),
 };

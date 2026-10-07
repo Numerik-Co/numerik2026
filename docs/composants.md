@@ -27,7 +27,7 @@ Les briques sont rangées par famille dans des sous-dossiers de `src/components/
 | `layout/Header.astro` | En-tête du site : logo, navigation, bouton "Adhérer", menu mobile. |
 | `layout/Footer.astro` | Pied de page : logo, coordonnées, réseaux sociaux, copyright. |
 | `layout/BrandStripe.astro` | Bande de couleurs de marque affichée en haut de l'en-tête. |
-| `layout/AnnonceBanner.astro` | Bannière d'annonces pleine largeur montée **au-dessus de `Header`** dans `Layout`. Lit `src/lib/annonces.ts` (contenu dans `src/contents/annonces.md`). Script client : fenêtre de dates, rotation auto (prop `intervalMs`, défaut 7000) avec flèches `‹` `›` si plusieurs annonces valides, pause au survol/focus, fermeture mémorisée en `sessionStorage`. Couleur pilotée par le `tone` de l'annonce affichée. Voir [annonces.md](annonces.md). |
+| `layout/AnnonceBanner.astro` | Bannière d'annonces pleine largeur montée **au-dessus de `Header`** dans `Layout`. Lit `src/lib/annonces.ts` (collection `annonces`, contenu dans `src/content/annonces.yaml`). Script client : fenêtre de dates, rotation auto (prop `intervalMs`, défaut 7000) avec flèches `‹` `›` si plusieurs annonces valides, pause au survol/focus, fermeture mémorisée en `sessionStorage`. Couleur pilotée par le `tone` de l'annonce affichée. Voir [annonces.md](annonces.md). |
 | `layout/Breadcrumb.astro` | Fil d'Ariane (`Accueil > ... > page courante`). Prend un tableau `items` (`{ label, href? }`) ; le dernier élément (page courante) n'a jamais de `href` et reçoit seul `aria-current="page"`. Un élément intermédiaire peut aussi omettre `href` (ex. un libellé de menu déroulant sans page "hub" propre) : il s'affiche alors en texte simple, sans lien ni `aria-current`. Ne se rend pas si `items` contient moins de 2 éléments. Voir [navigation.md](navigation.md). |
 
 ### `cards/`
@@ -87,7 +87,7 @@ Une section = un bloc complet de page (souvent une balise `<section>` pleine lar
 | `RdvCtaSection.astro` | Encart de prise de RDV avec le·la Conseiller·ère Numérique : permanences (déduites de `conseillerNumerique`) + bouton. Props facultatives : `eyebrow`, `title`, `description`, `buttonLabel`, `buttonHref` | Accueil |
 | `PageHeader.astro` | Bannière de titre pour les pages internes (dégradé + titre + description). Props : `title`, `description` | Activités, Actualités, Adhérer, Contact |
 
-> ⚠️ Ne pas confondre **Activités** (`activites/`, `ActivitesSection`, `ActivityCard` — les parcours/ateliers proposés par l'association, contenu évergreen) et **Actualités** (`actualites/`, `ActualitesSection`, `ArticleCard` — les news datées). Deux systèmes de contenu distincts, avec le même fonctionnement (dossier + `index.md` + `cover.*`).
+> ⚠️ Ne pas confondre **Activités** (`activites/`, `ActivitesSection`, `ActivityCard` — les parcours/ateliers proposés par l'association, contenu évergreen) et **Actualités** (`actualites/`, `ActualitesSection`, `ArticleCard` — les news datées). Deux collections de contenu distinctes, avec le même fonctionnement (dossier + `index.md` + photo citée par `cover:`).
 
 ## Ajouter une nouvelle section
 

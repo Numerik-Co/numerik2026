@@ -1,10 +1,10 @@
 /**
  * Configuration propre à chaque structure qui déploie ce template.
  *
- * C'est le SEUL fichier hors de `src/contents/` qu'un intégrateur doit
+ * C'est le SEUL fichier hors de `src/content/` qu'un intégrateur doit
  * ajuster pour mettre en route une nouvelle plateforme. Toutes les autres
  * pages de contenu se déclarent elles-mêmes via leur frontmatter
- * (voir `src/contents/README.md`).
+ * (voir `src/content/README.md`).
  */
 
 export interface BuiltinNavItem {

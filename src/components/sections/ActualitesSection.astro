@@ -18,7 +18,7 @@ const {
 	limit = 3,
 } = Astro.props;
 
-const articles = getAllNews().slice(0, limit);
+const articles = (await getAllNews()).slice(0, limit);
 ---
 
 <section class="bg-white py-16">

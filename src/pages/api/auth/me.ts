@@ -10,10 +10,10 @@ export const prerender = false;
  * « Pages réservées »). 401 si personne n'est connecté — le middleware a
  * alors effacé le cookie indicateur.
  */
-export const GET: APIRoute = ({ locals }) => {
+export const GET: APIRoute = async ({ locals }) => {
 	const user = locals.user;
 	if (!user) return jsonError('Non connecté·e.', 401);
-	const pages = getContentPages()
+	const pages = (await getContentPages())
 		.filter((p) => p.access !== null && canAccess(user, p.access))
 		.map((p) => ({ title: p.title, url: p.url, description: p.description ?? null }));
 	return json({ user: publicUser(user), pages });

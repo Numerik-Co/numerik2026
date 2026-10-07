@@ -21,3 +21,7 @@ scratch-*
 
 # Comptes de l'espace bénévoles : montés en volume au runtime, jamais dans l'image
 data
+
+# Versions construites par la publication en ligne
+.releases
+.tmp-publication

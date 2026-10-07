@@ -14,7 +14,7 @@ export async function getStaticPaths() {
 }
 
 const { category } = Astro.props;
-const activities = getActivitiesByCategory(category.slug);
+const activities = await getActivitiesByCategory(category.slug);
 ---
 
 <Layout

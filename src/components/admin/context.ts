@@ -7,6 +7,13 @@ export interface AdminContext {
 	pages: Ref<ReservedPage[]>;
 	/** À appeler sur une erreur 401 : la session a expiré, on repasse en mode visiteur. */
 	sessionExpired: () => void;
+	/**
+	 * Le module ouvert peut intercepter la fermeture du panneau (✕, Échap,
+	 * clic sur le fond) : la fonction renvoie `true` si elle l'a traitée
+	 * (ex. retour à la liste depuis un formulaire), `false` pour fermer.
+	 * Renvoie de quoi se désinscrire (à appeler au démontage du module).
+	 */
+	onCloseRequest: (handler: () => boolean) => () => void;
 }
 
 export const ADMIN_CONTEXT: InjectionKey<AdminContext> = Symbol('admin-context');

@@ -1,4 +1,4 @@
-import { getContentPages, getGroupMeta } from './content-pages';
+import { getContentPages, getGroups, groupMetaOf } from './content-pages';
 import { site } from '../config/site';
 
 /** Lien simple de la barre de navigation. */
@@ -29,14 +29,15 @@ interface Bucket {
 /**
  * Construit l'arbre de navigation au build, à partir de :
  *  1. `site.builtinNav` — les pages applicatives du template ;
- *  2. les pages de `src/contents/pages/` dont le frontmatter porte `menu.show: true`.
+ *  2. les pages de `src/content/pages/` dont le frontmatter porte `menu.show: true`.
  *
  * L'arborescence de dossiers produit les menus déroulants : une page rangée
  * dans un sous-dossier (`association/notre-histoire`) devient un enfant du
  * dropdown de ce dossier. Tout est trié par `order` (builtin et contenu mélangés).
  */
-export function getNavTree(): NavEntry[] {
+export async function getNavTree(): Promise<NavEntry[]> {
 	const ordered: OrderedEntry[] = [];
+	const groups = await getGroups();
 
 	// 1. Pages applicatives déclarées dans src/config/site.ts
 	for (const item of site.builtinNav) {
@@ -46,8 +47,8 @@ export function getNavTree(): NavEntry[] {
 	// 2. Pages de contenu marquées `menu.show: true`
 	const buckets = new Map<string, Bucket>();
 
-	for (const page of getContentPages()) {
-		// Les pages réservées (`access:`) restent hors du menu public, calculé au build.
+	for (const page of await getContentPages()) {
+		// Les pages réservées (espace-benevoles/) restent hors du menu public, calculé au build.
 		if (!page.menu?.show || page.access !== null) continue;
 
 		// Page à la racine -> lien de premier niveau
@@ -62,7 +63,7 @@ export function getNavTree(): NavEntry[] {
 		// Page dans un sous-dossier -> enfant du dropdown de ce dossier
 		const folder = page.segments[0];
 		if (!buckets.has(folder)) {
-			const meta = getGroupMeta(folder);
+			const meta = groupMetaOf(groups, folder);
 			buckets.set(folder, { order: meta.order, label: meta.label, children: [] });
 		}
 		buckets.get(folder)!.children.push({

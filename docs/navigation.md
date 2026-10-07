@@ -8,9 +8,9 @@ Le menu du header est **construit automatiquement au build** par
 1. **`src/config/site.ts`** — les pages applicatives du template
    (`builtinNav` : Accueil, Activités, Actualités, Contact) et le bouton CTA
    « Adhérer » (`cta`, jamais une entrée de menu).
-2. **Les pages de `src/contents/pages/`** dont le frontmatter porte
+2. **Les pages de `src/content/pages/`** dont le frontmatter porte
    `menu.show: true` — voir [pages.md](pages.md) et le guide éditeur
-   [`src/contents/README.md`](../src/contents/README.md).
+   [`src/content/README.md`](../src/content/README.md).
 
 `src/components/layout/Header.astro` consomme `getNavTree()` : le rendu
 (desktop + menu mobile) et le bouton « Adhérer » sont inchangés, seule la
@@ -20,7 +20,7 @@ source des données a changé. Le tableau `navLinks` codé en dur a disparu.
 
 | Cas | Où agir |
 | --- | --- |
-| Page éditoriale (contenu) | Frontmatter `menu:` de `src/contents/pages/<...>/index.md` |
+| Page éditoriale (contenu) | Frontmatter `menu:` de `src/content/pages/<...>/index.md` |
 | Page applicative (Accueil, Activités…) | Tableau `builtinNav` de `src/config/site.ts` |
 | Bouton « Adhérer » | Objet `cta` de `src/config/site.ts` (`enabled: false` le masque) |
 | Ordre | Champ `order` — builtin et contenu sont triés sur la **même échelle** |
@@ -31,11 +31,11 @@ Actualités `30`, Contact `40`.
 ## Un dossier de pages **crée** désormais un sous-menu
 
 Contrairement à l'ancienne version : ranger des pages de contenu dans un
-sous-dossier de `src/contents/pages/` les regroupe automatiquement dans un
+sous-dossier de `src/content/pages/` les regroupe automatiquement dans un
 menu déroulant.
 
 ```
-src/contents/pages/
+src/content/pages/
   association/
     _group.md                     -> libellé + ordre du menu déroulant
     notre-histoire/index.md        -> /association/notre-histoire (enfant, menu.show:true)
@@ -63,7 +63,7 @@ src/contents/pages/
 
 ⚠️ Un libellé de dropdown n'ayant pas de page « hub » propre, tout fil d'Ariane
 qui le mentionne doit omettre son `href` — c'est ce que fait automatiquement
-`src/pages/[...slug].astro` (`{ label: getGroupLabel(folder) }` sans `href`).
+`src/components/article/ContentPageView.astro` (`{ label: groupMetaOf(groups, folder).label }` sans `href`).
 `Breadcrumb.astro` affiche alors ce libellé en texte simple.
 
 ## Fil d'Ariane
@@ -87,7 +87,7 @@ Pour une page « libre » (`.astro` dans `src/pages/`), deux choses :
    automatique depuis l'URL).
 2. Ajouter `slot="page-header"` sur son `<PageHeader>`.
 
-Pour une page de contenu (`src/contents/pages/`), le fil d'Ariane est **construit
+Pour une page de contenu (`src/content/pages/`), le fil d'Ariane est **construit
 automatiquement** par `src/pages/[...slug].astro` à partir du chemin :
 `Accueil` → (libellé du dossier parent, si sous-dossier) → titre de la page.
 
@@ -110,6 +110,6 @@ n'affiche rien (accueil, 404).
   (`/reglement-interieur`).
 
 Ces trois pages sont des pages de contenu ordinaires
-(`src/contents/pages/<slug>/index.md`) avec `menu.show: false` : accessibles par
+(`src/content/pages/<slug>/index.md`) avec `menu.show: false` : accessibles par
 leur URL, liées uniquement depuis le pied de page. Passer leur `menu.show` à
 `true` les ajouterait aussi à la navbar.

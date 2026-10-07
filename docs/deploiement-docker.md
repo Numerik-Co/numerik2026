@@ -11,10 +11,10 @@ change rien — il empaquette juste ce build.
 | **Adhésions, inscriptions, contacts** (formulaire) | **Grist** (via les routes `/api/adhesion/*`) | ❌ **Non.** C'est live, indépendant de l'image. |
 | **Comptes de l'espace bénévoles** | `data/accounts/` sur le VPS (volume) | ❌ Non — gérés depuis le site |
 | Autres données saisies via un futur formulaire | Grist / service externe | ❌ Non |
-| **Actualités** (`src/contents/news/…`) | fichiers Markdown compilés au build | ✅ **Oui** |
-| **Activités** (`src/contents/activites/…`) | idem | ✅ Oui |
-| **Pages de contenu** (`src/contents/pages/…`) | idem | ✅ Oui |
-| **Bannière d'annonces** (`src/contents/annonces.md`) | idem | ✅ Oui |
+| **Actualités** (`src/content/news/…`) | fichiers Markdown compilés au build | ✅ **Oui** |
+| **Activités** (`src/content/activites/…`) | idem | ✅ Oui |
+| **Pages de contenu** (`src/content/pages/…`) | idem | ✅ Oui |
+| **Bannière d'annonces** (`src/content/annonces.yaml`) | idem | ✅ Oui |
 | **Partenaires, catégories, infos asso** (`src/lib/*.ts`) | données en dur dans le code | ✅ Oui |
 | Composants, styles, structure | code | ✅ Oui |
 
@@ -179,7 +179,7 @@ certbot --nginx -d numerikandco.org -d www.numerikandco.org   # HTTPS auto
 # 1. localement : créer le dossier de l'article + index.md + image
 #    (voir docs/actualites.md)
 # 2. commit + push
-git add src/contents/news/2026-09-xx-mon-article
+git add src/content/news/2026-09-xx-mon-article
 git commit -m "Actu : mon article"
 git push
 ```
@@ -194,7 +194,7 @@ cd /opt/numerik2026
 
 ```bash
 cd /opt/numerik2026
-nano src/contents/news/...           # ou scp de vos fichiers
+nano src/content/news/...           # ou scp de vos fichiers
 git add -A && git commit -m "..."    # gardez l'historique propre
 docker compose up -d --build         # reconstruit et redémarre
 ```

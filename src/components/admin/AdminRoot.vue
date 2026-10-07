@@ -7,7 +7,7 @@
  * Connexion et déconnexion rechargent la page : les pages réservées et le
  * contenu rendu côté serveur reflètent ainsi le nouvel état.
  */
-import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
 import { ApiError, authApi, type AdminUser, type ReservedPage } from './client';
@@ -21,6 +21,12 @@ const pages = ref<ReservedPage[]>([]);
 const loginOpen = ref(false);
 const activeId = ref<string | null>(null);
 
+/**
+ * Mode du serveur, affiché dans la barre : en développement (`astro dev`), le
+ * contenu est relu à chaud et les publications ne reconstruisent pas le site.
+ */
+const isDev = import.meta.env.DEV;
+
 const modules = computed(() => (user.value ? modulesFor(user.value.groups) : []));
 const activeModule = computed(() => modules.value.find((m) => m.id === activeId.value) ?? null);
 
@@ -29,7 +35,20 @@ function sessionExpired() {
 	activeId.value = null;
 	loginOpen.value = true;
 }
-provide(ADMIN_CONTEXT, { user, pages, sessionExpired });
+/** Interception de la fermeture par le module ouvert (cf. `AdminContext.onCloseRequest`). */
+const closeHandler = shallowRef<(() => boolean) | null>(null);
+function onCloseRequest(handler: () => boolean) {
+	closeHandler.value = handler;
+	return () => {
+		if (closeHandler.value === handler) closeHandler.value = null;
+	};
+}
+function closeModule() {
+	if (closeHandler.value?.()) return;
+	activeId.value = null;
+}
+
+provide(ADMIN_CONTEXT, { user, pages, sessionExpired, onCloseRequest });
 
 /** Lien « Espace bénévoles » : connexion, ou premier module si déjà connecté·e. */
 function open() {
@@ -78,6 +97,21 @@ onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
 				<i class="fa-solid fa-gear text-gray-400" aria-hidden="true"></i>
 				Espace bénévoles
 			</span>
+			<span
+				v-if="isDev"
+				class="mr-1 shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-semibold text-amber-950"
+				title="Serveur de développement : les modifications sont visibles aussitôt, sans reconstruction du site."
+			>
+				<i class="fa-solid fa-flask mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Développement</span><span class="sm:hidden">Dév.</span>
+			</span>
+			<span
+				v-else
+				class="mr-1 hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs text-gray-300 sm:flex"
+				title="Serveur de production : chaque publication reconstruit le site."
+			>
+				<span class="h-2 w-2 rounded-full bg-green-400" aria-hidden="true"></span>
+				Production
+			</span>
 			<nav class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto" aria-label="Modules d'administration">
 				<button
 					v-for="m in modules"
@@ -109,7 +143,7 @@ onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
 		</div>
 	</div>
 
-	<AdminOverlay v-if="activeModule" :key="activeModule.id" :title="activeModule.label" @close="activeId = null">
+	<AdminOverlay v-if="activeModule" :key="activeModule.id" :title="activeModule.label" @close="closeModule">
 		<component :is="activeModule.component" />
 	</AdminOverlay>
 

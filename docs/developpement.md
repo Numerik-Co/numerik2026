@@ -6,7 +6,7 @@
 - **`@astrojs/node`** (`mode: 'standalone'`) — adaptateur qui fournit le petit serveur HTTP nécessaire aux routes API ; à mettre derrière un reverse proxy (nginx/Apache) et un process manager (PM2) en production. Voir [api.md](api.md).
 - **[Tailwind CSS 4](https://tailwindcss.com)** — classes utilitaires, configurées directement en CSS via `@theme` dans `src/styles/global.css` (pas de fichier `tailwind.config.js`, c'est le fonctionnement natif de Tailwind 4).
 - **`@astrojs/rss`** — génération du flux `/rss.xml`.
-- **`@astrojs/mdx`** — pour les pages de `src/contents/pages/` qui ont besoin d'interpoler des valeurs dynamiques (ex. `mentions-legales`) ; voir [pages.md](pages.md).
+- **`@astrojs/mdx`** — pour les pages de `src/content/pages/` qui ont besoin d'interpoler des valeurs dynamiques (ex. `mentions-legales`) ; voir [pages.md](pages.md).
 - **`@fortawesome/fontawesome-free`** — icônes des catégories d'activités, auto-hébergées (import CSS dans `global.css`, pas de CDN externe).
 
 ## Commandes
@@ -31,9 +31,9 @@ src/
 │   ├── TableOfContents.astro, ReadingProgress.astro  # sommaire + temps de lecture (slot sidebar d'Article)
 │   ├── Header.astro, Footer.astro                    # structure commune
 │   └── sections/                                     # blocs de page (Hero, CtaSection, PageHeader...)
-├── contents/
-│   ├── news/<slug>/                                  # un dossier par actualité (index.md + cover.*)
-│   ├── activites/<slug>/                             # un dossier par activité (index.md + cover.*)
+├── content/
+│   ├── news/<slug>/                                  # collection news : un dossier par actualité (index.md + photo cover:)
+│   ├── activites/<slug>/                             # collection activites : un dossier par activité (index.md + photo cover:)
 │   ├── pages/<...>/index.{md,mdx}                     # pages éditoriales : le chemin = l'URL, frontmatter menu: (voir pages.md)
 │   ├── pages/<dossier>/_group.md                     # libellé + ordre d'un menu déroulant
 │   └── README.md                                     # guide de rédaction destiné aux éditeurs
@@ -44,14 +44,14 @@ src/
 │   └── site.ts                                       # config par déploiement : CTA « Adhérer » + builtinNav
 ├── lib/
 │   ├── news.ts                                       # lecture/tri/formatage des actualités (getAllNews)
-│   ├── activites.ts                                  # lecture/tri des activités (getAllActivities, getActivitiesByCategory)
-│   ├── content-pages.ts                              # découverte des pages de contents/pages/ (getContentPages, getGroupMeta)
+│   ├── activites.ts                                  # collection activites (getAllActivities, getActivitiesByCategory, renderActivity)
+│   ├── content-pages.ts                              # collections pages / pageGroups (getContentPages, renderPage, getGroups)
 │   ├── navigation.ts                                 # construction du menu au build (getNavTree)
 │   ├── reading-time.ts                               # estimation du temps de lecture (~200 mots/minute)
 │   └── categories.ts                                 # registre fixe des 4 catégories d'activités (label, icône)
 ├── pages/
 │   ├── index.astro, activites.astro, contact.astro...  # une route par fichier
-│   ├── [...slug].astro                               # route attrape-tout : rend les pages de contents/pages/
+│   ├── [...slug].astro                               # route attrape-tout : rend les pages de content/pages/
 │   ├── actualites/[slug].astro                       # route dynamique, une page par actualité
 │   ├── activites/[category].astro                    # route dynamique, une page par catégorie
 │   ├── activites/[category]/[slug].astro             # route dynamique, une page par activité
@@ -65,9 +65,9 @@ src/
 └── env.d.ts                                           # typage des variables d'environnement (import.meta.env)
 ```
 
-À la racine du projet : `.env.example` liste les variables d'environnement attendues (à copier en `.env`, jamais commité — voir [api.md](api.md)).
+À la racine du projet : `.env.example` liste les variables d'environnement attendues (à copier en `.env`, jamais commité). Elles sont déclarées dans `astro.config.mjs` (`astro:env`, lues au démarrage, jamais figées dans `dist/`) — voir [api.md](api.md#variables-denvironnement).
 
-Pas de dossier `src/assets/` ni `public/` actif à ce stade (contenu de démarrage Astro supprimé) ; les images du site vivent à côté de ce qui les utilise (`src/styles/img/` pour le logo, `src/contents/news/<slug>/` et `src/contents/activites/<slug>/` pour les visuels).
+Pas de dossier `src/assets/` ni `public/` actif à ce stade (contenu de démarrage Astro supprimé) ; les images du site vivent à côté de ce qui les utilise (`src/styles/img/` pour le logo, `src/content/news/<slug>/` et `src/content/activites/<slug>/` pour les visuels).
 
 ## Configuration Astro (`astro.config.mjs`)
 

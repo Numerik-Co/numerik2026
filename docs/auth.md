@@ -16,7 +16,7 @@ Mise en service et mode d'emploi pour les bénévoles :
 
 | Grav | Ici |
 | :--- | :--- |
-| `user/accounts/<login>.yaml` | `data/accounts/<login>.yaml` (`AUTH_DATA_DIR`) |
+| `user/accounts/<login>.yaml` | `data/accounts/<login>.yaml` (`DATA_DIR`) |
 | `user/config/groups.yaml` | `AUTH_GROUPS` dans `src/lib/auth/groups.ts` |
 | `bin/plugin login newuser` | `npm run auth:user -- add …` (`scripts/auth-user.ts`) |
 | Admin plugin > Utilisateurs | module « Comptes » de la barre admin (groupe `admin`) |
@@ -51,15 +51,20 @@ updated: 2026-10-06T10:00:00.000Z
 | :--- | :--- |
 | `admin` | Tout : toutes les pages réservées + tous les modules (dont « Comptes ») |
 | `animateur` | Pages réservées dont l'`access:` cite `animateur` (ou `true`) |
+| `redacteur` | Module « Actualités » (publication des actualités, cf. [publication.md](publication.md)) |
 
 Ajouter un groupe = une entrée dans `AUTH_GROUPS` (`src/lib/auth/groups.ts`).
 
 ## Réserver une page de contenu
 
-Frontmatter de `src/contents/pages/<…>/index.md` :
+Les pages réservées se rangent dans **`src/content/pages/espace-benevoles/`**
+(URL `/espace-benevoles/<…>`). Ce dossier est le seul servi **à la demande**
+(`src/pages/espace-benevoles/[...slug].astro`, Node requis) : toutes les autres
+pages sont prérendues, donc publiques par nature. Frontmatter :
 
 ```yaml
-access: true                 # toute personne connectée
+# (absent)                   # toute personne connectée (défaut dans ce dossier)
+access: true                 # idem, explicite
 access: animateur            # un groupe
 access: [animateur, admin]   # l'un de ces groupes
 ```
@@ -70,12 +75,11 @@ access: [animateur, admin]   # l'un de ces groupes
 - Une page réservée n'apparaît **jamais dans le menu** (calculé au build) ;
   elle est listée dans le module « Pages réservées » des personnes autorisées.
 - Pas d'outils de partage, `noindex`, en-tête `Cache-Control: private, no-store`.
-- Un groupe inconnu dans `access:` fait **échouer le build** (une faute de
-  frappe ne doit jamais ouvrir une page).
-
-Conséquence technique : `src/pages/[...slug].astro` est rendue **à la
-demande** (`prerender = false`) pour toutes les pages de contenu, et non plus
-prérendue. Les autres pages statiques (accueil, actualités…) restent prérendues.
+- Le build **échoue** si `access:` cite un groupe inconnu, ou s'il est posé sur
+  une page hors de `espace-benevoles/` (elle serait prérendue, donc lisible par
+  tous). Une faute de frappe ne doit jamais ouvrir une page.
+- Le contenu de ces pages n'est jamais écrit dans `dist/client/` (vérifié) : il
+  n'existe que dans le serveur Node.
 
 ## Interface : modale, barre, modules
 
@@ -87,9 +91,9 @@ prérendue. Les autres pages statiques (accueil, actualités…) restent préren
 | `src/components/admin/AdminOverlay.vue` | Calque générique : `variant="drawer"` (panneau à droite, plein écran sur mobile) ou `"modal"`. Échap / clic sur le fond ferment, focus piégé puis rendu, défilement de la page bloqué. |
 | `src/components/admin/LoginForm.vue` | Formulaire de la modale de connexion. |
 | `src/components/admin/modules.ts` | **Registre des modules** (`id`, `label`, icône, `groups`, composant chargé à la demande). |
-| `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `AccountsModule` (comptes, `admin`), `PasswordModule` (mon mot de passe). |
+| `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `NewsModule` (actualités, `redacteur`), `AccountsModule` (comptes, `admin`), `PasswordModule` (mon mot de passe). |
 | `src/components/admin/client.ts` | Appels typés aux routes ; `ApiError.status === 401` = session expirée (`sessionExpired()` du contexte rouvre la connexion). |
-| `src/components/admin/context.ts` | `provide/inject` (`user`, `pages`, `sessionExpired`) + classes des champs. |
+| `src/components/admin/context.ts` | `provide/inject` (`user`, `pages`, `sessionExpired`, `onCloseRequest` : un module peut intercepter ✕/Échap, ex. retour à sa liste depuis un formulaire) + classes des champs. |
 
 N'importe quel élément peut ouvrir la connexion : `<button type="button" data-auth-open>…</button>`
 (une fois connecté·e, il ouvre le premier module).
@@ -101,8 +105,8 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 2. Une entrée dans `ADMIN_MODULES` (`modules.ts`) — `groups: []` = toute
    personne connectée ; `admin` voit tout.
 3. Ses routes JSON sous `src/pages/api/admin/<…>` : connexion déjà exigée
-   par le middleware ; si elles sont réservées à un groupe, ajouter la garde
-   dans `src/middleware.ts` (comme `/api/admin/comptes`). **Le contrôle
+   par le middleware ; si elles sont réservées à un groupe, ajouter une
+   entrée à `GUARDS` dans `src/middleware.ts` (comme `/api/admin/comptes`). **Le contrôle
    d'accès réel est toujours côté serveur.**
 
 ## Routes API
@@ -114,12 +118,17 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `GET /api/auth/me` | `{ user, pages }` (pages réservées ouvertes) ou 401 |
 | `POST /api/admin/mot-de-passe` | `{ current, next }` — ferme les autres sessions |
 | `GET/POST /api/admin/comptes` | Liste / création (`password` provisoire renvoyé une fois) — `admin` |
+| `GET/POST /api/admin/actualites` | Liste (brouillons compris) + état de publication / dépôt `{ markdown, cover?: { type, data } }` → écrit `src/content/news/…` et reconstruit le site — `redacteur` |
+| `GET/PUT /api/admin/actualites/<slug>` | Lecture des sources (formulaire) / modification `{ fields, body, cover: { action: keep\|remove\|replace } }` : même dossier (URL inchangée), sauvegarde restaurée si le build échoue — `redacteur` |
+| `DELETE /api/admin/actualites/<slug>` | Suppression `{ confirm: <slug> }` : dossier mis de côté, site reconstruit, dossier effacé (ou remis en place si échec) — `redacteur` |
+| `GET /api/admin/publication` | État de la dernière publication — `redacteur` |
 | `PATCH/POST/DELETE /api/admin/comptes/<login>` | Modification / réinitialisation du mot de passe / suppression (`{ confirm: <login> }`) — `admin` |
 
 Garde : `src/middleware.ts` — `/api/auth/*` et `/api/admin/*` n'acceptent
 que les requêtes du site lui-même (`Sec-Fetch-Site`, à défaut `Origin`),
-`/api/admin/*` exige une connexion (401), `/api/admin/comptes*` le groupe
-`admin` (403). `Astro.locals.user` est renseigné sur chaque requête rendue à
+`/api/admin/*` exige une connexion (401), et les préfixes de `GUARDS` un
+groupe (403) : `/api/admin/comptes*` → `admin`, `/api/admin/actualites*` et
+`/api/admin/publication` → `redacteur` (`admin` passe toujours). `Astro.locals.user` est renseigné sur chaque requête rendue à
 la demande.
 
 Garde-fous des comptes : impossible de se retirer ses propres droits admin,
@@ -176,7 +185,7 @@ npm run auth:user -- reset xavier                       # nouveau mot de passe p
 ### En production (Docker)
 
 1. Ajouter `AUTH_SECRET=…` au `.env` du VPS.
-2. Le `docker-compose.yml` monte `./data` sur `/app/data` (`AUTH_DATA_DIR`) :
+2. Le `docker-compose.yml` monte `./data` sur `/app/data` (`DATA_DIR`) :
    les comptes survivent aux redéploiements. Sauvegarder ce dossier.
 3. Créer le premier admin, puis tout se fait depuis le module « Comptes » :
 

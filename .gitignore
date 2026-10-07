@@ -31,3 +31,7 @@ pnpm-debug.log*
 
 # Comptes de l'espace bénévoles (auth à plat, cf. docs/auth.md) — données, jamais versionnées
 /data/
+
+# Versions du site construites par l'espace bénévoles (publication), cf. docs/publication.md
+/.releases/
+/.tmp-publication/

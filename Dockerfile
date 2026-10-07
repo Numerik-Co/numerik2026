@@ -25,12 +25,13 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-# Le serveur standalone + ses dépendances d'exécution.
-# (On recopie node_modules tel quel : image un peu plus lourde,
-#  mais parité garantie avec le build — pas de surprise sharp/vue.)
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/package.json ./package.json
+# Tout le projet construit : le serveur (dist/) MAIS AUSSI les sources et
+# les outils de build (node_modules complet). Indispensable pour publier
+# depuis l'espace bénévoles : le conteneur reconstruit lui-même le site après
+# l'ajout d'une actualité (cf. docs/publication.md). src/content/ est monté
+# depuis le VPS (docker-compose.yml) pour que ce contenu survive aux
+# redéploiements.
+COPY --from=build /app ./
 
 EXPOSE 4321
 

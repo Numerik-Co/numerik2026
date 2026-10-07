@@ -19,10 +19,10 @@ Ce registre vit dans **`src/lib/categories.ts`** — c'est la seule source de v�
 
 ## Créer une nouvelle activité
 
-1. Créer un dossier dans `src/contents/activites/`, nommé d'après le slug de l'activité :
+1. Créer un dossier dans `src/content/activites/`, nommé d'après le slug de l'activité :
 
    ```
-   src/contents/activites/atelier-photo-numerique/
+   src/content/activites/atelier-photo-numerique/
    ```
 
 2. À l'intérieur, créer un fichier `index.md` avec ce frontmatter :
@@ -34,6 +34,7 @@ Ce registre vit dans **`src/lib/categories.ts`** — c'est la seule source de v�
    excerpt: "Un court résumé (1-2 phrases) affiché dans les cartes."
    category: "ateliers"
    order: 4
+   cover: ./cover.jpg
    ---
 
    Le corps de la page en Markdown : paragraphes, **gras**, sous-titres `## ...`,
@@ -48,12 +49,15 @@ Ce registre vit dans **`src/lib/categories.ts`** — c'est la seule source de v�
    | `category` | oui | Slug d'une catégorie de `src/lib/categories.ts` (`parcours`, `ateliers`, `mediation-numerique`, `fablab`). Détermine sous quelle page catégorie l'activité apparaît, et son URL |
    | `order` | non | Nombre entier, détermine l'ordre d'affichage au sein de sa catégorie (croissant). Sans ce champ, l'activité est affichée en dernier |
    | `level` | non | Niveau du cours (ex. `"Grand débutant"`, `"Initiation"`, `"Perfectionnement"`), affiché en pastille en bas à droite de la carte, à côté du lien "En savoir plus". Sans ce champ, la pastille ne s'affiche pas |
+   | `cover` | non | Photo, chemin relatif au dossier (`./cover.jpg`). Le fichier doit exister, sinon le build échoue. Sans `cover:`, un placeholder « Image à venir » s'affiche sur la carte |
    | `imageCredit` | non | Légende affichée sous l'image **sur la page de détail uniquement** (ex. `"Photo : Prénom Nom / Source"`). Si absent ou vide, retombe automatiquement sur `"Photo : <nom de l'association>"` (voir `src/lib/association.ts`) |
    | `inscription` | non | `false` masque le bouton « S'inscrire » de la page de détail (ex. permanences sur RDV). Absent = bouton affiché — voir [inscription.md](inscription.md) |
    | `activiteGrist` | non | Nom (ou liste de noms) de l'activité dans Grist (`Activite.Nom`) ciblée par le bouton « S'inscrire » ; `*` final = préfixe (`"Initiation*"`). Absent = le `title` — voir [inscription.md](inscription.md#présélection) |
    | `typeGrist` | non | Type Grist (`Séances`, `Ateliers`, `Atelier CN`) ciblé par le bouton « S'inscrire », seul ou avec `activiteGrist` |
 
-3. (Optionnel) Ajouter une image dans le même dossier, nommée `cover.jpg`, `cover.png` ou `cover.webp`. Sans image, un placeholder "Images à venir" s'affiche automatiquement sur la carte.
+3. (Optionnel) Déposer la photo dans le même dossier et la citer avec `cover: ./cover.jpg` (voir le tableau).
+
+Le frontmatter est vérifié à la construction : un champ obligatoire manquant ou une `category` inconnue bloquent le build avec un message qui nomme la fiche.
 
 L'activité apparaît alors sur :
 - la page **`/activites/<category>`** (liste des activités de sa catégorie),
@@ -67,9 +71,12 @@ Avant d'ajouter une photo trouvée sur le web : vérifier sa licence. Une image 
 
 ## Comment ça marche techniquement
 
-La logique de lecture est centralisée dans `src/lib/activites.ts` :
-- `getAllActivities()` — écarte les activités avec `isPublish: false`, scanne `src/contents/activites/*/index.md`, associe l'image par nom de dossier, trie par `order`. Calcule `href` en `/activites/<category>/<slug>`.
-- `getActivitiesByCategory(categorySlug)` — filtre `getAllActivities()` par catégorie.
+Les fiches forment la **content collection** `activites` (`src/content.config.ts`, [doc Astro](https://docs.astro.build/en/guides/content-collections/)) : loader `glob` sur `src/content/activites/*/index.md`, identifiant = nom du dossier, schéma validé au build (`category` limitée aux slugs de `src/lib/categories.ts`, `cover` via `image()`).
+
+`src/lib/activites.ts` :
+- `getAllActivities()` (async) — `getCollection('activites')` filtré sur `isPublish`, trié par `order` (puis nom de dossier). Calcule `href` en `/activites/<category>/<slug>` et le lien du bouton « S'inscrire ».
+- `getActivitiesByCategory(categorySlug)` (async) — filtre `getAllActivities()` par catégorie.
+- `renderActivity(activity)` — `render()` de l'entrée : composant `Content` et `headings`.
 
 Quatre endroits consomment ces fonctions :
 - `ActivitesSection.astro` (accueil + `/activites`) — affiche les 4 `CategoryCard` depuis `categories.ts`, pas les activités.

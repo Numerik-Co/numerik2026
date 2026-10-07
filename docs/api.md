@@ -33,14 +33,17 @@ export default defineConfig({
 
 En développement (`astro dev`), tout fonctionne de façon transparente. En production sur un VPS/serveur dédié (OVH ou autre) :
 
-1. `npm run build` — génère `dist/server/entry.mjs` (le serveur Node) en plus des fichiers statiques.
-2. Lancer ce serveur en continu avec un process manager (ex. PM2 : `pm2 start dist/server/entry.mjs --name numerik2026`).
+1. `npm run build` — génère `dist/server/entry.mjs` (le serveur Node) en plus des fichiers statiques (`dist/client/`). Le build n'a **pas besoin** du `.env` et n'en recopie rien (voir plus bas).
+2. Lancer ce serveur en continu avec un process manager. `npm start` lance `node --env-file-if-exists=.env dist/server/entry.mjs` : le `.env` est lu **au démarrage** (ex. PM2 : `pm2 start npm --name numerik2026 -- start`).
 3. Mettre nginx/Apache en reverse proxy devant, avec le vrai nom de domaine.
-4. Définir les variables d'environnement (voir plus bas) directement sur le serveur — jamais dans les fichiers commités.
+4. Définir les variables d'environnement (voir plus bas) directement sur le serveur — jamais dans les fichiers commités. Après une modification du `.env`, **redémarrer** le serveur suffit : pas de rebuild.
 
 ## Variables d'environnement
 
-Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner :
+Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner. Toutes
+sont **facultatives** : une fonction non configurée se désactive proprement
+(formulaires Grist en erreur gérée, bulletin PDF masqué, connexion « non
+configurée »), le reste du site fonctionne.
 
 | Variable | Rôle |
 | :--- | :--- |
@@ -48,15 +51,39 @@ Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner :
 | `GRIST_DOC_ID` | Identifiant du document Grist contenant les tables d'adhésion |
 | `GRIST_API_KEY` | Clé API Grist — **secret**, ne doit exister que dans `.env` côté serveur |
 | `GRIST_TABLE_MEMBRES` | Nom technique de la table des membres (défaut `Membres`) — optionnel |
-| `GRIST_TABLE_INSCRIPTIONS` | Nom technique de la table des inscriptions (défaut `Inscriptions`) — optionnel |
-| `GRIST_TABLE_COTISATIONS` | Nom technique de la table des cotisations (défaut `Cotisations`) — optionnel |
-| `GRIST_TABLE_ACTIVITES` | Nom technique de la table des activités (défaut `Activites`) — optionnel |
-| `GRIST_TABLE_PRESENCE` | Nom technique de la table de présence aux ateliers (défaut `Presence`) — optionnel |
+| `GRIST_TABLE_ADHESIONS` | Table des adhésions (défaut `Adhesions`) — optionnel |
+| `GRIST_TABLE_INSCRIPTIONS` | Table des inscriptions (défaut `Inscription`) — optionnel |
+| `GRIST_TABLE_COTISATIONS` | Table des cotisations (défaut `Cotisation`) — optionnel |
+| `GRIST_TABLE_ACTIVITES` | Table des activités (défaut `Activite`) — optionnel |
+| `GRIST_TABLE_SAISONS` | Table des saisons (défaut `Saisons`) — optionnel |
+| `GRIST_TABLE_PRESENCE` | Table de présence aux ateliers (défaut `Presence`) — optionnel |
+| `GRIST_DOC_ID_RDV` | Document Grist des RDV du Conseiller Numérique — optionnel, voir [rdv-conseiller-numerique.md](rdv-conseiller-numerique.md) |
+| `GRIST_TABLE_BENEFICIAIRES` / `GRIST_TABLE_RDV` / `GRIST_TABLE_DEMARCHES` | Tables du document RDV (défauts `Beneficiaires`, `RDV`, `Demarches`) — optionnel |
 | `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
 | `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |
 | `BULLETIN_SECRET` | Secret HMAC du lien de bulletin — **secret**, requis avec `GOTENBERG_URL` |
+| `AUTH_SECRET` | Signature des sessions de l'espace bénévoles (≥ 32 caractères) — **secret**, voir [auth.md](auth.md) |
+| `DATA_DIR` | Dossier des comptes et de l'état des publications de l'espace bénévoles (défaut `./data`) — optionnel |
+| `SITE_ROOT` / `PUBLISH_HOOK` / `PUBLISH_RESTART` | Publication depuis l'espace bénévoles — optionnel, voir [publication.md](publication.md) |
 
-Ces variables sont typées dans `src/env.d.ts` pour l'auto-complétion sur `import.meta.env`.
+### Lues au démarrage, jamais figées dans le build
+
+Les variables sont déclarées dans `astro.config.mjs` (`env.schema`, API
+[`astro:env`](https://docs.astro.build/en/guides/environment-variables/)), toutes
+en `access: 'secret'` : le code les lit par
+`import { GRIST_API_KEY } from 'astro:env/server'` et leur valeur est prise
+**au démarrage du serveur**, jamais recopiée dans `dist/`. Conséquences :
+
+- on peut construire le site n'importe où (poste, CI) et déposer `dist/` sur le
+  serveur : aucun secret de la machine de build ne part avec ;
+- changer le `.env` demande un **redémarrage**, pas un rebuild ;
+- ne jamais lire un secret via `import.meta.env.X` : Vite le recopierait en
+  clair dans le build. (Une variable serveur `access: 'public'` d'`astro:env`
+  est elle aussi figée au build — d'où `secret` partout.)
+
+Nouvelle variable : l'ajouter à `env.schema` (`astro.config.mjs`) et à
+`.env.example`. `DATA_DIR` fait exception (lue par `process.env` dans
+`src/lib/data-dir.ts`, partagé avec le CLI `auth-user`).
 
 ## Formulaire d'adhésion
 

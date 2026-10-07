@@ -49,7 +49,7 @@ hors de l'image Docker. Le `docker-compose.yml` monte déjà ce dossier :
 
 ```yaml
 environment:
-  - AUTH_DATA_DIR=/app/data
+  - DATA_DIR=/app/data
 volumes:
   - ./data:/app/data
 ```
@@ -108,7 +108,7 @@ Autres commandes utiles :
 ```
 
 > L'identifiant : 2 à 32 caractères, minuscules, chiffres, `.`, `-` ou `_`
-> (ex. `prenom.nom`). Groupes possibles : `admin`, `animateur`.
+> (ex. `prenom.nom`). Groupes possibles : `admin`, `animateur`, `redacteur`.
 
 ### 5. Vérifier
 
@@ -162,19 +162,25 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 └────────────────────────────────────────────────────────────────────┘
 ```
 
+- Un badge indique le **mode du serveur** : **Production** (point vert) —
+  chaque publication reconstruit le site — ou **Développement** (ambre) —
+  serveur de test, modifications visibles aussitôt, sans reconstruction.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
-  la partie assombrie de la page.
+  la partie assombrie de la page. Dans un formulaire (actualité à
+  ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
+  d'abord à la liste.
 - Vous naviguez normalement sur le site : la barre vous suit sur toutes les pages.
 
 Les modules visibles dépendent de votre groupe :
 
-| Module | Bureau (`admin`) | Animateur·rice |
-| :--- | :---: | :---: |
-| Pages réservées | ✅ | ✅ |
-| Comptes | ✅ | — |
-| Mon mot de passe | ✅ | ✅ |
+| Module | Bureau (`admin`) | Rédacteur·rice | Animateur·rice |
+| :--- | :---: | :---: | :---: |
+| Pages réservées | ✅ | ✅ | ✅ |
+| Actualités | ✅ | ✅ | — |
+| Comptes | ✅ | — | — |
+| Mon mot de passe | ✅ | ✅ | ✅ |
 
 ### Pages réservées
 
@@ -183,6 +189,84 @@ Liste les pages du site qui ne sont visibles qu'une fois connecté·e
 
 Si vous arrivez sur une page réservée **sans être connecté·e**, elle affiche
 un encart **« Page réservée »** avec un bouton **Se connecter**.
+
+### Publier une actualité
+
+Module **📰 Actualités** (groupes *Rédacteur·rice* et *Bureau*). La liste
+montre toutes les actualités, les plus récentes d'abord (badge
+**Brouillon** pour celles non publiées) ; « Voir la page Actualités » ouvre la
+page publique.
+
+1. **+ Ajouter une actualité**, puis **Télécharger un modèle** : un fichier
+   `.md` déjà daté du jour, avec des exemples de mise en forme, à compléter
+   dans n'importe quel éditeur de texte. Il commence par cet en-tête :
+
+   ```markdown
+   ---
+   title: "Atelier retouche photo"
+   publishAt: 2026-10-15
+   excerpt: "Un court résumé affiché sur les cartes et l'accueil."
+   tag: "Ateliers"
+   author: "numérik&Co"
+   ---
+
+   Le texte de l'actualité. **Gras**, listes, sous-titres `## …`, liens…
+   ```
+
+   `title`, `publishAt` (AAAA-MM-JJ) et `excerpt` sont obligatoires ;
+   `tag`, `author`, `imageCredit` facultatifs ; `isPublish: false` pour un
+   brouillon. Détail des champs : [actualites.md](actualites.md).
+2. Glisser le fichier `.md` dans la première zone (ou cliquer pour le
+   choisir) : un aperçu (titre, date, résumé) s'affiche, un champ manquant
+   est signalé en rouge.
+3. Glisser la **photo** de couverture dans la seconde zone (JPEG, PNG ou
+   WebP, 10 Mo max) — facultative mais recommandée. Sa position GPS et ses
+   autres métadonnées sont retirées automatiquement.
+4. **Publier l'actualité** : le site est **reconstruit** (de quelques
+   secondes à une minute) ; un encadré « Publication en cours » suit
+   l'avancement, puis affiche le lien vers l'actualité en ligne. On peut
+   fermer le panneau pendant ce temps.
+
+Le texte accepte le **HTML** en plus du Markdown : tableaux, encadrés
+(`<div>`), mise en forme, détails dépliables, vidéos et cartes intégrées
+(`<iframe>` YouTube, Vimeo, PeerTube, OpenStreetMap). Par sécurité, tout code
+exécutable (`<script>`, `<style>`, attributs `onclick=`…, liens
+`javascript:`, iframes d'autres sites) est **retiré à l'affichage**, sans
+toucher au reste.
+
+Refusés à l'envoi, avec un message qui indique la ligne en cause : les liens
+Markdown autres que `http(s)`, `mailto:`, `tel:` ou internes, et les images
+Markdown locales (`![…](./photo.jpg)` : seule la photo de couverture se
+dépose ; une image en ligne `https://…` est acceptée). Si la reconstruction
+échoue, rien n'est publié et le site reste tel quel.
+
+> Le titre et la date forment l'adresse de la page
+> (`/actualites/2026-10-15-atelier-retouche-photo`) : deux actualités ne
+> peuvent pas avoir la même date et le même titre.
+
+**Supprimer une actualité** : icône 🗑 au bout de sa ligne, puis
+**Supprimer** dans l'encadré rouge qui apparaît (ou **Annuler**). Le site est
+reconstruit comme pour un ajout ; l'actualité disparaît de la page
+Actualités, de l'accueil et du flux RSS. Si la reconstruction échoue, rien
+n'est supprimé.
+
+**Modifier une actualité** : clic sur son **titre** dans la liste (l'icône 👁
+au bout de la ligne ouvre la page sur le site). Un formulaire
+s'ouvre, prérempli : titre, date, catégorie, résumé, auteur·rice, texte (en
+Markdown), photo (**Remplacer** / **Retirer**), crédit photo, et la case
+**Brouillon** pour retirer l'actualité du site sans la supprimer (la décocher
+plus tard la republie). **Enregistrer les modifications** reconstruit le site ;
+si la reconstruction échoue, la version précédente est conservée.
+
+> L'adresse de la page ne change pas, même si le titre ou la date sont
+> modifiés : les liens déjà partagés continuent de fonctionner.
+
+> Supprimer à la main le dossier dans `src/content/news/` ne retire
+> l'actualité du site qu'à la prochaine reconstruction : passez par le
+> module.
+
+Côté serveur, la publication a des prérequis (sources du site, gestionnaire
+de process) : voir [publication.md](publication.md).
 
 ### Changer mon mot de passe
 
@@ -208,9 +292,10 @@ Module **👥 Comptes**, réservé au groupe *Bureau / administration*.
    - **Identifiant** — ce que la personne tapera pour se connecter
      (ex. `marie.fruit`) ; il ne pourra plus être changé.
    - **Prénom et nom**, **email** (facultatif).
-   - **Groupes** — *Animateur·rice* pour les encadrant·e·s, *Bureau /
+   - **Groupes** — *Animateur·rice* pour les encadrant·e·s,
+     *Rédacteur·rice* (publication des actualités), *Bureau /
      administration* pour les membres du bureau (accès à tout, dont la
-     gestion des comptes).
+     gestion des comptes). Plusieurs groupes peuvent être cochés.
    - **Mot de passe provisoire** — laisser vide pour en générer un.
 3. **Créer le compte**.
 
@@ -258,9 +343,21 @@ ordinateur partagé (médiathèque, salle d'atelier…).
 
 ## Pour les éditeurs : réserver une page
 
-Ajouter `access:` dans le frontmatter d'une page de `src/contents/pages/` :
+Ranger la page dans `src/content/pages/espace-benevoles/` (son adresse
+commence alors par `/espace-benevoles/`). Par défaut, toute personne
+connectée y a accès ; `access:` restreint à certains groupes :
 
 ```yaml
+---
+title: "Fiches animateur·rice·s"
+access: animateur        # ou : admin, redacteur, [animateur, admin]
+---
+```
+
+La page n'apparaît pas dans le menu public et figure dans **Pages réservées**
+pour les personnes autorisées. Comme tout contenu, elle est publiée au
+prochain build. Détail : [src/content/README.md](../src/content/README.md).
+
 ---
 title: "Fiches animateur·rice·s"
 access: animateur        # ou : true (toute personne connectée), admin, [animateur, admin]
@@ -269,7 +366,7 @@ access: animateur        # ou : true (toute personne connectée), admin, [animat
 
 La page disparaît du menu public et apparaît dans **Pages réservées** pour
 les personnes autorisées. Comme tout contenu, elle est publiée au prochain
-déploiement. Détail : [src/contents/README.md](../src/contents/README.md).
+déploiement. Détail : [src/content/README.md](../src/content/README.md).
 
 ---
 

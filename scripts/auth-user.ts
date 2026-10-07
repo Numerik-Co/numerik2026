@@ -11,7 +11,7 @@
  *   ./auth-user.sh add xavier "Xavier Burke" admin
  *
  * Le mot de passe provisoire est généré et affiché une seule fois.
- * Comptes écrits dans `$AUTH_DATA_DIR/accounts` (défaut `./data/accounts`).
+ * Comptes écrits dans `$DATA_DIR/accounts` (défaut `./data/accounts`).
  */
 
 import { dataDir, isValidLogin, listAccounts, normalizeLogin, readAccount, saveAccount } from '../src/lib/auth/accounts.ts';

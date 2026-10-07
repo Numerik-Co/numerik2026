@@ -16,24 +16,26 @@ assemblée générale à venir, recherche de bénévoles, fermeture exceptionnel
   visiteur a demandé « animations réduites » dans son système.
 
 Toutes les annonces sont regroupées dans **un seul fichier** :
-`src/contents/annonces.md`. Aucune base de données, aucun dossier à créer.
+`src/content/annonces.yaml`. Aucune base de données, aucun dossier à créer.
 
 ## Ajouter une annonce
 
-Ouvrir `src/contents/annonces.md` et ajouter une entrée dans la liste `annonces`
-de l'en-tête (la partie entre les `---`) :
+Ouvrir `src/content/annonces.yaml` et ajouter une entrée à la liste (chaque
+annonce commence par un tiret `-` en début de ligne) :
 
-```markdown
-  - id: "ag-2026"
-    title: "Assemblée générale 2026"
-    message: "Notre assemblée générale annuelle approche. Votre présence compte."
-    startDate: "2026-08-20"
-    endDate: "2026-09-18"
-    tone: "info"
-    icon: "fa-calendar-days"
-    ctaLabel: "Voir les détails"
-    ctaHref: "/actualites/2026-08-17-assemblee-generale-2026"
+```yaml
+- id: "ag-2026"
+  title: "Assemblée générale 2026"
+  message: "Notre assemblée générale annuelle approche. Votre présence compte."
+  startDate: "2026-08-20"
+  endDate: "2026-09-18"
+  tone: "info"
+  icon: "fa-calendar-days"
+  ctaLabel: "Voir les détails"
+  ctaHref: "/actualites/2026-08-17-assemblee-generale-2026"
 ```
+
+Les annonces défilent **dans l'ordre du fichier**.
 
 | Champ | Obligatoire | Rôle |
 | :--- | :--- | :--- |
@@ -47,7 +49,10 @@ de l'en-tête (la partie entre les `---`) :
 | `ctaLabel` + `ctaHref` | non | Lien d'action. Les **deux** doivent être renseignés. Lien interne (`/adherer`) ou externe. |
 | `active` | non | `false` pour préparer une annonce sans l'afficher (brouillon). |
 
-Toujours mettre les valeurs **entre guillemets doubles**.
+Toujours mettre les valeurs **entre guillemets doubles**. Le fichier est
+vérifié à la construction du site : un champ obligatoire manquant, une date
+mal écrite ou une `endDate` antérieure à `startDate` bloquent le build avec un
+message qui nomme l'annonce en cause.
 
 ### Régler la vitesse de défilement
 
@@ -66,8 +71,8 @@ le HTML contient toujours toutes les annonces non-brouillon, masquées, et un
 petit script révèle celles dont la date du jour est dans l'intervalle et que le
 visiteur n'a pas fermées.
 
-Il reste utile de reconstruire / redéployer le site après avoir édité
-`annonces.md` pour que le nouveau contenu soit servi.
+Il faut en revanche reconstruire le site (`npm run build`) après avoir édité
+`annonces.yaml` pour que le nouveau contenu soit servi.
 
 ## Retirer une annonce
 
@@ -84,10 +89,12 @@ première ligne du `<Layout>` de `src/pages/index.astro`.
 
 ## Comment ça marche techniquement
 
-- `src/contents/annonces.md` — le contenu (frontmatter uniquement).
-- `src/lib/annonces.ts` — `getAnnonces()` lit le frontmatter, valide les champs
-  (erreur de build explicite si `id` / `title` / `message` / dates manquants ou
-  mal formés), écarte les `active: false`.
+- `src/content/annonces.yaml` — le contenu : collection Astro `annonces`
+  (`src/content.config.ts`, loader `file()`), schéma validé au build ; le
+  loader ajoute `position` (rang dans le fichier) pour garder l'ordre.
+- `src/lib/annonces.ts` — `getAnnonces()` (async, `getCollection`) écarte les
+  `active: false`, trie par `position`, ne garde le lien d'action que si
+  `ctaLabel` et `ctaHref` sont renseignés.
 - `src/components/layout/AnnonceBanner.astro` — rendu de la bannière + script client :
   fenêtre de dates, rotation automatique avec pause au survol/focus, flèches
   `‹` `›`, fermeture mémorisée dans `sessionStorage` (clé

@@ -18,6 +18,10 @@ export const AUTH_GROUPS = {
 		label: 'Animateur·rice',
 		description: 'Accès aux pages réservées aux encadrant·e·s.',
 	},
+	redacteur: {
+		label: 'Rédacteur·rice',
+		description: 'Publie les actualités depuis la barre d’administration.',
+	},
 } as const;
 
 export type AuthGroup = keyof typeof AUTH_GROUPS;

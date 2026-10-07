@@ -7,8 +7,8 @@ import { site } from '../../config/site';
 import BrandStripe from './BrandStripe.astro';
 
 // Menu construit au build à partir de src/config/site.ts + des frontmatters
-// `menu:` des pages de src/contents/pages/ (voir src/contents/README.md).
-const navLinks = getNavTree();
+// `menu:` des pages de src/content/pages/ (voir src/content/README.md).
+const navLinks = await getNavTree();
 const cta = site.cta;
 const presence = site.presence;
 ---

@@ -1,6 +1,13 @@
+/**
+ * Fiches d'activité : collection `activites` (`src/content.config.ts`), un
+ * dossier par fiche dans `src/content/activites/`. Résolu au build.
+ */
+
+import { getCollection, render, type CollectionEntry } from 'astro:content';
 import { association } from './association';
-import type { Heading } from './headings';
 import { estimateReadingTime } from './reading-time';
+
+export type ActivityEntry = CollectionEntry<'activites'>;
 
 export interface Activity {
 	slug: string;
@@ -9,8 +16,8 @@ export interface Activity {
 	title: string;
 	excerpt: string;
 	level?: string;
-	image?: any;
-	imageCredit?: string;
+	image?: ActivityEntry['data']['cover'];
+	imageCredit: string;
 	/** `false` masque le bouton « S'inscrire » (ex. activités sur rendez-vous). Défaut : `true`. */
 	inscription: boolean;
 	/**
@@ -21,69 +28,50 @@ export interface Activity {
 	 */
 	inscriptionHref: string;
 	order: number;
-	headings: Heading[];
 	readingTime: number;
-	Content: any;
+	/** Entrée brute de la collection (pour `render()` sur la page de détail). */
+	entry: ActivityEntry;
 }
 
-const activityFiles = import.meta.glob('../contents/activites/*/index.md', {
-	eager: true,
-}) as Record<
-	string,
-	{
-		frontmatter: Record<string, any>;
-		Content: any;
-		getHeadings: () => Heading[];
-		rawContent: () => string;
-	}
->;
-
-const activityImages = import.meta.glob('../contents/activites/*/cover.*', {
-	eager: true,
-	import: 'default',
-}) as Record<string, any>;
-
-function slugFromPath(path: string) {
-	return path.split('/').slice(-2, -1)[0];
-}
-
-function inscriptionHref(frontmatter: Record<string, any>): string {
+function inscriptionHref(data: ActivityEntry['data']): string {
 	const params = new URLSearchParams();
-	const noms = [frontmatter.activiteGrist ?? []].flat().filter(Boolean);
-	if (noms.length === 0 && !frontmatter.typeGrist) noms.push(frontmatter.title);
-	noms.forEach((n: string) => params.append('activite', n));
-	if (frontmatter.typeGrist) params.set('type', frontmatter.typeGrist);
+	const noms = [data.activiteGrist ?? []].flat().filter(Boolean);
+	if (noms.length === 0 && !data.typeGrist) noms.push(data.title);
+	noms.forEach((n) => params.append('activite', n));
+	if (data.typeGrist) params.set('type', data.typeGrist);
 	return `/inscription?${params}`;
 }
 
-export function getAllActivities(): Activity[] {
-	return Object.entries(activityFiles)
-		.filter(([, mod]) => mod.frontmatter.isPublish !== false)
-		.map(([path, mod]) => {
-			const { frontmatter, Content, getHeadings, rawContent } = mod;
-			const slug = slugFromPath(path);
-			const imagePath = Object.keys(activityImages).find((p) => slugFromPath(p) === slug);
-
-			return {
-				slug,
-				category: frontmatter.category,
-				href: `/activites/${frontmatter.category}/${slug}`,
-				title: frontmatter.title,
-				excerpt: frontmatter.excerpt,
-				level: frontmatter.level,
-				inscription: frontmatter.inscription !== false,
-				inscriptionHref: inscriptionHref(frontmatter),
-				image: imagePath ? activityImages[imagePath] : undefined,
-				imageCredit: frontmatter.imageCredit || `Photo : ${association.name}`,
-				order: frontmatter.order ?? 999,
-				headings: getHeadings(),
-				readingTime: estimateReadingTime(rawContent()),
-				Content,
-			};
-		})
-		.sort((a, b) => a.order - b.order);
+function toActivity(entry: ActivityEntry): Activity {
+	const { data } = entry;
+	return {
+		slug: entry.id,
+		category: data.category,
+		href: `/activites/${data.category}/${entry.id}`,
+		title: data.title,
+		excerpt: data.excerpt,
+		level: data.level,
+		inscription: data.inscription,
+		inscriptionHref: inscriptionHref(data),
+		image: data.cover,
+		imageCredit: data.imageCredit || `Photo : ${association.name}`,
+		order: data.order,
+		readingTime: estimateReadingTime(entry.body ?? ''),
+		entry,
+	};
 }
 
-export function getActivitiesByCategory(categorySlug: string): Activity[] {
-	return getAllActivities().filter((activity) => activity.category === categorySlug);
+/** Activités publiées (`isPublish` ≠ false), par `order` croissant. */
+export async function getAllActivities(): Promise<Activity[]> {
+	const entries = await getCollection('activites', ({ data }) => data.isPublish);
+	return entries.map(toActivity).sort((a, b) => a.order - b.order || a.slug.localeCompare(b.slug));
+}
+
+export async function getActivitiesByCategory(categorySlug: string): Promise<Activity[]> {
+	return (await getAllActivities()).filter((activity) => activity.category === categorySlug);
+}
+
+/** Contenu rendu d'une fiche : composant `Content` et titres (sommaire). */
+export async function renderActivity(activity: Activity) {
+	return render(activity.entry);
 }
