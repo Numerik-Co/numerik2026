@@ -166,7 +166,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│ ⚙ Espace bénévoles  🔒 Pages réservées  👥 Comptes  🔑 Mon mot de passe     Marie  ⏻ Déconnexion │
+│ ⚙ Paramètres  🔒 Pages réservées  👥 Comptes  🔑 Mon mot de passe     Marie  ⏻ Déconnexion │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -232,8 +232,8 @@ page publique.
    autres métadonnées sont retirées automatiquement.
 4. **Publier l'actualité** : le site est **reconstruit** (de quelques
    secondes à une minute) ; un encadré « Publication en cours » suit
-   l'avancement, puis affiche le lien vers l'actualité en ligne. On peut
-   fermer le panneau pendant ce temps.
+   l'avancement, puis affiche le lien vers l'actualité en ligne (encadré
+   refermable par sa croix ✕). On peut fermer le panneau pendant ce temps.
 
 Le texte accepte le **HTML** en plus du Markdown : tableaux, encadrés
 (`<div>`), mise en forme, détails dépliables, vidéos et cartes intégrées

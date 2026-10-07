@@ -12,7 +12,7 @@
  * bref redémarrage du serveur. L'aperçu du frontmatter est indicatif ; le
  * serveur fait la vraie validation.
  */
-import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem, type PublishStatus } from '../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 
@@ -26,6 +26,14 @@ const availability = ref<{ ok: boolean; reason?: string }>({ ok: true });
 const status = ref<PublishStatus>({ state: 'idle' });
 /** Vrai pendant qu'on suit une publication lancée depuis ce module (ou trouvée en cours). */
 const following = ref(false);
+/** Encadré du dernier résultat fermé par l'utilisateur·rice ; réaffiché à la publication suivante. */
+const statusDismissed = ref(false);
+watch(
+	() => status.value.state,
+	(state) => {
+		if (state === 'running') statusDismissed.value = false;
+	},
+);
 
 const mdFile = ref<File | null>(null);
 const mdText = ref('');
@@ -351,16 +359,38 @@ onMounted(load);
 		</span>
 	</div>
 	<div
-		v-else-if="status.state === 'succeeded'"
-		class="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+		v-else-if="status.state === 'succeeded' && !statusDismissed"
+		class="relative mb-4 rounded-xl border border-green-200 bg-green-50 p-4 pr-10 text-sm text-green-800"
 		role="status"
 	>
+		<button
+			type="button"
+			class="absolute right-2 top-2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
+			aria-label="Fermer ce message"
+			title="Fermer"
+			@click="statusDismissed = true"
+		>
+			<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+		</button>
 		Dernière publication en ligne :
 		<a v-if="status.href" :href="status.href" class="font-medium underline">{{ status.label }}</a>
 		<span v-else class="font-medium">{{ status.label }}</span>
 		<span v-if="status.message" class="mt-1 block text-amber-800">{{ status.message }}</span>
 	</div>
-	<p v-else-if="status.state === 'failed'" class="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+	<p
+		v-else-if="status.state === 'failed' && !statusDismissed"
+		class="relative mb-4 rounded-xl bg-red-50 p-4 pr-10 text-sm text-red-700"
+		role="alert"
+	>
+		<button
+			type="button"
+			class="absolute right-2 top-2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
+			aria-label="Fermer ce message"
+			title="Fermer"
+			@click="statusDismissed = true"
+		>
+			<i class="fa-solid fa-xmark" aria-hidden="true"></i>
+		</button>
 		<strong class="font-medium">Dernière publication non aboutie<template v-if="status.label"> ({{ status.label }})</template>.</strong>
 		<span class="block">{{ status.message }}</span>
 	</p>
@@ -554,33 +584,33 @@ onMounted(load);
 		</p>
 
 		<div>
-			<label for="ed-title" class="block text-sm font-medium text-gray-700">Titre</label>
+			<label for="ed-title" class="block text-sm font-semibold text-gray-700">Titre</label>
 			<input id="ed-title" v-model="editForm.title" type="text" required :class="inputClass" />
 		</div>
 		<div class="grid gap-4 sm:grid-cols-2">
 			<div>
-				<label for="ed-date" class="block text-sm font-medium text-gray-700">Date de publication</label>
+				<label for="ed-date" class="block text-sm font-semibold text-gray-700">Date de publication</label>
 				<input id="ed-date" v-model="editForm.publishAt" type="date" required :class="inputClass" />
 			</div>
 			<div>
-				<label for="ed-tag" class="block text-sm font-medium text-gray-700">
+				<label for="ed-tag" class="block text-sm font-semibold text-gray-700">
 					Catégorie <span class="font-light text-gray-500">(facultative)</span>
 				</label>
 				<input id="ed-tag" v-model="editForm.tag" type="text" placeholder="Ateliers" :class="inputClass" />
 			</div>
 		</div>
 		<div>
-			<label for="ed-excerpt" class="block text-sm font-medium text-gray-700">Résumé</label>
+			<label for="ed-excerpt" class="block text-sm font-semibold text-gray-700">Résumé</label>
 			<textarea id="ed-excerpt" v-model="editForm.excerpt" rows="2" required :class="inputClass"></textarea>
 		</div>
 		<div>
-			<label for="ed-author" class="block text-sm font-medium text-gray-700">
+			<label for="ed-author" class="block text-sm font-semibold text-gray-700">
 				Auteur·rice <span class="font-light text-gray-500">(facultatif)</span>
 			</label>
 			<input id="ed-author" v-model="editForm.author" type="text" :class="inputClass" />
 		</div>
 		<div>
-			<label for="ed-body" class="block text-sm font-medium text-gray-700">Texte (Markdown)</label>
+			<label for="ed-body" class="block text-sm font-semibold text-gray-700">Texte (Markdown)</label>
 			<textarea id="ed-body" v-model="editForm.body" rows="14" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
 			<p class="mt-1 text-xs font-light text-gray-500">
 				<code>## Sous-titre</code>, <code>**gras**</code>, <code>*italique*</code>, <code>- liste</code>,
@@ -591,7 +621,7 @@ onMounted(load);
 
 		<!-- Photo -->
 		<fieldset>
-			<legend class="text-sm font-medium text-gray-700">Photo de couverture</legend>
+			<legend class="text-sm font-semibold text-gray-700">Photo de couverture</legend>
 			<img
 				v-if="coverAction === 'keep' && editing.coverUrl"
 				:src="editing.coverUrl"
@@ -621,7 +651,7 @@ onMounted(load);
 			</div>
 		</fieldset>
 		<div>
-			<label for="ed-credit" class="block text-sm font-medium text-gray-700">
+			<label for="ed-credit" class="block text-sm font-semibold text-gray-700">
 				Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
 			</label>
 			<input id="ed-credit" v-model="editForm.imageCredit" type="text" placeholder="Photo : Prénom Nom" :class="inputClass" />
