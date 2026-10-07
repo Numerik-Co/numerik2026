@@ -6,12 +6,12 @@
  * Les garde-fous (soi-même, dernier admin) sont appliqués par le serveur ;
  * l'interface masque seulement les actions impossibles sur son propre compte.
  */
-import { computed, inject, onMounted, reactive, ref } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { AUTH_GROUPS, type AuthGroup } from '../../../lib/auth/groups';
 import { ApiError, accountsApi, type AccountView } from '../client';
 import { ADMIN_CONTEXT, inputClass } from '../context';
 
-const { user, sessionExpired } = inject(ADMIN_CONTEXT)!;
+const { user, sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 const groupEntries = Object.entries(AUTH_GROUPS) as [AuthGroup, (typeof AUTH_GROUPS)[AuthGroup]][];
 
 type View = { name: 'list' } | { name: 'create' } | { name: 'edit'; login: string };
@@ -131,7 +131,15 @@ const remove = () =>
 const formatDate = (iso: string) =>
 	iso ? new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
+// ✕ / Échap depuis une fiche ou la création : retour à la liste plutôt que fermeture du panneau.
+const stopCloseRequest = onCloseRequest(() => {
+	if (view.value.name === 'list') return false;
+	go({ name: 'list' });
+	return true;
+});
+
 onMounted(load);
+onBeforeUnmount(stopCloseRequest);
 </script>
 
 <template>

@@ -165,8 +165,9 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
-  la partie assombrie de la page. Dans un formulaire (ajout ou
-  modification d'une actualité), ces mêmes gestes ramènent d'abord à la liste.
+  la partie assombrie de la page. Dans un formulaire (actualité à
+  ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
+  d'abord à la liste.
 - Vous naviguez normalement sur le site : la barre vous suit sur toutes les pages.
 
 Les modules visibles dépendent de votre groupe :
@@ -239,7 +240,8 @@ reconstruit comme pour un ajout ; l'actualité disparaît de la page
 Actualités, de l'accueil et du flux RSS. Si la reconstruction échoue, rien
 n'est supprimé.
 
-**Modifier une actualité** : icône ✏️ au bout de sa ligne. Un formulaire
+**Modifier une actualité** : clic sur son **titre** dans la liste (l'icône 👁
+au bout de la ligne ouvre la page sur le site). Un formulaire
 s'ouvre, prérempli : titre, date, catégorie, résumé, auteur·rice, texte (en
 Markdown), photo (**Remplacer** / **Retirer**), crédit photo, et la case
 **Brouillon** pour retirer l'actualité du site sans la supprimer (la décocher

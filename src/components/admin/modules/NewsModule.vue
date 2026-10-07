@@ -391,27 +391,31 @@ onMounted(load);
 						<img v-if="a.thumbnail" :src="a.thumbnail" alt="" class="h-full w-full object-cover" loading="lazy" />
 					</span>
 					<span class="min-w-0 flex-1">
-						<a
-							v-if="a.isPublish"
-							:href="a.href"
-							class="block truncate text-sm font-medium text-gray-900 hover:text-primary"
-						>{{ a.title }}</a>
-						<span v-else class="block truncate text-sm font-medium text-gray-500">{{ a.title }}</span>
+						<!-- Le titre ouvre l'édition ; l'icône 👁 mène à la page publique. -->
+						<button
+							type="button"
+							class="block max-w-full truncate text-left text-sm font-medium hover:text-primary disabled:cursor-default disabled:hover:text-inherit"
+							:class="a.isPublish ? 'text-gray-900' : 'text-gray-500'"
+							:disabled="!availability.ok || following || busy"
+							:title="`Modifier « ${a.title} »`"
+							@click="openEdit(a)"
+						>
+							{{ a.title }}
+						</button>
 						<span class="block truncate text-xs font-light text-gray-500">
 							{{ formatDate(a.publishAt) }}<template v-if="a.tag"> · {{ a.tag }}</template>
 						</span>
 					</span>
 					<span v-if="!a.isPublish" class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Brouillon</span>
-					<button
-						type="button"
-						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-primary/10 hover:text-primary disabled:opacity-40"
-						:disabled="!availability.ok || following || busy"
-						:aria-label="`Modifier « ${a.title} »`"
-						:title="`Modifier « ${a.title} »`"
-						@click="openEdit(a)"
+					<a
+						v-if="a.isPublish"
+						:href="a.href"
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+						:aria-label="`Voir « ${a.title} » sur le site`"
+						:title="`Voir « ${a.title} » sur le site`"
 					>
-						<i class="fa-solid fa-pen text-sm" aria-hidden="true"></i>
-					</button>
+						<i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
+					</a>
 					<button
 						type="button"
 						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
