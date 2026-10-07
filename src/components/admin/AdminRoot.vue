@@ -98,7 +98,7 @@ onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
 		<div class="mx-auto flex h-full max-w-7xl items-center gap-1 px-2 sm:px-4">
 			<span class="mr-2 hidden items-center gap-2 font-heading font-semibold md:flex">
 				<i class="fa-solid fa-gear text-gray-400" aria-hidden="true"></i>
-				Espace bénévoles
+				Paramètres
 			</span>
 			<span
 				v-if="isDev"
