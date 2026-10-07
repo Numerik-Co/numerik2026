@@ -162,6 +162,9 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 └────────────────────────────────────────────────────────────────────┘
 ```
 
+- Un badge indique le **mode du serveur** : **Production** (point vert) —
+  chaque publication reconstruit le site — ou **Développement** (ambre) —
+  serveur de test, modifications visibles aussitôt, sans reconstruction.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur

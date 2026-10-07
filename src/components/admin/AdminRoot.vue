@@ -21,6 +21,12 @@ const pages = ref<ReservedPage[]>([]);
 const loginOpen = ref(false);
 const activeId = ref<string | null>(null);
 
+/**
+ * Mode du serveur, affiché dans la barre : en développement (`astro dev`), le
+ * contenu est relu à chaud et les publications ne reconstruisent pas le site.
+ */
+const isDev = import.meta.env.DEV;
+
 const modules = computed(() => (user.value ? modulesFor(user.value.groups) : []));
 const activeModule = computed(() => modules.value.find((m) => m.id === activeId.value) ?? null);
 
@@ -90,6 +96,21 @@ onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
 			<span class="mr-2 hidden items-center gap-2 font-heading font-semibold md:flex">
 				<i class="fa-solid fa-gear text-gray-400" aria-hidden="true"></i>
 				Espace bénévoles
+			</span>
+			<span
+				v-if="isDev"
+				class="mr-1 shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-semibold text-amber-950"
+				title="Serveur de développement : les modifications sont visibles aussitôt, sans reconstruction du site."
+			>
+				<i class="fa-solid fa-flask mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Développement</span><span class="sm:hidden">Dév.</span>
+			</span>
+			<span
+				v-else
+				class="mr-1 hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs text-gray-300 sm:flex"
+				title="Serveur de production : chaque publication reconstruit le site."
+			>
+				<span class="h-2 w-2 rounded-full bg-green-400" aria-hidden="true"></span>
+				Production
 			</span>
 			<nav class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto" aria-label="Modules d'administration">
 				<button

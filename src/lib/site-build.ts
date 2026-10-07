@@ -158,7 +158,8 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 
 	if (import.meta.env.DEV) {
 		await request.onSuccess?.().catch(() => {});
-		await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: startedAt, message: 'Mode développement : contenu relu à chaud, aucun build.' });
+		// Pas de build en dev (contenu relu à chaud) : le mode est affiché dans la barre d'admin.
+		await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: startedAt });
 		return { started: true };
 	}
 
