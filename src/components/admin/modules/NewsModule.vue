@@ -14,7 +14,7 @@
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem, type PublishStatus } from '../client';
-import { ADMIN_CONTEXT, inputClass } from '../context';
+import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
@@ -42,6 +42,7 @@ const POLL_MS = 3000;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 function fail(e: unknown) {
+	takeModuleToReopen(); // l'enregistrement a échoué : pas de réouverture au prochain chargement
 	if (e instanceof ApiError && e.status === 401) return sessionExpired();
 	error.value = (e as Error).message;
 }
@@ -85,7 +86,8 @@ function follow() {
 		}
 		await load();
 	};
-	pollTimer = setTimeout(tick, POLL_MS);
+	// Premier point d'étape presque immédiat (en dev, la publication est déjà finie).
+	pollTimer = setTimeout(tick, 400);
 }
 
 // ✕ / Échap depuis un formulaire : retour à la liste plutôt que fermeture du panneau.
@@ -173,6 +175,7 @@ async function submit() {
 	busy.value = true;
 	try {
 		const cover = photo.value ? { type: photo.value.type, data: await toBase64(photo.value) } : null;
+		rememberOpenModule('actualites');
 		await newsApi.create(mdText.value, cover);
 		status.value = { state: 'running', label: preview.value?.title };
 		reset();
@@ -228,6 +231,7 @@ async function remove(item: NewsItem) {
 	error.value = '';
 	busy.value = true;
 	try {
+		rememberOpenModule('actualites');
 		await newsApi.remove(item.slug);
 		confirmingDelete.value = null;
 		status.value = { state: 'running', label: `Suppression : ${item.title}` };
@@ -298,6 +302,7 @@ async function saveEdit() {
 		if (coverAction.value === 'replace' && photo.value) {
 			cover = { action: 'replace', type: photo.value.type, data: await toBase64(photo.value) };
 		}
+		rememberOpenModule('actualites');
 		await newsApi.update(editing.value.slug, fields, body, cover);
 		status.value = { state: 'running', label: `Modification : ${editForm.title}` };
 		reset();
@@ -439,7 +444,7 @@ onMounted(load);
 						class="rounded-full bg-red-600 px-4 py-1.5 font-heading text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
 						@click="remove(a)"
 					>
-						Supprimer
+						<i v-if="busy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>Supprimer
 					</button>
 					<button type="button" class="px-2 py-1.5 text-xs font-medium text-gray-600 hover:underline" @click="confirmingDelete = null">
 						Annuler
@@ -535,7 +540,7 @@ onMounted(load);
 			:disabled="busy || !mdFile || !preview || missing.length > 0"
 			class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
 		>
-			{{ busy ? 'Envoi…' : 'Publier l’actualité' }}
+			<i v-if="busy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ busy ? 'Envoi…' : 'Publier l’actualité' }}
 		</button>
 	</form>
 
@@ -644,7 +649,7 @@ onMounted(load);
 			:disabled="busy || !editForm.title || !editForm.publishAt || !editForm.excerpt || !editForm.body"
 			class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
 		>
-			{{ busy ? 'Enregistrement…' : 'Enregistrer les modifications' }}
+			<i v-if="busy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ busy ? 'Enregistrement…' : 'Enregistrer les modifications' }}
 		</button>
 	</form>
 </template>

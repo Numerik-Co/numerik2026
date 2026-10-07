@@ -18,6 +18,32 @@ export interface AdminContext {
 
 export const ADMIN_CONTEXT: InjectionKey<AdminContext> = Symbol('admin-context');
 
+/**
+ * Module à rouvrir au prochain chargement de page. En dev, écrire dans
+ * src/content déclenche un rechargement automatique de la page (Vite) : le
+ * module le note avant d'enregistrer pour réapparaître avec le résultat.
+ */
+const REOPEN_KEY = 'numerik-admin-reopen';
+
+export function rememberOpenModule(id: string): void {
+	if (!import.meta.env.DEV) return;
+	try {
+		sessionStorage.setItem(REOPEN_KEY, id);
+	} catch {
+		// sessionStorage indisponible : tant pis, la modification est faite quand même.
+	}
+}
+
+export function takeModuleToReopen(): string | null {
+	try {
+		const id = sessionStorage.getItem(REOPEN_KEY);
+		sessionStorage.removeItem(REOPEN_KEY);
+		return id;
+	} catch {
+		return null;
+	}
+}
+
 /** Classes Tailwind des champs de formulaire de l'espace bénévoles. */
 export const inputClass =
 	'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';

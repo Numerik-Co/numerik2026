@@ -11,7 +11,7 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch }
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
 import { ApiError, authApi, type AdminUser, type ReservedPage } from './client';
-import { ADMIN_CONTEXT } from './context';
+import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
 import { modulesFor } from './modules';
 
 const props = defineProps<{ openOnMount?: boolean }>();
@@ -85,6 +85,9 @@ onMounted(async () => {
 	// `AdminLoader.astro` a pu poser la classe d'avance (indicateur présent) : on la confirme ou on la retire.
 	document.documentElement.classList.toggle('has-admin-bar', Boolean(user.value));
 	if (props.openOnMount) open();
+	// Rechargement automatique en dev après une publication : on rouvre le module.
+	const reopen = takeModuleToReopen();
+	if (reopen && modules.value.some((m) => m.id === reopen)) activeId.value = reopen;
 });
 
 onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
