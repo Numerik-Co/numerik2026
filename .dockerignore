@@ -25,3 +25,4 @@ data
 # Versions construites par la publication en ligne
 .releases
 .tmp-publication
+src/content/.tmp-publication

@@ -35,3 +35,4 @@ pnpm-debug.log*
 # Versions du site construites par l'espace bénévoles (publication), cf. docs/publication.md
 /.releases/
 /.tmp-publication/
+/src/content/.tmp-publication/

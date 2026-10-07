@@ -12,7 +12,7 @@
 import type { APIRoute } from 'astro';
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
-import { json, jsonError, readJson } from '../../../../lib/auth/api';
+import { json, jsonError, readJson, withErrors } from '../../../../lib/auth/api';
 import { COVER_MAX_BYTES, MARKDOWN_MAX_BYTES, removeNews, writeNews } from '../../../../lib/news-writer';
 import { canPublish, isPublishing, publish, readStatus, type BuildStatus } from '../../../../lib/site-build';
 
@@ -36,7 +36,7 @@ function statusToShow(status: BuildStatus, hrefs: Set<string>): BuildStatus {
 	return status;
 }
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = withErrors(async () => {
 	const entries = await getCollection('news');
 	const news = await Promise.all(
 		entries.map(async ({ id, data }) => ({
@@ -52,9 +52,9 @@ export const GET: APIRoute = async () => {
 	news.sort((a, b) => b.publishAt.localeCompare(a.publishAt) || a.slug.localeCompare(b.slug));
 	const status = statusToShow(await readStatus(), new Set(news.map((n) => n.href)));
 	return json({ news, status, availability: await canPublish() });
-};
+});
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = withErrors(async ({ request }) => {
 	const availability = await canPublish();
 	if (!availability.ok) return jsonError(availability.reason!, 503);
 	if (isPublishing()) return jsonError('Une publication est déjà en cours, réessayez dans une minute.', 409);
@@ -83,4 +83,4 @@ export const POST: APIRoute = async ({ request }) => {
 		return jsonError(started.reason!, 409);
 	}
 	return json({ slug, href }, 202);
-};
+});
