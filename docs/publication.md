@@ -8,13 +8,16 @@ revient donc à faire, sur le serveur, ce qu'un·e développeur·se ferait à la
 1. écrire `src/content/news/<AAAA-MM-JJ-slug>/` (`index.md` + `cover.jpg`) — ou,
    pour une modification, remplacer ce dossier par sa nouvelle version après en
    avoir gardé une sauvegarde ; pour une suppression, le mettre de côté
-   (`.tmp-publication/`) ;
+   (`src/content/.tmp-publication/`, même disque que le contenu) ;
 2. reconstruire le site dans un dossier neuf, `.releases/<horodatage>/` — le
    site en ligne n'est pas touché pendant ce temps (≈ 10 s à 1 min) ;
 3. faire pointer `dist` sur cette nouvelle version (bascule atomique) ;
 4. lancer la commande `PUBLISH_HOOK` si elle est définie (voir plus bas) ;
-5. arrêter le process Node : son **gestionnaire** le relance aussitôt sur la
-   nouvelle version (≈ 1 s d'interruption).
+5. redémarrer le serveur sur la nouvelle version (≈ 1 s d'interruption) :
+   sous **Docker** ou **PM2**, le process s'arrête et son gestionnaire le relance ;
+   sinon (ex. `npm start` dans un terminal, ou service systemd), le serveur
+   **se relance lui-même** : un petit processus attend son arrêt puis relance
+   la même commande (journal : « relance autonome »).
 
 Si la reconstruction échoue, la modification est défaite (dossier ajouté
 retiré, sauvegarde ou dossier supprimé remis en place), `dist` n'est pas modifié, le site reste en ligne tel quel, et le module affiche
@@ -32,15 +35,17 @@ La publication n'est possible que si le serveur Node dispose :
 | Les **sources** du site (`src/`, `astro.config.mjs`, `package.json`…) et `node_modules` complet (`npm ci`, dépendances de développement comprises) | Le serveur relance `npm run build` |
 | `npm` dans le `PATH` du process | Idem |
 | Le dossier du projet **en écriture** | Écriture de `src/content/news/`, `.releases/`, lien `dist` |
-| Un **gestionnaire de process** qui relance le serveur quand il s'arrête | Chargement de la nouvelle version (étape 5) |
+| De préférence un **gestionnaire de process** (PM2, systemd, Docker) | Relance propre sur la nouvelle version (étape 5) ; à défaut, relance autonome |
 
 Sinon, le module « Actualités » l'indique et le bouton d'ajout est désactivé
 (rien n'est écrit).
 
-> ⚠️ Lancé à la main dans un terminal (`npm start` sans gestionnaire), le
-> serveur s'arrêterait après la première publication. Toujours utiliser un
-> gestionnaire, ou `PUBLISH_RESTART=false` (déconseillé : le nouveau contenu
-> n'est alors servi qu'au prochain redémarrage manuel).
+> Lancé à la main (`npm start` dans un terminal), le serveur se relance
+> lui-même après chaque publication, en arrière-plan : il n'est alors plus
+> lié au terminal (Ctrl+C ne l'arrête plus — `pkill -f dist/server/entry.mjs`).
+> Un gestionnaire (PM2, systemd `Restart=always`, Docker) reste recommandé en
+> production. `PUBLISH_RESTART=false` désactive tout redémarrage (le nouveau
+> contenu n'est alors servi qu'au prochain redémarrage manuel).
 
 ## Installation « Node seul » (cas de base)
 

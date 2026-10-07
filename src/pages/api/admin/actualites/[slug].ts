@@ -13,7 +13,7 @@ import type { APIRoute } from 'astro';
 import { getImage } from 'astro:assets';
 import { getEntry } from 'astro:content';
 import { stringify as stringifyYaml } from 'yaml';
-import { json, jsonError, readJson } from '../../../../lib/auth/api';
+import { json, jsonError, readJson, withErrors } from '../../../../lib/auth/api';
 import {
 	COVER_MAX_BYTES,
 	MARKDOWN_MAX_BYTES,
@@ -28,7 +28,7 @@ export const prerender = false;
 
 const COVER_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = withErrors(async ({ params }) => {
 	const source = await readNewsSource(String(params.slug ?? ''));
 	if (!source) return jsonError('Actualité introuvable dans les sources.', 404);
 	// Aperçu de la photo actuelle : celle du site construit (la source n'est pas servie).
@@ -37,7 +37,7 @@ export const GET: APIRoute = async ({ params }) => {
 		? (await getImage({ src: entry.data.cover, width: 640, height: 360, fit: 'cover' })).src
 		: null;
 	return json({ ...source, coverUrl });
-};
+});
 
 /** Champs du formulaire → fichier Markdown, validé ensuite comme un dépôt. */
 function toMarkdown(fields: Record<string, unknown>, body: string): string {
@@ -48,7 +48,7 @@ function toMarkdown(fields: Record<string, unknown>, body: string): string {
 	return `---\n${stringifyYaml(data, { defaultStringType: 'QUOTE_DOUBLE', lineWidth: 0 })}---\n\n${body}\n`;
 }
 
-export const PUT: APIRoute = async ({ params, request }) => {
+export const PUT: APIRoute = withErrors(async ({ params, request }) => {
 	const slug = String(params.slug ?? '');
 	const availability = await canPublish();
 	if (!availability.ok) return jsonError(availability.reason!, 503);
@@ -85,9 +85,9 @@ export const PUT: APIRoute = async ({ params, request }) => {
 		return jsonError(started.reason!, 409);
 	}
 	return json({ ok: true, href: `/actualites/${slug}` }, 202);
-};
+});
 
-export const DELETE: APIRoute = async ({ params, request }) => {
+export const DELETE: APIRoute = withErrors(async ({ params, request }) => {
 	const slug = String(params.slug ?? '');
 	const availability = await canPublish();
 	if (!availability.ok) return jsonError(availability.reason!, 503);
@@ -110,4 +110,4 @@ export const DELETE: APIRoute = async ({ params, request }) => {
 		return jsonError(started.reason!, 409);
 	}
 	return json({ ok: true }, 202);
-};
+});

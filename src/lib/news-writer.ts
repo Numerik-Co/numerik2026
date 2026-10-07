@@ -168,9 +168,19 @@ function serializeNews(frontmatter: NewsFrontmatter, body: string, cover?: strin
 	return `---\n${yaml}---\n\n${body}\n`;
 }
 
+/**
+ * Dossier de travail des écritures (préparation, sauvegardes, suppressions en
+ * attente) : DANS src/content, donc sur le même système de fichiers que les
+ * actualités — un renommage ne peut pas changer de disque (EXDEV), or
+ * src/content peut être un volume monté (Docker). Aucune collection ne lit ce
+ * dossier (les loaders visent src/content/news, pages, activites).
+ */
+function workRoot(): string {
+	return join(siteRoot(), 'src', 'content', '.tmp-publication');
+}
+
 function workDir(name: string): string {
-	// Hors de src/content (même disque, renommage instantané) : jamais vu à moitié écrit.
-	return join(siteRoot(), '.tmp-publication', `${name}-${process.pid}-${Date.now()}`);
+	return join(workRoot(), `${name}-${process.pid}-${Date.now()}`);
 }
 
 const COVER_ERROR = "La photo n'a pas pu être lue (formats acceptés : JPEG, PNG, WebP).";
@@ -330,8 +340,8 @@ export async function setAsideNews(
 	if (!NEWS_SLUG.test(slug)) return null;
 	const source = join(newsSourceDir(), slug);
 	if (!(await stat(source).then((s) => s.isDirectory(), () => false))) return null;
-	const aside = join(siteRoot(), '.tmp-publication', `suppression-${slug}-${Date.now()}`);
-	await mkdir(join(siteRoot(), '.tmp-publication'), { recursive: true });
+	const aside = workDir(`suppression-${slug}`);
+	await mkdir(workRoot(), { recursive: true });
 	await rename(source, aside);
 	return {
 		purge: () => rm(aside, { recursive: true, force: true }),

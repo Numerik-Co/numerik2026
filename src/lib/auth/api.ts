@@ -7,7 +7,7 @@
  * (`Sec-Fetch-Site`, à défaut `Origin`) — en plus du cookie `SameSite=Lax`.
  */
 
-import type { APIContext } from 'astro';
+import type { APIContext, APIRoute } from 'astro';
 import type { SessionUser } from './session.ts';
 
 export function json(data: unknown, status = 200): Response {
@@ -42,4 +42,19 @@ export async function readJson(request: Request): Promise<Record<string, unknown
 /** Vue publique d'une personne connectée, renvoyée au navigateur. */
 export function publicUser(user: SessionUser) {
 	return { login: user.login, fullname: user.fullname, email: user.email ?? null, groups: user.groups };
+}
+
+/**
+ * Enveloppe une route : une erreur inattendue renvoie un message JSON lisible
+ * (affiché par le module) et est journalisée, au lieu d'un 500 muet.
+ */
+export function withErrors(handler: APIRoute): APIRoute {
+	return async (context) => {
+		try {
+			return await handler(context);
+		} catch (err) {
+			console.error(`[${context.request.method} ${context.url.pathname}]`, err);
+			return jsonError(`Erreur du serveur : ${(err as Error).message}`, 500);
+		}
+	};
 }

@@ -9,8 +9,10 @@
  *     n'est pas touché pendant ce temps) ;
  *  2. bascule atomique : `dist` devient un lien vers cette version ;
  *  3. commande `PUBLISH_HOOK` facultative (ex. copie vers un hébergement statique) ;
- *  4. arrêt du process : le gestionnaire (Docker `restart`, PM2, systemd)
- *     le relance sur la nouvelle version (~1 s d'interruption).
+ *  4. redémarrage du serveur sur la nouvelle version (~1 s d'interruption) :
+ *     sous un gestionnaire de process (Docker, PM2, systemd), simple arrêt,
+ *     le gestionnaire relance ; sinon (ex. `npm start` dans un terminal), le
+ *     serveur se relance lui-même (`restartServer()`).
  * En cas d'échec du build, `onFailure` défait la modification de contenu et
  * le site reste tel quel ; en cas de succès, `onSuccess` la rend définitive
  * (ex. effacer le dossier d'une actualité supprimée, gardé de côté jusque-là).
@@ -24,7 +26,7 @@
 
 import { PUBLISH_HOOK, PUBLISH_RESTART, SITE_ROOT } from 'astro:env/server';
 import { spawn } from 'node:child_process';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, existsSync } from 'node:fs';
 import { access, constants, lstat, mkdir, readdir, readFile, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { dataDir } from './data-dir';
@@ -134,6 +136,44 @@ async function pruneReleases(): Promise<void> {
 	for (const name of names.slice(KEEP_RELEASES)) await rm(join(dir, name), { recursive: true, force: true });
 }
 
+/**
+ * Le process tourne-t-il sous un gestionnaire qui le relancera s'il s'arrête ?
+ * Docker (politique `restart`) et PM2 sont détectés. Pas systemd : sa
+ * variable `INVOCATION_ID` est aussi héritée par les terminaux de bureau ;
+ * sous un service systemd (`Restart=always`), la relance autonome est sans
+ * effet néfaste — l'arrêt du process principal fait redémarrer le service.
+ */
+function underProcessManager(): boolean {
+	return existsSync('/.dockerenv') || 'pm_id' in process.env;
+}
+
+/** `'…'` pour le shell. */
+function shellQuote(arg: string): string {
+	return `'${arg.replace(/'/g, `'\\''`)}'`;
+}
+
+/**
+ * Redémarre le serveur sur la nouvelle version. Sous un gestionnaire : on
+ * s'arrête, il relance. Sinon, un petit shell détaché attend la fin de ce
+ * process (libération du port) puis relance la même commande Node, mêmes
+ * options (`--env-file…`), même dossier, même environnement.
+ */
+function restartServer(log: NodeJS.WritableStream): void {
+	if (!underProcessManager()) {
+		const command = [process.execPath, ...process.execArgv, ...process.argv.slice(1)].map(shellQuote).join(' ');
+		const waiter = spawn('sh', ['-c', `while kill -0 ${process.pid} 2>/dev/null; do sleep 0.2; done; exec ${command}`], {
+			cwd: process.cwd(),
+			env: process.env,
+			detached: true,
+			stdio: 'inherit',
+		});
+		waiter.unref();
+		log.write(`\nAucun gestionnaire de process détecté : relance autonome du serveur (${command}).\n`);
+		console.log('[publication] Nouvelle version en ligne : le serveur redémarre (relance autonome, en arrière-plan).');
+	}
+	setTimeout(() => process.exit(0), 500);
+}
+
 /** Heure UTC compacte, triable : `20261006T221530Z`. */
 function stamp(): string {
 	return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
@@ -184,9 +224,8 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 			await pruneReleases().catch(() => {});
 			await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: new Date().toISOString(), message });
 			if (PUBLISH_RESTART) {
-				// Le gestionnaire de process relance le serveur sur la nouvelle version.
 				log.write('\nPublication terminée : redémarrage du serveur.\n');
-				setTimeout(() => process.exit(0), 500);
+				restartServer(log);
 			}
 		} catch (err) {
 			await request.onFailure?.().catch(() => {});
