@@ -121,7 +121,14 @@ async function swapDist(release: string): Promise<void> {
 	const info = await lstat(dist).catch(() => null);
 	if (info && !info.isSymbolicLink()) {
 		// Premier passage : le `dist` d'origine (dossier réel) est rangé comme version précédente.
-		await rename(dist, join(base, RELEASES_DIR, `${release}-avant`));
+		try {
+			await rename(dist, join(base, RELEASES_DIR, `${release}-avant`));
+		} catch (err) {
+			// Docker (overlayfs) : un dossier venu de l'image ne peut pas être renommé
+			// (EXDEV), mais peut être supprimé — l'image le contient de toute façon.
+			if ((err as NodeJS.ErrnoException).code !== 'EXDEV') throw err;
+			await rm(dist, { recursive: true, force: true });
+		}
 	}
 	const tmpLink = join(base, `dist.${process.pid}.tmp`);
 	await rm(tmpLink, { force: true });
