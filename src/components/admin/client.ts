@@ -89,7 +89,13 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
 		body: body === undefined ? undefined : JSON.stringify(body),
 	});
 	const data = await res.json().catch(() => null);
-	if (!res.ok) throw new ApiError((data && data.error) || `Erreur ${res.status}`, res.status);
+	if (!res.ok) {
+		const fallback =
+			res.status === 413
+				? "Envoi trop volumineux pour le serveur (erreur 413). Essayez une photo plus légère ; l'administrateur·rice du serveur peut aussi relever la limite (nginx : client_max_body_size)."
+				: `Erreur ${res.status}`;
+		throw new ApiError((data && data.error) || fallback, res.status);
+	}
 	return data as T;
 }
 

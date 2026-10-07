@@ -148,6 +148,10 @@ server {
     listen 80;
     server_name numerikandco.org www.numerikandco.org;
 
+    # Photos des actualités envoyées depuis l'espace bénévoles (10 Mo max,
+    # ~13,5 Mo encodées) : la limite par défaut de nginx (1 Mo) donne une 413.
+    client_max_body_size 20m;
+
     location / {
         proxy_pass http://127.0.0.1:4321;
         proxy_http_version 1.1;

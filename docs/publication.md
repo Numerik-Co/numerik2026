@@ -110,6 +110,20 @@ PUBLISH_HOOK=rsync -a --delete dist/client/ compte@hebergeur.example:www/
 La commande s'exécute à la racine du projet (`sh -c`). Si elle échoue, le
 site Node est bien publié et le module affiche un avertissement.
 
+## Taille des photos (erreur 413)
+
+La photo d'une actualité est envoyée telle quelle (10 Mo max, ≈ 13,5 Mo une
+fois encodée). Un reverse proxy limite souvent la taille des requêtes —
+nginx : **1 Mo par défaut**, d'où une erreur 413. Le relever :
+
+```nginx
+client_max_body_size 20m;   # dans le bloc server du site
+```
+
+(Équivalents : Apache `LimitRequestBody 20971520`, Traefik middleware
+`buffering.maxRequestBodyBytes`.) Le module affiche un message explicite en
+cas de 413.
+
 ## Variables
 
 | Variable | Défaut | Rôle |
