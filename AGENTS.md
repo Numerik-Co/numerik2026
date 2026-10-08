@@ -52,8 +52,9 @@ Fonctionnement technique :
   `modules/pages/*`, `src/lib/page-writer.ts` (validation = schéma,
   transaction sur tout `src/content/pages/`, puis `admin-publish.ts` →
   `site-build.ts`), routes `/api/admin/pages*` et
-  `/api/admin/menus-deroulants*`. Création : page classique ou enrichie ;
-  emplacement racine / menu déroulant / réservée ; menus déroulants =
+  `/api/admin/menus-deroulants*`. Création : page classique ou enrichie,
+  ou fichier `.md` déposé qui pré-remplit le formulaire (modèles
+  téléchargeables, `modules/pages/page-markdown.ts`) ; emplacement racine / menu déroulant / réservée ; menus déroulants =
   `_group.md`, un seul niveau, suppression si vide. Vocabulaire : « menu »
   = menu de navigation (frontmatter `menu:`), « menu déroulant » = groupe
   type « Association » (code : `dropdown`). Liens vers les pages

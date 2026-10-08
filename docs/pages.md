@@ -108,7 +108,10 @@ reconstruit le site, comme le module « Actualités »
   menus déroulants et leurs pages, triés par position), pages libres (racine,
   `menu.show` faux), pages réservées, formulaires (`pages/PageForm.vue`,
   `pages/BlocsEditor.vue`, `pages/BlocFields.vue`) ; création = choix
-  **page classique** ou **page enrichie**.
+  **page classique** ou **page enrichie**, ou dépôt d'un fichier `.md` qui
+  pré-remplit le formulaire (`pages/page-markdown.ts` : `parsePageMarkdown()`,
+  modèles `downloadPageTemplate()` ; emplacement, adresse, accès et photo
+  restent à régler dans le formulaire, le serveur revalide tout).
 - `src/lib/page-writer.ts` — validation identique au schéma (adresse libre et
   non prise par une page applicative de `src/pages/` ou un fichier de
   `public/`, liens sûrs, variables connues, blocs valides, marqueurs ↔ blocs),

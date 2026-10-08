@@ -333,6 +333,13 @@ blocs :
   `[[bloc:…]]` dans le texte à l'endroit du curseur ; le bloc s'affiche à
   cet endroit (on peut déplacer la ligne du marqueur).
 
+**Ou à partir d'un fichier `.md`** (même écran) : « Télécharger un modèle »
+(page classique ou page enrichie, avec des exemples de chaque bloc), le
+compléter dans un éditeur de texte, puis le déposer. Le formulaire est
+pré-rempli (titre, description, texte, blocs, libellé du menu) ; il reste à
+vérifier, choisir l'emplacement et publier. Les champs non repris
+(`access`, `cover`…) sont signalés en tête du formulaire.
+
 Puis : titre, description, **emplacement** (hors menu déroulant — avec ou
 sans lien direct dans le menu de navigation —, dans un menu déroulant, ou
 page réservée avec les groupes autorisés), adresse (déduite du titre),

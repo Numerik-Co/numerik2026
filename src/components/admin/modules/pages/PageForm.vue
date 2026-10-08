@@ -1,7 +1,8 @@
 <script setup lang="ts">
 /**
  * Formulaire de page du module « Pages » : création (choix page classique /
- * enrichie) ou modification d'une page des sources. Emplacement : hors menu
+ * enrichie, ou fichier `.md` déposé qui pré-remplit le formulaire, modèles
+ * téléchargeables : ./page-markdown.ts) ou modification d'une page des sources. Emplacement : hors menu
  * déroulant (racine), dans un menu déroulant, ou réservée (espace bénévoles).
  * « Menu » = menu de navigation (frontmatter `menu:`). Le serveur valide
  * tout (src/lib/page-writer.ts) et reconstruit le site.
@@ -13,6 +14,7 @@ import { PAGE_VARIABLES } from '../../../../lib/page-variables';
 import { ApiError, pagesApi, type CoverUpdate, type DropdownView, type PageInput, type PageSourceView } from '../../client';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
 import BlocsEditor from './BlocsEditor.vue';
+import { downloadPageTemplate, parsePageMarkdown } from './page-markdown';
 
 const props = defineProps<{ dropdowns: DropdownView[]; source: PageSourceView | null; disabled: boolean }>();
 const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
@@ -57,6 +59,44 @@ const slugTouched = ref(Boolean(editing));
 const error = ref('');
 const busy = ref(false);
 const bodyField = ref<HTMLTextAreaElement | null>(null);
+
+// --- Création depuis un fichier .md ---
+
+/** Fichier déposé et remarques de lecture (affichées en tête du formulaire). */
+const imported = ref<{ name: string; warnings: string[] } | null>(null);
+const mdDragOver = ref(false);
+
+async function pickMarkdown(file: File | undefined) {
+	error.value = '';
+	if (!file) return;
+	if (!/\.(md|markdown)$/i.test(file.name)) {
+		error.value = 'Le fichier doit être un fichier Markdown (.md).';
+		return;
+	}
+	if (file.size > 200 * 1024) {
+		error.value = 'Le fichier est trop long (200 Ko max).';
+		return;
+	}
+	const { page, warnings, error: problem } = parsePageMarkdown(await file.text());
+	if (!page) {
+		error.value = problem!;
+		return;
+	}
+	Object.assign(form, {
+		type: page.type,
+		title: page.title,
+		description: page.description,
+		menuLabel: page.menuLabel,
+		imageCredit: page.imageCredit,
+		body: page.body,
+	});
+	if (page.menuShow !== undefined) form.menuShow = page.menuShow;
+	for (const id of Object.keys(blocs)) delete blocs[id];
+	Object.assign(blocs, page.blocs);
+	if (!page.title) warnings.unshift('Titre absent du fichier : à saisir ci-dessous.');
+	imported.value = { name: file.name, warnings };
+	typeChosen.value = true;
+}
 
 const coverAction = ref<'keep' | 'replace' | 'remove'>('keep');
 const photo = ref<File | null>(null);
@@ -195,10 +235,45 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 				Conseiller Numérique…
 			</span>
 		</button>
+
+		<!-- Ou à partir d'un fichier .md -->
+		<div class="pt-2">
+			<p class="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-gray-400">
+				<span class="h-px flex-1 bg-gray-200"></span>ou à partir d'un fichier .md<span class="h-px flex-1 bg-gray-200"></span>
+			</p>
+			<p v-if="error" class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+			<label
+				class="mt-3 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm transition-colors"
+				:class="mdDragOver ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'"
+				@dragover.prevent="mdDragOver = true"
+				@dragleave="mdDragOver = false"
+				@drop.prevent="mdDragOver = false; pickMarkdown($event.dataTransfer?.files?.[0])"
+			>
+				<i class="fa-solid fa-file-arrow-up text-2xl text-gray-400" aria-hidden="true"></i>
+				<span class="text-gray-600">Glissez votre fichier ici ou <span class="text-primary underline">parcourez</span></span>
+				<span class="text-xs font-light text-gray-500">Le formulaire est pré-rempli : vous vérifiez, choisissez l'emplacement, puis publiez.</span>
+				<input type="file" accept=".md,.markdown,text/markdown" class="sr-only" @change="pickMarkdown(($event.target as HTMLInputElement).files?.[0])" />
+			</label>
+			<p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+				<span class="text-gray-600"><i class="fa-solid fa-download mr-1 text-xs text-gray-400" aria-hidden="true"></i>Télécharger un modèle :</span>
+				<button type="button" class="font-medium text-primary hover:underline" @click="downloadPageTemplate('classique')">page classique</button>
+				<button type="button" class="font-medium text-primary hover:underline" @click="downloadPageTemplate('enrichie')">page enrichie</button>
+			</p>
+		</div>
+
 		<button type="button" class="text-sm text-gray-600 hover:underline" @click="emit('cancel')">Annuler</button>
 	</div>
 
 	<form v-else class="space-y-5" @submit.prevent="submit">
+		<div v-if="imported" class="rounded-lg bg-primary/5 px-3 py-2 text-sm text-gray-700" role="status">
+			<p>
+				<i class="fa-solid fa-file-circle-check mr-1 text-primary" aria-hidden="true"></i>
+				Formulaire rempli depuis <strong>{{ imported.name }}</strong> : vérifiez, choisissez l'emplacement puis publiez.
+			</p>
+			<ul v-if="imported.warnings.length" class="mt-1 list-disc pl-5 text-xs text-amber-800">
+				<li v-for="w in imported.warnings" :key="w">{{ w }}</li>
+			</ul>
+		</div>
 		<p v-if="editing?.technique" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
 			Page technique (.mdx) : elle se modifie dans le code, pas ici.
 		</p>
