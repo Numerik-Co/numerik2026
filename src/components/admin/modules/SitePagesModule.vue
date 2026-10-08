@@ -1,33 +1,40 @@
 <script setup lang="ts">
 /**
  * Module « Pages » (groupes `redacteur` / `admin`) : pages de contenu et
- * menus déroulants du site, tels qu'ils sont dans les sources
- * (`src/content/pages/`). Création (page classique ou enrichie de blocs),
- * modification, déplacement, suppression ; menus : création, libellé et
- * position, suppression d'un menu vide. Chaque modification reconstruit le
+ * menus déroulants de la barre de navigation, tels qu'ils sont dans les
+ * sources (`src/content/pages/`). Création (page classique ou enrichie de
+ * blocs), modification, déplacement, suppression ; menus déroulants :
+ * création (en dernière position), libellé, suppression d'un menu déroulant
+ * vide ; ordre du menu par flèches ↑/↓. Chaque modification reconstruit le
  * site (suivi par `usePublication`), comme le module « Actualités ».
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import ConfirmIconButton from '../ConfirmIconButton.vue';
 import PublishStatus from '../PublishStatus.vue';
-import { ApiError, menusApi, pagesApi, type MenuView, type PageSourceView } from '../client';
-import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
+import { ApiError, dropdownsApi, linksApi, menuOrderApi, pagesApi, type BuiltinLinkView, type DropdownView, type PageSourceView } from '../client';
+import { ADMIN_CONTEXT, iconButtonClass, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 import { usePublication } from '../usePublication';
-import { site } from '../../../config/site';
+import OrderArrows from './pages/OrderArrows.vue';
 import PageForm from './pages/PageForm.vue';
 import PageRow from './pages/PageRow.vue';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
-type View = { name: 'list' } | { name: 'page'; source: PageSourceView | null } | { name: 'menu'; menu: MenuView | null };
+type View =
+	| { name: 'list' }
+	| { name: 'page'; source: PageSourceView | null }
+	| { name: 'dropdown'; dropdown: DropdownView | null }
+	| { name: 'link'; link: BuiltinLinkView };
 
 const view = ref<View>({ name: 'list' });
-const menus = ref<MenuView[]>([]);
+const links = ref<BuiltinLinkView[]>([]);
+const dropdowns = ref<DropdownView[]>([]);
 const pages = ref<PageSourceView[]>([]);
 const availability = ref<{ ok: boolean; reason?: string }>({ ok: true });
 const loading = ref(true);
 const busy = ref(false);
 const error = ref('');
-/** Page ou menu dont la suppression attend confirmation (`page:<chemin>` / `menu:<dossier>`). */
+/** Élément dont la suppression attend confirmation (`page:<chemin>` / `dropdown:<dossier>` / `link:<id>`). */
 const confirming = ref<string | null>(null);
 
 function fail(e: unknown) {
@@ -40,8 +47,10 @@ async function load() {
 	loading.value = true;
 	try {
 		const res = await pagesApi.list();
-		menus.value = res.menus;
+		links.value = res.links;
+		dropdowns.value = res.dropdowns;
 		pages.value = res.pages;
+		orderDraft.value = {};
 		availability.value = res.availability;
 		receive(res.status);
 	} catch (e) {
@@ -52,16 +61,87 @@ async function load() {
 }
 
 const { status, following, receive, started, dismiss: dismissStatus } = usePublication({ onSettled: () => load(), onError: fail });
-const locked = computed(() => !availability.value.ok || following.value || busy.value);
+/** Publication impossible ou en cours. */
+const publishLocked = computed(() => !availability.value.ok || following.value || busy.value);
+
+/**
+ * Ordre changé par les flèches ↑/↓, pas encore enregistré : clés des éléments
+ * par niveau (`racine`, `dropdown:<dossier>`). Tant qu'il est en attente, les
+ * autres actions sont bloquées (une publication enregistre tout l'ordre d'un coup).
+ */
+const orderDraft = ref<Record<string, string[]>>({});
+const orderPending = computed(() => Object.keys(orderDraft.value).length > 0);
+const locked = computed(() => publishLocked.value || orderPending.value);
+
+function inDraftOrder<T>(level: string, items: T[], key: (item: T) => string): T[] {
+	const draft = orderDraft.value[level];
+	return draft ? [...items].sort((a, b) => draft.indexOf(key(a)) - draft.indexOf(key(b))) : items;
+}
+
+function move(level: string, keys: string[], index: number, delta: -1 | 1) {
+	const next = [...keys];
+	[next[index], next[index + delta]] = [next[index + delta], next[index]];
+	orderDraft.value = { ...orderDraft.value, [level]: next };
+}
+
+async function saveOrder() {
+	error.value = '';
+	busy.value = true;
+	try {
+		rememberOpenModule('pages-site');
+		await menuOrderApi.save(orderDraft.value);
+		orderDraft.value = {};
+		started('Nouvel ordre du menu');
+	} catch (e) {
+		fail(e);
+	} finally {
+		busy.value = false;
+	}
+}
 
 const byPath = computed(() => new Map(pages.value.map((p) => [p.path, p])));
-const rootPages = computed(() => pages.value.filter((p) => p.placement.kind === 'racine'));
+/** Pages à la racine absentes du menu de navigation (accessibles par leur adresse seulement). */
+const freePages = computed(() => pages.value.filter((p) => p.placement.kind === 'racine' && !p.menu.show));
 const reservedPages = computed(() => pages.value.filter((p) => p.placement.kind === 'reservee'));
-const menuPages = (menu: MenuView) =>
-	menu.pages
-		.map((path) => byPath.value.get(path))
-		.filter((p): p is PageSourceView => Boolean(p))
-		.sort((a, b) => a.menu.order - b.menu.order);
+const dropdownPages = (dropdown: DropdownView) =>
+	inDraftOrder(
+		`dropdown:${dropdown.folder}`,
+		dropdown.pages
+			.map((path) => byPath.value.get(path))
+			.filter((p): p is PageSourceView => Boolean(p))
+			.sort((a, b) => a.menu.order - b.menu.order),
+		(p) => `page:${p.path}`,
+	);
+
+/** Menu de navigation tel qu'il s'affiche : pages applicatives, liens directs et menus déroulants, par position. */
+type NavItem =
+	| { kind: 'builtin'; order: number; link: BuiltinLinkView }
+	| { kind: 'page'; order: number; page: PageSourceView }
+	| { kind: 'dropdown'; order: number; dropdown: DropdownView };
+const navItems = computed<NavItem[]>(() =>
+	inDraftOrder(
+		'racine',
+		[
+			...links.value.map((link): NavItem => ({ kind: 'builtin', order: link.order, link })),
+			...pages.value
+				.filter((p) => p.placement.kind === 'racine' && p.menu.show)
+				.map((page): NavItem => ({ kind: 'page', order: page.menu.order, page })),
+			...dropdowns.value.map((dropdown): NavItem => ({ kind: 'dropdown', order: dropdown.order, dropdown })),
+		].sort((a, b) => a.order - b.order),
+		(item) => navKey(item),
+	),
+);
+/** Menus déroulants dépliés dans la liste (accordéon ; tous repliés à l'ouverture). */
+const expanded = ref(new Set<string>());
+function toggleDropdown(folder: string) {
+	if (expanded.value.has(folder)) expanded.value.delete(folder);
+	else expanded.value.add(folder);
+}
+
+const dropdownKeys = (dropdown: DropdownView) => dropdownPages(dropdown).map((p) => `page:${p.path}`);
+
+const navKey = (item: NavItem) =>
+	item.kind === 'builtin' ? `builtin:${item.link.id}` : item.kind === 'page' ? `page:${item.page.path}` : `dropdown:${item.dropdown.folder}`;
 
 function go(next: View) {
 	error.value = '';
@@ -101,27 +181,24 @@ async function removePage(page: PageSourceView) {
 	}
 }
 
-// --- Menus ---
+// --- Menus déroulants ---
 
-const menuForm = reactive({ label: '', folder: '', order: 50 });
-/** Repères de position : pages applicatives de la barre (`site.builtinNav`). */
-const navLandmarks = site.builtinNav.map((item) => `${item.label} ${item.order}`).join(', ');
-
-function openMenu(menu: MenuView | null) {
-	Object.assign(menuForm, { label: menu?.label ?? '', folder: menu?.folder ?? '', order: menu?.order ?? 50 });
-	go({ name: 'menu', menu });
+const dropdownForm = reactive({ label: '', folder: '' });
+function openDropdown(dropdown: DropdownView | null) {
+	Object.assign(dropdownForm, { label: dropdown?.label ?? '', folder: dropdown?.folder ?? '' });
+	go({ name: 'dropdown', dropdown });
 }
 
-async function saveMenu() {
-	if (view.value.name !== 'menu') return;
-	const current = view.value.menu;
+async function saveDropdown() {
+	if (view.value.name !== 'dropdown') return;
+	const current = view.value.dropdown;
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		if (current) await menusApi.update(current.folder, { label: menuForm.label, order: Number(menuForm.order) });
-		else await menusApi.create({ label: menuForm.label, folder: menuForm.folder, order: Number(menuForm.order) });
-		onPublished(`Menu : ${menuForm.label}`);
+		if (current) await dropdownsApi.update(current.folder, { label: dropdownForm.label });
+		else await dropdownsApi.create({ label: dropdownForm.label, folder: dropdownForm.folder });
+		onPublished(`Menu déroulant : ${dropdownForm.label}`);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -129,14 +206,59 @@ async function saveMenu() {
 	}
 }
 
-async function removeMenu(menu: MenuView) {
+async function removeDropdown(dropdown: DropdownView) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		await menusApi.remove(menu.folder);
+		await dropdownsApi.remove(dropdown.folder);
 		confirming.value = null;
-		started(`Suppression du menu : ${menu.label}`);
+		started(`Suppression du menu déroulant : ${dropdown.label}`);
+	} catch (e) {
+		fail(e);
+	} finally {
+		busy.value = false;
+	}
+}
+
+// --- Liens vers les pages du site (Accueil, Activités…) ---
+
+const linkForm = reactive({ label: '', show: true });
+
+function openLink(link: BuiltinLinkView) {
+	Object.assign(linkForm, { label: link.label, show: link.show });
+	go({ name: 'link', link });
+}
+
+function resetLink(link: BuiltinLinkView) {
+	Object.assign(linkForm, { label: link.defaultLabel, show: true });
+}
+
+async function saveLink() {
+	if (view.value.name !== 'link') return;
+	const { link } = view.value;
+	error.value = '';
+	busy.value = true;
+	try {
+		rememberOpenModule('pages-site');
+		await linksApi.update(link.id, { label: linkForm.label, show: linkForm.show });
+		onPublished(`Lien du menu : ${linkForm.label}`);
+	} catch (e) {
+		fail(e);
+	} finally {
+		busy.value = false;
+	}
+}
+
+/** Retire un lien du menu (la page reste accessible) ou l'y remet, sans passer par le formulaire. */
+async function setLinkShown(link: BuiltinLinkView, show: boolean) {
+	error.value = '';
+	busy.value = true;
+	try {
+		rememberOpenModule('pages-site');
+		await linksApi.update(link.id, { label: link.label, show });
+		confirming.value = null;
+		started(`${show ? 'Remis dans le menu' : 'Retiré du menu'} : ${link.label}`);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -175,73 +297,231 @@ onMounted(load);
 				type="button"
 				class="rounded-full border-2 border-primary px-5 py-2 font-heading text-sm font-semibold text-primary hover:bg-primary hover:text-white disabled:opacity-50"
 				:disabled="locked"
-				@click="openMenu(null)"
+				@click="openDropdown(null)"
 			>
-				<i class="fa-solid fa-bars mr-1.5" aria-hidden="true"></i>Nouveau menu
+				<i class="fa-solid fa-bars mr-1.5" aria-hidden="true"></i>Nouveau menu déroulant
 			</button>
 		</div>
 
 		<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 		<div v-else class="space-y-6">
-			<!-- Menus déroulants -->
-			<section v-for="menu in menus" :key="menu.folder" class="rounded-xl border border-gray-200">
-				<header class="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
-					<i class="fa-solid fa-bars text-gray-400" aria-hidden="true"></i>
-					<span class="font-heading font-semibold text-gray-900">{{ menu.label }}</span>
-					<span class="text-xs text-gray-500">menu · /{{ menu.folder }}/… · position {{ menu.order }}</span>
-					<span class="ml-auto flex gap-3 text-sm">
-						<button type="button" class="text-primary hover:underline disabled:opacity-50" :disabled="locked" @click="openMenu(menu)">Modifier</button>
-						<template v-if="!menu.pages.length">
-							<button
-								v-if="confirming !== `menu:${menu.folder}`"
-								type="button"
-								class="text-red-600 hover:underline disabled:opacity-50"
-								:disabled="locked"
-								@click="confirming = `menu:${menu.folder}`"
-							>
-								Supprimer
-							</button>
-							<span v-else class="flex gap-2">
-								<button type="button" class="font-semibold text-red-600 hover:underline" :disabled="locked" @click="removeMenu(menu)">
-									Confirmer
-								</button>
-								<button type="button" class="text-gray-600 hover:underline" @click="confirming = null">Annuler</button>
-							</span>
-						</template>
-					</span>
+			<!-- Ordre changé par les flèches : enregistré en une seule publication -->
+			<div
+				v-if="orderPending"
+				class="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200"
+				role="status"
+			>
+				<i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i>
+				<span class="min-w-0 flex-1">Nouvel ordre du menu, pas encore publié.</span>
+				<button
+					type="button"
+					class="rounded-full bg-primary px-4 py-1.5 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+					:disabled="publishLocked"
+					@click="saveOrder"
+				>
+					Enregistrer et publier
+				</button>
+				<button type="button" class="text-xs font-medium text-gray-700 hover:underline" @click="orderDraft = {}">Annuler</button>
+			</div>
+
+			<!-- 1. Menu de navigation : pages du site, liens directs, menus déroulants -->
+			<section class="rounded-xl border border-gray-200">
+				<header class="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+					<i class="fa-solid fa-compass text-gray-400" aria-hidden="true"></i>
+					<span class="font-heading font-semibold text-gray-900">Menu de navigation</span>
+					<span class="text-xs text-gray-500">dans l'ordre d'affichage</span>
 				</header>
 				<ul class="divide-y divide-gray-100">
-					<PageRow
-						v-for="p in menuPages(menu)"
-						:key="p.path"
-						:page="p"
-						:locked="locked"
-						:confirming="confirming === `page:${p.path}`"
-						@edit="openPage(p)"
-						@ask-delete="confirming = `page:${p.path}`"
-						@confirm-delete="removePage(p)"
-						@cancel-delete="confirming = null"
-					>
-						<span v-if="!p.menu.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">masquée du menu</span>
-					</PageRow>
-					<li v-if="!menu.pages.length" class="px-4 py-2.5 text-sm font-light text-gray-500">
-						Aucune page : le menu n'apparaît pas encore sur le site.
-					</li>
+					<template v-for="(item, i) in navItems" :key="navKey(item)">
+						<li v-if="item.kind === 'builtin'" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
+							<span :class="['min-w-0', { 'opacity-60': !item.link.show }]">
+								<a :href="item.link.href" class="font-medium text-gray-900 hover:underline">{{ item.link.label }}</a>
+							</span>
+							<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600" title="Page applicative du site : son contenu se modifie dans le code">
+								page du site
+							</span>
+							<span v-if="!item.link.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">masquée du menu</span>
+							<span class="ml-auto flex items-center gap-1">
+								<OrderArrows
+									:label="item.link.label"
+									:first="i === 0"
+									:last="i === navItems.length - 1"
+									:disabled="publishLocked"
+									@up="move('racine', navItems.map(navKey), i, -1)"
+									@down="move('racine', navItems.map(navKey), i, 1)"
+								/>
+								<button
+									type="button"
+									:class="[iconButtonClass, 'text-primary']"
+									:disabled="locked"
+									aria-label="Modifier"
+									title="Modifier"
+									@click="openLink(item.link)"
+								>
+									<i class="fa-solid fa-pen" aria-hidden="true"></i>
+								</button>
+								<button
+									v-if="!item.link.show"
+									type="button"
+									:class="[iconButtonClass, 'text-primary']"
+									:disabled="locked"
+									aria-label="Remettre dans le menu"
+									title="Remettre dans le menu"
+									@click="setLinkShown(item.link, true)"
+								>
+									<i class="fa-solid fa-eye" aria-hidden="true"></i>
+								</button>
+								<ConfirmIconButton
+									v-else
+									label="Retirer du menu"
+									title="Retirer du menu (la page reste accessible)"
+									:confirming="confirming === `link:${item.link.id}`"
+									:disabled="locked"
+									@ask="confirming = `link:${item.link.id}`"
+									@confirm="setLinkShown(item.link, false)"
+									@cancel="confirming = null"
+								/>
+							</span>
+						</li>
+						<PageRow
+							v-else-if="item.kind === 'page'"
+							:page="item.page"
+							:locked="locked"
+							:confirming="confirming === `page:${item.page.path}`"
+							@edit="openPage(item.page)"
+							@ask-delete="confirming = `page:${item.page.path}`"
+							@confirm-delete="removePage(item.page)"
+							@cancel-delete="confirming = null"
+						>
+							<span class="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">lien direct</span>
+							<template #order>
+								<OrderArrows
+									:label="item.page.title"
+									:first="i === 0"
+									:last="i === navItems.length - 1"
+									:disabled="publishLocked"
+									@up="move('racine', navItems.map(navKey), i, -1)"
+									@down="move('racine', navItems.map(navKey), i, 1)"
+								/>
+							</template>
+						</PageRow>
+						<li v-else>
+							<div class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
+								<button
+									type="button"
+									class="flex items-center gap-2 font-medium text-gray-900 hover:text-primary"
+									:aria-expanded="expanded.has(item.dropdown.folder)"
+									:aria-controls="`dropdown-pages-${item.dropdown.folder}`"
+									@click="toggleDropdown(item.dropdown.folder)"
+								>
+									{{ item.dropdown.label }}
+									<i
+										:class="[
+											'fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-200',
+											{ 'rotate-180': expanded.has(item.dropdown.folder) },
+										]"
+										aria-hidden="true"
+									></i>
+									<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-600">
+										{{ item.dropdown.pages.length }} page{{ item.dropdown.pages.length > 1 ? 's' : '' }}
+									</span>
+								</button>
+								<span class="text-xs text-gray-500">menu déroulant</span>
+								<span class="ml-auto flex items-center gap-1">
+									<OrderArrows
+										:label="item.dropdown.label"
+										:first="i === 0"
+										:last="i === navItems.length - 1"
+										:disabled="publishLocked"
+										@up="move('racine', navItems.map(navKey), i, -1)"
+										@down="move('racine', navItems.map(navKey), i, 1)"
+									/>
+									<button
+										type="button"
+										:class="[iconButtonClass, 'text-primary']"
+										:disabled="locked"
+										aria-label="Modifier"
+										title="Modifier"
+										@click="openDropdown(item.dropdown)"
+									>
+										<i class="fa-solid fa-pen" aria-hidden="true"></i>
+									</button>
+									<span v-if="item.dropdown.pages.length" class="w-7" aria-hidden="true"></span>
+									<template v-if="!item.dropdown.pages.length">
+										<ConfirmIconButton
+											label="Supprimer"
+											title="Supprimer le menu déroulant"
+											:confirming="confirming === `dropdown:${item.dropdown.folder}`"
+											:disabled="locked"
+											@ask="confirming = `dropdown:${item.dropdown.folder}`"
+											@confirm="removeDropdown(item.dropdown)"
+											@cancel="confirming = null"
+										/>
+									</template>
+								</span>
+							</div>
+							<div
+								:id="`dropdown-pages-${item.dropdown.folder}`"
+								:class="[
+									'grid transition-[grid-template-rows] duration-200 ease-out',
+									expanded.has(item.dropdown.folder) ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+								]"
+								:inert="!expanded.has(item.dropdown.folder)"
+							>
+								<ul class="ml-6 min-h-0 overflow-hidden divide-y divide-gray-100 border-l border-gray-200">
+									<PageRow
+										v-for="(p, j) in dropdownPages(item.dropdown)"
+										:key="p.path"
+										:page="p"
+										:locked="locked"
+										:confirming="confirming === `page:${p.path}`"
+										@edit="openPage(p)"
+										@ask-delete="confirming = `page:${p.path}`"
+										@confirm-delete="removePage(p)"
+										@cancel-delete="confirming = null"
+									>
+										<span v-if="!p.menu.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">masquée du menu</span>
+										<template #order>
+											<OrderArrows
+												:label="p.title"
+												:first="j === 0"
+												:last="j === item.dropdown.pages.length - 1"
+												:disabled="publishLocked"
+												@up="move(`dropdown:${item.dropdown.folder}`, dropdownKeys(item.dropdown), j, -1)"
+												@down="move(`dropdown:${item.dropdown.folder}`, dropdownKeys(item.dropdown), j, 1)"
+											/>
+										</template>
+									</PageRow>
+									<li v-if="!dropdownPages(item.dropdown).some((p) => p.menu.show)" class="px-4 py-2.5 text-sm font-light text-gray-500">
+										{{ item.dropdown.pages.length ? 'Aucune page visible' : 'Aucune page' }} : ce menu déroulant n'apparaît pas
+										encore sur le site.
+									</li>
+								</ul>
+							</div>
+						</li>
+					</template>
 				</ul>
 			</section>
 
-			<!-- Pages hors menu déroulant, puis réservées -->
+			<!-- 2. Pages libres, 3. pages réservées -->
 			<section
 				v-for="group in [
-					{ key: 'racine', title: 'Pages hors menu déroulant', icon: 'fa-file-lines', list: rootPages },
-					{ key: 'reservee', title: 'Pages réservées (espace bénévoles)', icon: 'fa-lock', list: reservedPages },
+					{
+						key: 'libre',
+						title: 'Pages libres',
+						hint: 'hors du menu, accessibles par leur adresse',
+						icon: 'fa-file-lines',
+						list: freePages,
+					},
+					{ key: 'reservee', title: 'Pages réservées', hint: 'espace bénévoles, connexion requise', icon: 'fa-lock', list: reservedPages },
 				]"
 				:key="group.key"
 				class="rounded-xl border border-gray-200"
 			>
-				<header class="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+				<header class="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
 					<i :class="['fa-solid', group.icon, 'text-gray-400']" aria-hidden="true"></i>
 					<span class="font-heading font-semibold text-gray-900">{{ group.title }}</span>
+					<span class="text-xs text-gray-500">{{ group.hint }}</span>
 				</header>
 				<ul class="divide-y divide-gray-100">
 					<PageRow
@@ -255,9 +535,6 @@ onMounted(load);
 						@confirm-delete="removePage(p)"
 						@cancel-delete="confirming = null"
 					>
-						<span v-if="group.key === 'racine' && p.menu.show" class="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">
-							dans la barre de navigation
-						</span>
 						<span v-if="group.key === 'reservee'" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
 							{{ p.access.length ? p.access.join(', ') : 'toute personne connectée' }}
 						</span>
@@ -271,44 +548,73 @@ onMounted(load);
 	<!-- Page : création / modification -->
 	<PageForm
 		v-else-if="view.name === 'page'"
-		:menus="menus"
+		:dropdowns="dropdowns"
 		:source="view.source"
 		:disabled="locked"
 		@published="onPublished"
 		@cancel="go({ name: 'list' })"
 	/>
 
-	<!-- Menu : création / modification -->
-	<form v-else class="space-y-4" @submit.prevent="saveMenu">
+	<!-- Lien vers une page du site : libellé, visibilité (position : flèches ↑/↓) -->
+	<form v-else-if="view.name === 'link'" class="space-y-4" @submit.prevent="saveLink">
 		<p class="text-sm font-light text-gray-600">
-			Un menu regroupe des pages dans un menu déroulant de la barre de navigation. Son libellé n'est pas cliquable et
-			il n'a pas de contenu propre : seules ses pages ont un lien.
+			Lien du menu de navigation vers la page « {{ view.link.defaultLabel }} » ({{ view.link.href }}). Le contenu de
+			cette page fait partie du site et se modifie dans le code ; ici, seulement son lien dans le menu.
 		</p>
 		<div>
-			<label for="menu-label" class="block text-sm font-semibold text-gray-700">Libellé</label>
-			<input id="menu-label" v-model="menuForm.label" type="text" required :class="inputClass" />
-		</div>
-		<div v-if="!view.menu">
-			<label for="menu-folder" class="block text-sm font-semibold text-gray-700">
-				Adresse <span class="font-light text-gray-500">(facultative, déduite du libellé)</span>
-			</label>
-			<input id="menu-folder" v-model="menuForm.folder" type="text" pattern="[a-z0-9]+(-[a-z0-9]+)*" :class="inputClass" />
-			<p class="mt-1 text-xs font-light text-gray-500">Début de l'adresse des pages du menu (/adresse/page). Ne change plus ensuite.</p>
+			<label for="link-label" class="block text-sm font-semibold text-gray-700">Libellé dans le menu de navigation</label>
+			<input id="link-label" v-model="linkForm.label" type="text" required :placeholder="view.link.defaultLabel" :class="inputClass" />
 		</div>
 		<div>
-			<label for="menu-order" class="block text-sm font-semibold text-gray-700">Position dans la barre</label>
-			<input id="menu-order" v-model.number="menuForm.order" type="number" step="1" :class="inputClass" />
-			<p class="mt-1 text-xs font-light text-gray-500">
-				Petit nombre = plus à gauche. Repères : {{ navLandmarks }}.
-			</p>
+			<label class="flex items-center gap-2 text-sm text-gray-700">
+				<input v-model="linkForm.show" type="checkbox" class="rounded border-gray-300" />
+				Visible dans le menu de navigation
+			</label>
+			<p class="mt-1 text-xs font-light text-gray-500">Décoché : la page reste accessible par son adresse.</p>
 		</div>
+		<p class="text-xs font-light text-gray-500">
+			Par défaut : « {{ view.link.defaultLabel }} », visible.
+			<button type="button" class="text-primary hover:underline" @click="resetLink(view.link)">Rétablir</button>
+		</p>
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
 			<button
 				type="submit"
 				:disabled="locked"
 				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
 			>
-				{{ view.menu ? 'Enregistrer et publier' : 'Créer le menu' }}
+				Enregistrer et publier
+			</button>
+			<button type="button" class="text-sm text-gray-600 hover:underline" @click="go({ name: 'list' })">Annuler</button>
+		</div>
+	</form>
+
+	<!-- Menu déroulant : création / modification -->
+	<form v-else-if="view.name === 'dropdown'" class="space-y-4" @submit.prevent="saveDropdown">
+		<p class="text-sm font-light text-gray-600">
+			Un menu déroulant (comme « Association ») regroupe des pages sous un même libellé du menu de navigation. Ce
+			libellé n'est pas cliquable et n'a pas de contenu propre : seules ses pages ont un lien.
+		</p>
+		<div>
+			<label for="dropdown-label" class="block text-sm font-semibold text-gray-700">Libellé</label>
+			<input id="dropdown-label" v-model="dropdownForm.label" type="text" required :class="inputClass" />
+		</div>
+		<div v-if="!view.dropdown">
+			<label for="dropdown-folder" class="block text-sm font-semibold text-gray-700">
+				Adresse <span class="font-light text-gray-500">(facultative, déduite du libellé)</span>
+			</label>
+			<input id="dropdown-folder" v-model="dropdownForm.folder" type="text" pattern="[a-z0-9]+(-[a-z0-9]+)*" :class="inputClass" />
+			<p class="mt-1 text-xs font-light text-gray-500">Début de l'adresse des pages du menu déroulant (/adresse/page). Ne change plus ensuite.</p>
+		</div>
+		<p v-if="!view.dropdown" class="text-xs font-light text-gray-500">
+			Le menu déroulant se place en dernière position du menu de navigation ; les flèches ↑/↓ de la liste changent l'ordre.
+		</p>
+		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
+			<button
+				type="submit"
+				:disabled="locked"
+				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+			>
+				{{ view.dropdown ? 'Enregistrer et publier' : 'Créer le menu déroulant' }}
 			</button>
 			<button type="button" class="text-sm text-gray-600 hover:underline" @click="go({ name: 'list' })">Annuler</button>
 		</div>

@@ -14,6 +14,7 @@ import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import { parseAccess } from './lib/auth/access';
 import { validateBloc, type Bloc } from './lib/blocs';
+import { BUILTIN_LINK_IDS } from './lib/builtin-nav';
 import { categories } from './lib/categories';
 
 /**
@@ -124,6 +125,29 @@ const pageGroups = defineCollection({
 });
 
 /**
+ * Réglages des liens du menu de navigation vers les pages applicatives
+ * (`site.builtinNav`) : `src/content/pages/_navigation.md` (frontmatter seul,
+ * écrit par le module « Pages », facultatif). Identifiant inconnu = build en échec.
+ */
+const navigation = defineCollection({
+	loader: glob({ pattern: '_navigation.md', base: './src/content/pages' }),
+	schema: z.object({
+		liens: z
+			.record(
+				z.string().refine((id) => BUILTIN_LINK_IDS.includes(id), {
+					message: `Lien inconnu ; attendus : ${BUILTIN_LINK_IDS.join(', ')}.`,
+				}),
+				z.object({
+					label: z.string().optional(),
+					order: z.number().optional(),
+					show: z.boolean().optional(),
+				}),
+			)
+			.default({}),
+	}),
+});
+
+/**
  * Fiches d'activité : `src/content/activites/<slug>/index.md` →
  * `/activites/<category>/<slug>`. La catégorie doit exister dans
  * `src/lib/categories.ts`.
@@ -194,4 +218,4 @@ const annonces = defineCollection({
 		.refine((a) => a.endDate >= a.startDate, { message: '`endDate` doit être postérieure ou égale à `startDate`.' }),
 });
 
-export const collections = { news, pages, pageGroups, activites, annonces };
+export const collections = { news, pages, pageGroups, navigation, activites, annonces };

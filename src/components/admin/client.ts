@@ -82,7 +82,7 @@ export interface JournalEntry {
 	message?: string;
 }
 
-export type PagePlacement = { kind: 'racine' } | { kind: 'menu'; menu: string } | { kind: 'reservee' };
+export type PagePlacement = { kind: 'racine' } | { kind: 'dropdown'; dropdown: string } | { kind: 'reservee' };
 
 /** Page à créer ou modifier (module « Pages »), cf. src/lib/page-writer.ts. */
 export interface PageInput {
@@ -108,7 +108,19 @@ export interface PageSourceView extends PageInput {
 	coverUrl?: string | null;
 }
 
-export interface MenuView {
+/** Lien du menu de navigation vers une page applicative (Accueil, Activités…), cf. src/lib/builtin-nav.ts. */
+export interface BuiltinLinkView {
+	id: string;
+	href: string;
+	label: string;
+	order: number;
+	show: boolean;
+	defaultLabel: string;
+	defaultOrder: number;
+}
+
+/** Menu déroulant de la barre de navigation (`_group.md`). */
+export interface DropdownView {
 	folder: string;
 	label: string;
 	order: number;
@@ -185,10 +197,13 @@ export const newsApi = {
 
 export const pagesApi = {
 	list: () =>
-		request<{ menus: MenuView[]; pages: PageSourceView[]; status: PublishStatus; availability: { ok: boolean; reason?: string } }>(
-			'GET',
-			'/api/admin/pages',
-		),
+		request<{
+			links: BuiltinLinkView[];
+			dropdowns: DropdownView[];
+			pages: PageSourceView[];
+			status: PublishStatus;
+			availability: { ok: boolean; reason?: string };
+		}>('GET', '/api/admin/pages'),
 	get: (path: string) => request<PageSourceView>('GET', `/api/admin/pages/${path}`),
 	create: (page: PageInput, cover: { type: string; data: string } | null) =>
 		request<{ ok: true; href: string | null }>('POST', '/api/admin/pages', { page, cover: cover ?? undefined }),
@@ -197,12 +212,22 @@ export const pagesApi = {
 	remove: (path: string) => request<{ ok: true }>('DELETE', `/api/admin/pages/${path}`, { confirm: path }),
 };
 
-export const menusApi = {
-	create: (input: { label: string; folder: string; order: number }) =>
-		request<{ ok: true }>('POST', '/api/admin/menus', input),
-	update: (folder: string, input: { label: string; order: number }) =>
-		request<{ ok: true }>('PUT', `/api/admin/menus/${encodeURIComponent(folder)}`, input),
-	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus/${encodeURIComponent(folder)}`, { confirm: folder }),
+/** Nouvel ordre d'un ou plusieurs niveaux du menu (`racine`, `dropdown:<dossier>`), cf. saveMenuOrder(). */
+export const menuOrderApi = {
+	save: (levels: Record<string, string[]>) => request<{ ok: true }>('PUT', '/api/admin/ordre-menu', { levels }),
+};
+
+export const linksApi = {
+	update: (id: string, input: { label: string; show: boolean }) =>
+		request<{ ok: true }>('PUT', `/api/admin/liens-menu/${encodeURIComponent(id)}`, input),
+};
+
+export const dropdownsApi = {
+	create: (input: { label: string; folder: string }) =>
+		request<{ ok: true }>('POST', '/api/admin/menus-deroulants', input),
+	update: (folder: string, input: { label: string }) =>
+		request<{ ok: true }>('PUT', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, input),
+	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, { confirm: folder }),
 };
 
 export const journalApi = {

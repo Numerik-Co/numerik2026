@@ -102,21 +102,42 @@ Groupes `redacteur` / `admin` / `superadmin`. Écrit dans les sources puis
 reconstruit le site, comme le module « Actualités »
 ([publication.md](publication.md)) :
 
-- `src/components/admin/modules/SitePagesModule.vue` — liste (menus et leurs
-  pages, pages hors menu, pages réservées), formulaires (`pages/PageForm.vue`,
+- `src/components/admin/modules/SitePagesModule.vue` — liste en trois blocs :
+  menu de navigation tel qu'affiché (liens vers les pages du site
+  `site.builtinNav`, liens directs,
+  menus déroulants et leurs pages, triés par position), pages libres (racine,
+  `menu.show` faux), pages réservées, formulaires (`pages/PageForm.vue`,
   `pages/BlocsEditor.vue`, `pages/BlocFields.vue`) ; création = choix
   **page classique** ou **page enrichie**.
 - `src/lib/page-writer.ts` — validation identique au schéma (adresse libre et
   non prise par une page applicative de `src/pages/` ou un fichier de
   `public/`, liens sûrs, variables connues, blocs valides, marqueurs ↔ blocs),
+  position dans le menu calculée (pas de champ dans le formulaire) : gardée
+  si la page reste au même niveau, sinon dernière (`menuOrderFor()`, max + 10),
   écriture dans une **transaction** (copie de `src/content/pages/`, remise en
-  place si la reconstruction échoue). Déplacer une page (autre menu, hors
-  menu, réservée) ou changer son adresse **change son URL**.
-- Menus : `_group.md` (libellé, position) ; l'adresse d'un menu est fixée à
-  sa création ; seul un menu vide se supprime ; un menu sans page n'apparaît
-  pas sur le site. Un seul niveau de menu déroulant.
+  place si la reconstruction échoue). Déplacer une page (autre menu déroulant,
+  hors menu déroulant, réservée) ou changer son adresse **change son URL**.
+- Menus déroulants : `_group.md` (libellé, position dans le menu de
+  navigation : dernière à la création, puis flèches) ; l'adresse d'un menu déroulant est fixée à sa création ; seul
+  un menu déroulant vide se supprime ; sans page, il n'apparaît pas sur le
+  site. Un seul niveau. (« Menu » seul = menu de navigation, frontmatter
+  `menu:`.)
+- Liens vers les pages du site (`site.builtinNav` : Accueil, Activités…) :
+  libellé et visibilité réglables (formulaire), position par les flèches ; seuls les écarts aux valeurs
+  de `src/config/site.ts` sont écrits dans `src/content/pages/_navigation.md`
+  (collection `navigation`, `liens: { <id>: { label, order, show } }`,
+  fichier facultatif, supprimé s'il ne reste aucun écart ; id inconnu = build
+  en échec). Fusion : `builtinLinks()` (`src/lib/builtin-nav.ts`), utilisée
+  par `getNavTree()` et par le module.
+- Ordre : flèches ↑/↓ dans le bloc « Menu de navigation » (premier niveau :
+  liens du site, liens directs, menus déroulants ; ou pages d'un menu
+  déroulant), brouillon local puis `PUT /api/admin/ordre-menu`
+  (`saveMenuOrder()` : liste complète du niveau exigée, positions
+  renumérotées 0, 10, 20… dans `menu.order`, `_group.md` et
+  `_navigation.md`, une seule transaction et une seule publication).
 - Routes : `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>`,
-  `POST /api/admin/menus`, `PUT/DELETE /api/admin/menus/<dossier>` ; chaque
+  `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>`,
+  `PUT /api/admin/liens-menu/<id>`, `PUT /api/admin/ordre-menu` ; chaque
   action est consignée au journal.
 
 ### Comment ça marche

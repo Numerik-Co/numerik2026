@@ -22,7 +22,7 @@ Le reste de la navigation (Accueil, Activités, Actualités, Contact) et le bout
 
 > **Le plus simple** : module **« Pages »** de la barre d'administration
 > (rédacteur·rice·s et bureau) — créer, modifier, déplacer, supprimer pages
-> et menus sans toucher aux fichiers. Ce qui suit décrit les fichiers qu'il
+> et menus déroulants sans toucher aux fichiers. Ce qui suit décrit les fichiers qu'il
 > écrit, pour qui préfère les éditer à la main.
 
 1. Créer un dossier dans `pages/` et y placer un fichier `index.md` :
@@ -198,6 +198,21 @@ mélangées sur la même échelle). Repères actuels :
 | 40 | Contact |
 
 Choisir un `order` intermédiaire (ex. `25`) pour intercaler une nouvelle page.
+
+Libellé, position et visibilité d'Accueil, Activités, Actualités et Contact
+se règlent depuis le module « Pages » (bouton « Modifier »), qui les écrit dans
+`pages/_navigation.md` :
+
+```yaml
+---
+liens:
+  contact:
+    label: "Nous écrire"
+    order: 5
+  actualites:
+    show: false   # retiré du menu, la page reste accessible
+---
+```
 
 ---
 

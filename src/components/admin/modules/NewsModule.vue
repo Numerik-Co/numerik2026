@@ -4,7 +4,7 @@
  * actualités (brouillons compris), ajout par dépôt d'un fichier `.md`
  * (frontmatter habituel, cf. docs/actualites.md) et d'une photo de
  * couverture, édition dans un formulaire (le dossier, donc l'URL, ne change
- * pas), suppression (confirmée dans la ligne, sans boîte de dialogue).
+ * pas), suppression (confirmée dans la ligne par la pastille de `ConfirmIconButton`, sans boîte de dialogue).
  *
  * Le serveur écrit `src/content/news/<AAAA-MM-JJ-slug>/` puis reconstruit le
  * site (≈ 1 min, cf. src/lib/site-build.ts) : le module suit la publication
@@ -13,6 +13,7 @@
  * serveur fait la vraie validation.
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import ConfirmIconButton from '../ConfirmIconButton.vue';
 import PublishStatus from '../PublishStatus.vue';
 import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem } from '../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
@@ -360,34 +361,16 @@ onMounted(load);
 					>
 						<i class="fa-solid fa-eye text-sm" aria-hidden="true"></i>
 					</a>
-					<button
-						type="button"
-						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+					<ConfirmIconButton
+						class="shrink-0"
+						label="Supprimer"
+						:title="`Supprimer « ${a.title} » (définitif, le site sera reconstruit)`"
+						:confirming="confirmingDelete === a.slug"
 						:disabled="!availability.ok || following || busy"
-						:aria-label="`Supprimer « ${a.title} »`"
-						:title="`Supprimer « ${a.title} »`"
-						@click="confirmingDelete = confirmingDelete === a.slug ? null : a.slug"
-					>
-						<i class="fa-solid fa-trash-can text-sm" aria-hidden="true"></i>
-					</button>
-				</div>
-				<div
-					v-if="confirmingDelete === a.slug"
-					class="mt-2 flex flex-wrap items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800"
-					role="alert"
-				>
-					<span class="min-w-0 flex-1">Supprimer définitivement cette actualité ? Le site sera reconstruit.</span>
-					<button
-						type="button"
-						:disabled="busy"
-						class="rounded-full bg-red-600 px-4 py-1.5 font-heading text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-						@click="remove(a)"
-					>
-						<i v-if="busy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>Supprimer
-					</button>
-					<button type="button" class="px-2 py-1.5 text-xs font-medium text-gray-600 hover:underline" @click="confirmingDelete = null">
-						Annuler
-					</button>
+						@ask="confirmingDelete = a.slug"
+						@confirm="remove(a)"
+						@cancel="confirmingDelete = null"
+					/>
 				</div>
 			</li>
 		</ul>

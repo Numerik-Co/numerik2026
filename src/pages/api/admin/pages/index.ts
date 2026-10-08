@@ -1,6 +1,6 @@
 /**
  * Module « Pages » (groupes `redacteur` / `admin`, garde dans `src/middleware.ts`) :
- *  - GET  : arborescence des sources (menus, pages, pages réservées), état de
+ *  - GET  : arborescence des sources (menus déroulants, pages, pages réservées), état de
  *           la dernière publication, disponibilité de la publication ;
  *  - POST : `{ page, cover?: { type, data (base64) } }` → crée
  *           `src/content/pages/<…>/index.md` puis reconstruit le site

@@ -48,6 +48,10 @@ export function takeModuleToReopen(): string | null {
 export const inputClass =
 	'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
 
+/** Bouton icône des listes (modifier, supprimer) ; ajouter la couleur. Libellé en `aria-label` + `title`. */
+export const iconButtonClass =
+	'inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent';
+
 /** Photo déposée dans un module : formats et poids acceptés (le serveur revérifie). */
 export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const PHOTO_MAX = 10 * 1024 * 1024;

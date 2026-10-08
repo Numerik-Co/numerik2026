@@ -118,7 +118,7 @@ access: [animateur, admin]   # l'un de ces groupes
 | `src/components/admin/AdminOverlay.vue` | Calque générique : `variant="drawer"` (panneau à droite, plein écran sur mobile) ou `"modal"`. Échap / clic sur le fond ferment, focus piégé puis rendu, défilement de la page bloqué. |
 | `src/components/admin/LoginForm.vue` | Formulaire de la modale de connexion. |
 | `src/components/admin/modules.ts` | **Registre des modules** (`id`, `label`, icône, `groups`, composant chargé à la demande). |
-| `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `NewsModule` (actualités, `redacteur`), `SitePagesModule` (pages et menus, `redacteur`), `JournalModule` (`superadmin`), `AccountsModule` (comptes, `admin`), `PasswordModule` (mon mot de passe). |
+| `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `NewsModule` (actualités, `redacteur`), `SitePagesModule` (pages et menus déroulants, `redacteur`), `JournalModule` (`superadmin`), `AccountsModule` (comptes, `admin`), `PasswordModule` (mon mot de passe). |
 | `src/components/admin/client.ts` | Appels typés aux routes ; `ApiError.status === 401` = session expirée (`sessionExpired()` du contexte rouvre la connexion). |
 | `src/components/admin/context.ts` | `provide/inject` (`user`, `pages`, `sessionExpired`, `onCloseRequest` : un module peut intercepter ✕/Échap, ex. retour à sa liste depuis un formulaire) + classes des champs. |
 
@@ -151,7 +151,7 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `GET/DELETE /api/admin/publication` | État de la dernière publication / fermeture définitive de son encadré (journalisée) — `redacteur` |
 | `GET /api/admin/journal` | Journal des modifications, `?annee=AAAA` — `superadmin` seul |
 | `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>` | Pages de contenu (sources), cf. [pages.md](pages.md#module-pages-espace-bénévoles) — `redacteur` |
-| `POST /api/admin/menus`, `PUT/DELETE /api/admin/menus/<dossier>` | Menus déroulants (`_group.md`) — `redacteur` |
+| `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>` | Menus déroulants (`_group.md`) — `redacteur` |
 | `PATCH/POST/DELETE /api/admin/comptes/<login>` | Modification / réinitialisation du mot de passe / suppression (`{ confirm: <login> }`) — `admin` |
 
 Garde : `src/middleware.ts` — `/api/auth/*` et `/api/admin/*` n'acceptent

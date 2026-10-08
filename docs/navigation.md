@@ -6,8 +6,11 @@ Le menu du header est **construit automatiquement au build** par
 `src/lib/navigation.ts` (`getNavTree()`), à partir de deux sources :
 
 1. **`src/config/site.ts`** — les pages applicatives du template
-   (`builtinNav` : Accueil, Activités, Actualités, Contact) et le bouton CTA
-   « Adhérer » (`cta`, jamais une entrée de menu).
+   (`builtinNav` : Accueil, Activités, Actualités, Contact, chacune avec un
+   `id`) et le bouton CTA « Adhérer » (`cta`, jamais une entrée de menu).
+   Valeurs par défaut : libellé, position et visibilité se règlent depuis le
+   module « Pages » (`src/content/pages/_navigation.md`,
+   `src/lib/builtin-nav.ts`).
 2. **Les pages de `src/content/pages/`** dont le frontmatter porte
    `menu.show: true` — voir [pages.md](pages.md) et le guide éditeur
    [`src/content/README.md`](../src/content/README.md).
@@ -21,7 +24,7 @@ source des données a changé. Le tableau `navLinks` codé en dur a disparu.
 | Cas | Où agir |
 | --- | --- |
 | Page éditoriale (contenu) | Frontmatter `menu:` de `src/content/pages/<...>/index.md` |
-| Page applicative (Accueil, Activités…) | Tableau `builtinNav` de `src/config/site.ts` |
+| Page applicative (Accueil, Activités…) | Module « Pages » (libellé, masquer, flèches ↑/↓ pour l'ordre) ; ajouter/retirer : `builtinNav` de `src/config/site.ts` |
 | Bouton « Adhérer » | Objet `cta` de `src/config/site.ts` (`enabled: false` le masque) |
 | Ordre | Champ `order` — builtin et contenu sont triés sur la **même échelle** |
 

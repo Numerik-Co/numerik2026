@@ -51,9 +51,18 @@ Fonctionnement technique :
 - **Module « Pages »** (`redacteur`) : `SitePagesModule.vue` +
   `modules/pages/*`, `src/lib/page-writer.ts` (validation = schéma,
   transaction sur tout `src/content/pages/`, puis `admin-publish.ts` →
-  `site-build.ts`), routes `/api/admin/pages*` et `/api/admin/menus*`.
-  Création : page classique ou enrichie ; emplacement racine / menu /
-  réservée ; menus = `_group.md`, un seul niveau, suppression si vide.
+  `site-build.ts`), routes `/api/admin/pages*` et
+  `/api/admin/menus-deroulants*`. Création : page classique ou enrichie ;
+  emplacement racine / menu déroulant / réservée ; menus déroulants =
+  `_group.md`, un seul niveau, suppression si vide. Vocabulaire : « menu »
+  = menu de navigation (frontmatter `menu:`), « menu déroulant » = groupe
+  type « Association » (code : `dropdown`). Liens vers les pages
+  applicatives (`site.builtinNav`, chacun avec un `id`) : libellé, position,
+  visibilité réglables (`PUT /api/admin/liens-menu/<id>`), écarts écrits dans
+  `src/content/pages/_navigation.md` (collection `navigation`), fusion
+  `builtinLinks()` de `src/lib/builtin-nav.ts`. Ordre : flèches ↑/↓ du
+  module → `PUT /api/admin/ordre-menu` (`saveMenuOrder()`) ; une nouvelle
+  page se place en dernier (`menuOrderFor()`).
 - `src/lib/navigation.ts` — `getNavTree()` fusionne `site.builtinNav` et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
@@ -109,7 +118,8 @@ sous `/api/admin/`).
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
   (`/api/admin/comptes` → `admin`, `/api/admin/actualites`,
-  `/api/admin/publication`, `/api/admin/pages` et `/api/admin/menus` →
+  `/api/admin/publication`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
+  `/api/admin/liens-menu` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
