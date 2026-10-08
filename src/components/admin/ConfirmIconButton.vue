@@ -30,7 +30,8 @@ watch(
 </script>
 
 <template>
-	<span class="relative inline-flex">
+	<span class="relative inline-flex text-sm">
+		<!-- text-sm : même rendu quelle que soit la taille de texte de la ligne (Pages, Actualités…). -->
 		<button
 			type="button"
 			:class="[iconButtonClass, 'text-red-600']"
