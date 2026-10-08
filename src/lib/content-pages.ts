@@ -1,5 +1,9 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
+import type { MarkdownHeading } from 'astro';
 import type { PageAccess } from './auth/access';
+import { blocMarkersIn, type Bloc } from './blocs';
+import { applyPageVariables } from './page-variables';
+import { sanitizeNewsHtml } from './sanitize-news';
 
 /**
  * Pages de contenu : collections `pages` et `pageGroups`
@@ -11,6 +15,11 @@ import type { PageAccess } from './auth/access';
  *   src/content/pages/statuts/index.md               -> /statuts
  *   src/content/pages/association/_group.md           -> libellé du menu déroulant « Association »
  *   src/content/pages/association/notre-histoire/...  -> /association/notre-histoire (dans le dropdown)
+ *
+ * Pages `.md` (classiques ou enrichies de blocs, cf. `src/lib/blocs.ts`) :
+ * HTML nettoyé comme celui des actualités, variables `{{…}}` remplacées
+ * (`page-variables.ts`). Pages `.mdx` : écrites dans le code, rendues telles
+ * quelles (jamais produites par l'espace bénévoles).
  *
  * Pages publiques : prérendues par `src/pages/[...slug].astro`.
  * Pages réservées : rangées dans `RESERVED_FOLDER`, rendues à la demande par
@@ -49,6 +58,12 @@ export interface ContentPage {
 	 * de `access:`), et n'apparaît jamais dans le menu.
 	 */
 	access: PageAccess;
+	/** `enrichie` = blocs autorisés. */
+	type: 'classique' | 'enrichie';
+	/** Blocs d'une page enrichie, par identifiant. */
+	blocs: Record<string, Bloc>;
+	/** Source `.mdx` (code) plutôt que `.md`. */
+	mdx: boolean;
 	/** Entrée brute de la collection (pour `render()`). */
 	entry: CollectionEntry<'pages'>;
 }
@@ -79,6 +94,18 @@ function toPage(entry: CollectionEntry<'pages'>): ContentPage {
 		);
 	}
 
+	const blocs = data.blocs ?? {};
+	const mdx = Boolean(entry.filePath?.endsWith('.mdx'));
+	if (!mdx) {
+		if (data.type !== 'enrichie' && Object.keys(blocs).length > 0) {
+			throw new Error(`Page "${slug}" : \`blocs:\` n'est possible que pour une page \`type: enrichie\`.`);
+		}
+		const unknown = blocMarkersIn(entry.body ?? '').filter((id) => !blocs[id]);
+		if (unknown.length > 0) {
+			throw new Error(`Page "${slug}" : marqueur(s) sans bloc correspondant dans \`blocs:\` : ${unknown.join(', ')}.`);
+		}
+	}
+
 	return {
 		slug,
 		segments,
@@ -89,6 +116,9 @@ function toPage(entry: CollectionEntry<'pages'>): ContentPage {
 		image: data.cover,
 		imageCredit: data.imageCredit,
 		access: reserved ? (data.access ?? 'connecte') : null,
+		type: data.type,
+		blocs,
+		mdx,
 		entry,
 	};
 }
@@ -102,6 +132,36 @@ export async function getContentPages(): Promise<ContentPage[]> {
 /** Contenu rendu d'une page : composant `Content` et titres (sommaire). */
 export async function renderPage(page: ContentPage) {
 	return render(page.entry);
+}
+
+/** Morceau du contenu d'une page `.md` : HTML nettoyé, ou bloc à rendre par son composant. */
+export type PagePart = { html: string } | { blocId: string; bloc: Bloc };
+
+/** Marqueur de bloc tel que rendu par le moteur Markdown : un paragraphe seul. */
+const RENDERED_MARKER = /<p>\s*\[\[bloc:([a-z0-9][a-z0-9-]{0,39})\]\]\s*<\/p>/g;
+
+/**
+ * Contenu d'une page `.md` prêt à afficher (HTML nettoyé et variables
+ * remplacées, découpé aux marqueurs de blocs) + titres pour le sommaire.
+ * `null` pour une page `.mdx` : rendue par `renderPage()` (composant `Content`).
+ */
+export function pageParts(page: ContentPage): { parts: PagePart[]; headings: MarkdownHeading[] } | null {
+	if (page.mdx) return null;
+	const rendered = page.entry.rendered;
+	const html = applyPageVariables(sanitizeNewsHtml(rendered?.html ?? ''));
+	const parts: PagePart[] = [];
+	let last = 0;
+	for (const match of html.matchAll(RENDERED_MARKER)) {
+		parts.push({ html: html.slice(last, match.index) });
+		const bloc = page.blocs[match[1]];
+		if (bloc) parts.push({ blocId: match[1], bloc });
+		last = match.index! + match[0].length;
+	}
+	parts.push({ html: html.slice(last) });
+	return {
+		parts: parts.filter((p) => !('html' in p) || p.html.trim() !== ''),
+		headings: (rendered?.metadata?.headings as MarkdownHeading[] | undefined) ?? [],
+	};
 }
 
 /** Métadonnées des menus déroulants, indexées par nom de dossier. */

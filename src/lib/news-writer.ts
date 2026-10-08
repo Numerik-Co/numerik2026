@@ -25,6 +25,9 @@ import { join, resolve } from 'node:path';
 import { SITE_ROOT } from 'astro:env/server';
 import sharp from 'sharp';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
+import { isSafeUrl } from './safe-url';
+
+export { isSafeUrl };
 
 /** Taille maximale de la photo déposée (octets). */
 export const COVER_MAX_BYTES = 10 * 1024 * 1024;
@@ -34,7 +37,7 @@ export const MARKDOWN_MAX_BYTES = 200 * 1024;
 /** Nom de dossier d'une actualité : `AAAA-MM-JJ-slug`. */
 const NEWS_SLUG = /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/;
 
-function siteRoot(): string {
+export function siteRoot(): string {
 	return resolve(SITE_ROOT || process.cwd());
 }
 
@@ -52,20 +55,6 @@ export function slugify(text: string): string {
 		.replace(/^-+|-+$/g, '')
 		.slice(0, 60)
 		.replace(/-+$/g, '');
-}
-
-const SAFE_SCHEMES = ['http', 'https', 'mailto', 'tel'];
-
-/**
- * URL acceptée : `http(s):`, `mailto:`, `tel:`, ou chemin du site / ancre.
- * Les blancs et caractères de contrôle sont retirés avant le test, comme le
- * font les navigateurs (`java\tscript:` = `javascript:`).
- */
-export function isSafeUrl(url: string): boolean {
-	const compact = url.replace(/[\u0000- \u007f]/g, '');
-	const scheme = compact.match(/^([a-z][a-z0-9+.-]*):/i);
-	if (scheme) return SAFE_SCHEMES.includes(scheme[1].toLowerCase());
-	return !compact.startsWith('//') && !compact.startsWith('\\');
 }
 
 function optionalString(value: unknown, field: string, errors: string[]): string | undefined {
@@ -88,7 +77,7 @@ interface NewsFrontmatter {
 }
 
 /** Contrôle du corps (liens et images Markdown ; le HTML est nettoyé à l'affichage). Renvoie les problèmes trouvés. */
-function checkBody(body: string): string[] {
+export function checkBody(body: string): string[] {
 	const problems = new Set<string>();
 	const walk = (node: Nodes) => {
 		const line = node.position?.start.line;
@@ -146,7 +135,7 @@ export function parseNewsMarkdown(markdown: string): { frontmatter?: NewsFrontma
 }
 
 /** Photo redressée selon l'EXIF, sans métadonnées (dont la position GPS), 1600 px de large au plus. */
-async function writeCover(dir: string, input: Buffer): Promise<void> {
+export async function writeCover(dir: string, input: Buffer): Promise<void> {
 	await sharp(input, { failOn: 'error' })
 		.rotate()
 		.resize({ width: 1600, withoutEnlargement: true })
@@ -175,15 +164,15 @@ function serializeNews(frontmatter: NewsFrontmatter, body: string, cover?: strin
  * src/content peut être un volume monté (Docker). Aucune collection ne lit ce
  * dossier (les loaders visent src/content/news, pages, activites).
  */
-function workRoot(): string {
+export function workRoot(): string {
 	return join(siteRoot(), 'src', 'content', '.tmp-publication');
 }
 
-function workDir(name: string): string {
+export function workDir(name: string): string {
 	return join(workRoot(), `${name}-${process.pid}-${Date.now()}`);
 }
 
-const COVER_ERROR = "La photo n'a pas pu être lue (formats acceptés : JPEG, PNG, WebP).";
+export const COVER_ERROR = "La photo n'a pas pu être lue (formats acceptés : JPEG, PNG, WebP).";
 
 export async function writeNews(markdown: string, cover?: Buffer): Promise<{ slug?: string; title?: string; errors: string[] }> {
 	const { frontmatter, body, errors } = parseNewsMarkdown(markdown);

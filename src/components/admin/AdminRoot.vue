@@ -7,13 +7,15 @@
  * Connexion et déconnexion rechargent la page : les pages réservées et le
  * contenu rendu côté serveur reflètent ainsi le nouvel état.
  */
-import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
-import PasswordModule from './modules/PasswordModule.vue';
 import { ApiError, authApi, type AdminUser, type ReservedPage } from './client';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
 import { modulesFor } from './modules';
+
+// Chargé à la demande (seulement pour un mot de passe provisoire), comme dans le registre des modules.
+const PasswordModule = defineAsyncComponent(() => import('./modules/PasswordModule.vue'));
 
 const props = defineProps<{ openOnMount?: boolean }>();
 

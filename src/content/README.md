@@ -20,6 +20,11 @@ Le reste de la navigation (Accueil, Activités, Actualités, Contact) et le bout
 
 ## Créer une page
 
+> **Le plus simple** : module **« Pages »** de la barre d'administration
+> (rédacteur·rice·s et bureau) — créer, modifier, déplacer, supprimer pages
+> et menus sans toucher aux fichiers. Ce qui suit décrit les fichiers qu'il
+> écrit, pour qui préfère les éditer à la main.
+
 1. Créer un dossier dans `pages/` et y placer un fichier `index.md` :
 
    ```
@@ -61,6 +66,47 @@ imageCredit: "Photo : Prénom Nom / Source (licence)"
 
 Si le fichier cité n'existe pas, le site refuse de se construire et indique
 la page en cause.
+
+### Page enrichie (blocs)
+
+Une page peut recevoir des **blocs** prêts à l'emploi (grille de cartes,
+encadré tarif, bouton, encadré d'information, rendez-vous du Conseiller
+Numérique) : `type: enrichie`, les blocs décrits sous `blocs:`, et un
+marqueur **seul sur sa ligne** à l'endroit où chacun doit s'afficher :
+
+```md
+---
+title: "Adhérer en tant qu'association"
+type: enrichie
+blocs:
+  cotisation:
+    type: tarif
+    libelle: "Adhésion structure, valable de septembre à juin"
+    montant: "110 € / an"
+  contact:
+    type: bouton
+    texte: "Nous contacter"
+    lien: "/contact"
+---
+
+## Cotisation
+
+[[bloc:cotisation]]
+
+[[bloc:contact]]
+```
+
+Types et champs : `src/lib/blocs.ts` (exemple complet :
+`pages/association/adhesion-associations/index.md`). Un bloc inconnu, un
+champ obligatoire manquant ou un marqueur sans bloc empêchent le site de se
+construire, avec un message qui nomme la page.
+
+### Informations de l'association dans le texte
+
+`{{association.nom}}`, `{{association.email}}`, `{{association.adresse}}`…
+sont remplacés par les valeurs configurées pour le site
+(`src/lib/association.ts`) : pas de recopie qui se périme. Liste complète :
+`src/lib/page-variables.ts` (exemple : `pages/mentions-legales/index.md`).
 
 ### Page accessible mais absente du menu
 
@@ -168,6 +214,9 @@ Choisir un `order` intermédiaire (ex. `25`) pour intercaler une nouvelle page.
 | `menu.label` | non | Texte du menu si différent de `title` |
 | `cover` | non | Photo, chemin relatif au dossier (`./cover.jpg`) |
 | `imageCredit` | non | Crédit affiché sous la photo |
+| `type` | non | `enrichie` pour une page à blocs (défaut : `classique`) |
+| `blocs` | non | Blocs d'une page enrichie, par identifiant (voir plus haut) |
+| `access` | non | Pages réservées seulement : groupe(s) autorisé(s) |
 
 ### Menu déroulant — `pages/<dossier>/_group.md`
 

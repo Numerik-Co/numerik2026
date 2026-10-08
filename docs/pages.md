@@ -3,7 +3,9 @@
 Deux mécanismes coexistent :
 
 - **Pages de contenu** (éditoriales) — un simple fichier Markdown dans
-  `src/content/pages/`. Aucune ligne de code à écrire. **C'est le cas courant.**
+  `src/content/pages/`, créé à la main ou depuis le module **« Pages »** de
+  l'espace bénévoles (voir plus bas). Aucune ligne de code à écrire. **C'est
+  le cas courant.**
   Guide pas-à-pas pour les éditeurs : [`src/content/README.md`](../src/content/README.md).
 - **Pages applicatives** — un `.astro` dans `src/pages/` (routage par fichiers
   d'Astro), pour tout ce qui a une logique propre (listes, filtres, formulaires).
@@ -25,7 +27,8 @@ Deux mécanismes coexistent :
 | `src/pages/rss.xml.js` | `/rss.xml` | applicative | Flux RSS des actualités |
 | `src/content/pages/statuts/index.md` | `/statuts` | contenu | Statuts (lien de pied de page) |
 | `src/content/pages/reglement-interieur/index.md` | `/reglement-interieur` | contenu | Règlement intérieur (lien de pied de page) |
-| `src/content/pages/mentions-legales/index.mdx` | `/mentions-legales` | contenu | Mentions légales (lien de pied de page) |
+| `src/content/pages/mentions-legales/index.md` | `/mentions-legales` | contenu | Mentions légales (lien de pied de page), variables `{{association.…}}` |
+| `src/content/pages/association/adhesion-associations/index.md` | `/association/adhesion-associations` | contenu (enrichie) | Adhésion des associations : cartes, tarif, bouton |
 | `src/content/pages/association/_group.md` | — | contenu | Décrit le menu déroulant « Association » |
 | `src/content/pages/association/notre-histoire/index.md` | `/association/notre-histoire` | contenu | Histoire de l'association |
 | `src/content/pages/association/ethique-du-logiciel-libre/index.md` | `/association/ethique-du-logiciel-libre` | contenu | Éthique du logiciel libre |
@@ -64,15 +67,57 @@ Deux mécanismes coexistent :
   `show: false`. Utile pour les pages liées seulement depuis le pied de page.
 - **Menu déroulant** : ranger les pages dans un sous-dossier + y placer un
   `_group.md` (`label`, `order`). Voir [navigation.md](navigation.md).
-- **Valeurs dynamiques dans le texte** (ex. `mentions-legales` qui injecte les
-  coordonnées depuis `src/lib/association.ts`) : utiliser `.mdx` au lieu de
-  `.md`. Le `.mdx` accepte `import` / `export const` et des expressions `{...}`.
-  La route attrape-tout lit les deux extensions indifféremment.
+- **Valeurs de la configuration dans le texte** : variables
+  `{{association.nom}}`, `{{association.adresse}}`, `{{hebergeur.nom}}`…
+  (`src/lib/page-variables.ts`), remplacées à l'affichage (ex.
+  `mentions-legales`).
+- **Page enrichie** : `type: enrichie` + `blocs:` + marqueurs
+  `[[bloc:<id>]]` seuls sur leur ligne (catalogue `src/lib/blocs.ts`,
+  rendu `src/components/blocs/BlocView.astro`). Ajouter un type de bloc =
+  une entrée dans `BLOC_TYPES` (champs : formulaire du module + validation
+  au build) + une branche dans `BlocView.astro`. Un composant avec
+  `client:*` (îlot) y est possible.
+- **`.mdx`** : reste lu par la route attrape-tout (composant `Content`),
+  pour une page écrite dans le code avec ses propres `import`. Le module
+  « Pages » la montre comme **page technique** (lecture seule) : le MDX
+  s'exécute sur le serveur, il n'est jamais écrit depuis le site.
 - **Sommaire** : `src/pages/[...slug].astro` affiche automatiquement le sommaire
   « Sur cette page » si le contenu a plus d'un titre (`<h2>`/`<h3>`).
 - **Partage** : chaque page affiche un bouton de partage Facebook (colonne de
   droite, ou sous le texte sur mobile) ; l'aperçu reprend le titre, la
   `description` et l'image de couverture. Voir [partage.md](partage.md).
+
+### Rendu et sécurité
+
+Une page `.md` est affichée à partir du HTML rendu par le Content Layer,
+**nettoyé** comme celui des actualités (`sanitizeNewsHtml()`,
+`src/lib/sanitize-news.ts` : `<script>`, `on…=`, `javascript:` retirés,
+balisage et classes gardés), variables remplacées, puis découpé aux
+marqueurs de blocs (`pageParts()`, `src/lib/content-pages.ts`). Le texte
+Markdown des blocs passe par le même nettoyage (`markdown-fragment.ts`).
+
+## Module « Pages » (espace bénévoles)
+
+Groupes `redacteur` / `admin` / `superadmin`. Écrit dans les sources puis
+reconstruit le site, comme le module « Actualités »
+([publication.md](publication.md)) :
+
+- `src/components/admin/modules/SitePagesModule.vue` — liste (menus et leurs
+  pages, pages hors menu, pages réservées), formulaires (`pages/PageForm.vue`,
+  `pages/BlocsEditor.vue`, `pages/BlocFields.vue`) ; création = choix
+  **page classique** ou **page enrichie**.
+- `src/lib/page-writer.ts` — validation identique au schéma (adresse libre et
+  non prise par une page applicative de `src/pages/` ou un fichier de
+  `public/`, liens sûrs, variables connues, blocs valides, marqueurs ↔ blocs),
+  écriture dans une **transaction** (copie de `src/content/pages/`, remise en
+  place si la reconstruction échoue). Déplacer une page (autre menu, hors
+  menu, réservée) ou changer son adresse **change son URL**.
+- Menus : `_group.md` (libellé, position) ; l'adresse d'un menu est fixée à
+  sa création ; seul un menu vide se supprime ; un menu sans page n'apparaît
+  pas sur le site. Un seul niveau de menu déroulant.
+- Routes : `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>`,
+  `POST /api/admin/menus`, `PUT/DELETE /api/admin/menus/<dossier>` ; chaque
+  action est consignée au journal.
 
 ### Comment ça marche
 

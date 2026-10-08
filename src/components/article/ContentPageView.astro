@@ -3,6 +3,7 @@
  * Rendu d'une page de contenu (collection `pages`), partagé par
  * `src/pages/[...slug].astro` (pages publiques, prérendues) et
  * `src/pages/espace-benevoles/[...slug].astro` (pages réservées, à la demande).
+ * Contenu `.md` : HTML nettoyé, variables `{{…}}` et blocs (`pageParts()`).
  * `denied` : `login` = personne connectée requise (encart « Se connecter »),
  * `forbidden` = groupe insuffisant ; le contenu n'est alors pas rendu.
  */
@@ -12,7 +13,8 @@ import TableOfContents from './TableOfContents.astro';
 import FigureImage from './FigureImage.astro';
 import ShareTools from './ShareTools.astro';
 import { association } from '../../lib/association';
-import { getGroups, groupMetaOf, renderPage, type ContentPage } from '../../lib/content-pages';
+import BlocView from '../blocs/BlocView.astro';
+import { getGroups, groupMetaOf, pageParts, renderPage, type ContentPage } from '../../lib/content-pages';
 
 interface Props {
 	page: ContentPage;
@@ -21,7 +23,13 @@ interface Props {
 
 const { page, denied = null } = Astro.props;
 const restricted = page.access !== null;
-const { Content, headings } = denied ? { Content: null, headings: [] } : await renderPage(page);
+// `.md` : HTML nettoyé découpé aux blocs ; `.mdx` (code) : composant `Content`.
+const md = denied ? null : pageParts(page);
+const { Content, headings } = denied
+	? { Content: null, headings: [] }
+	: md
+		? { Content: null, headings: md.headings }
+		: await renderPage(page);
 
 const breadcrumbs: { label: string; href?: string }[] = [{ label: 'Accueil', href: '/' }];
 if (page.segments.length > 1) {
@@ -78,7 +86,9 @@ breadcrumbs.push({ label: page.title });
 			)}
 
 			<div class="markdown-content font-light text-gray-700">
-				{Content && <Content />}
+				{md
+					? md.parts.map((part) => ('html' in part ? <Fragment set:html={part.html} /> : <BlocView bloc={part.bloc} />))
+					: Content && <Content />}
 			</div>
 		</>
 	)}

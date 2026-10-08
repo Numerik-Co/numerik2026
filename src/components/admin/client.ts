@@ -4,6 +4,7 @@
  * (`status === 401` : session expirée).
  */
 import type { AuthGroup } from '../../lib/auth/groups';
+import type { Bloc } from '../../lib/blocs';
 
 export interface AdminUser {
 	login: string;
@@ -81,6 +82,39 @@ export interface JournalEntry {
 	message?: string;
 }
 
+export type PagePlacement = { kind: 'racine' } | { kind: 'menu'; menu: string } | { kind: 'reservee' };
+
+/** Page à créer ou modifier (module « Pages »), cf. src/lib/page-writer.ts. */
+export interface PageInput {
+	placement: PagePlacement;
+	slug: string;
+	title: string;
+	description: string;
+	type: 'classique' | 'enrichie';
+	menu: { show: boolean; order: number; label: string };
+	access: AuthGroup[];
+	body: string;
+	blocs: Record<string, Bloc>;
+	imageCredit: string;
+}
+
+/** Page telle qu'elle est dans les sources. */
+export interface PageSourceView extends PageInput {
+	path: string;
+	cover: string | null;
+	/** Page `.mdx` écrite dans le code : lecture seule. */
+	technique: boolean;
+	/** Aperçu de la photo actuelle (GET d'une page seulement). */
+	coverUrl?: string | null;
+}
+
+export interface MenuView {
+	folder: string;
+	label: string;
+	order: number;
+	pages: string[];
+}
+
 export interface AccountInput {
 	fullname: string;
 	email: string;
@@ -147,6 +181,28 @@ export const newsApi = {
 		request<{ ok: true; href: string }>('PUT', `/api/admin/actualites/${encodeURIComponent(slug)}`, { fields, body, cover }),
 	remove: (slug: string) =>
 		request<{ ok: true }>('DELETE', `/api/admin/actualites/${encodeURIComponent(slug)}`, { confirm: slug }),
+};
+
+export const pagesApi = {
+	list: () =>
+		request<{ menus: MenuView[]; pages: PageSourceView[]; status: PublishStatus; availability: { ok: boolean; reason?: string } }>(
+			'GET',
+			'/api/admin/pages',
+		),
+	get: (path: string) => request<PageSourceView>('GET', `/api/admin/pages/${path}`),
+	create: (page: PageInput, cover: { type: string; data: string } | null) =>
+		request<{ ok: true; href: string | null }>('POST', '/api/admin/pages', { page, cover: cover ?? undefined }),
+	update: (path: string, page: PageInput, cover: CoverUpdate) =>
+		request<{ ok: true; href: string | null }>('PUT', `/api/admin/pages/${path}`, { page, cover }),
+	remove: (path: string) => request<{ ok: true }>('DELETE', `/api/admin/pages/${path}`, { confirm: path }),
+};
+
+export const menusApi = {
+	create: (input: { label: string; folder: string; order: number }) =>
+		request<{ ok: true }>('POST', '/api/admin/menus', input),
+	update: (folder: string, input: { label: string; order: number }) =>
+		request<{ ok: true }>('PUT', `/api/admin/menus/${encodeURIComponent(folder)}`, input),
+	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus/${encodeURIComponent(folder)}`, { confirm: folder }),
 };
 
 export const journalApi = {

@@ -13,6 +13,7 @@ import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import { parseAccess } from './lib/auth/access';
+import { validateBloc, type Bloc } from './lib/blocs';
 import { categories } from './lib/categories';
 
 /**
@@ -72,6 +73,21 @@ const pages = defineCollection({
 				.optional(),
 			cover: image().optional(),
 			imageCredit: z.string().optional(),
+			/** `enrichie` = la page peut recevoir des blocs (`blocs:` + marqueurs `[[bloc:<id>]]`). */
+			type: z.enum(['classique', 'enrichie']).default('classique'),
+			/** Blocs d'une page enrichie, par identifiant (cf. `src/lib/blocs.ts`). */
+			blocs: z
+				.record(z.string(), z.unknown())
+				.optional()
+				.transform((value, ctx) => {
+					const blocs: Record<string, Bloc> = {};
+					for (const [id, raw] of Object.entries(value ?? {})) {
+						const { bloc, errors } = validateBloc(id, raw);
+						for (const message of errors) ctx.addIssue({ code: 'custom', message });
+						if (bloc) blocs[id] = bloc;
+					}
+					return blocs;
+				}),
 			/**
 			 * Restriction d'accès (pages de `espace-benevoles/` uniquement) :
 			 * `true` (toute personne connectée), un groupe ou une liste. Un

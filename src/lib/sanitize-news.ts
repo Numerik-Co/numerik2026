@@ -2,8 +2,10 @@
  * Nettoyage du HTML des actualités (`src/content/news/`, contenu publiable
  * depuis l'espace bénévoles), appliqué à l'affichage par la page d'article
  * sur le HTML rendu par Astro (`entry.rendered.html`, cf. `renderNews()` dans
- * `src/lib/news.ts`). Le moteur Markdown du site n'est pas modifié et les
- * autres contenus (pages, activités) sont rendus tels quels.
+ * `src/lib/news.ts`). Aussi appliqué aux pages de contenu `.md` (publiables
+ * depuis le module « Pages », cf. `pageParts()` dans `src/lib/content-pages.ts`)
+ * et au texte de leurs blocs. Le moteur Markdown du site n'est pas modifié ;
+ * les activités et les pages `.mdx` (code) sont rendues telles quelles.
  *
  * Le HTML est AUTORISÉ dans une actualité (tableaux, div, span, classes,
  * styles, images, détails/résumé…) : seul le code exécutable est retiré —

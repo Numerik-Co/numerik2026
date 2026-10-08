@@ -13,8 +13,10 @@
  * serveur fait la vraie validation.
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem, type PublishStatus } from '../client';
+import PublishStatus from '../PublishStatus.vue';
+import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem } from '../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
+import { usePublication } from '../usePublication';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
@@ -23,24 +25,6 @@ const news = ref<NewsItem[]>([]);
 const loading = ref(true);
 const error = ref('');
 const availability = ref<{ ok: boolean; reason?: string }>({ ok: true });
-const status = ref<PublishStatus>({ state: 'idle' });
-/** Vrai pendant qu'on suit une publication lancée depuis ce module (ou trouvée en cours). */
-const following = ref(false);
-/**
- * Ferme définitivement l'encadré du dernier résultat (pour tout le monde,
- * cf. `dismissStatus`) ; il reste consultable dans le journal du super admin.
- */
-async function dismissStatus() {
-	const previous = status.value;
-	status.value = { state: 'idle' };
-	try {
-		await newsApi.dismissStatus();
-	} catch (e) {
-		status.value = previous;
-		fail(e);
-	}
-}
-
 const mdFile = ref<File | null>(null);
 const mdText = ref('');
 const photo = ref<File | null>(null);
@@ -52,8 +36,6 @@ const dragOver = ref<'md' | 'photo' | null>(null);
 
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const PHOTO_MAX = 10 * 1024 * 1024;
-const POLL_MS = 3000;
-const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 function fail(e: unknown) {
 	takeModuleToReopen(); // l'enregistrement a échoué : pas de réouverture au prochain chargement
@@ -67,8 +49,7 @@ async function load() {
 		const res = await newsApi.list();
 		news.value = res.news;
 		availability.value = res.availability;
-		status.value = res.status;
-		if (res.status.state === 'running' && !following.value) follow();
+		receive(res.status);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -78,31 +59,7 @@ async function load() {
 
 // --- Suivi de la publication ---
 
-let pollTimer: ReturnType<typeof setTimeout> | undefined;
-
-function follow() {
-	following.value = true;
-	const startedAt = Date.now();
-	const tick = async () => {
-		try {
-			status.value = await newsApi.status();
-		} catch (e) {
-			if (e instanceof ApiError && e.status === 401) return sessionExpired();
-			// Serveur en cours de redémarrage sur la nouvelle version : on réessaie.
-		}
-		if (status.value.state === 'running' && Date.now() - startedAt < POLL_TIMEOUT_MS) {
-			pollTimer = setTimeout(tick, POLL_MS);
-			return;
-		}
-		following.value = false;
-		if (status.value.state === 'running') {
-			error.value = "La publication prend plus de temps que prévu. Rouvrez ce module dans quelques minutes pour voir le résultat.";
-		}
-		await load();
-	};
-	// Premier point d'étape presque immédiat (en dev, la publication est déjà finie).
-	pollTimer = setTimeout(tick, 400);
-}
+const { status, following, receive, started, dismiss: dismissStatus } = usePublication({ onSettled: () => load(), onError: fail });
 
 // ✕ / Échap depuis un formulaire : retour à la liste plutôt que fermeture du panneau.
 const stopCloseRequest = onCloseRequest(() => {
@@ -111,10 +68,7 @@ const stopCloseRequest = onCloseRequest(() => {
 	return true;
 });
 
-onBeforeUnmount(() => {
-	clearTimeout(pollTimer);
-	stopCloseRequest();
-});
+onBeforeUnmount(stopCloseRequest);
 
 // --- Dépôt ---
 
@@ -191,10 +145,9 @@ async function submit() {
 		const cover = photo.value ? { type: photo.value.type, data: await toBase64(photo.value) } : null;
 		rememberOpenModule('actualites');
 		await newsApi.create(mdText.value, cover);
-		status.value = { state: 'running', label: preview.value?.title };
+		started(preview.value?.title);
 		reset();
 		view.value = 'list';
-		follow();
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -248,8 +201,7 @@ async function remove(item: NewsItem) {
 		rememberOpenModule('actualites');
 		await newsApi.remove(item.slug);
 		confirmingDelete.value = null;
-		status.value = { state: 'running', label: `Suppression : ${item.title}` };
-		follow();
+		started(`Suppression : ${item.title}`);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -318,11 +270,10 @@ async function saveEdit() {
 		}
 		rememberOpenModule('actualites');
 		await newsApi.update(editing.value.slug, fields, body, cover);
-		status.value = { state: 'running', label: `Modification : ${editForm.title}` };
+		started(`Modification : ${editForm.title}`);
 		reset();
 		editing.value = null;
 		view.value = 'list';
-		follow();
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -351,55 +302,7 @@ onMounted(load);
 
 <template>
 	<!-- Publication en cours / dernier résultat -->
-	<div
-		v-if="following || status.state === 'running'"
-		class="mb-4 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-gray-800"
-		role="status"
-	>
-		<i class="fa-solid fa-spinner fa-spin mt-0.5 text-primary" aria-hidden="true"></i>
-		<span>
-			<strong class="font-medium">Publication en cours<template v-if="status.label"> : {{ status.label }}</template></strong>
-			<span class="block font-light text-gray-600">
-				Le site est en cours de reconstruction (environ une minute). Vous pouvez fermer ce panneau : la publication continue.
-			</span>
-		</span>
-	</div>
-	<div
-		v-else-if="status.state === 'succeeded'"
-		class="relative mb-4 rounded-xl border border-green-200 bg-green-50 p-4 pr-10 text-sm text-green-800"
-		role="status"
-	>
-		<button
-			type="button"
-			class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
-			aria-label="Fermer ce message"
-			title="Fermer"
-			@click="dismissStatus"
-		>
-			<i class="fa-solid fa-xmark" aria-hidden="true"></i>
-		</button>
-		Dernière publication en ligne :
-		<a v-if="status.href" :href="status.href" class="font-medium underline">{{ status.label }}</a>
-		<span v-else class="font-medium">{{ status.label }}</span>
-		<span v-if="status.message" class="mt-1 block text-amber-800">{{ status.message }}</span>
-	</div>
-	<p
-		v-else-if="status.state === 'failed'"
-		class="relative mb-4 rounded-xl bg-red-50 p-4 pr-10 text-sm text-red-700"
-		role="alert"
-	>
-		<button
-			type="button"
-			class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
-			aria-label="Fermer ce message"
-			title="Fermer"
-			@click="dismissStatus"
-		>
-			<i class="fa-solid fa-xmark" aria-hidden="true"></i>
-		</button>
-		<strong class="font-medium">Dernière publication non aboutie<template v-if="status.label"> ({{ status.label }})</template>.</strong>
-		<span class="block">{{ status.message }}</span>
-	</p>
+	<PublishStatus :status="status" :following="following" @dismiss="dismissStatus" />
 
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
