@@ -29,6 +29,22 @@ const isDev = import.meta.env.DEV;
 
 const modules = computed(() => (user.value ? modulesFor(user.value.groups) : []));
 const activeModule = computed(() => modules.value.find((m) => m.id === activeId.value) ?? null);
+const barModules = computed(() => modules.value.filter((m) => m.placement !== 'user'));
+const userModules = computed(() => modules.value.filter((m) => m.placement === 'user'));
+
+/** Menu déroulant du nom : modules personnels (`placement: 'user'`) + déconnexion. */
+const userMenuOpen = ref(false);
+const userMenu = ref<HTMLElement | null>(null);
+function openUserModule(id: string) {
+	userMenuOpen.value = false;
+	activeId.value = id;
+}
+function onDocumentClick(e: MouseEvent) {
+	if (userMenuOpen.value && !userMenu.value?.contains(e.target as Node)) userMenuOpen.value = false;
+}
+function onDocumentKeydown(e: KeyboardEvent) {
+	if (e.key === 'Escape') userMenuOpen.value = false;
+}
 
 function sessionExpired() {
 	user.value = null;
@@ -52,7 +68,7 @@ provide(ADMIN_CONTEXT, { user, pages, sessionExpired, onCloseRequest });
 
 /** Lien « Espace bénévoles » : connexion, ou premier module si déjà connecté·e. */
 function open() {
-	if (user.value) activeId.value = modules.value[0]?.id ?? null;
+	if (user.value) activeId.value = barModules.value[0]?.id ?? null;
 	else loginOpen.value = true;
 }
 
@@ -72,6 +88,8 @@ watch(user, (u) => document.documentElement.classList.toggle('has-admin-bar', Bo
 
 onMounted(async () => {
 	window.addEventListener('numerik:auth-open', open);
+	document.addEventListener('click', onDocumentClick);
+	document.addEventListener('keydown', onDocumentKeydown);
 	if (document.cookie.split('; ').includes('numerik_connecte=1')) {
 		try {
 			const me = await authApi.me();
@@ -90,34 +108,23 @@ onMounted(async () => {
 	if (reopen && modules.value.some((m) => m.id === reopen)) activeId.value = reopen;
 });
 
-onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
+onBeforeUnmount(() => {
+	window.removeEventListener('numerik:auth-open', open);
+	document.removeEventListener('click', onDocumentClick);
+	document.removeEventListener('keydown', onDocumentKeydown);
+});
 </script>
 
 <template>
 	<div v-if="user" class="fixed inset-x-0 top-0 z-[60] h-10 bg-gray-900 text-sm text-white shadow">
-		<div class="mx-auto flex h-full max-w-7xl items-center gap-1 px-2 sm:px-4">
+		<div class="flex h-full w-full items-center gap-1 px-2 sm:px-4">
 			<span class="mr-2 hidden items-center gap-2 font-heading font-semibold md:flex">
 				<i class="fa-solid fa-gear text-gray-400" aria-hidden="true"></i>
 				Paramètres
 			</span>
-			<span
-				v-if="isDev"
-				class="mr-1 shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-semibold text-amber-950"
-				title="Serveur de développement : les modifications sont visibles aussitôt, sans reconstruction du site."
-			>
-				<i class="fa-solid fa-flask mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Développement</span><span class="sm:hidden">Dév.</span>
-			</span>
-			<span
-				v-else
-				class="mr-1 hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs text-gray-300 sm:flex"
-				title="Serveur de production : chaque publication reconstruit le site."
-			>
-				<span class="h-2 w-2 rounded-full bg-green-400" aria-hidden="true"></span>
-				Production
-			</span>
 			<nav class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto" aria-label="Modules d'administration">
 				<button
-					v-for="m in modules"
+					v-for="m in barModules"
 					:key="m.id"
 					type="button"
 					class="flex shrink-0 items-center gap-1.5 rounded px-2.5 py-1.5 hover:bg-white/10"
@@ -130,19 +137,64 @@ onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
 					<span class="hidden sm:inline">{{ m.label }}</span>
 				</button>
 			</nav>
-			<span class="hidden shrink-0 items-center gap-1.5 text-gray-300 lg:flex">
-				<i class="fa-solid fa-circle-user" aria-hidden="true"></i>
-				{{ user.fullname }}
-			</span>
-			<button
-				type="button"
-				class="ml-1 flex shrink-0 items-center gap-1.5 rounded px-2.5 py-1.5 text-gray-300 hover:bg-white/10 hover:text-white"
-				title="Se déconnecter"
-				@click="logout"
+			<span
+				v-if="isDev"
+				class="ml-1 shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-semibold text-amber-950"
+				title="Serveur de développement : les modifications sont visibles aussitôt, sans reconstruction du site."
 			>
-				<i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
-				<span class="hidden sm:inline">Déconnexion</span>
-			</button>
+				<i class="fa-solid fa-flask mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Développement</span><span class="sm:hidden">Dév.</span>
+			</span>
+			<span
+				v-else
+				class="ml-1 hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs text-gray-300 sm:flex"
+				title="Serveur de production : chaque publication reconstruit le site."
+			>
+				<span class="h-2 w-2 rounded-full bg-green-400" aria-hidden="true"></span>
+				Production
+			</span>
+			<div ref="userMenu" class="relative ml-1 shrink-0">
+				<button
+					type="button"
+					class="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-gray-300 hover:bg-white/10 hover:text-white"
+					:class="userMenuOpen ? 'bg-white/15 text-white' : ''"
+					aria-haspopup="menu"
+					:aria-expanded="userMenuOpen"
+					:title="user.fullname"
+					@click="userMenuOpen = !userMenuOpen"
+				>
+					<i class="fa-solid fa-circle-user" aria-hidden="true"></i>
+					<span class="hidden max-w-[12rem] truncate sm:inline">{{ user.fullname }}</span>
+					<i class="fa-solid fa-chevron-down text-[0.65rem] transition-transform" :class="userMenuOpen ? 'rotate-180' : ''" aria-hidden="true"></i>
+				</button>
+				<div
+					v-if="userMenuOpen"
+					class="absolute right-0 top-full mt-1 min-w-48 overflow-hidden rounded-b-md bg-gray-900 py-1 shadow-lg ring-1 ring-white/10"
+					role="menu"
+				>
+					<button
+						v-for="m in userModules"
+						:key="m.id"
+						type="button"
+						role="menuitem"
+						class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-white/10"
+						:class="activeId === m.id ? 'bg-white/15' : ''"
+						@click="openUserModule(m.id)"
+					>
+						<i :class="['fa-solid', m.icon, 'w-4 text-center text-gray-300']" aria-hidden="true"></i>
+						{{ m.label }}
+					</button>
+					<div v-if="userModules.length" class="my-1 border-t border-white/10"></div>
+					<button
+						type="button"
+						role="menuitem"
+						class="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-300 hover:bg-white/10 hover:text-white"
+						@click="logout"
+					>
+						<i class="fa-solid fa-right-from-bracket w-4 text-center" aria-hidden="true"></i>
+						Déconnexion
+					</button>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -150,7 +202,7 @@ onBeforeUnmount(() => window.removeEventListener('numerik:auth-open', open));
 		<component :is="activeModule.component" />
 	</AdminOverlay>
 
-	<AdminOverlay v-if="loginOpen && !user" title="Espace bénévoles" variant="modal" @close="loginOpen = false">
+	<AdminOverlay v-if="loginOpen && !user" title="Espace Administration" variant="modal" @close="loginOpen = false">
 		<LoginForm @success="reload" />
 	</AdminOverlay>
 </template>

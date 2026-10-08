@@ -93,7 +93,9 @@ sous `/api/admin/`).
   connexion ; `GUARDS` réserve des préfixes à des groupes
   (`/api/admin/comptes` → `admin`, `/api/admin/actualites` et
   `/api/admin/publication` → `redacteur`).
-- Modules : Pages réservées, **Actualités**, Comptes, Mon mot de passe.
+- Modules : Pages réservées, **Actualités**, Comptes ; Mon mot de passe
+  (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
+  du nom, en fin de barre (pleine largeur, badge serveur juste avant).
 
 ### HTML des actualités
 

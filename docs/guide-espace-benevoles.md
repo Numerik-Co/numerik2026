@@ -165,12 +165,18 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 ### La barre d'administration
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│ ⚙ Paramètres  🔒 Pages réservées  👥 Comptes  🔑 Mon mot de passe     Marie  ⏻ Déconnexion │
-└────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│ ⚙ Paramètres  🔒 Pages réservées  👥 Comptes        ● Production  👤 Marie ▾ │
+└──────────────────────────────────────────────────────┬───────────────────┤
+                                                       │ 🔑 Mon mot de passe │
+                                                       │ ⏻ Déconnexion      │
+                                                       └───────────────────┘
 ```
 
-- Un badge indique le **mode du serveur** : **Production** (point vert) —
+- La barre occupe toute la largeur de l'écran.
+- Le **nom** à droite ouvre un menu personnel : **Mon mot de passe** et
+  **Déconnexion** (fermé par un clic ailleurs ou **Échap**).
+- Un badge, juste avant le nom, indique le **mode du serveur** : **Production** (point vert) —
   chaque publication reconstruit le site — ou **Développement** (ambre) —
   serveur de test, modifications visibles aussitôt, sans reconstruction.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
@@ -278,7 +284,7 @@ de process) : voir [publication.md](publication.md).
 
 ### Changer mon mot de passe
 
-Module **🔑 Mon mot de passe** :
+Menu du **nom** (à droite de la barre) → **🔑 Mon mot de passe** :
 
 1. Saisir le mot de passe actuel.
 2. Saisir deux fois le nouveau — **10 caractères minimum**. Une courte phrase
@@ -344,7 +350,7 @@ gère le serveur utilise `./auth-user.sh reset <login>` (voir Partie 1).
 
 ### Se déconnecter
 
-Bouton **⏻ Déconnexion** à droite de la barre. Indispensable sur un
+Menu du **nom** (à droite de la barre) → **⏻ Déconnexion**. Indispensable sur un
 ordinateur partagé (médiathèque, salle d'atelier…).
 
 ---

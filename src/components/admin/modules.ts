@@ -1,6 +1,7 @@
 /**
  * Modules de l'espace bénévoles : chacun apparaît comme un bouton de la
- * barre d'administration et s'ouvre dans le panneau latéral.
+ * barre d'administration (ou du menu du nom, `placement: 'user'`) et s'ouvre
+ * dans le panneau latéral.
  *
  * Ajouter un module = un composant dans `./modules/` + une entrée ici
  * (+ ses routes `/api/admin/<…>`, gardées par `GUARDS` dans
@@ -17,6 +18,8 @@ export interface AdminModule {
 	icon: string;
 	groups: AuthGroup[];
 	component: Component;
+	/** `user` = rangé dans le menu déroulant du nom (compte personnel) plutôt que dans la barre. */
+	placement?: 'bar' | 'user';
 }
 
 export const ADMIN_MODULES: AdminModule[] = [
@@ -46,6 +49,7 @@ export const ADMIN_MODULES: AdminModule[] = [
 		label: 'Mon mot de passe',
 		icon: 'fa-key',
 		groups: [],
+		placement: 'user',
 		component: defineAsyncComponent(() => import('./modules/PasswordModule.vue')),
 	},
 ];
