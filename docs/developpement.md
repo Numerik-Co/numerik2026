@@ -41,7 +41,7 @@ src/
 │   ├── Layout.astro                                  # <html>, <head>, Header + <slot/> + Footer
 │   └── ArticleLayout.astro                           # gabarit de page complet pour le contenu de lecture (voir composants.md)
 ├── config/
-│   └── site.ts                                       # config par déploiement : CTA « Adhérer » + builtinNav
+│   └── site.ts                                       # config par déploiement : CTA « Adhérer », formulaires, partage
 ├── lib/
 │   ├── news.ts                                       # lecture/tri/formatage des actualités (getAllNews)
 │   ├── activites.ts                                  # collection activites (getAllActivities, getActivitiesByCategory, renderActivity)

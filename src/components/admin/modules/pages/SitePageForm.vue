@@ -1,0 +1,124 @@
+<script setup lang="ts">
+/**
+ * Formulaire d'une page du site (bibliothèque `src/lib/site-pages.ts` :
+ * Accueil, Activités…) dans le module « Pages » : lien dans le menu
+ * (libellé, visibilité) et textes de la page, section par section. Un texte
+ * vidé reprend sa valeur par défaut ; le serveur n'enregistre que les écarts.
+ * Activer / désactiver se fait depuis la liste.
+ */
+import { computed, inject, reactive, ref } from 'vue';
+import { PAGE_VARIABLES } from '../../../../lib/page-variables';
+import { SITE_PAGES } from '../../../../lib/site-pages';
+import { ApiError, sitePagesApi, type SitePageView } from '../../client';
+import { ADMIN_CONTEXT, inputClass, rememberOpenModule } from '../../context';
+
+const props = defineProps<{ page: SitePageView; disabled: boolean }>();
+const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
+const { sessionExpired } = inject(ADMIN_CONTEXT)!;
+
+const def = SITE_PAGES.find((p) => p.id === props.page.id)!;
+const form = reactive({ label: props.page.label, show: props.page.show, textes: { ...props.page.textes } });
+const error = ref('');
+const busy = ref(false);
+
+const defaults = Object.fromEntries(def.sections.flatMap((s) => s.texts.map((t) => [t.name, t.default])));
+/** Textes différents de l'origine (un texte vide compte comme l'origine). */
+const changed = computed(
+	() =>
+		Object.keys(defaults).filter((name) => {
+			const value = (form.textes[name] ?? '').trim();
+			return value !== '' && value !== defaults[name];
+		}).length,
+);
+
+function resetTexts() {
+	Object.assign(form.textes, defaults);
+}
+
+async function submit() {
+	error.value = '';
+	busy.value = true;
+	try {
+		rememberOpenModule('pages-site');
+		await sitePagesApi.update(props.page.id, { label: form.label, show: form.show, active: props.page.active, textes: form.textes });
+		emit('published', `Page du site : ${form.label}`);
+	} catch (e) {
+		if (e instanceof ApiError && e.status === 401) return sessionExpired();
+		error.value = (e as Error).message;
+	} finally {
+		busy.value = false;
+	}
+}
+
+const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{{${name}}}`, label: v.label }));
+</script>
+
+<template>
+	<form class="space-y-5" @submit.prevent="submit">
+		<p class="text-sm font-light text-gray-600">
+			Page du site <strong class="font-medium text-gray-800">{{ def.label }}</strong> ({{ props.page.href }}) : sa mise en
+			page est fournie par le site ; vous réglez son lien dans le menu et ses textes.
+		</p>
+		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+
+		<!-- Lien dans le menu -->
+		<fieldset class="space-y-3 rounded-xl bg-gray-50 p-4">
+			<legend class="sr-only">Lien dans le menu de navigation</legend>
+			<div>
+				<label for="sp-label" class="block text-sm font-semibold text-gray-700">Libellé dans le menu de navigation</label>
+				<input id="sp-label" v-model="form.label" type="text" required :placeholder="def.label" :class="inputClass" />
+			</div>
+			<div>
+				<label class="flex items-center gap-2 text-sm text-gray-700">
+					<input v-model="form.show" type="checkbox" class="rounded border-gray-300" />
+					Visible dans le menu de navigation
+				</label>
+				<p class="mt-1 text-xs font-light text-gray-500">Décoché : la page reste accessible par son adresse.</p>
+			</div>
+		</fieldset>
+
+		<!-- Textes, par section -->
+		<fieldset v-for="section in def.sections" :key="section.title" class="space-y-3">
+			<legend class="font-heading text-sm font-semibold text-gray-900">{{ section.title }}</legend>
+			<div v-for="t in section.texts" :key="t.name">
+				<label :for="`sp-${t.name}`" class="block text-sm font-medium text-gray-700">{{ t.label }}</label>
+				<textarea
+					v-if="t.multiline"
+					:id="`sp-${t.name}`"
+					v-model="form.textes[t.name]"
+					rows="2"
+					:placeholder="t.default"
+					:class="inputClass"
+				></textarea>
+				<input v-else :id="`sp-${t.name}`" v-model="form.textes[t.name]" type="text" :placeholder="t.default" :class="inputClass" />
+				<p v-if="t.help" class="mt-1 text-xs font-light text-gray-500">{{ t.help }}</p>
+			</div>
+		</fieldset>
+
+		<details class="text-sm">
+			<summary class="cursor-pointer text-primary">Informations de l'association utilisables dans les textes</summary>
+			<ul class="mt-2 space-y-1 text-xs text-gray-600">
+				<li v-for="v in variables" :key="v.token"><code class="text-gray-900">{{ v.token }}</code> — {{ v.label }}</li>
+			</ul>
+		</details>
+
+		<p class="text-xs font-light text-gray-500">
+			Un texte vidé reprend sa valeur d'origine.
+			<template v-if="changed">
+				{{ changed }} texte{{ changed > 1 ? 's' : '' }} modifié{{ changed > 1 ? 's' : '' }} —
+				<button type="button" class="text-primary hover:underline" @click="resetTexts">rétablir les textes d'origine</button>
+			</template>
+		</p>
+
+		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
+			<button
+				type="submit"
+				:disabled="props.disabled || busy"
+				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+			>
+				Enregistrer et publier
+			</button>
+			<button type="button" class="text-sm text-gray-600 hover:underline" @click="emit('cancel')">Annuler</button>
+		</div>
+	</form>
+</template>

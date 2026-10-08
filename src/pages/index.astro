@@ -6,38 +6,45 @@ import ActualitesSection from '../components/sections/ActualitesSection.astro';
 import CtaSection from '../components/sections/CtaSection.astro';
 import RdvCtaSection from '../components/sections/RdvCtaSection.astro';
 import heroImage from '../styles/img/hero-mediation-numerique.jpg';
-import { association } from '../lib/association';
+import { getSitePage, inactiveSiteHrefs } from '../lib/site-pages-content';
+
+// Textes réglés depuis le module « Pages » (bibliothèque src/lib/site-pages.ts).
+const { t } = await getSitePage('accueil');
+// Liens vers une page du site désactivée : masqués ('' et non undefined, qui
+// rendrait au composant son lien par défaut).
+const off = await inactiveSiteHrefs();
+const link = (href: string) => (off.has(href) ? '' : href);
 ---
 
 <Layout>
 	<Hero
-		title="Le numérique, ensemble et pour toutes et tous"
-		highlight="ensemble"
-		description={`${association.name} accompagne les habitant·e·s, les associations et les écoles dans la découverte et l'appropriation des outils numériques.`}
-		primaryLabel="Découvrir nos activités"
-		primaryHref="/activites"
-		secondaryLabel="Nous rejoindre"
+		title={t['hero-titre']}
+		highlight={t['hero-mot']}
+		description={t['hero-accroche']}
+		primaryLabel={t['hero-bouton-1']}
+		primaryHref={link('/activites')}
+		secondaryLabel={t['hero-bouton-2']}
 		secondaryHref="/adherer"
 		backgroundImage={heroImage}
 		overlay="black"
 	/>
 	<ActualitesSection
-		eyebrow="Actualités"
-		title="Les dernières actus de l'association"
-		ctaLabel="Voir toutes les actualités"
-		ctaHref="/actualites"
+		eyebrow={t['actus-surtitre']}
+		title={t['actus-titre']}
+		ctaLabel={t['actus-lien']}
+		ctaHref={link('/actualites')}
 		limit={3}
 	/>
 	<RdvCtaSection />
 	<ActivitesSection
-		title="Nos activités"
-		ctaLabel="Accéder à la page"
-		ctaHref="/activites"
+		title={t['activites-titre']}
+		ctaLabel={t['activites-lien']}
+		ctaHref={link('/activites')}
 	/>
 	<CtaSection
-		title="Envie de nous rejoindre ?"
-		description={`Bénévoles, adhérent·e·s ou partenaires : chacun·e a sa place chez ${association.name}.`}
-		buttonLabel="Adhérer à l'association"
+		title={t['rejoindre-titre']}
+		description={t['rejoindre-texte']}
+		buttonLabel={t['rejoindre-bouton']}
 		buttonHref="/adherer"
 	/>
 </Layout>

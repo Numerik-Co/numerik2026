@@ -57,19 +57,23 @@ Fonctionnement technique :
   téléchargeables, `modules/pages/page-markdown.ts`) ; emplacement racine / menu déroulant / réservée ; menus déroulants =
   `_group.md`, un seul niveau, suppression si vide. Vocabulaire : « menu »
   = menu de navigation (frontmatter `menu:`), « menu déroulant » = groupe
-  type « Association » (code : `dropdown`). Liens vers les pages
-  applicatives (`site.builtinNav`, chacun avec un `id`) : libellé, position,
-  visibilité réglables (`PUT /api/admin/liens-menu/<id>`), écarts écrits dans
-  `src/content/pages/_navigation.md` (collection `navigation`), fusion
-  `builtinLinks()` de `src/lib/builtin-nav.ts`. Ordre : flèches ↑/↓ du
+  type « Association » (code : `dropdown`). **Pages du site** :
+  bibliothèque `src/lib/site-pages.ts` (`SITE_PAGES` : Accueil, Activités,
+  Actualités, Contact), activables (désactivée = 404, HTML prérendu retiré par
+  `src/integrations/site-pages.ts` ; accueil toujours actif), lien et
+  **textes** réglables (`SitePageForm.vue`, `PUT /api/admin/pages-du-site/<id>`,
+  `saveSitePage()`), écarts écrits dans `src/content/pages/_pages-site.md`
+  (collection `sitePages`) ; lecture au build `getSitePage(id)`
+  (`src/lib/site-pages-content.ts`). Nouvelle page de bibliothèque = entrée
+  `SITE_PAGES` + `getSitePage()` dans la page `.astro`. Ordre : flèches ↑/↓ du
   module → `PUT /api/admin/ordre-menu` (`saveMenuOrder()`) ; une nouvelle
   page se place en dernier (`menuOrderFor()`).
-- `src/lib/navigation.ts` — `getNavTree()` fusionne `site.builtinNav` et les
+- `src/lib/navigation.ts` — `getNavTree()` fusionne les pages du site actives et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
 - `src/config/site.ts` — seul fichier de config par déploiement : bouton CTA
-  « Adhérer », pages applicatives du template (Accueil, Activités, Actualités,
-  Contact) et ouverture/fermeture des formulaires (`site.forms`).
+  « Adhérer », outils de partage et ouverture/fermeture des formulaires
+  (`site.forms`). Les pages du site se règlent dans l'espace bénévoles.
 - `src/components/layout/Header.astro` — consomme `getNavTree()` ; markup
   inchangé, structure `{ label, href, children }`.
 
@@ -120,7 +124,7 @@ sous `/api/admin/`).
   connexion ; `GUARDS` réserve des préfixes à des groupes
   (`/api/admin/comptes` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
-  `/api/admin/liens-menu` et `/api/admin/ordre-menu` →
+  `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route

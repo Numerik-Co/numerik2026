@@ -8,7 +8,7 @@
  *   <dossier>/_group.md              menu déroulant : libellé + ordre, sans contenu
  *   <dossier>/<slug>/index.md        page du menu déroulant
  *   espace-benevoles/<slug>/index.md page réservée (`access:`), jamais dans le menu de navigation
- *   _navigation.md                   réglages des liens vers les pages applicatives (cf. `builtin-nav.ts`)
+ *   _pages-site.md                   réglages des pages du site : activation, lien, textes (cf. `site-pages.ts`)
  *
  * Tout est vérifié AVANT d'écrire, avec les règles du schéma de la collection
  * (`src/content.config.ts`, catalogue `src/lib/blocs.ts`) : une page qui
@@ -27,11 +27,11 @@ import { cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:
 import { join } from 'node:path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { isAuthGroup, type AuthGroup } from './auth/groups';
-import { BUILTIN_LINK_IDS, builtinLinks, type BuiltinLink, type BuiltinLinkOverride } from './builtin-nav';
 import { blocMarkdownTexts, blocMarkersIn, validateBloc, type Bloc } from './blocs';
 import { RESERVED_FOLDER } from './content-pages';
 import { checkBody, COVER_ERROR, siteRoot, slugify, workDir, workRoot, writeCover, type CoverChange } from './news-writer';
 import { unknownPageVariables } from './page-variables';
+import { SITE_PAGES, sitePagesState, type SitePageSettings, type SitePageState } from './site-pages';
 
 export { type CoverChange };
 
@@ -164,31 +164,31 @@ export async function readPageSource(path: string): Promise<PageSource | null> {
 	return readPageAt(path);
 }
 
-const NAVIGATION_FILE = '_navigation.md';
+const SITE_PAGES_FILE = '_pages-site.md';
 
 /**
- * Écrit `_navigation.md`. Le fichier est gardé même sans écart (`liens: {}`) :
- * une collection `navigation` vide ferait avertir Astro à chaque requête.
+ * Écrit `_pages-site.md`. Le fichier est gardé même sans réglage (`pages: {}`) :
+ * une collection `sitePages` vide ferait avertir Astro à chaque requête.
  */
-async function writeNavigation(root: string, liens: Record<string, BuiltinLinkOverride>): Promise<void> {
-	await writeFile(join(root, NAVIGATION_FILE), serialize({ liens }, '').trimEnd() + '\n', 'utf8');
+async function writeSitePages(root: string, pages: Record<string, SitePageSettings>): Promise<void> {
+	await writeFile(join(root, SITE_PAGES_FILE), serialize({ pages }, '').trimEnd() + '\n', 'utf8');
 }
 
-/** Réglages enregistrés des liens vers les pages applicatives (`liens:` de `_navigation.md`). */
-async function readNavigationOverrides(): Promise<Record<string, BuiltinLinkOverride>> {
+/** Réglages enregistrés des pages du site (`pages:` de `_pages-site.md`). */
+async function readSitePagesSettings(): Promise<Record<string, SitePageSettings>> {
 	try {
-		const { data } = readFrontmatter(await readFile(join(pagesSourceDir(), NAVIGATION_FILE), 'utf8'));
-		return data.liens && typeof data.liens === 'object' ? (data.liens as Record<string, BuiltinLinkOverride>) : {};
+		const { data } = readFrontmatter(await readFile(join(pagesSourceDir(), SITE_PAGES_FILE), 'utf8'));
+		return data.pages && typeof data.pages === 'object' ? (data.pages as Record<string, SitePageSettings>) : {};
 	} catch {
 		return {};
 	}
 }
 
 /**
- * Arborescence des sources : liens vers les pages applicatives, menus
+ * Arborescence des sources : pages du site (bibliothèque), menus
  * déroulants (avec leurs pages), pages à la racine, pages réservées.
  */
-export async function listPagesSource(): Promise<{ links: BuiltinLink[]; dropdowns: DropdownSource[]; pages: PageSource[] }> {
+export async function listPagesSource(): Promise<{ sitePages: SitePageState[]; dropdowns: DropdownSource[]; pages: PageSource[] }> {
 	const root = pagesSourceDir();
 	const pages: PageSource[] = [];
 	const dropdowns: DropdownSource[] = [];
@@ -220,7 +220,7 @@ export async function listPagesSource(): Promise<{ links: BuiltinLink[]; dropdow
 	}
 	dropdowns.sort((a, b) => a.order - b.order || a.label.localeCompare(b.label, 'fr'));
 	pages.sort((a, b) => a.menu.order - b.menu.order || a.title.localeCompare(b.title, 'fr'));
-	return { links: builtinLinks(await readNavigationOverrides()), dropdowns, pages };
+	return { sitePages: sitePagesState(await readSitePagesSettings()), dropdowns, pages };
 }
 
 // --- Validation ------------------------------------------------------------
@@ -316,7 +316,8 @@ async function menuOrderFor(
 
 	const others = pages.filter((p) => p.path !== currentPath && sameLevel(p)).map((p) => p.menu.order);
 	if (placement.kind === 'racine') {
-		others.push(...(await readNavigationOverrides().then(builtinLinks)).map((l) => l.order), ...dropdowns.map((d) => d.order));
+		const sitePages = sitePagesState(await readSitePagesSettings()).filter((p) => p.active);
+		others.push(...sitePages.map((p) => p.order), ...dropdowns.map((d) => d.order));
 	}
 	return others.length ? Math.floor(Math.max(...others) / ORDER_STEP) * ORDER_STEP + ORDER_STEP : ORDER_STEP;
 }
@@ -481,33 +482,56 @@ export async function deleteDropdown(folder: string): Promise<{ label?: string; 
 	return { label: dropdown.label, applied, errors: [] };
 }
 
-// --- Liens vers les pages applicatives ---------------------------------------
+// --- Pages du site (bibliothèque) ---------------------------------------------
 
-export interface BuiltinLinkInput {
+export interface SitePageInput {
 	label: string;
 	show: boolean;
+	active: boolean;
+	/** Textes par nom ; vide = texte par défaut. */
+	textes: Record<string, string>;
 }
 
+const SITE_TEXT_MAX = 2000;
+
 /**
- * Règle libellé et visibilité d'un lien de `site.builtinNav` (position :
- * inchangée, cf. `saveMenuOrder()`). Seuls
- * les écarts aux valeurs par défaut sont enregistrés.
+ * Règle une page du site : activation, libellé et visibilité de son lien,
+ * textes (position : inchangée, cf. `saveMenuOrder()`). Seuls les écarts aux
+ * valeurs par défaut de `site-pages.ts` sont enregistrés.
  */
-export async function saveBuiltinLink(id: string, input: BuiltinLinkInput): Promise<{ label?: string; applied?: Applied; errors: string[] }> {
-	const link = (await listPagesSource()).links.find((l) => l.id === id);
-	if (!link || !BUILTIN_LINK_IDS.includes(id)) return { errors: ['Lien introuvable.'] };
+export async function saveSitePage(id: string, input: SitePageInput): Promise<{ label?: string; applied?: Applied; errors: string[] }> {
+	const def = SITE_PAGES.find((p) => p.id === id);
+	const state = (await listPagesSource()).sitePages.find((p) => p.id === id);
+	if (!def || !state) return { errors: ['Page du site introuvable.'] };
+	const errors: string[] = [];
 	const label = input.label.trim();
-	if (!label) return { errors: ['Le libellé est obligatoire.'] };
+	if (!label) errors.push('Le libellé dans le menu est obligatoire.');
+	if (!input.active && !def.canDisable) errors.push(`La page « ${def.label} » ne peut pas être désactivée.`);
 
-	const override: BuiltinLinkOverride = {};
-	if (label !== link.defaultLabel) override.label = label;
-	if (link.order !== link.defaultOrder) override.order = link.order;
-	if (!input.show) override.show = false;
-	const liens = await readNavigationOverrides();
-	if (Object.keys(override).length) liens[id] = override;
-	else delete liens[id];
+	const textes: Record<string, string> = {};
+	for (const section of def.sections) {
+		for (const t of section.texts) {
+			const value = (input.textes[t.name] ?? '').replace(/\r\n?/g, '\n').trim();
+			if (!value || value === t.default) continue;
+			if (value.length > SITE_TEXT_MAX) errors.push(`« ${t.label} » (${section.title}) est trop long.`);
+			const unknown = unknownPageVariables(value);
+			if (unknown.length) errors.push(`« ${t.label} » : variable(s) inconnue(s) ${unknown.map((v) => `{{${v}}}`).join(', ')}.`);
+			textes[t.name] = value;
+		}
+	}
+	if (errors.length) return { errors };
 
-	const applied = await transaction((root) => writeNavigation(root, liens));
+	const settings: SitePageSettings = {};
+	if (!input.active) settings.active = false;
+	if (label !== def.label) settings.label = label;
+	if (state.order !== def.order) settings.order = state.order;
+	if (!input.show) settings.show = false;
+	if (Object.keys(textes).length) settings.textes = textes;
+	const pages = await readSitePagesSettings();
+	if (Object.keys(settings).length) pages[id] = settings;
+	else delete pages[id];
+
+	const applied = await transaction((root) => writeSitePages(root, pages));
 	return { label, applied, errors: [] };
 }
 
@@ -517,15 +541,15 @@ export async function saveBuiltinLink(id: string, input: BuiltinLinkInput): Prom
 export type MenuLevel = 'racine' | `dropdown:${string}`;
 
 /**
- * Éléments d'un niveau du menu, par clé : `builtin:<id>` (lien vers une page
- * du site), `page:<chemin>`, `dropdown:<dossier>`. Premier niveau = liens du
- * site, pages à la racine affichées et menus déroulants ; menu déroulant =
+ * Éléments d'un niveau du menu, par clé : `site:<id>` (page du site
+ * active), `page:<chemin>`, `dropdown:<dossier>`. Premier niveau = pages du
+ * site actives, pages à la racine affichées et menus déroulants ; menu déroulant =
  * toutes ses pages.
  */
 function levelKeys(level: string, source: Awaited<ReturnType<typeof listPagesSource>>): string[] | null {
 	if (level === 'racine') {
 		return [
-			...source.links.map((l) => `builtin:${l.id}`),
+			...source.sitePages.filter((p) => p.active).map((p) => `site:${p.id}`),
 			...source.pages.filter((p) => p.placement.kind === 'racine' && p.menu.show).map((p) => `page:${p.path}`),
 			...source.dropdowns.map((d) => `dropdown:${d.folder}`),
 		];
@@ -539,8 +563,8 @@ function levelKeys(level: string, source: Awaited<ReturnType<typeof listPagesSou
  * Nouvel ordre d'un ou plusieurs niveaux du menu (flèches ↑/↓ du module) :
  * positions renumérotées 0, 10, 20… dans l'ordre reçu, qui doit contenir
  * exactement les éléments du niveau. Seule la position est réécrite :
- * `menu.order` des pages, `order` des `_group.md`, écarts des liens du site
- * dans `_navigation.md`. Une seule transaction, donc une seule publication.
+ * `menu.order` des pages, `order` des `_group.md`, position des pages du site
+ * dans `_pages-site.md`. Une seule transaction, donc une seule publication.
  */
 export async function saveMenuOrder(levels: Record<string, string[]>): Promise<{ applied?: Applied; errors: string[] }> {
 	const source = await listPagesSource();
@@ -554,15 +578,15 @@ export async function saveMenuOrder(levels: Record<string, string[]>): Promise<{
 	}
 	if (!orders.size) return { errors: ['Aucun ordre à enregistrer.'] };
 
-	const liens = await readNavigationOverrides();
-	let linksChanged = false;
-	for (const link of source.links) {
-		const order = orders.get(`builtin:${link.id}`);
-		if (order === undefined || order === link.order) continue;
-		const { order: _previous, ...rest } = liens[link.id] ?? {};
-		liens[link.id] = order === link.defaultOrder ? rest : { ...rest, order };
-		if (!Object.keys(liens[link.id]).length) delete liens[link.id];
-		linksChanged = true;
+	const settings = await readSitePagesSettings();
+	let sitePagesChanged = false;
+	for (const page of source.sitePages) {
+		const order = orders.get(`site:${page.id}`);
+		if (order === undefined || order === page.order) continue;
+		const { order: _previous, ...rest } = settings[page.id] ?? {};
+		settings[page.id] = order === page.defaultOrder ? rest : { ...rest, order };
+		if (!Object.keys(settings[page.id]).length) delete settings[page.id];
+		sitePagesChanged = true;
 	}
 
 	const applied = await transaction(async (root) => {
@@ -581,7 +605,7 @@ export async function saveMenuOrder(levels: Record<string, string[]>): Promise<{
 			const { data } = await readFile(file, 'utf8').then(readFrontmatter, () => ({ data: {} as Record<string, unknown> }));
 			await writeFile(file, serialize({ label: dropdown.label, ...data, order }, '').trimEnd() + '\n', 'utf8');
 		}
-		if (linksChanged) await writeNavigation(root, liens);
+		if (sitePagesChanged) await writeSitePages(root, settings);
 	});
 	return { applied, errors: [] };
 }

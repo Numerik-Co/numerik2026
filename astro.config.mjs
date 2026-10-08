@@ -9,6 +9,8 @@ import mdx from '@astrojs/mdx';
 
 import vue from '@astrojs/vue';
 
+import sitePages from './src/integrations/site-pages.ts';
+
 // https://astro.build/config
 export default defineConfig({
   // Dossier de sortie : `dist` ; la publication depuis l'espace bénévoles
@@ -69,12 +71,17 @@ export default defineConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    // `yaml` est aussi chargé dans le navigateur (dépôt de .md, module « Pages ») :
+    // pré-optimisé au démarrage du dev, sinon Vite le découvre en cours de route
+    // et l'îlot d'administration échoue (504 « Outdated Optimize Dep »).
+    optimizeDeps: { include: ['yaml'] }
   },
 
   adapter: node({
     mode: 'standalone'
   }),
 
-  integrations: [mdx(), vue()]
+  // sitePages : retire du build le HTML des pages du site désactivées (404 réel).
+  integrations: [mdx(), vue(), sitePages()]
 });

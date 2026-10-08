@@ -1,5 +1,4 @@
-import { getCollection } from 'astro:content';
-import { builtinLinks } from './builtin-nav';
+import { getSitePagesState } from './site-pages-content';
 import { getContentPages, getGroups, groupMetaOf } from './content-pages';
 
 /** Lien simple de la barre de navigation. */
@@ -29,8 +28,8 @@ interface Bucket {
 
 /**
  * Construit l'arbre de navigation au build, à partir de :
- *  1. `site.builtinNav` — les pages applicatives du template, avec les réglages
- *     du module « Pages » (`_navigation.md`, cf. `builtin-nav.ts`) ;
+ *  1. les pages du site actives (bibliothèque `site-pages.ts`, réglages du
+ *     module « Pages » dans `_pages-site.md`) ;
  *  2. les pages de `src/content/pages/` dont le frontmatter porte `menu.show: true`.
  *
  * L'arborescence de dossiers produit les menus déroulants : une page rangée
@@ -41,10 +40,9 @@ export async function getNavTree(): Promise<NavEntry[]> {
 	const ordered: OrderedEntry[] = [];
 	const groups = await getGroups();
 
-	// 1. Pages applicatives déclarées dans src/config/site.ts (+ réglages enregistrés)
-	const [settings] = await getCollection('navigation');
-	for (const item of builtinLinks(settings?.data.liens)) {
-		if (!item.show) continue;
+	// 1. Pages du site actives et affichées dans le menu
+	for (const item of await getSitePagesState()) {
+		if (!item.active || !item.show) continue;
 		ordered.push({ order: item.order, entry: { label: item.label, href: item.href } });
 	}
 

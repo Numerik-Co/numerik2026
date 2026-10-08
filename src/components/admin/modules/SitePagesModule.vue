@@ -11,12 +11,14 @@
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
 import PublishStatus from '../PublishStatus.vue';
-import { ApiError, dropdownsApi, linksApi, menuOrderApi, pagesApi, type BuiltinLinkView, type DropdownView, type PageSourceView } from '../client';
+import { ApiError, dropdownsApi, menuOrderApi, pagesApi, sitePagesApi, type DropdownView, type PageSourceView, type SitePageView } from '../client';
 import { ADMIN_CONTEXT, iconButtonClass, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 import { usePublication } from '../usePublication';
 import OrderArrows from './pages/OrderArrows.vue';
 import PageForm from './pages/PageForm.vue';
 import PageRow from './pages/PageRow.vue';
+import SitePageForm from './pages/SitePageForm.vue';
+import { SITE_PAGES } from '../../../lib/site-pages';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
@@ -24,10 +26,10 @@ type View =
 	| { name: 'list' }
 	| { name: 'page'; source: PageSourceView | null }
 	| { name: 'dropdown'; dropdown: DropdownView | null }
-	| { name: 'link'; link: BuiltinLinkView };
+	| { name: 'site'; page: SitePageView };
 
 const view = ref<View>({ name: 'list' });
-const links = ref<BuiltinLinkView[]>([]);
+const sitePages = ref<SitePageView[]>([]);
 const dropdowns = ref<DropdownView[]>([]);
 const pages = ref<PageSourceView[]>([]);
 const availability = ref<{ ok: boolean; reason?: string }>({ ok: true });
@@ -47,7 +49,7 @@ async function load() {
 	loading.value = true;
 	try {
 		const res = await pagesApi.list();
-		links.value = res.links;
+		sitePages.value = res.sitePages;
 		dropdowns.value = res.dropdowns;
 		pages.value = res.pages;
 		orderDraft.value = {};
@@ -115,14 +117,14 @@ const dropdownPages = (dropdown: DropdownView) =>
 
 /** Menu de navigation tel qu'il s'affiche : pages applicatives, liens directs et menus déroulants, par position. */
 type NavItem =
-	| { kind: 'builtin'; order: number; link: BuiltinLinkView }
+	| { kind: 'site'; order: number; site: SitePageView }
 	| { kind: 'page'; order: number; page: PageSourceView }
 	| { kind: 'dropdown'; order: number; dropdown: DropdownView };
 const navItems = computed<NavItem[]>(() =>
 	inDraftOrder(
 		'racine',
 		[
-			...links.value.map((link): NavItem => ({ kind: 'builtin', order: link.order, link })),
+			...sitePages.value.filter((p) => p.active).map((site): NavItem => ({ kind: 'site', order: site.order, site })),
 			...pages.value
 				.filter((p) => p.placement.kind === 'racine' && p.menu.show)
 				.map((page): NavItem => ({ kind: 'page', order: page.menu.order, page })),
@@ -141,7 +143,7 @@ function toggleDropdown(folder: string) {
 const dropdownKeys = (dropdown: DropdownView) => dropdownPages(dropdown).map((p) => `page:${p.path}`);
 
 const navKey = (item: NavItem) =>
-	item.kind === 'builtin' ? `builtin:${item.link.id}` : item.kind === 'page' ? `page:${item.page.path}` : `dropdown:${item.dropdown.folder}`;
+	item.kind === 'site' ? `site:${item.site.id}` : item.kind === 'page' ? `page:${item.page.path}` : `dropdown:${item.dropdown.folder}`;
 
 function go(next: View) {
 	error.value = '';
@@ -221,44 +223,20 @@ async function removeDropdown(dropdown: DropdownView) {
 	}
 }
 
-// --- Liens vers les pages du site (Accueil, Activités…) ---
+// --- Pages du site (bibliothèque : Accueil, Activités…) ---
 
-const linkForm = reactive({ label: '', show: true });
+/** Pages du site désactivées : proposées à l'activation (bloc « Bibliothèque »). */
+const inactiveSitePages = computed(() => sitePages.value.filter((p) => !p.active));
 
-function openLink(link: BuiltinLinkView) {
-	Object.assign(linkForm, { label: link.label, show: link.show });
-	go({ name: 'link', link });
-}
-
-function resetLink(link: BuiltinLinkView) {
-	Object.assign(linkForm, { label: link.defaultLabel, show: true });
-}
-
-async function saveLink() {
-	if (view.value.name !== 'link') return;
-	const { link } = view.value;
+/** Changement rapide depuis la liste (menu, activation), réglages actuels gardés pour le reste. */
+async function updateSitePage(page: SitePageView, change: { show?: boolean; active?: boolean }, label: string) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		await linksApi.update(link.id, { label: linkForm.label, show: linkForm.show });
-		onPublished(`Lien du menu : ${linkForm.label}`);
-	} catch (e) {
-		fail(e);
-	} finally {
-		busy.value = false;
-	}
-}
-
-/** Retire un lien du menu (la page reste accessible) ou l'y remet, sans passer par le formulaire. */
-async function setLinkShown(link: BuiltinLinkView, show: boolean) {
-	error.value = '';
-	busy.value = true;
-	try {
-		rememberOpenModule('pages-site');
-		await linksApi.update(link.id, { label: link.label, show });
+		await sitePagesApi.update(page.id, { label: page.label, show: page.show, active: page.active, textes: page.textes, ...change });
 		confirming.value = null;
-		started(`${show ? 'Remis dans le menu' : 'Retiré du menu'} : ${link.label}`);
+		started(`${label} : ${page.label}`);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -333,17 +311,17 @@ onMounted(load);
 				</header>
 				<ul class="divide-y divide-gray-100">
 					<template v-for="(item, i) in navItems" :key="navKey(item)">
-						<li v-if="item.kind === 'builtin'" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
-							<span :class="['min-w-0', { 'opacity-60': !item.link.show }]">
-								<a :href="item.link.href" class="font-medium text-gray-900 hover:underline">{{ item.link.label }}</a>
+						<li v-if="item.kind === 'site'" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
+							<span :class="['min-w-0', { 'opacity-60': !item.site.show }]">
+								<a :href="item.site.href" class="font-medium text-gray-900 hover:underline">{{ item.site.label }}</a>
 							</span>
-							<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600" title="Page applicative du site : son contenu se modifie dans le code">
+							<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600" title="Page fournie par le site : vous réglez son lien et ses textes">
 								page du site
 							</span>
-							<span v-if="!item.link.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">masquée du menu</span>
+							<span v-if="!item.site.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">masquée du menu</span>
 							<span class="ml-auto flex items-center gap-1">
 								<OrderArrows
-									:label="item.link.label"
+									:label="item.site.label"
 									:first="i === 0"
 									:last="i === navItems.length - 1"
 									:disabled="publishLocked"
@@ -355,32 +333,22 @@ onMounted(load);
 									:class="[iconButtonClass, 'text-primary']"
 									:disabled="locked"
 									aria-label="Modifier"
-									title="Modifier"
-									@click="openLink(item.link)"
+									title="Modifier le lien et les textes"
+									@click="go({ name: 'site', page: item.site })"
 								>
 									<i class="fa-solid fa-pen" aria-hidden="true"></i>
 								</button>
-								<button
-									v-if="!item.link.show"
-									type="button"
-									:class="[iconButtonClass, 'text-primary']"
-									:disabled="locked"
-									aria-label="Remettre dans le menu"
-									title="Remettre dans le menu"
-									@click="setLinkShown(item.link, true)"
-								>
-									<i class="fa-solid fa-eye" aria-hidden="true"></i>
-								</button>
 								<ConfirmIconButton
-									v-else
-									label="Retirer du menu"
-									title="Retirer du menu (la page reste accessible)"
-									:confirming="confirming === `link:${item.link.id}`"
+									v-if="item.site.canDisable"
+									label="Désactiver"
+									title="Désactiver la page (retirée du site, réactivable depuis la bibliothèque)"
+									:confirming="confirming === `site:${item.site.id}`"
 									:disabled="locked"
-									@ask="confirming = `link:${item.link.id}`"
-									@confirm="setLinkShown(item.link, false)"
+									@ask="confirming = `site:${item.site.id}`"
+									@confirm="updateSitePage(item.site, { active: false }, 'Page désactivée')"
 									@cancel="confirming = null"
 								/>
+								<span v-else class="w-7" aria-hidden="true" title="Toujours active"></span>
 							</span>
 						</li>
 						<PageRow
@@ -542,6 +510,34 @@ onMounted(load);
 					<li v-if="!group.list.length" class="px-4 py-2.5 text-sm font-light text-gray-500">Aucune page.</li>
 				</ul>
 			</section>
+
+			<!-- 4. Bibliothèque : pages du site désactivées -->
+			<section class="rounded-xl border border-dashed border-gray-300">
+				<header class="flex flex-wrap items-center gap-2 border-b border-gray-100 px-4 py-2.5">
+					<i class="fa-solid fa-book-open text-gray-400" aria-hidden="true"></i>
+					<span class="font-heading font-semibold text-gray-900">Bibliothèque de pages du site</span>
+					<span class="text-xs text-gray-500">pages prêtes à l'emploi, à activer</span>
+				</header>
+				<ul class="divide-y divide-gray-100">
+					<li v-for="p in inactiveSitePages" :key="p.id" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
+						<span class="min-w-0 flex-1">
+							<span class="font-medium text-gray-900">{{ p.defaultLabel }}</span>
+							<span class="block text-xs font-light text-gray-500">{{ SITE_PAGES.find((d) => d.id === p.id)?.summary }}</span>
+						</span>
+						<button
+							type="button"
+							class="rounded-full border-2 border-primary px-3 py-1 font-heading text-xs font-semibold text-primary hover:bg-primary hover:text-white disabled:opacity-50"
+							:disabled="locked"
+							@click="updateSitePage(p, { active: true }, 'Page activée')"
+						>
+							<i class="fa-solid fa-power-off mr-1" aria-hidden="true"></i>Activer
+						</button>
+					</li>
+					<li v-if="!inactiveSitePages.length" class="px-4 py-2.5 text-sm font-light text-gray-500">
+						Toutes les pages du site sont actives.
+					</li>
+				</ul>
+			</section>
 		</div>
 	</template>
 
@@ -555,38 +551,15 @@ onMounted(load);
 		@cancel="go({ name: 'list' })"
 	/>
 
-	<!-- Lien vers une page du site : libellé, visibilité (position : flèches ↑/↓) -->
-	<form v-else-if="view.name === 'link'" class="space-y-4" @submit.prevent="saveLink">
-		<p class="text-sm font-light text-gray-600">
-			Lien du menu de navigation vers la page « {{ view.link.defaultLabel }} » ({{ view.link.href }}). Le contenu de
-			cette page fait partie du site et se modifie dans le code ; ici, seulement son lien dans le menu.
-		</p>
-		<div>
-			<label for="link-label" class="block text-sm font-semibold text-gray-700">Libellé dans le menu de navigation</label>
-			<input id="link-label" v-model="linkForm.label" type="text" required :placeholder="view.link.defaultLabel" :class="inputClass" />
-		</div>
-		<div>
-			<label class="flex items-center gap-2 text-sm text-gray-700">
-				<input v-model="linkForm.show" type="checkbox" class="rounded border-gray-300" />
-				Visible dans le menu de navigation
-			</label>
-			<p class="mt-1 text-xs font-light text-gray-500">Décoché : la page reste accessible par son adresse.</p>
-		</div>
-		<p class="text-xs font-light text-gray-500">
-			Par défaut : « {{ view.link.defaultLabel }} », visible.
-			<button type="button" class="text-primary hover:underline" @click="resetLink(view.link)">Rétablir</button>
-		</p>
-		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="locked"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				Enregistrer et publier
-			</button>
-			<button type="button" class="text-sm text-gray-600 hover:underline" @click="go({ name: 'list' })">Annuler</button>
-		</div>
-	</form>
+	<!-- Page du site : lien et textes -->
+	<SitePageForm
+		v-else-if="view.name === 'site'"
+		:key="view.page.id"
+		:page="view.page"
+		:disabled="locked"
+		@published="onPublished"
+		@cancel="go({ name: 'list' })"
+	/>
 
 	<!-- Menu déroulant : création / modification -->
 	<form v-else-if="view.name === 'dropdown'" class="space-y-4" @submit.prevent="saveDropdown">

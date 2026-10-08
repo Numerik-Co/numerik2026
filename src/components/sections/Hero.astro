@@ -27,7 +27,9 @@ const {
 	overlay = 'black',
 } = Astro.props;
 
-const [before, after = ''] = title.split(highlight);
+// Mot mis en couleur : seulement s'il figure dans le titre.
+const [before, after = ''] = highlight && title.includes(highlight) ? title.split(highlight) : [title];
+const showHighlight = Boolean(highlight) && title.includes(highlight);
 
 const hasImage = Boolean(backgroundImage);
 const isDark = hasImage && overlay === 'black';
@@ -58,14 +60,14 @@ const overlayClass = {
 
 	<div class="relative mx-auto max-w-6xl">
 		<h1 class={`text-4xl sm:text-5xl ${isDark ? 'text-white' : 'text-gray-900'}`}>
-			{before}<span class="text-primary">{highlight}</span>{after}
+			{before}{showHighlight && <span class="text-primary">{highlight}</span>}{after}
 		</h1>
 		<p class={`mx-auto mt-6 max-w-2xl font-light ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
 			{description}
 		</p>
 		<div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-			<Button href={primaryHref} variant="primary">{primaryLabel}</Button>
-			<Button href={secondaryHref} variant="outline">{secondaryLabel}</Button>
+			{primaryHref && primaryLabel && <Button href={primaryHref} variant="primary">{primaryLabel}</Button>}
+			{secondaryHref && secondaryLabel && <Button href={secondaryHref} variant="outline">{secondaryLabel}</Button>}
 		</div>
 	</div>
 </section>

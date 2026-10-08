@@ -24,6 +24,7 @@ const ACTIONS: Record<string, { label: string; icon: string }> = {
 	'menu-deroulant.ajout': { label: 'Menu déroulant ajouté', icon: 'fa-bars' },
 	'menu-deroulant.modification': { label: 'Menu déroulant modifié', icon: 'fa-bars' },
 	'menu-deroulant.suppression': { label: 'Menu déroulant supprimé', icon: 'fa-bars' },
+	'page-site.modification': { label: 'Page du site modifiée', icon: 'fa-file-pen' },
 	'lien-menu.modification': { label: 'Lien du menu modifié', icon: 'fa-link' },
 	'ordre-menu.modification': { label: 'Ordre du menu modifié', icon: 'fa-arrows-up-down' },
 	// Anciens noms (avant le 2026-10-08), pour les entrées déjà écrites.

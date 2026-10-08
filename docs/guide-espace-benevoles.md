@@ -310,7 +310,7 @@ de process) : voir [publication.md](publication.md).
 
 ### Gérer les pages et les menus déroulants
 
-Module **🗂 Pages** (groupes *Rédacteur·rice* et *Bureau*). La liste a trois
+Module **🗂 Pages** (groupes *Rédacteur·rice* et *Bureau*). La liste a quatre
 blocs :
 
 1. **Menu de navigation**, dans l'ordre d'affichage : pages du site
@@ -321,7 +321,9 @@ blocs :
    déroulant) ; un bandeau propose alors **Enregistrer et publier** (une
    seule reconstruction pour tous les déplacements) ou **Annuler** ;
 2. **Pages libres** : hors du menu, accessibles par leur adresse seulement ;
-3. **Pages réservées** (espace bénévoles).
+3. **Pages réservées** (espace bénévoles) ;
+4. **Bibliothèque de pages du site** : les pages fournies par le site
+   (Activités, Actualités, Contact) désactivées, avec un bouton **Activer**.
 
 **Nouvelle page** : choisir d'abord le type —
 
@@ -353,12 +355,19 @@ d'échec, rien n'est modifié. Changer l'emplacement ou l'adresse d'une page
 **change son adresse** : les liens déjà partagés vers l'ancienne ne
 fonctionnent plus.
 
-**Modifier** sur une *page du site* (Accueil, Activités, Actualités,
-Contact) règle seulement son lien dans le menu : libellé et
-visibilité (masqué, la page reste accessible par son adresse). « Rétablir »
-remet les valeurs d'origine. La corbeille **retire le lien du menu** (après
-confirmation) sans supprimer la page ; l'œil l'y remet. Le contenu de ces
-pages se modifie dans le code.
+**Pages du site** (Accueil, Activités, Actualités, Contact) : leur mise en
+page est fournie par le site, l'association règle le reste.
+
+- **Modifier** (crayon) : libellé et visibilité du lien dans le menu
+  (masqué, la page reste accessible par son adresse), puis les **textes** de
+  la page, section par section (titres, accroches, boutons ; pour l'accueil :
+  bandeau, section Actualités, section Activités, appel à nous rejoindre).
+  Les variables `{{association.nom}}`… sont acceptées. Un texte vidé reprend
+  sa valeur d'origine ; « rétablir les textes d'origine » les remet tous.
+- **Désactiver** (corbeille, après confirmation) : la page disparaît du menu
+  **et** du site (son adresse affiche « page introuvable ») ; les liens de
+  l'accueil vers elle sont masqués. Elle passe dans la **Bibliothèque**, d'où
+  **Activer** la remet en place. L'accueil ne se désactive pas.
 
 **Nouveau menu déroulant** : un libellé (non cliquable sur le site) ; il se
 place en dernière position du menu de navigation (flèches ↑/↓ pour le
