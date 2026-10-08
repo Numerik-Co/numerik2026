@@ -183,7 +183,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ ⚙ Espace d'administration   🔒 Pages réservées  👥 Comptes   ● Production  👤 Marie ▾ │
+│ ⚙ Espace d'administration   🔒 Pages réservées  👥 Comptes   🖥 Production  👤 Marie ▾ │
 └───────────────────────────────────────┬──────────────────────────────────┤
                                         │ 🔑 Mon mot de passe │ ⏻ Déconnexion │
                                         └──────────────────────────────────┘
@@ -192,7 +192,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - La barre occupe toute la largeur de l'écran.
 - Le **nom** à droite ouvre un menu personnel : **Mon mot de passe** et
   **Déconnexion** (fermé par un clic ailleurs ou **Échap**).
-- Un badge, juste avant le nom, indique le **mode du serveur** : **Production** (point vert) —
+- Un badge, juste avant le nom, indique le **mode du serveur** : **Production** (vert, icône serveur) —
   chaque publication reconstruit le site — ou **Développement** (ambre) —
   serveur de test, modifications visibles aussitôt, sans reconstruction.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus

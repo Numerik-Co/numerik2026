@@ -149,11 +149,10 @@ onBeforeUnmount(() => {
 			</span>
 			<span
 				v-else
-				class="ml-1 hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs text-gray-300 sm:flex"
+				class="ml-1 shrink-0 rounded-full bg-green-400 px-2 py-0.5 text-xs font-semibold text-green-950"
 				title="Serveur de production : chaque publication reconstruit le site."
 			>
-				<span class="h-2 w-2 rounded-full bg-green-400" aria-hidden="true"></span>
-				Production
+				<i class="fa-solid fa-server mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Production</span><span class="sm:hidden">Prod.</span>
 			</span>
 			<div ref="userMenu" class="relative ml-1 shrink-0">
 				<button
