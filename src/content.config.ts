@@ -127,7 +127,7 @@ const pageGroups = defineCollection({
 /**
  * Réglages des liens du menu de navigation vers les pages applicatives
  * (`site.builtinNav`) : `src/content/pages/_navigation.md` (frontmatter seul,
- * écrit par le module « Pages », facultatif). Identifiant inconnu = build en échec.
+ * écrit par le module « Pages », `liens: {}` sans réglage). Identifiant inconnu = build en échec.
  */
 const navigation = defineCollection({
 	loader: glob({ pattern: '_navigation.md', base: './src/content/pages' }),

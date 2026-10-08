@@ -166,6 +166,14 @@ export async function readPageSource(path: string): Promise<PageSource | null> {
 
 const NAVIGATION_FILE = '_navigation.md';
 
+/**
+ * Écrit `_navigation.md`. Le fichier est gardé même sans écart (`liens: {}`) :
+ * une collection `navigation` vide ferait avertir Astro à chaque requête.
+ */
+async function writeNavigation(root: string, liens: Record<string, BuiltinLinkOverride>): Promise<void> {
+	await writeFile(join(root, NAVIGATION_FILE), serialize({ liens }, '').trimEnd() + '\n', 'utf8');
+}
+
 /** Réglages enregistrés des liens vers les pages applicatives (`liens:` de `_navigation.md`). */
 async function readNavigationOverrides(): Promise<Record<string, BuiltinLinkOverride>> {
 	try {
@@ -483,8 +491,7 @@ export interface BuiltinLinkInput {
 /**
  * Règle libellé et visibilité d'un lien de `site.builtinNav` (position :
  * inchangée, cf. `saveMenuOrder()`). Seuls
- * les écarts aux valeurs par défaut sont enregistrés ; plus aucun écart =
- * `_navigation.md` supprimé.
+ * les écarts aux valeurs par défaut sont enregistrés.
  */
 export async function saveBuiltinLink(id: string, input: BuiltinLinkInput): Promise<{ label?: string; applied?: Applied; errors: string[] }> {
 	const link = (await listPagesSource()).links.find((l) => l.id === id);
@@ -500,11 +507,7 @@ export async function saveBuiltinLink(id: string, input: BuiltinLinkInput): Prom
 	if (Object.keys(override).length) liens[id] = override;
 	else delete liens[id];
 
-	const applied = await transaction(async (root) => {
-		const file = join(root, NAVIGATION_FILE);
-		if (Object.keys(liens).length) await writeFile(file, serialize({ liens }, '').trimEnd() + '\n', 'utf8');
-		else await rm(file, { force: true });
-	});
+	const applied = await transaction((root) => writeNavigation(root, liens));
 	return { label, applied, errors: [] };
 }
 
@@ -578,11 +581,7 @@ export async function saveMenuOrder(levels: Record<string, string[]>): Promise<{
 			const { data } = await readFile(file, 'utf8').then(readFrontmatter, () => ({ data: {} as Record<string, unknown> }));
 			await writeFile(file, serialize({ label: dropdown.label, ...data, order }, '').trimEnd() + '\n', 'utf8');
 		}
-		if (linksChanged) {
-			const file = join(root, NAVIGATION_FILE);
-			if (Object.keys(liens).length) await writeFile(file, serialize({ liens }, '').trimEnd() + '\n', 'utf8');
-			else await rm(file, { force: true });
-		}
+		if (linksChanged) await writeNavigation(root, liens);
 	});
 	return { applied, errors: [] };
 }

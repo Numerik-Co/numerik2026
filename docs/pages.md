@@ -126,7 +126,8 @@ reconstruit le site, comme le module « Actualités »
   libellé et visibilité réglables (formulaire), position par les flèches ; seuls les écarts aux valeurs
   de `src/config/site.ts` sont écrits dans `src/content/pages/_navigation.md`
   (collection `navigation`, `liens: { <id>: { label, order, show } }`,
-  fichier facultatif, supprimé s'il ne reste aucun écart ; id inconnu = build
+  fichier toujours présent, `liens: {}` sans écart — une collection vide
+  ferait avertir Astro à chaque requête ; id inconnu = build
   en échec). Fusion : `builtinLinks()` (`src/lib/builtin-nav.ts`), utilisée
   par `getNavTree()` et par le module.
 - Ordre : flèches ↑/↓ dans le bloc « Menu de navigation » (premier niveau :
