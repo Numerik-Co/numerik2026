@@ -7,13 +7,15 @@
  * Connexion et déconnexion rechargent la page : les pages réservées et le
  * contenu rendu côté serveur reflètent ainsi le nouvel état.
  */
-import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
-import PasswordModule from './modules/PasswordModule.vue';
 import { ApiError, authApi, type AdminUser, type ReservedPage } from './client';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
 import { modulesFor } from './modules';
+
+// Chargé à la demande (seulement pour un mot de passe provisoire), comme dans le registre des modules.
+const PasswordModule = defineAsyncComponent(() => import('./modules/PasswordModule.vue'));
 
 const props = defineProps<{ openOnMount?: boolean }>();
 
@@ -119,7 +121,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<div v-if="user" class="fixed inset-x-0 top-0 z-[60] h-10 bg-gray-900 text-sm text-white shadow">
+	<!-- Au-dessus des calques (z-[70]) : la barre reste cliquable, module ouvert ou non. -->
+	<div v-if="user" class="fixed inset-x-0 top-0 z-[80] h-10 bg-gray-900 text-sm text-white shadow">
 		<div class="flex h-full w-full items-center gap-1 px-2 sm:px-4">
 			<span class="mr-6 hidden shrink-0 items-center gap-2 font-heading font-semibold md:flex">
 				<i class="fa-solid fa-gear text-gray-400" aria-hidden="true"></i>

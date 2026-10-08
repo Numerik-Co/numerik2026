@@ -47,3 +47,28 @@ export function takeModuleToReopen(): string | null {
 /** Classes Tailwind des champs de formulaire de l'espace bénévoles. */
 export const inputClass =
 	'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
+
+/** Bouton icône des listes (modifier, supprimer) ; ajouter la couleur. Libellé en `aria-label` + `title`. */
+export const iconButtonClass =
+	'inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent';
+
+/** Photo déposée dans un module : formats et poids acceptés (le serveur revérifie). */
+export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const PHOTO_MAX = 10 * 1024 * 1024;
+
+/** Problème d'une photo déposée, ou `null` si elle convient. */
+export function photoProblem(file: File): string | null {
+	if (!PHOTO_TYPES.includes(file.type)) return 'Photo : formats acceptés JPEG, PNG ou WebP.';
+	if (file.size > PHOTO_MAX) return 'La photo est trop lourde (10 Mo max).';
+	return null;
+}
+
+/** Contenu d'un fichier en base64 (envoi JSON). */
+export function fileToBase64(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
+		reader.onerror = () => reject(new Error('Lecture de la photo impossible.'));
+		reader.readAsDataURL(file);
+	});
+}

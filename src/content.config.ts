@@ -13,6 +13,8 @@ import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import { parseAccess } from './lib/auth/access';
+import { validateBloc, type Bloc } from './lib/blocs';
+import { BUILTIN_LINK_IDS } from './lib/builtin-nav';
 import { categories } from './lib/categories';
 
 /**
@@ -72,6 +74,21 @@ const pages = defineCollection({
 				.optional(),
 			cover: image().optional(),
 			imageCredit: z.string().optional(),
+			/** `enrichie` = la page peut recevoir des blocs (`blocs:` + marqueurs `[[bloc:<id>]]`). */
+			type: z.enum(['classique', 'enrichie']).default('classique'),
+			/** Blocs d'une page enrichie, par identifiant (cf. `src/lib/blocs.ts`). */
+			blocs: z
+				.record(z.string(), z.unknown())
+				.optional()
+				.transform((value, ctx) => {
+					const blocs: Record<string, Bloc> = {};
+					for (const [id, raw] of Object.entries(value ?? {})) {
+						const { bloc, errors } = validateBloc(id, raw);
+						for (const message of errors) ctx.addIssue({ code: 'custom', message });
+						if (bloc) blocs[id] = bloc;
+					}
+					return blocs;
+				}),
 			/**
 			 * Restriction d'accès (pages de `espace-benevoles/` uniquement) :
 			 * `true` (toute personne connectée), un groupe ou une liste. Un
@@ -104,6 +121,29 @@ const pageGroups = defineCollection({
 	schema: z.object({
 		label: z.string().optional(),
 		order: z.number().default(50),
+	}),
+});
+
+/**
+ * Réglages des liens du menu de navigation vers les pages applicatives
+ * (`site.builtinNav`) : `src/content/pages/_navigation.md` (frontmatter seul,
+ * écrit par le module « Pages », facultatif). Identifiant inconnu = build en échec.
+ */
+const navigation = defineCollection({
+	loader: glob({ pattern: '_navigation.md', base: './src/content/pages' }),
+	schema: z.object({
+		liens: z
+			.record(
+				z.string().refine((id) => BUILTIN_LINK_IDS.includes(id), {
+					message: `Lien inconnu ; attendus : ${BUILTIN_LINK_IDS.join(', ')}.`,
+				}),
+				z.object({
+					label: z.string().optional(),
+					order: z.number().optional(),
+					show: z.boolean().optional(),
+				}),
+			)
+			.default({}),
 	}),
 });
 
@@ -178,4 +218,4 @@ const annonces = defineCollection({
 		.refine((a) => a.endDate >= a.startDate, { message: '`endDate` doit être postérieure ou égale à `startDate`.' }),
 });
 
-export const collections = { news, pages, pageGroups, activites, annonces };
+export const collections = { news, pages, pageGroups, navigation, activites, annonces };

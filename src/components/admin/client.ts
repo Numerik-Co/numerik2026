@@ -4,6 +4,7 @@
  * (`status === 401` : session expirée).
  */
 import type { AuthGroup } from '../../lib/auth/groups';
+import type { Bloc } from '../../lib/blocs';
 
 export interface AdminUser {
 	login: string;
@@ -81,6 +82,51 @@ export interface JournalEntry {
 	message?: string;
 }
 
+export type PagePlacement = { kind: 'racine' } | { kind: 'dropdown'; dropdown: string } | { kind: 'reservee' };
+
+/** Page à créer ou modifier (module « Pages »), cf. src/lib/page-writer.ts. */
+export interface PageInput {
+	placement: PagePlacement;
+	slug: string;
+	title: string;
+	description: string;
+	type: 'classique' | 'enrichie';
+	menu: { show: boolean; order: number; label: string };
+	access: AuthGroup[];
+	body: string;
+	blocs: Record<string, Bloc>;
+	imageCredit: string;
+}
+
+/** Page telle qu'elle est dans les sources. */
+export interface PageSourceView extends PageInput {
+	path: string;
+	cover: string | null;
+	/** Page `.mdx` écrite dans le code : lecture seule. */
+	technique: boolean;
+	/** Aperçu de la photo actuelle (GET d'une page seulement). */
+	coverUrl?: string | null;
+}
+
+/** Lien du menu de navigation vers une page applicative (Accueil, Activités…), cf. src/lib/builtin-nav.ts. */
+export interface BuiltinLinkView {
+	id: string;
+	href: string;
+	label: string;
+	order: number;
+	show: boolean;
+	defaultLabel: string;
+	defaultOrder: number;
+}
+
+/** Menu déroulant de la barre de navigation (`_group.md`). */
+export interface DropdownView {
+	folder: string;
+	label: string;
+	order: number;
+	pages: string[];
+}
+
 export interface AccountInput {
 	fullname: string;
 	email: string;
@@ -147,6 +193,41 @@ export const newsApi = {
 		request<{ ok: true; href: string }>('PUT', `/api/admin/actualites/${encodeURIComponent(slug)}`, { fields, body, cover }),
 	remove: (slug: string) =>
 		request<{ ok: true }>('DELETE', `/api/admin/actualites/${encodeURIComponent(slug)}`, { confirm: slug }),
+};
+
+export const pagesApi = {
+	list: () =>
+		request<{
+			links: BuiltinLinkView[];
+			dropdowns: DropdownView[];
+			pages: PageSourceView[];
+			status: PublishStatus;
+			availability: { ok: boolean; reason?: string };
+		}>('GET', '/api/admin/pages'),
+	get: (path: string) => request<PageSourceView>('GET', `/api/admin/pages/${path}`),
+	create: (page: PageInput, cover: { type: string; data: string } | null) =>
+		request<{ ok: true; href: string | null }>('POST', '/api/admin/pages', { page, cover: cover ?? undefined }),
+	update: (path: string, page: PageInput, cover: CoverUpdate) =>
+		request<{ ok: true; href: string | null }>('PUT', `/api/admin/pages/${path}`, { page, cover }),
+	remove: (path: string) => request<{ ok: true }>('DELETE', `/api/admin/pages/${path}`, { confirm: path }),
+};
+
+/** Nouvel ordre d'un ou plusieurs niveaux du menu (`racine`, `dropdown:<dossier>`), cf. saveMenuOrder(). */
+export const menuOrderApi = {
+	save: (levels: Record<string, string[]>) => request<{ ok: true }>('PUT', '/api/admin/ordre-menu', { levels }),
+};
+
+export const linksApi = {
+	update: (id: string, input: { label: string; show: boolean }) =>
+		request<{ ok: true }>('PUT', `/api/admin/liens-menu/${encodeURIComponent(id)}`, input),
+};
+
+export const dropdownsApi = {
+	create: (input: { label: string; folder: string }) =>
+		request<{ ok: true }>('POST', '/api/admin/menus-deroulants', input),
+	update: (folder: string, input: { label: string }) =>
+		request<{ ok: true }>('PUT', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, input),
+	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, { confirm: folder }),
 };
 
 export const journalApi = {

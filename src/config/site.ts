@@ -8,6 +8,8 @@
  */
 
 export interface BuiltinNavItem {
+	/** Clé stable : libellé, position et visibilité réglables depuis le module « Pages » (`src/content/pages/_navigation.md`). */
+	id: string;
 	label: string;
 	href: string;
 	/** Position dans la navbar ; se mélange avec le `menu.order` des pages de contenu. */
@@ -54,12 +56,15 @@ export const site = {
 	 *
 	 * Retirer une ligne masque l'entrée du menu (la page reste accessible).
 	 * Modifier `order` permet de la repositionner par rapport aux pages de contenu.
+	 * Valeurs par défaut : le module « Pages » de l'espace bénévoles peut
+	 * changer libellé, position et visibilité (`src/content/pages/_navigation.md`,
+	 * cf. `src/lib/builtin-nav.ts`).
 	 */
 	builtinNav: [
-		{ label: 'Accueil', href: '/', order: 0 },
-		{ label: 'Activités', href: '/activites', order: 20 },
-		{ label: 'Actualités', href: '/actualites', order: 30 },
-		{ label: 'Contact', href: '/contact', order: 40 },
+		{ id: 'accueil', label: 'Accueil', href: '/', order: 0 },
+		{ id: 'activites', label: 'Activités', href: '/activites', order: 20 },
+		{ id: 'actualites', label: 'Actualités', href: '/actualites', order: 30 },
+		{ id: 'contact', label: 'Contact', href: '/contact', order: 40 },
 	] satisfies BuiltinNavItem[],
 
 	/**

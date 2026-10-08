@@ -209,6 +209,7 @@ Les modules visibles dépendent de votre groupe :
 | :--- | :---: | :---: | :---: | :---: |
 | Pages réservées | ✅ | ✅ | ✅ | ✅ |
 | Actualités | ✅ | ✅ | ✅ | — |
+| Pages | ✅ | ✅ | ✅ | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
 | Mon mot de passe | ✅ | ✅ | ✅ | ✅ |
@@ -306,6 +307,58 @@ si la reconstruction échoue, la version précédente est conservée.
 
 Côté serveur, la publication a des prérequis (sources du site, gestionnaire
 de process) : voir [publication.md](publication.md).
+
+### Gérer les pages et les menus déroulants
+
+Module **🗂 Pages** (groupes *Rédacteur·rice* et *Bureau*). La liste a trois
+blocs :
+
+1. **Menu de navigation**, dans l'ordre d'affichage : pages du site
+   (Accueil, Activités…), liens directs et **menus
+   déroulants** (comme « Association ») ; un clic sur le nom d'un menu
+   déroulant déplie ou replie ses pages ;
+   Les flèches **↑/↓** changent l'ordre (premier niveau, ou pages d'un menu
+   déroulant) ; un bandeau propose alors **Enregistrer et publier** (une
+   seule reconstruction pour tous les déplacements) ou **Annuler** ;
+2. **Pages libres** : hors du menu, accessibles par leur adresse seulement ;
+3. **Pages réservées** (espace bénévoles).
+
+**Nouvelle page** : choisir d'abord le type —
+
+- **Page classique** : du texte mis en forme (titres `##`, listes, liens,
+  tableaux) et une photo de couverture facultative ;
+- **Page enrichie** : la même chose, plus des **blocs** (grille de cartes,
+  encadré tarif, bouton, encadré d'information, rendez-vous du Conseiller
+  Numérique). « Ajouter un bloc » le crée et insère son marqueur
+  `[[bloc:…]]` dans le texte à l'endroit du curseur ; le bloc s'affiche à
+  cet endroit (on peut déplacer la ligne du marqueur).
+
+Puis : titre, description, **emplacement** (hors menu déroulant — avec ou
+sans lien direct dans le menu de navigation —, dans un menu déroulant, ou
+page réservée avec les groupes autorisés), adresse (déduite du titre),
+libellé dans le menu de navigation. Une nouvelle page (ou une page changée
+d'emplacement) se place en **dernière position** de son menu.
+« Insérer une information de l'association » liste les variables
+(`{{association.nom}}`…) remplacées par les vraies valeurs.
+
+**Créer et publier** reconstruit le site (environ une minute) ; en cas
+d'échec, rien n'est modifié. Changer l'emplacement ou l'adresse d'une page
+**change son adresse** : les liens déjà partagés vers l'ancienne ne
+fonctionnent plus.
+
+**Modifier** sur une *page du site* (Accueil, Activités, Actualités,
+Contact) règle seulement son lien dans le menu : libellé et
+visibilité (masqué, la page reste accessible par son adresse). « Rétablir »
+remet les valeurs d'origine. La corbeille **retire le lien du menu** (après
+confirmation) sans supprimer la page ; l'œil l'y remet. Le contenu de ces
+pages se modifie dans le code.
+
+**Nouveau menu déroulant** : un libellé (non cliquable sur le site) ; il se
+place en dernière position du menu de navigation (flèches ↑/↓ pour le
+déplacer). Il apparaît sur le site dès qu'il contient une page. Un menu déroulant ne se supprime que vide.
+
+> Les pages « technique » (fichiers `.mdx`) se modifient dans le code
+> uniquement.
 
 ### Changer mon mot de passe
 

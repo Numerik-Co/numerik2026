@@ -136,72 +136,62 @@ Voir le détail des [tarifs 2026-2027](/adherer).
 
 Les titres `##` alimentent le sommaire de la colonne de droite.
 
-### Blocs MDX (pages `.mdx` uniquement)
+### Blocs (pages enrichies)
 
-Pour utiliser les blocs ci-dessous, la page doit être un **`index.mdx`**
-(pas `.md`). Exemple complet :
-`src/content/pages/association/adhesion-associations/index.mdx`.
+La page déclare `type: enrichie` et ses blocs ; chaque bloc s'affiche à
+l'endroit de son marqueur, seul sur sa ligne. Catalogue et champs :
+`src/lib/blocs.ts` ; exemple complet :
+`src/content/pages/association/adhesion-associations/index.md`. Le module
+« Pages » de l'espace bénévoles produit exactement ce format.
 
-#### Bouton
+```md
+---
+title: "Titre"
+type: enrichie
+blocs:
+  apports:
+    type: cartes
+    colonnes: "2"            # ou "3"
+    items:
+      - icone: cloud         # Font Awesome solid, sans « fa- »
+        titre: "Titre de la carte"
+        texte: "Texte **gras**, [liens](/contact) et listes « - » acceptés."
+  cotisation:
+    type: tarif
+    libelle: "Adhésion structure, valable de septembre à juin"
+    montant: "110 € / an"
+  contact:
+    type: bouton
+    texte: "Nous contacter"
+    lien: "/contact"
+    style: primary           # primary | secondary | outline
+  important:
+    type: encart
+    style: attention         # info | attention | succes
+    titre: "À savoir"
+    texte: "Texte **Markdown**."
+  rdv:
+    type: rdv-conseiller     # titre / texte facultatifs
+---
 
-```mdx
-import Button from '../../../../components/ui/Button.astro';
+## Ce que l'adhésion vous apporte
 
-<div class="mt-6">
-  <Button href="/contact" variant="primary">Nous contacter</Button>
-</div>
+[[bloc:apports]]
+
+[[bloc:cotisation]]
+
+[[bloc:contact]]
 ```
 
-`variant` : `primary` (défaut), `secondary`, `outline`. Le chemin de
-l'`import` dépend de la profondeur du dossier : un `../` par niveau jusqu'à
-`src/`.
-
-#### Grille de cartes avec icône
-
-Deux colonnes à partir de la tablette ; dupliquer le bloc de carte autant
-que nécessaire. Icônes : [Font Awesome solid](https://fontawesome.com/search?o=r&s=solid&f=classic).
-
-```mdx
-<div class="mt-8 grid gap-6 sm:grid-cols-2">
-  <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-    <span class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-xl text-primary">
-      <i class="fa-solid fa-cloud" aria-hidden="true"></i>
-    </span>
-    <p class="font-heading text-lg font-semibold text-gray-900">Titre de la carte</p>
-    <p class="mt-2 text-sm font-light text-gray-600">Texte de la carte, **gras** et [liens](/contact) acceptés.</p>
-  </div>
-</div>
-```
-
-Liste à puces dans une carte :
-
-```mdx
-    <ul class="mt-3 space-y-1 text-sm font-light text-gray-600">
-      <li>Premier point</li>
-      <li>Second point</li>
-    </ul>
-```
-
-#### Encadré tarif
-
-```mdx
-<div class="mt-6 flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 p-6">
-  <span class="font-light text-gray-600">Adhésion structure, valable de septembre à juin</span>
-  <span class="font-heading text-2xl font-semibold text-gray-900">110 € / an</span>
-</div>
-```
-
-#### Valeur tirée de la configuration
+### Valeur tirée de la configuration
 
 Évite de recopier nom, adresse… qui changent d'un déploiement à l'autre
-(voir `src/content/pages/mentions-legales/index.mdx`).
+(liste : `src/lib/page-variables.ts`, exemple :
+`src/content/pages/mentions-legales/index.md`).
 
-```mdx
-import { association, getFullAddress } from '../../../lib/association';
-
-export const president = association.legal.president || '[Nom du président]';
-
-L'association **{association.name}** est présidée par {president}.
+```md
+L'association **{{association.nom}}** est présidée par {{association.president}}.
+Siège social : {{association.adresse}}
 ```
 
 ---

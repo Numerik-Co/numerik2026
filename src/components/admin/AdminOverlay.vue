@@ -1,7 +1,9 @@
 <script setup lang="ts">
 /**
  * Calque superposé au site : `variant="drawer"` = panneau latéral à droite
- * (modules), `variant="modal"` = fenêtre centrée (connexion).
+ * (modules), sous la barre d'administration (`top-10`) pour qu'un clic sur
+ * un autre module de la barre l'ouvre directement ; `variant="modal"` =
+ * fenêtre centrée (connexion).
  * Échap ou clic sur le fond ferme (sauf `closable: false`, ex. changement de
  * mot de passe imposé) ; le focus est placé dans le calque à
  * l'ouverture et rendu à l'élément d'origine à la fermeture ; la page
@@ -59,7 +61,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-	<div class="fixed inset-0 z-[70]" :class="props.variant === 'modal' ? 'flex items-center justify-center p-4' : ''">
+	<div :class="['fixed z-[70]', props.variant === 'modal' ? 'inset-0 flex items-center justify-center p-4' : 'inset-x-0 top-10 bottom-0']">
 		<div class="absolute inset-0 bg-gray-900/50" aria-hidden="true" @click="requestClose"></div>
 		<div
 			ref="panel"

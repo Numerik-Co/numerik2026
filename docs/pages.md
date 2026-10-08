@@ -3,7 +3,9 @@
 Deux mécanismes coexistent :
 
 - **Pages de contenu** (éditoriales) — un simple fichier Markdown dans
-  `src/content/pages/`. Aucune ligne de code à écrire. **C'est le cas courant.**
+  `src/content/pages/`, créé à la main ou depuis le module **« Pages »** de
+  l'espace bénévoles (voir plus bas). Aucune ligne de code à écrire. **C'est
+  le cas courant.**
   Guide pas-à-pas pour les éditeurs : [`src/content/README.md`](../src/content/README.md).
 - **Pages applicatives** — un `.astro` dans `src/pages/` (routage par fichiers
   d'Astro), pour tout ce qui a une logique propre (listes, filtres, formulaires).
@@ -25,7 +27,8 @@ Deux mécanismes coexistent :
 | `src/pages/rss.xml.js` | `/rss.xml` | applicative | Flux RSS des actualités |
 | `src/content/pages/statuts/index.md` | `/statuts` | contenu | Statuts (lien de pied de page) |
 | `src/content/pages/reglement-interieur/index.md` | `/reglement-interieur` | contenu | Règlement intérieur (lien de pied de page) |
-| `src/content/pages/mentions-legales/index.mdx` | `/mentions-legales` | contenu | Mentions légales (lien de pied de page) |
+| `src/content/pages/mentions-legales/index.md` | `/mentions-legales` | contenu | Mentions légales (lien de pied de page), variables `{{association.…}}` |
+| `src/content/pages/association/adhesion-associations/index.md` | `/association/adhesion-associations` | contenu (enrichie) | Adhésion des associations : cartes, tarif, bouton |
 | `src/content/pages/association/_group.md` | — | contenu | Décrit le menu déroulant « Association » |
 | `src/content/pages/association/notre-histoire/index.md` | `/association/notre-histoire` | contenu | Histoire de l'association |
 | `src/content/pages/association/ethique-du-logiciel-libre/index.md` | `/association/ethique-du-logiciel-libre` | contenu | Éthique du logiciel libre |
@@ -64,15 +67,78 @@ Deux mécanismes coexistent :
   `show: false`. Utile pour les pages liées seulement depuis le pied de page.
 - **Menu déroulant** : ranger les pages dans un sous-dossier + y placer un
   `_group.md` (`label`, `order`). Voir [navigation.md](navigation.md).
-- **Valeurs dynamiques dans le texte** (ex. `mentions-legales` qui injecte les
-  coordonnées depuis `src/lib/association.ts`) : utiliser `.mdx` au lieu de
-  `.md`. Le `.mdx` accepte `import` / `export const` et des expressions `{...}`.
-  La route attrape-tout lit les deux extensions indifféremment.
+- **Valeurs de la configuration dans le texte** : variables
+  `{{association.nom}}`, `{{association.adresse}}`, `{{hebergeur.nom}}`…
+  (`src/lib/page-variables.ts`), remplacées à l'affichage (ex.
+  `mentions-legales`).
+- **Page enrichie** : `type: enrichie` + `blocs:` + marqueurs
+  `[[bloc:<id>]]` seuls sur leur ligne (catalogue `src/lib/blocs.ts`,
+  rendu `src/components/blocs/BlocView.astro`). Ajouter un type de bloc =
+  une entrée dans `BLOC_TYPES` (champs : formulaire du module + validation
+  au build) + une branche dans `BlocView.astro`. Un composant avec
+  `client:*` (îlot) y est possible.
+- **`.mdx`** : reste lu par la route attrape-tout (composant `Content`),
+  pour une page écrite dans le code avec ses propres `import`. Le module
+  « Pages » la montre comme **page technique** (lecture seule) : le MDX
+  s'exécute sur le serveur, il n'est jamais écrit depuis le site.
 - **Sommaire** : `src/pages/[...slug].astro` affiche automatiquement le sommaire
   « Sur cette page » si le contenu a plus d'un titre (`<h2>`/`<h3>`).
 - **Partage** : chaque page affiche un bouton de partage Facebook (colonne de
   droite, ou sous le texte sur mobile) ; l'aperçu reprend le titre, la
   `description` et l'image de couverture. Voir [partage.md](partage.md).
+
+### Rendu et sécurité
+
+Une page `.md` est affichée à partir du HTML rendu par le Content Layer,
+**nettoyé** comme celui des actualités (`sanitizeNewsHtml()`,
+`src/lib/sanitize-news.ts` : `<script>`, `on…=`, `javascript:` retirés,
+balisage et classes gardés), variables remplacées, puis découpé aux
+marqueurs de blocs (`pageParts()`, `src/lib/content-pages.ts`). Le texte
+Markdown des blocs passe par le même nettoyage (`markdown-fragment.ts`).
+
+## Module « Pages » (espace bénévoles)
+
+Groupes `redacteur` / `admin` / `superadmin`. Écrit dans les sources puis
+reconstruit le site, comme le module « Actualités »
+([publication.md](publication.md)) :
+
+- `src/components/admin/modules/SitePagesModule.vue` — liste en trois blocs :
+  menu de navigation tel qu'affiché (liens vers les pages du site
+  `site.builtinNav`, liens directs,
+  menus déroulants et leurs pages, triés par position), pages libres (racine,
+  `menu.show` faux), pages réservées, formulaires (`pages/PageForm.vue`,
+  `pages/BlocsEditor.vue`, `pages/BlocFields.vue`) ; création = choix
+  **page classique** ou **page enrichie**.
+- `src/lib/page-writer.ts` — validation identique au schéma (adresse libre et
+  non prise par une page applicative de `src/pages/` ou un fichier de
+  `public/`, liens sûrs, variables connues, blocs valides, marqueurs ↔ blocs),
+  position dans le menu calculée (pas de champ dans le formulaire) : gardée
+  si la page reste au même niveau, sinon dernière (`menuOrderFor()`, max + 10),
+  écriture dans une **transaction** (copie de `src/content/pages/`, remise en
+  place si la reconstruction échoue). Déplacer une page (autre menu déroulant,
+  hors menu déroulant, réservée) ou changer son adresse **change son URL**.
+- Menus déroulants : `_group.md` (libellé, position dans le menu de
+  navigation : dernière à la création, puis flèches) ; l'adresse d'un menu déroulant est fixée à sa création ; seul
+  un menu déroulant vide se supprime ; sans page, il n'apparaît pas sur le
+  site. Un seul niveau. (« Menu » seul = menu de navigation, frontmatter
+  `menu:`.)
+- Liens vers les pages du site (`site.builtinNav` : Accueil, Activités…) :
+  libellé et visibilité réglables (formulaire), position par les flèches ; seuls les écarts aux valeurs
+  de `src/config/site.ts` sont écrits dans `src/content/pages/_navigation.md`
+  (collection `navigation`, `liens: { <id>: { label, order, show } }`,
+  fichier facultatif, supprimé s'il ne reste aucun écart ; id inconnu = build
+  en échec). Fusion : `builtinLinks()` (`src/lib/builtin-nav.ts`), utilisée
+  par `getNavTree()` et par le module.
+- Ordre : flèches ↑/↓ dans le bloc « Menu de navigation » (premier niveau :
+  liens du site, liens directs, menus déroulants ; ou pages d'un menu
+  déroulant), brouillon local puis `PUT /api/admin/ordre-menu`
+  (`saveMenuOrder()` : liste complète du niveau exigée, positions
+  renumérotées 0, 10, 20… dans `menu.order`, `_group.md` et
+  `_navigation.md`, une seule transaction et une seule publication).
+- Routes : `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>`,
+  `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>`,
+  `PUT /api/admin/liens-menu/<id>`, `PUT /api/admin/ordre-menu` ; chaque
+  action est consignée au journal.
 
 ### Comment ça marche
 

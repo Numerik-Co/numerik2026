@@ -1,0 +1,134 @@
+<script setup lang="ts">
+/**
+ * Blocs d'une page enrichie : ajout depuis le catalogue (`src/lib/blocs.ts`),
+ * champs de chaque bloc, éléments répétés (cartes…), et insertion du
+ * marqueur `[[bloc:<id>]]` dans le texte (`insert`).
+ */
+import { computed, ref } from 'vue';
+import { BLOC_TYPES, blocMarkersIn, emptyBloc, type Bloc, type BlocType, type BlocTypeDef } from '../../../../lib/blocs';
+import { inputClass } from '../../context';
+import BlocFields from './BlocFields.vue';
+
+const props = defineProps<{ blocs: Record<string, Bloc>; body: string }>();
+const emit = defineEmits<{ insert: [id: string] }>();
+
+const types = Object.entries(BLOC_TYPES) as [BlocType, BlocTypeDef][];
+const def = (type: BlocType): BlocTypeDef => BLOC_TYPES[type];
+const newType = ref<BlocType>(types[0][0]);
+const placed = computed(() => new Set(blocMarkersIn(props.body)));
+
+function add() {
+	let n = 1;
+	while (props.blocs[`${newType.value}-${n}`]) n++;
+	const id = `${newType.value}-${n}`;
+	props.blocs[id] = emptyBloc(newType.value);
+	emit('insert', id);
+}
+
+function remove(id: string) {
+	delete props.blocs[id];
+}
+
+function addItem(bloc: Bloc) {
+	const fields = def(bloc.type).items!.fields;
+	(bloc.items ??= []).push(Object.fromEntries(fields.map((f) => [f.name, ''])));
+}
+
+function moveItem(bloc: Bloc, index: number, delta: number) {
+	const items = bloc.items!;
+	const [item] = items.splice(index, 1);
+	items.splice(index + delta, 0, item);
+}
+</script>
+
+<template>
+	<fieldset class="space-y-4">
+		<legend class="text-sm font-semibold text-gray-700">Blocs de la page</legend>
+		<p class="text-xs font-light text-gray-500">
+			Chaque bloc s'affiche à l'endroit de son marqueur <code>[[bloc:…]]</code> dans le texte (seul sur sa ligne).
+		</p>
+
+		<div v-for="(bloc, id) in props.blocs" :key="id" class="rounded-xl border border-gray-200 p-4">
+			<div class="mb-3 flex flex-wrap items-center gap-2">
+				<i :class="['fa-solid', def(bloc.type).icon, 'text-primary']" aria-hidden="true"></i>
+				<span class="font-heading font-semibold text-gray-900">{{ def(bloc.type).label }}</span>
+				<code class="text-xs text-gray-500">{{ id }}</code>
+				<span
+					v-if="!placed.has(String(id))"
+					class="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800"
+					title="Le marqueur de ce bloc n'est pas dans le texte : le bloc ne s'affichera pas."
+				>non placé</span>
+				<span class="ml-auto flex gap-3 text-sm">
+					<button type="button" class="text-primary hover:underline" @click="emit('insert', String(id))">
+						<i class="fa-solid fa-arrow-turn-down mr-1" aria-hidden="true"></i>Insérer dans le texte
+					</button>
+					<button type="button" class="text-red-600 hover:underline" @click="remove(String(id))">Retirer</button>
+				</span>
+			</div>
+
+			<BlocFields :fields="def(bloc.type).fields" :values="bloc" :id-prefix="`bloc-${id}`" />
+
+			<div v-if="def(bloc.type).items" class="mt-4 space-y-3">
+				<div v-for="(item, i) in bloc.items" :key="i" class="rounded-lg bg-gray-50 p-3">
+					<div class="mb-2 flex items-center gap-2 text-sm">
+						<span class="font-semibold text-gray-700">{{ def(bloc.type).items!.label }} {{ i + 1 }}</span>
+						<span class="ml-auto flex gap-1">
+							<button
+								type="button"
+								class="rounded px-1.5 py-0.5 text-gray-500 hover:bg-gray-200 disabled:opacity-30"
+								:disabled="i === 0"
+								aria-label="Monter"
+								@click="moveItem(bloc, i, -1)"
+							>
+								<i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+							</button>
+							<button
+								type="button"
+								class="rounded px-1.5 py-0.5 text-gray-500 hover:bg-gray-200 disabled:opacity-30"
+								:disabled="i === (bloc.items?.length ?? 0) - 1"
+								aria-label="Descendre"
+								@click="moveItem(bloc, i, 1)"
+							>
+								<i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+							</button>
+							<button
+								type="button"
+								class="rounded px-1.5 py-0.5 text-red-600 hover:bg-red-50 disabled:opacity-30"
+								:disabled="(bloc.items?.length ?? 0) <= def(bloc.type).items!.min"
+								aria-label="Retirer"
+								@click="bloc.items!.splice(i, 1)"
+							>
+								<i class="fa-solid fa-trash" aria-hidden="true"></i>
+							</button>
+						</span>
+					</div>
+					<BlocFields :fields="def(bloc.type).items!.fields" :values="item" :id-prefix="`bloc-${id}-${i}`" />
+				</div>
+				<button
+					v-if="(bloc.items?.length ?? 0) < def(bloc.type).items!.max"
+					type="button"
+					class="text-sm font-medium text-primary hover:underline"
+					@click="addItem(bloc)"
+				>
+					<i class="fa-solid fa-plus mr-1" aria-hidden="true"></i>Ajouter : {{ def(bloc.type).items!.label.toLowerCase() }}
+				</button>
+			</div>
+		</div>
+
+		<div class="flex flex-wrap items-end gap-2 rounded-xl border border-dashed border-gray-300 p-4">
+			<div class="min-w-48 flex-1">
+				<label for="bloc-new-type" class="block text-sm font-semibold text-gray-700">Ajouter un bloc</label>
+				<select id="bloc-new-type" v-model="newType" :class="inputClass">
+					<option v-for="[type, d] in types" :key="type" :value="type">{{ d.label }} — {{ d.description }}</option>
+				</select>
+			</div>
+			<button
+				type="button"
+				class="rounded-full border-2 border-primary px-4 py-2 font-heading text-sm font-semibold text-primary hover:bg-primary hover:text-white"
+				@click="add"
+			>
+				<i class="fa-solid fa-plus mr-1" aria-hidden="true"></i>Ajouter
+			</button>
+		</div>
+	</fieldset>
+</template>

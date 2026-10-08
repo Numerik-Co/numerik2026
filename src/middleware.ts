@@ -25,6 +25,10 @@ const GUARDS: { prefix: string; groups: AuthGroup[]; message: string; noAdmin?: 
 	{ prefix: '/api/admin/comptes', groups: ['admin'], message: 'La gestion des comptes est réservée au bureau.' },
 	{ prefix: '/api/admin/actualites', groups: ['redacteur'], message: 'La publication des actualités est réservée aux rédacteur·rice·s.' },
 	{ prefix: '/api/admin/publication', groups: ['redacteur'], message: 'Réservé aux rédacteur·rice·s.' },
+	{ prefix: '/api/admin/pages', groups: ['redacteur'], message: 'La gestion des pages est réservée aux rédacteur·rice·s.' },
+	{ prefix: '/api/admin/ordre-menu', groups: ['redacteur'], message: 'La gestion du menu est réservée aux rédacteur·rice·s.' },
+	{ prefix: '/api/admin/liens-menu', groups: ['redacteur'], message: 'La gestion du menu est réservée aux rédacteur·rice·s.' },
+	{ prefix: '/api/admin/menus-deroulants', groups: ['redacteur'], message: 'La gestion des menus déroulants est réservée aux rédacteur·rice·s.' },
 ];
 
 function startsWithSegment(path: string, prefix: string): boolean {

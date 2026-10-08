@@ -41,6 +41,13 @@ export const ADMIN_MODULES: AdminModule[] = [
 		component: defineAsyncComponent(() => import('./modules/NewsModule.vue')),
 	},
 	{
+		id: 'pages-site',
+		label: 'Pages',
+		icon: 'fa-sitemap',
+		groups: ['redacteur'],
+		component: defineAsyncComponent(() => import('./modules/SitePagesModule.vue')),
+	},
+	{
 		id: 'comptes',
 		label: 'Comptes',
 		icon: 'fa-users',

@@ -39,8 +39,30 @@ Fonctionnement technique :
 - `src/pages/espace-benevoles/[...slug].astro` — pages réservées
   (`src/content/pages/espace-benevoles/`), seules rendues à la demande.
 - `src/lib/content-pages.ts` — collections `pages` / `pageGroups`
-  (`getContentPages()`, `renderPage()`, `getGroups()`), frontmatter `menu:`
-  et fichiers `_group.md`.
+  (`getContentPages()`, `pageParts()`, `renderPage()`, `getGroups()`),
+  frontmatter `menu:` et fichiers `_group.md`. Page `.md` : HTML nettoyé
+  (`sanitizeNewsHtml`), variables `{{association.…}}`
+  (`src/lib/page-variables.ts`) et, si `type: enrichie`, **blocs** (`blocs:`
+  + marqueurs `[[bloc:<id>]]` seuls sur leur ligne ; catalogue
+  `src/lib/blocs.ts`, rendu `src/components/blocs/BlocView.astro` ; nouveau
+  bloc = entrée `BLOC_TYPES` + branche `BlocView`). `.mdx` = page
+  « technique » écrite dans le code, jamais produite par l'admin (le MDX
+  s'exécute sur le serveur).
+- **Module « Pages »** (`redacteur`) : `SitePagesModule.vue` +
+  `modules/pages/*`, `src/lib/page-writer.ts` (validation = schéma,
+  transaction sur tout `src/content/pages/`, puis `admin-publish.ts` →
+  `site-build.ts`), routes `/api/admin/pages*` et
+  `/api/admin/menus-deroulants*`. Création : page classique ou enrichie ;
+  emplacement racine / menu déroulant / réservée ; menus déroulants =
+  `_group.md`, un seul niveau, suppression si vide. Vocabulaire : « menu »
+  = menu de navigation (frontmatter `menu:`), « menu déroulant » = groupe
+  type « Association » (code : `dropdown`). Liens vers les pages
+  applicatives (`site.builtinNav`, chacun avec un `id`) : libellé, position,
+  visibilité réglables (`PUT /api/admin/liens-menu/<id>`), écarts écrits dans
+  `src/content/pages/_navigation.md` (collection `navigation`), fusion
+  `builtinLinks()` de `src/lib/builtin-nav.ts`. Ordre : flèches ↑/↓ du
+  module → `PUT /api/admin/ordre-menu` (`saveMenuOrder()`) ; une nouvelle
+  page se place en dernier (`menuOrderFor()`).
 - `src/lib/navigation.ts` — `getNavTree()` fusionne `site.builtinNav` et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
@@ -95,14 +117,16 @@ sous `/api/admin/`).
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
-  (`/api/admin/comptes` → `admin`, `/api/admin/actualites` et
-  `/api/admin/publication` → `redacteur`).
+  (`/api/admin/comptes` → `admin`, `/api/admin/actualites`,
+  `/api/admin/publication`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
+  `/api/admin/liens-menu` et `/api/admin/ordre-menu` →
+  `redacteur`, `/api/admin/journal` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
   d'admin et par `site-build.ts` (résultat des publications). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
-- Modules : Pages réservées, **Actualités**, Comptes, Journal (`exclusive`,
+- Modules : Pages réservées, **Actualités**, **Pages**, Comptes, Journal (`exclusive`,
   `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
@@ -115,8 +139,9 @@ bloquer). Il est **nettoyé à l'affichage** par la page d'article
 `entry.rendered.html`) : balisage, classes, styles, tableaux gardés ; `<script>`,
 `<style>`, `on…=`, `javascript:`, svg/math et iframes hors `IFRAME_HOSTS`
 (YouTube, Vimeo, PeerTube, OpenStreetMap) retirés. Le moteur Markdown du site
-(Satteri, défaut d'Astro 7) n'est PAS modifié ; pages et activités non
-concernées.
+(Satteri, défaut d'Astro 7) n'est PAS modifié. Même nettoyage pour les
+pages `.md` (`pageParts()`, publiables depuis le module « Pages ») et le
+texte de leurs blocs ; activités non concernées.
 
 ### Publication (module Actualités)
 
@@ -346,7 +371,7 @@ Pistes de suite non traitées (à reprendre si redemandé) :
 
 ## Documentation
 
-Snippets prêts à copier (frontmatter, blocs MDX, FormGate, route API Grist…) :
+Snippets prêts à copier (frontmatter, blocs de page, variables, FormGate, route API Grist…) :
 [docs/snippets.md](docs/snippets.md) — à tenir à jour quand un motif change.
 
 Full documentation: https://docs.astro.build

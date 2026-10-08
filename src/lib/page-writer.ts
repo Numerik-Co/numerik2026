@@ -1,0 +1,616 @@
+/**
+ * Écriture des pages de contenu et des menus déroulants dans les sources
+ * (`src/content/pages/`) depuis le module « Pages » de l'espace bénévoles.
+ * La publication (reconstruction du site) est faite par `site-build.ts`.
+ *
+ * Structure gérée (cf. `src/lib/content-pages.ts`) :
+ *   <slug>/index.md                  page à la racine (lien direct du menu de navigation si `menu.show`)
+ *   <dossier>/_group.md              menu déroulant : libellé + ordre, sans contenu
+ *   <dossier>/<slug>/index.md        page du menu déroulant
+ *   espace-benevoles/<slug>/index.md page réservée (`access:`), jamais dans le menu de navigation
+ *   _navigation.md                   réglages des liens vers les pages applicatives (cf. `builtin-nav.ts`)
+ *
+ * Tout est vérifié AVANT d'écrire, avec les règles du schéma de la collection
+ * (`src/content.config.ts`, catalogue `src/lib/blocs.ts`) : une page qui
+ * ferait échouer le build est refusée avec un message clair.
+ *
+ * Chaque modification se fait dans une « transaction » : copie de sauvegarde
+ * de tout `src/content/pages/` (quelques fichiers), modification, puis
+ * `restore` (reconstruction en échec) ou `purge` (nouvelle version en ligne).
+ * Une page déplacée change d'URL ; les pages `.mdx` (code) ne sont jamais
+ * modifiées ici.
+ *
+ * Code serveur uniquement.
+ */
+
+import { cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
+import { isAuthGroup, type AuthGroup } from './auth/groups';
+import { BUILTIN_LINK_IDS, builtinLinks, type BuiltinLink, type BuiltinLinkOverride } from './builtin-nav';
+import { blocMarkdownTexts, blocMarkersIn, validateBloc, type Bloc } from './blocs';
+import { RESERVED_FOLDER } from './content-pages';
+import { checkBody, COVER_ERROR, siteRoot, slugify, workDir, workRoot, writeCover, type CoverChange } from './news-writer';
+import { unknownPageVariables } from './page-variables';
+
+export { type CoverChange };
+
+/** Segment d'URL (page ou menu déroulant) : minuscules, chiffres, tirets. */
+const SEGMENT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SEGMENT_MAX = 60;
+const BODY_MAX = 200 * 1024;
+
+export type Placement = { kind: 'racine' } | { kind: 'dropdown'; dropdown: string } | { kind: 'reservee' };
+
+export interface PageInput {
+	placement: Placement;
+	/** Dernier segment de l'URL ; déduit du titre s'il est vide. */
+	slug: string;
+	title: string;
+	description: string;
+	type: 'classique' | 'enrichie';
+	/** Présence dans le menu de navigation (lien direct ou entrée d'un menu déroulant ; ignoré pour une page réservée). */
+	menu: { show: boolean; order: number; label: string };
+	/** Page réservée : groupes autorisés ; vide = toute personne connectée. */
+	access: AuthGroup[];
+	body: string;
+	blocs: Record<string, unknown>;
+	imageCredit: string;
+}
+
+export interface PageSource extends PageInput {
+	/** Chemin complet (= URL sans `/`). */
+	path: string;
+	/** `cover:` actuel (`./cover.jpg`) ou `null`. */
+	cover: string | null;
+	/** Page `.mdx` écrite dans le code : lecture seule dans le module. */
+	technique: boolean;
+}
+
+export interface DropdownSource {
+	folder: string;
+	label: string;
+	order: number;
+	/** Pages du menu déroulant (chemins). */
+	pages: string[];
+}
+
+export function pagesSourceDir(): string {
+	return join(siteRoot(), 'src', 'content', 'pages');
+}
+
+function readFrontmatter(text: string): { data: Record<string, unknown>; body: string } {
+	const clean = text.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
+	const match = clean.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
+	let data: Record<string, unknown> = {};
+	try {
+		const parsed = match ? parseYaml(match[1]) : null;
+		if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) data = parsed;
+	} catch {
+		// En-tête illisible : champs vides, la personne les corrige.
+	}
+	return { data, body: (match ? clean.slice(match[0].length) : clean).trim() };
+}
+
+const exists = (path: string) => stat(path).then(() => true, () => false);
+
+/** Noms pris par les pages applicatives (`src/pages/`) et les fichiers publics (`public/`) : interdits à la racine. */
+async function takenRootNames(): Promise<Set<string>> {
+	const names = new Set<string>([RESERVED_FOLDER, 'api', '_astro', '_image']);
+	for (const dir of ['src/pages', 'public']) {
+		try {
+			for (const entry of await readdir(join(siteRoot(), dir))) {
+				if (!entry.startsWith('[')) names.add(entry.replace(/\.[a-z]+$/i, ''));
+			}
+		} catch {
+			// dossier absent
+		}
+	}
+	return names;
+}
+
+// --- Lecture ---------------------------------------------------------------
+
+async function readPageAt(path: string): Promise<PageSource | null> {
+	const dir = join(pagesSourceDir(), path);
+	let file = 'index.md';
+	let text: string;
+	try {
+		text = await readFile(join(dir, file), 'utf8');
+	} catch {
+		try {
+			file = 'index.mdx';
+			text = await readFile(join(dir, file), 'utf8');
+		} catch {
+			return null;
+		}
+	}
+	const { data, body } = readFrontmatter(text);
+	const segments = path.split('/');
+	const str = (v: unknown) => (typeof v === 'string' ? v : v === undefined || v === null ? '' : String(v));
+	const menu = data.menu && typeof data.menu === 'object' ? (data.menu as Record<string, unknown>) : null;
+	const access = data.access;
+	const placement: Placement =
+		segments[0] === RESERVED_FOLDER
+			? { kind: 'reservee' }
+			: segments.length > 1
+				? { kind: 'dropdown', dropdown: segments[0] }
+				: { kind: 'racine' };
+	return {
+		path,
+		placement,
+		slug: segments[segments.length - 1],
+		title: str(data.title),
+		description: str(data.description),
+		type: data.type === 'enrichie' ? 'enrichie' : 'classique',
+		menu: {
+			show: menu?.show === true,
+			order: typeof menu?.order === 'number' ? menu.order : 99,
+			label: str(menu?.label),
+		},
+		access: (Array.isArray(access) ? access : typeof access === 'string' ? [access] : []).filter(isAuthGroup),
+		body,
+		blocs: data.blocs && typeof data.blocs === 'object' && !Array.isArray(data.blocs) ? (data.blocs as Record<string, unknown>) : {},
+		imageCredit: str(data.imageCredit),
+		cover: typeof data.cover === 'string' && /^\.\/[\w.-]+$/.test(data.cover) ? data.cover : null,
+		technique: file === 'index.mdx',
+	};
+}
+
+/** Page telle qu'elle est dans les sources, par son chemin (`association/mission`). */
+export async function readPageSource(path: string): Promise<PageSource | null> {
+	const segments = path.split('/');
+	if (segments.length > 2 || !segments.every((s) => SEGMENT.test(s))) return null;
+	return readPageAt(path);
+}
+
+const NAVIGATION_FILE = '_navigation.md';
+
+/** Réglages enregistrés des liens vers les pages applicatives (`liens:` de `_navigation.md`). */
+async function readNavigationOverrides(): Promise<Record<string, BuiltinLinkOverride>> {
+	try {
+		const { data } = readFrontmatter(await readFile(join(pagesSourceDir(), NAVIGATION_FILE), 'utf8'));
+		return data.liens && typeof data.liens === 'object' ? (data.liens as Record<string, BuiltinLinkOverride>) : {};
+	} catch {
+		return {};
+	}
+}
+
+/**
+ * Arborescence des sources : liens vers les pages applicatives, menus
+ * déroulants (avec leurs pages), pages à la racine, pages réservées.
+ */
+export async function listPagesSource(): Promise<{ links: BuiltinLink[]; dropdowns: DropdownSource[]; pages: PageSource[] }> {
+	const root = pagesSourceDir();
+	const pages: PageSource[] = [];
+	const dropdowns: DropdownSource[] = [];
+	for (const entry of await readdir(root, { withFileTypes: true })) {
+		if (!entry.isDirectory() || !SEGMENT.test(entry.name)) continue;
+		const own = await readPageAt(entry.name);
+		if (own) {
+			pages.push(own);
+			continue;
+		}
+		const children: PageSource[] = [];
+		for (const child of await readdir(join(root, entry.name), { withFileTypes: true })) {
+			if (!child.isDirectory() || !SEGMENT.test(child.name)) continue;
+			const page = await readPageAt(`${entry.name}/${child.name}`);
+			if (page) children.push(page);
+		}
+		pages.push(...children);
+		if (entry.name === RESERVED_FOLDER) continue;
+		let label = entry.name;
+		let order = 50;
+		try {
+			const { data } = readFrontmatter(await readFile(join(root, entry.name, '_group.md'), 'utf8'));
+			if (typeof data.label === 'string') label = data.label;
+			if (typeof data.order === 'number') order = data.order;
+		} catch {
+			// pas de _group.md : valeurs déduites du dossier
+		}
+		dropdowns.push({ folder: entry.name, label, order, pages: children.map((p) => p.path) });
+	}
+	dropdowns.sort((a, b) => a.order - b.order || a.label.localeCompare(b.label, 'fr'));
+	pages.sort((a, b) => a.menu.order - b.menu.order || a.title.localeCompare(b.title, 'fr'));
+	return { links: builtinLinks(await readNavigationOverrides()), dropdowns, pages };
+}
+
+// --- Validation ------------------------------------------------------------
+
+function targetPath(placement: Placement, slug: string): string {
+	if (placement.kind === 'racine') return slug;
+	if (placement.kind === 'reservee') return `${RESERVED_FOLDER}/${slug}`;
+	return `${placement.dropdown}/${slug}`;
+}
+
+interface NormalizedPage {
+	path: string;
+	frontmatter: Record<string, unknown>;
+	body: string;
+}
+
+async function normalizePage(input: PageInput, currentPath: string | null): Promise<{ page?: NormalizedPage; errors: string[] }> {
+	const errors: string[] = [];
+	const title = input.title.trim();
+	if (!title) errors.push('Le titre est obligatoire.');
+	const slug = (input.slug.trim() || slugify(title)).slice(0, SEGMENT_MAX);
+	if (!SEGMENT.test(slug)) errors.push("L'adresse de la page ne peut contenir que des minuscules, des chiffres et des tirets.");
+
+	const { dropdowns, pages } = await listPagesSource();
+	const placement = input.placement;
+	if (placement.kind === 'dropdown' && !dropdowns.some((d) => d.folder === placement.dropdown)) errors.push('Menu déroulant introuvable.');
+	const path = targetPath(placement, slug);
+	if (path !== currentPath) {
+		if (pages.some((p) => p.path === path) || (await exists(join(pagesSourceDir(), path)))) {
+			errors.push(`L'adresse /${path} est déjà prise.`);
+		} else if (placement.kind === 'racine' && ((await takenRootNames()).has(slug) || dropdowns.some((d) => d.folder === slug))) {
+			errors.push(`L'adresse /${slug} est déjà utilisée par le site ou par un menu déroulant.`);
+		}
+	}
+
+	const body = input.body.replace(/\r\n?/g, '\n').trim();
+	if (!body) errors.push('Le texte de la page est vide.');
+	if (Buffer.byteLength(body) > BODY_MAX) errors.push('Le texte est trop long (200 Ko max).');
+	errors.push(...checkBody(body));
+	const unknownVars = unknownPageVariables(body);
+	if (unknownVars.length) errors.push(`Variable(s) inconnue(s) : ${unknownVars.map((v) => `{{${v}}}`).join(', ')}.`);
+
+	const blocs: Record<string, Bloc> = {};
+	if (input.type === 'enrichie') {
+		for (const [id, raw] of Object.entries(input.blocs ?? {})) {
+			const { bloc, errors: blocErrors } = validateBloc(id, raw);
+			errors.push(...blocErrors);
+			if (!bloc) continue;
+			for (const text of blocMarkdownTexts(bloc)) errors.push(...checkBody(text).map((e) => `Bloc « ${id} » : ${e}`));
+			blocs[id] = bloc;
+		}
+		const missing = blocMarkersIn(body).filter((id) => !blocs[id]);
+		if (missing.length) errors.push(`Marqueur(s) sans bloc : ${missing.map((id) => `[[bloc:${id}]]`).join(', ')}.`);
+	} else if (blocMarkersIn(body).length) {
+		errors.push('Une page classique ne peut pas contenir de marqueur [[bloc:…]] : choisissez « page enrichie ».');
+	}
+
+	const groups = [...new Set(input.access.filter(isAuthGroup))];
+	const frontmatter: Record<string, unknown> = { title };
+	if (input.description.trim()) frontmatter.description = input.description.trim();
+	if (placement.kind !== 'reservee') {
+		const order = await menuOrderFor(placement, currentPath, pages, dropdowns);
+		const label = input.menu.label.trim();
+		frontmatter.menu = { show: Boolean(input.menu.show), order, ...(label && label !== title ? { label } : {}) };
+	}
+	if (input.type === 'enrichie') frontmatter.type = 'enrichie';
+	if (placement.kind === 'reservee' && groups.length) frontmatter.access = groups.length === 1 ? groups[0] : groups;
+	if (input.imageCredit.trim()) frontmatter.imageCredit = input.imageCredit.trim();
+	if (input.type === 'enrichie' && Object.keys(blocs).length) frontmatter.blocs = blocs;
+
+	return errors.length ? { errors } : { page: { path, frontmatter, body }, errors };
+}
+
+/** Écart entre deux positions attribuées : laisse la place d'intercaler à la main. */
+const ORDER_STEP = 10;
+
+/**
+ * Position d'une page dans son niveau du menu : inchangée si la page reste
+ * au même niveau (racine ou même menu déroulant), sinon la dernière
+ * (création, déplacement). La position saisie n'est pas prise en compte.
+ */
+async function menuOrderFor(
+	placement: Placement,
+	currentPath: string | null,
+	pages: PageSource[],
+	dropdowns: DropdownSource[],
+): Promise<number> {
+	const current = currentPath ? pages.find((p) => p.path === currentPath) : undefined;
+	const sameLevel = (p: PageSource) =>
+		p.placement.kind === placement.kind &&
+		(placement.kind !== 'dropdown' || (p.placement.kind === 'dropdown' && p.placement.dropdown === placement.dropdown));
+	if (current && sameLevel(current)) return current.menu.order;
+
+	const others = pages.filter((p) => p.path !== currentPath && sameLevel(p)).map((p) => p.menu.order);
+	if (placement.kind === 'racine') {
+		others.push(...(await readNavigationOverrides().then(builtinLinks)).map((l) => l.order), ...dropdowns.map((d) => d.order));
+	}
+	return others.length ? Math.floor(Math.max(...others) / ORDER_STEP) * ORDER_STEP + ORDER_STEP : ORDER_STEP;
+}
+
+function serialize(frontmatter: Record<string, unknown>, body: string): string {
+	const yaml = stringifyYaml(frontmatter, { defaultStringType: 'QUOTE_DOUBLE', defaultKeyType: 'PLAIN', lineWidth: 0 });
+	return `---\n${yaml}---\n\n${body}\n`;
+}
+
+// --- Transactions ----------------------------------------------------------
+
+export interface Applied {
+	restore: () => Promise<void>;
+	purge: () => Promise<void>;
+}
+
+/**
+ * Sauvegarde `src/content/pages/`, applique `mutate`, et rend de quoi annuler
+ * (`restore`) ou valider (`purge`). Une erreur pendant `mutate` remet tout en place.
+ */
+async function transaction(mutate: (root: string) => Promise<void>): Promise<Applied> {
+	const root = pagesSourceDir();
+	await mkdir(workRoot(), { recursive: true });
+	const backup = workDir('pages-sauvegarde');
+	await cp(root, backup, { recursive: true });
+	const restore = async () => {
+		const trash = workDir('pages-annulees');
+		await rename(root, trash);
+		await rename(backup, root);
+		await rm(trash, { recursive: true, force: true });
+	};
+	try {
+		await mutate(root);
+	} catch (err) {
+		await restore();
+		throw err;
+	}
+	return { restore, purge: () => rm(backup, { recursive: true, force: true }) };
+}
+
+// --- Pages -----------------------------------------------------------------
+
+class CoverError extends Error {}
+
+/** Dossier des pages réservées devenu vide (dernière page supprimée ou déplacée) : retiré. */
+async function removeEmptyReservedFolder(root: string): Promise<void> {
+	const dir = join(root, RESERVED_FOLDER);
+	if ((await readdir(dir).catch(() => null))?.length === 0) await rm(dir, { recursive: true, force: true });
+}
+
+/**
+ * Crée (`currentPath` null) ou modifie une page ; une page modifiée peut
+ * changer d'emplacement ou d'adresse (son dossier est déplacé, photo comprise).
+ */
+export async function savePage(
+	input: PageInput,
+	currentPath: string | null,
+	coverChange: CoverChange,
+): Promise<{ path?: string; title?: string; applied?: Applied; errors: string[] }> {
+	const current = currentPath ? await readPageSource(currentPath) : null;
+	if (currentPath && !current) return { errors: ['Page introuvable dans les sources.'] };
+	if (current?.technique) return { errors: ['Page technique (.mdx) : elle se modifie dans le code.'] };
+
+	const { page, errors } = await normalizePage(input, currentPath);
+	if (!page) return { errors };
+
+	let applied: Applied;
+	try {
+		applied = await transaction(async (root) => {
+			const dir = join(root, page.path);
+			if (current && current.path !== page.path) {
+				await mkdir(join(dir, '..'), { recursive: true });
+				await rename(join(root, current.path), dir);
+			}
+			await mkdir(dir, { recursive: true });
+			let cover = current?.cover ?? undefined;
+			if (coverChange.action !== 'keep' && cover) await rm(join(dir, cover), { force: true });
+			if (coverChange.action === 'remove') cover = undefined;
+			if (coverChange.action === 'replace') {
+				await writeCover(dir, coverChange.data).catch(() => {
+					throw new CoverError();
+				});
+				cover = './cover.jpg';
+			}
+			// `cover` avant `imageCredit` et les blocs : ordre de lecture habituel.
+			const { blocs, imageCredit, ...head } = page.frontmatter;
+			const frontmatter = { ...head, ...(cover ? { cover } : {}), ...(imageCredit ? { imageCredit } : {}), ...(blocs ? { blocs } : {}) };
+			await writeFile(join(dir, 'index.md'), serialize(frontmatter, page.body), 'utf8');
+			await removeEmptyReservedFolder(root);
+		});
+	} catch (err) {
+		if (err instanceof CoverError) return { errors: [COVER_ERROR] };
+		throw err;
+	}
+	return { path: page.path, title: String(page.frontmatter.title), applied, errors: [] };
+}
+
+/** Supprime une page (dossier entier, photo comprise). */
+export async function deletePage(path: string): Promise<{ title?: string; applied?: Applied; errors: string[] }> {
+	const current = await readPageSource(path);
+	if (!current) return { errors: ['Page introuvable dans les sources (déjà supprimée ?).'] };
+	if (current.technique) return { errors: ['Page technique (.mdx) : elle se supprime dans le code.'] };
+	const applied = await transaction(async (root) => {
+		await rm(join(root, path), { recursive: true, force: true });
+		await removeEmptyReservedFolder(root);
+	});
+	return { title: current.title || path, applied, errors: [] };
+}
+
+// --- Menus déroulants -------------------------------------------------------
+
+export interface DropdownInput {
+	/** Nom du dossier = début de l'adresse des pages du menu déroulant ; fixé à la création. */
+	folder: string;
+	label: string;
+}
+
+/**
+ * Crée (`currentFolder` null) ou modifie un menu déroulant (libellé ; le
+ * dossier ne change pas). Position : dernière à la création, inchangée
+ * ensuite (flèches ↑/↓, `saveMenuOrder()`).
+ */
+export async function saveDropdown(
+	input: DropdownInput,
+	currentFolder: string | null,
+): Promise<{ folder?: string; applied?: Applied; errors: string[] }> {
+	const errors: string[] = [];
+	const label = input.label.trim();
+	if (!label) errors.push('Le libellé du menu déroulant est obligatoire.');
+	const { dropdowns, pages } = await listPagesSource();
+	const current = currentFolder ? dropdowns.find((d) => d.folder === currentFolder) : undefined;
+	const order = current ? current.order : await menuOrderFor({ kind: 'racine' }, null, pages, dropdowns);
+	let folder = currentFolder;
+	if (currentFolder) {
+		if (!current) errors.push('Menu déroulant introuvable.');
+	} else {
+		folder = (input.folder.trim() || slugify(label)).slice(0, SEGMENT_MAX);
+		if (!SEGMENT.test(folder)) errors.push("L'adresse du menu déroulant ne peut contenir que des minuscules, des chiffres et des tirets.");
+		else if (
+			dropdowns.some((d) => d.folder === folder) ||
+			pages.some((p) => p.path === folder) ||
+			(await takenRootNames()).has(folder) ||
+			(await exists(join(pagesSourceDir(), folder)))
+		) {
+			errors.push(`L'adresse /${folder} est déjà utilisée.`);
+		}
+	}
+	if (errors.length) return { errors };
+	const applied = await transaction(async (root) => {
+		await mkdir(join(root, folder!), { recursive: true });
+		await writeFile(join(root, folder!, '_group.md'), serialize({ label, order }, '').trimEnd() + '\n', 'utf8');
+	});
+	return { folder: folder!, applied, errors: [] };
+}
+
+/** Supprime un menu déroulant vide (ses pages doivent d'abord être déplacées ou supprimées). */
+export async function deleteDropdown(folder: string): Promise<{ label?: string; applied?: Applied; errors: string[] }> {
+	const dropdown = (await listPagesSource()).dropdowns.find((d) => d.folder === folder);
+	if (!dropdown) return { errors: ['Menu déroulant introuvable.'] };
+	if (dropdown.pages.length) return { errors: ['Ce menu déroulant contient encore des pages : déplacez-les ou supprimez-les d’abord.'] };
+	const applied = await transaction((root) => rm(join(root, folder), { recursive: true, force: true }));
+	return { label: dropdown.label, applied, errors: [] };
+}
+
+// --- Liens vers les pages applicatives ---------------------------------------
+
+export interface BuiltinLinkInput {
+	label: string;
+	show: boolean;
+}
+
+/**
+ * Règle libellé et visibilité d'un lien de `site.builtinNav` (position :
+ * inchangée, cf. `saveMenuOrder()`). Seuls
+ * les écarts aux valeurs par défaut sont enregistrés ; plus aucun écart =
+ * `_navigation.md` supprimé.
+ */
+export async function saveBuiltinLink(id: string, input: BuiltinLinkInput): Promise<{ label?: string; applied?: Applied; errors: string[] }> {
+	const link = (await listPagesSource()).links.find((l) => l.id === id);
+	if (!link || !BUILTIN_LINK_IDS.includes(id)) return { errors: ['Lien introuvable.'] };
+	const label = input.label.trim();
+	if (!label) return { errors: ['Le libellé est obligatoire.'] };
+
+	const override: BuiltinLinkOverride = {};
+	if (label !== link.defaultLabel) override.label = label;
+	if (link.order !== link.defaultOrder) override.order = link.order;
+	if (!input.show) override.show = false;
+	const liens = await readNavigationOverrides();
+	if (Object.keys(override).length) liens[id] = override;
+	else delete liens[id];
+
+	const applied = await transaction(async (root) => {
+		const file = join(root, NAVIGATION_FILE);
+		if (Object.keys(liens).length) await writeFile(file, serialize({ liens }, '').trimEnd() + '\n', 'utf8');
+		else await rm(file, { force: true });
+	});
+	return { label, applied, errors: [] };
+}
+
+// --- Ordre du menu de navigation --------------------------------------------
+
+/** Niveau du menu réordonné : `racine` (premier niveau) ou `dropdown:<dossier>`. */
+export type MenuLevel = 'racine' | `dropdown:${string}`;
+
+/**
+ * Éléments d'un niveau du menu, par clé : `builtin:<id>` (lien vers une page
+ * du site), `page:<chemin>`, `dropdown:<dossier>`. Premier niveau = liens du
+ * site, pages à la racine affichées et menus déroulants ; menu déroulant =
+ * toutes ses pages.
+ */
+function levelKeys(level: string, source: Awaited<ReturnType<typeof listPagesSource>>): string[] | null {
+	if (level === 'racine') {
+		return [
+			...source.links.map((l) => `builtin:${l.id}`),
+			...source.pages.filter((p) => p.placement.kind === 'racine' && p.menu.show).map((p) => `page:${p.path}`),
+			...source.dropdowns.map((d) => `dropdown:${d.folder}`),
+		];
+	}
+	const folder = level.startsWith('dropdown:') ? level.slice('dropdown:'.length) : null;
+	const dropdown = source.dropdowns.find((d) => d.folder === folder);
+	return dropdown ? dropdown.pages.map((path) => `page:${path}`) : null;
+}
+
+/**
+ * Nouvel ordre d'un ou plusieurs niveaux du menu (flèches ↑/↓ du module) :
+ * positions renumérotées 0, 10, 20… dans l'ordre reçu, qui doit contenir
+ * exactement les éléments du niveau. Seule la position est réécrite :
+ * `menu.order` des pages, `order` des `_group.md`, écarts des liens du site
+ * dans `_navigation.md`. Une seule transaction, donc une seule publication.
+ */
+export async function saveMenuOrder(levels: Record<string, string[]>): Promise<{ applied?: Applied; errors: string[] }> {
+	const source = await listPagesSource();
+	const orders = new Map<string, number>();
+	for (const [level, keys] of Object.entries(levels)) {
+		const expected = levelKeys(level, source);
+		if (!expected) return { errors: ['Menu introuvable : rechargez la liste.'] };
+		const same = keys.length === expected.length && new Set(keys).size === keys.length && keys.every((k) => expected.includes(k));
+		if (!same) return { errors: ['Le menu a changé entre-temps : rechargez la liste.'] };
+		keys.forEach((key, index) => orders.set(key, index * ORDER_STEP));
+	}
+	if (!orders.size) return { errors: ['Aucun ordre à enregistrer.'] };
+
+	const liens = await readNavigationOverrides();
+	let linksChanged = false;
+	for (const link of source.links) {
+		const order = orders.get(`builtin:${link.id}`);
+		if (order === undefined || order === link.order) continue;
+		const { order: _previous, ...rest } = liens[link.id] ?? {};
+		liens[link.id] = order === link.defaultOrder ? rest : { ...rest, order };
+		if (!Object.keys(liens[link.id]).length) delete liens[link.id];
+		linksChanged = true;
+	}
+
+	const applied = await transaction(async (root) => {
+		for (const page of source.pages) {
+			const order = orders.get(`page:${page.path}`);
+			if (order === undefined || order === page.menu.order) continue;
+			const file = join(root, page.path, page.technique ? 'index.mdx' : 'index.md');
+			const { data, body } = readFrontmatter(await readFile(file, 'utf8'));
+			const menu = data.menu && typeof data.menu === 'object' ? (data.menu as Record<string, unknown>) : { show: true };
+			await writeFile(file, serialize({ ...data, menu: { ...menu, order } }, body), 'utf8');
+		}
+		for (const dropdown of source.dropdowns) {
+			const order = orders.get(`dropdown:${dropdown.folder}`);
+			if (order === undefined || order === dropdown.order) continue;
+			const file = join(root, dropdown.folder, '_group.md');
+			const { data } = await readFile(file, 'utf8').then(readFrontmatter, () => ({ data: {} as Record<string, unknown> }));
+			await writeFile(file, serialize({ label: dropdown.label, ...data, order }, '').trimEnd() + '\n', 'utf8');
+		}
+		if (linksChanged) {
+			const file = join(root, NAVIGATION_FILE);
+			if (Object.keys(liens).length) await writeFile(file, serialize({ liens }, '').trimEnd() + '\n', 'utf8');
+			else await rm(file, { force: true });
+		}
+	});
+	return { applied, errors: [] };
+}
+
+// --- Corps JSON des routes -------------------------------------------------
+
+const text = (v: unknown) => (typeof v === 'string' ? v : '');
+
+/** `PageInput` depuis le corps JSON d'une route (types forcés ; la validation suit dans `savePage`). */
+export function readPageInput(raw: unknown): PageInput {
+	const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+	const placement = (data.placement && typeof data.placement === 'object' ? data.placement : {}) as Record<string, unknown>;
+	const menu = (data.menu && typeof data.menu === 'object' ? data.menu : {}) as Record<string, unknown>;
+	return {
+		placement:
+			placement.kind === 'dropdown'
+				? { kind: 'dropdown', dropdown: text(placement.dropdown) }
+				: placement.kind === 'reservee'
+					? { kind: 'reservee' }
+					: { kind: 'racine' },
+		slug: text(data.slug),
+		title: text(data.title),
+		description: text(data.description),
+		type: data.type === 'enrichie' ? 'enrichie' : 'classique',
+		menu: { show: menu.show === true, order: Number(menu.order ?? 99), label: text(menu.label) },
+		access: Array.isArray(data.access) ? data.access.filter(isAuthGroup) : [],
+		body: text(data.body),
+		blocs: data.blocs && typeof data.blocs === 'object' && !Array.isArray(data.blocs) ? (data.blocs as Record<string, unknown>) : {},
+		imageCredit: text(data.imageCredit),
+	};
+}
