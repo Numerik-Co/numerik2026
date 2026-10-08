@@ -183,11 +183,10 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ ⚙ Paramètres  🔒 Pages réservées  👥 Comptes        ● Production  👤 Marie ▾ │
-└──────────────────────────────────────────────────────┬───────────────────┤
-                                                       │ 🔑 Mon mot de passe │
-                                                       │ ⏻ Déconnexion      │
-                                                       └───────────────────┘
+│ ⚙ Espace d'administration   🔒 Pages réservées  👥 Comptes   ● Production  👤 Marie ▾ │
+└───────────────────────────────────────┬──────────────────────────────────┤
+                                        │ 🔑 Mon mot de passe │ ⏻ Déconnexion │
+                                        └──────────────────────────────────┘
 ```
 
 - La barre occupe toute la largeur de l'écran.

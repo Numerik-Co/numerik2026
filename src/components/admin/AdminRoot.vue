@@ -121,9 +121,9 @@ onBeforeUnmount(() => {
 <template>
 	<div v-if="user" class="fixed inset-x-0 top-0 z-[60] h-10 bg-gray-900 text-sm text-white shadow">
 		<div class="flex h-full w-full items-center gap-1 px-2 sm:px-4">
-			<span class="mr-2 hidden items-center gap-2 font-heading font-semibold md:flex">
+			<span class="mr-6 hidden shrink-0 items-center gap-2 font-heading font-semibold md:flex">
 				<i class="fa-solid fa-gear text-gray-400" aria-hidden="true"></i>
-				Paramètres
+				Espace d'administration
 			</span>
 			<nav class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto" aria-label="Modules d'administration">
 				<button
@@ -171,26 +171,27 @@ onBeforeUnmount(() => {
 				</button>
 				<div
 					v-if="userMenuOpen"
-					class="absolute right-0 top-full mt-1 min-w-48 overflow-hidden rounded-b-md bg-gray-900 py-1 shadow-lg ring-1 ring-white/10"
+					class="absolute right-0 top-full mt-2.5 flex items-stretch gap-1 overflow-hidden whitespace-nowrap rounded-md bg-gray-900 p-1 shadow-lg ring-1 ring-white/10"
 					role="menu"
+					aria-orientation="horizontal"
 				>
 					<button
 						v-for="m in userModules"
 						:key="m.id"
 						type="button"
 						role="menuitem"
-						class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-white/10"
+						class="flex items-center gap-2 rounded px-3 py-1.5 hover:bg-white/10"
 						:class="activeId === m.id ? 'bg-white/15' : ''"
 						@click="openUserModule(m.id)"
 					>
 						<i :class="['fa-solid', m.icon, 'w-4 text-center text-gray-300']" aria-hidden="true"></i>
 						{{ m.label }}
 					</button>
-					<div v-if="userModules.length" class="my-1 border-t border-white/10"></div>
+					<div v-if="userModules.length" class="my-1 border-l border-white/15" aria-hidden="true"></div>
 					<button
 						type="button"
 						role="menuitem"
-						class="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-300 hover:bg-white/10 hover:text-white"
+						class="flex items-center gap-2 rounded px-3 py-1.5 text-gray-300 hover:bg-white/10 hover:text-white"
 						@click="logout"
 					>
 						<i class="fa-solid fa-right-from-bracket w-4 text-center" aria-hidden="true"></i>
