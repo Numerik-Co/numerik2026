@@ -29,6 +29,8 @@ export interface SessionUser {
 	fullname: string;
 	email?: string;
 	groups: AuthGroup[];
+	/** Mot de passe provisoire à remplacer avant toute autre action. */
+	mustChangePassword: boolean;
 }
 
 interface Payload {
@@ -69,6 +71,7 @@ function toSessionUser(account: Account): SessionUser {
 		fullname: account.fullname,
 		email: account.email,
 		groups: account.groups,
+		mustChangePassword: Boolean(account.mustChangePassword),
 	};
 }
 

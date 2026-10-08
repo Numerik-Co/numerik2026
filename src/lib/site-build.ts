@@ -19,7 +19,9 @@
  *
  * En développement (`astro dev`), rien à construire : le contenu est relu à chaud.
  * Une seule publication à la fois ; l'état est gardé dans
- * `<DATA_DIR>/publication/status.json` pour survivre au redémarrage.
+ * `<DATA_DIR>/publication/status.json` pour survivre au redémarrage, jusqu'à
+ * ce que l'encadré soit fermé (`dismissStatus`). Chaque résultat est aussi
+ * consigné dans le journal (`src/lib/journal.ts`).
  *
  * Code serveur uniquement.
  */
@@ -30,6 +32,7 @@ import { createWriteStream, existsSync } from 'node:fs';
 import { access, constants, lstat, mkdir, readdir, readFile, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { dataDir } from './data-dir';
+import { logEvent, type JournalActor } from './journal';
 
 export interface BuildStatus {
 	state: 'idle' | 'running' | 'succeeded' | 'failed';
@@ -41,6 +44,8 @@ export interface BuildStatus {
 	finishedAt?: string;
 	/** Message d'erreur, ou avertissement (hook en échec…). */
 	message?: string;
+	/** Personne qui a lancé la publication. */
+	by?: JournalActor;
 }
 
 /** Publication en cours dans ce process, ou `null`. */
@@ -97,6 +102,30 @@ export async function canPublish(): Promise<{ ok: boolean; reason?: string }> {
 		};
 	}
 	return { ok: true };
+}
+
+/**
+ * Ferme définitivement l'encadré du dernier résultat (pour tout le monde) :
+ * l'état repasse à `idle`, le résultat reste consultable dans le journal.
+ * Une publication interrompue (jamais journalisée, le serveur s'étant arrêté
+ * pendant le build) y est consignée à ce moment-là.
+ */
+export async function dismissStatus(by: JournalActor): Promise<boolean> {
+	if (current) return false;
+	const status = await readStatus();
+	if (status.state === 'idle') return true;
+	let raw: BuildStatus | null = null;
+	try {
+		raw = JSON.parse(await readFile(join(statusDir(), 'status.json'), 'utf8'));
+	} catch {
+		// déjà absent
+	}
+	if (raw?.state === 'running') {
+		await logEvent({ by: raw.by, action: 'publication', label: raw.label, outcome: 'echec', message: status.message });
+	}
+	await writeStatus({ state: 'idle' });
+	await logEvent({ by, action: 'publication.message-ferme', label: status.label, outcome: status.state === 'succeeded' ? 'ok' : 'echec' });
+	return true;
 }
 
 export function isPublishing(): boolean {
@@ -188,6 +217,8 @@ function stamp(): string {
 
 export interface PublishRequest {
 	label: string;
+	/** Personne qui publie (journal). */
+	by: JournalActor;
 	href?: string;
 	/** Annule la modification de contenu si la reconstruction échoue. */
 	onFailure?: () => Promise<void>;
@@ -202,15 +233,17 @@ export interface PublishRequest {
 export async function publish(request: PublishRequest): Promise<{ started: boolean; reason?: string }> {
 	if (current) return { started: false, reason: 'Une publication est déjà en cours, réessayez dans une minute.' };
 	const startedAt = new Date().toISOString();
+	const by = { login: request.by.login, fullname: request.by.fullname };
 
 	if (import.meta.env.DEV) {
 		await request.onSuccess?.().catch(() => {});
 		// Pas de build en dev (contenu relu à chaud) : le mode est affiché dans la barre d'admin.
-		await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: startedAt });
+		await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: startedAt, by });
+		await logEvent({ by, action: 'publication', label: request.label, href: request.href, outcome: 'ok', message: 'Serveur de développement : aucune reconstruction.' });
 		return { started: true };
 	}
 
-	await writeStatus({ state: 'running', label: request.label, href: request.href, startedAt });
+	await writeStatus({ state: 'running', label: request.label, href: request.href, startedAt, by });
 	current = (async () => {
 		const release = stamp();
 		const outDir = join(RELEASES_DIR, release);
@@ -229,7 +262,8 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 				}
 			}
 			await pruneReleases().catch(() => {});
-			await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: new Date().toISOString(), message });
+			await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: new Date().toISOString(), message, by });
+			await logEvent({ by, action: 'publication', label: request.label, href: request.href, outcome: 'ok', message });
 			if (PUBLISH_RESTART) {
 				log.write('\nPublication terminée : redémarrage du serveur.\n');
 				restartServer(log);
@@ -237,13 +271,9 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 		} catch (err) {
 			await request.onFailure?.().catch(() => {});
 			await rm(join(root(), outDir), { recursive: true, force: true });
-			await writeStatus({
-				state: 'failed',
-				label: request.label,
-				startedAt,
-				finishedAt: new Date().toISOString(),
-				message: `La reconstruction du site a échoué, rien n'a été publié (${(err as Error).message}). Détail : ${join(statusDir(), 'build.log')}`,
-			});
+			const message = `La reconstruction du site a échoué, rien n'a été publié (${(err as Error).message}). Détail : ${join(statusDir(), 'build.log')}`;
+			await writeStatus({ state: 'failed', label: request.label, startedAt, finishedAt: new Date().toISOString(), message, by });
+			await logEvent({ by, action: 'publication', label: request.label, outcome: 'echec', message });
 		} finally {
 			log.end();
 			current = null;

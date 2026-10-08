@@ -5,10 +5,10 @@
  *   access: true                  # toute personne connectée
  *   access: animateur             # un groupe
  *   access: [animateur, admin]    # l'un de ces groupes
- * Sans `access:`, la page est publique. Le groupe `admin` passe toujours.
+ * Sans `access:`, la page est publique. `admin` (et `superadmin`) passe toujours.
  */
 
-import { isAuthGroup, type AuthGroup } from './groups.ts';
+import { hasAdminRights, isAuthGroup, type AuthGroup } from './groups.ts';
 import type { SessionUser } from './session.ts';
 
 /** `null` = page publique ; `'connecte'` = toute personne connectée ; sinon les groupes autorisés. */
@@ -27,7 +27,7 @@ export function parseAccess(value: unknown): PageAccess {
 }
 
 export function isAdmin(user: SessionUser | null): boolean {
-	return Boolean(user?.groups.includes('admin'));
+	return Boolean(user && hasAdminRights(user.groups));
 }
 
 export function canAccess(user: SessionUser | null, access: PageAccess): boolean {

@@ -2,23 +2,29 @@
 /**
  * Calque superposé au site : `variant="drawer"` = panneau latéral à droite
  * (modules), `variant="modal"` = fenêtre centrée (connexion).
- * Échap ou clic sur le fond ferme ; le focus est placé dans le calque à
+ * Échap ou clic sur le fond ferme (sauf `closable: false`, ex. changement de
+ * mot de passe imposé) ; le focus est placé dans le calque à
  * l'ouverture et rendu à l'élément d'origine à la fermeture ; la page
  * dessous ne défile plus.
  */
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
-const props = withDefaults(defineProps<{ title: string; variant?: 'drawer' | 'modal' }>(), {
+const props = withDefaults(defineProps<{ title: string; variant?: 'drawer' | 'modal'; closable?: boolean }>(), {
 	variant: 'drawer',
+	closable: true,
 });
 const emit = defineEmits<{ close: [] }>();
+
+function requestClose() {
+	if (props.closable) emit('close');
+}
 
 const panel = ref<HTMLElement | null>(null);
 const titleId = `admin-overlay-${Math.random().toString(36).slice(2, 8)}`;
 let previousFocus: HTMLElement | null = null;
 
 function onKeydown(event: KeyboardEvent) {
-	if (event.key === 'Escape') emit('close');
+	if (event.key === 'Escape') requestClose();
 	if (event.key !== 'Tab' || !panel.value) return;
 	// Garde le focus clavier dans le calque.
 	const focusables = panel.value.querySelectorAll<HTMLElement>(
@@ -54,7 +60,7 @@ onBeforeUnmount(() => {
 
 <template>
 	<div class="fixed inset-0 z-[70]" :class="props.variant === 'modal' ? 'flex items-center justify-center p-4' : ''">
-		<div class="absolute inset-0 bg-gray-900/50" aria-hidden="true" @click="emit('close')"></div>
+		<div class="absolute inset-0 bg-gray-900/50" aria-hidden="true" @click="requestClose"></div>
 		<div
 			ref="panel"
 			role="dialog"
@@ -71,6 +77,7 @@ onBeforeUnmount(() => {
 			<header class="flex items-center justify-between gap-4 border-b border-gray-100 px-5 py-4">
 				<h2 :id="titleId" class="font-heading text-lg font-semibold text-gray-900">{{ props.title }}</h2>
 				<button
+					v-if="props.closable"
 					type="button"
 					data-overlay-close
 					class="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900"

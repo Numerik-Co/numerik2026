@@ -3,7 +3,10 @@
  * à la demande et garde les routes de l'espace bénévoles :
  *  - `/api/auth/*`, `/api/admin/*` : requêtes du site lui-même uniquement ;
  *  - `/api/admin/*` : connexion obligatoire (401) ;
- *  - préfixes de `GUARDS` : groupe requis (403), `admin` passe toujours.
+ *  - préfixes de `GUARDS` : groupe requis (403), `admin` / `superadmin`
+ *    passent toujours, sauf garde `noAdmin` (journal : `superadmin` seul) ;
+ *  - mot de passe provisoire (`mustChangePassword`) : seule
+ *    `/api/admin/mot-de-passe` répond (403 ailleurs).
  * L'interface (modale de connexion, barre et modules) est un îlot Vue
  * (`src/components/admin/AdminRoot.vue`) ; les pages de contenu restreintes
  * par `access:` sont contrôlées par `src/pages/[...slug].astro`.
@@ -17,7 +20,8 @@ import { isSameOrigin, jsonError } from './lib/auth/api';
 import { readSession } from './lib/auth/session';
 
 /** Routes réservées à certains groupes (en plus de la connexion). Tenir aligné avec `ADMIN_MODULES`. */
-const GUARDS: { prefix: string; groups: AuthGroup[]; message: string }[] = [
+const GUARDS: { prefix: string; groups: AuthGroup[]; message: string; noAdmin?: true }[] = [
+	{ prefix: '/api/admin/journal', groups: ['superadmin'], message: 'Le journal est réservé au super admin.', noAdmin: true },
 	{ prefix: '/api/admin/comptes', groups: ['admin'], message: 'La gestion des comptes est réservée au bureau.' },
 	{ prefix: '/api/admin/actualites', groups: ['redacteur'], message: 'La publication des actualités est réservée aux rédacteur·rice·s.' },
 	{ prefix: '/api/admin/publication', groups: ['redacteur'], message: 'Réservé aux rédacteur·rice·s.' },
@@ -39,8 +43,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	if (startsWithSegment(path, '/api/admin')) {
 		if (!user) return jsonError('Session expirée : reconnectez-vous.', 401);
+		if (user.mustChangePassword && path !== '/api/admin/mot-de-passe') {
+			return jsonError('Choisissez d’abord votre mot de passe personnel.', 403);
+		}
 		const guard = GUARDS.find((g) => startsWithSegment(path, g.prefix));
-		if (guard && !isAdmin(user) && !guard.groups.some((g) => user.groups.includes(g))) {
+		if (guard && !(isAdmin(user) && !guard.noAdmin) && !guard.groups.some((g) => user.groups.includes(g))) {
 			return jsonError(guard.message, 403);
 		}
 	}

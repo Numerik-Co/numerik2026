@@ -78,13 +78,29 @@ git pull
 > DOCKER_CONFIG=$PWD/.dockercfg docker compose up -d --force-recreate
 > ```
 
-### 4. Créer le premier compte administrateur
+### 4. Créer le super admin et le premier compte administrateur
 
-Le premier compte se crée en ligne de commande, avec le script
-`./auth-user.sh` (à côté de `deploy.sh`) ; ensuite, tout se fait depuis le site :
+Ces comptes se créent en ligne de commande, avec le script `./auth-user.sh`
+(à côté de `deploy.sh`) ; ensuite, tout se fait depuis le site.
+
+D'abord le **super admin** : compte technique (rôle `superadmin` seul), qui a
+tous les droits et est **le seul à voir le journal des modifications**. Il
+n'apparaît pas dans le module « Comptes » et ne peut y être ni modifié ni
+supprimé. Son mot de passe est provisoire : il **doit être changé à la
+première connexion**.
 
 ```bash
 cd /opt/numerik2026
+./auth-user.sh init                     # login « superadmin » ; ou : ./auth-user.sh init <login> "<Nom>"
+```
+
+La commande ne fait rien si un super admin existe déjà (relançable sans
+risque). Pour imposer le mot de passe provisoire au lieu de le générer :
+`SUPERADMIN_PASSWORD='…' ./auth-user.sh init`.
+
+Puis le premier compte du bureau :
+
+```bash
 ./auth-user.sh add xavier "Xavier Burke" admin
 ```
 
@@ -104,6 +120,7 @@ Autres commandes utiles :
 ./auth-user.sh list
 
 # nouveau mot de passe provisoire (et réactive le compte) — dépannage
+# (pour le super admin, le changement est à nouveau imposé à la connexion)
 ./auth-user.sh reset xavier
 ```
 
@@ -189,12 +206,19 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 
 Les modules visibles dépendent de votre groupe :
 
-| Module | Bureau (`admin`) | Rédacteur·rice | Animateur·rice |
-| :--- | :---: | :---: | :---: |
-| Pages réservées | ✅ | ✅ | ✅ |
-| Actualités | ✅ | ✅ | — |
-| Comptes | ✅ | — | — |
-| Mon mot de passe | ✅ | ✅ | ✅ |
+| Module | Super admin | Bureau (`admin`) | Rédacteur·rice | Animateur·rice |
+| :--- | :---: | :---: | :---: | :---: |
+| Pages réservées | ✅ | ✅ | ✅ | ✅ |
+| Actualités | ✅ | ✅ | ✅ | — |
+| Comptes | ✅ | ✅ | — | — |
+| Journal | ✅ | — | — | — |
+| Mon mot de passe | ✅ | ✅ | ✅ | ✅ |
+
+**Journal** (super admin seulement) : toutes les modifications faites depuis
+l'espace bénévoles — qui, quand, quoi, avec quel résultat (connexions,
+mots de passe, actualités ajoutées / modifiées / supprimées, résultat de
+chaque publication, comptes). Recherche par nom ou objet, connexions
+masquables, une page par année. Lecture seule.
 
 ### Pages réservées
 
@@ -238,8 +262,10 @@ page publique.
    autres métadonnées sont retirées automatiquement.
 4. **Publier l'actualité** : le site est **reconstruit** (de quelques
    secondes à une minute) ; un encadré « Publication en cours » suit
-   l'avancement, puis affiche le lien vers l'actualité en ligne (encadré
-   refermable par sa croix ✕). On peut fermer le panneau pendant ce temps.
+   l'avancement, puis affiche le lien vers l'actualité en ligne. Fermer
+   cet encadré par sa croix ✕ le fait disparaître **définitivement, pour
+   tout le monde** ; le résultat reste consultable dans le journal du super
+   admin. On peut fermer le panneau pendant la publication.
 
 Le texte accepte le **HTML** en plus du Markdown : tableaux, encadrés
 (`<div>`), mise en forme, détails dépliables, vidéos et cartes intégrées

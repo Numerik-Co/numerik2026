@@ -6,6 +6,7 @@
 #   ./auth-user.sh list
 #   ./auth-user.sh add <login> "<Prénom Nom>" [groupe…]   (défaut : admin)
 #   ./auth-user.sh reset <login>
+#   ./auth-user.sh init [login] ["<Nom>"]   (super admin, au déploiement)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -14,4 +15,5 @@ cd "$(dirname "$0")"
 export DOCKER_CONFIG="$(pwd)/.dockercfg"
 mkdir -p "$DOCKER_CONFIG"
 
-exec docker compose exec web node dist/cli/auth-user.mjs "$@"
+# SUPERADMIN_PASSWORD (init) est transmis au conteneur s'il est défini.
+exec docker compose exec ${SUPERADMIN_PASSWORD:+-e SUPERADMIN_PASSWORD} web node dist/cli/auth-user.mjs "$@"

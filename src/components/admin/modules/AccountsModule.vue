@@ -7,12 +7,13 @@
  * l'interface masque seulement les actions impossibles sur son propre compte.
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import { AUTH_GROUPS, type AuthGroup } from '../../../lib/auth/groups';
+import { ASSIGNABLE_GROUPS, AUTH_GROUPS, type AuthGroup } from '../../../lib/auth/groups';
 import { ApiError, accountsApi, type AccountView } from '../client';
 import { ADMIN_CONTEXT, inputClass } from '../context';
 
 const { user, sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
-const groupEntries = Object.entries(AUTH_GROUPS) as [AuthGroup, (typeof AUTH_GROUPS)[AuthGroup]][];
+// `superadmin` ne s'attribue pas ici (CLI seulement) ; ses comptes ne sont pas listés.
+const groupEntries = ASSIGNABLE_GROUPS.map((g) => [g, AUTH_GROUPS[g]] as const);
 
 type View = { name: 'list' } | { name: 'create' } | { name: 'edit'; login: string };
 

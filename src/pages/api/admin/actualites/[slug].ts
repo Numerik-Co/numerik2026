@@ -22,6 +22,7 @@ import {
 	updateNews,
 	type CoverChange,
 } from '../../../../lib/news-writer';
+import { logEvent } from '../../../../lib/journal';
 import { canPublish, isPublishing, publish } from '../../../../lib/site-build';
 
 export const prerender = false;
@@ -48,7 +49,7 @@ function toMarkdown(fields: Record<string, unknown>, body: string): string {
 	return `---\n${stringifyYaml(data, { defaultStringType: 'QUOTE_DOUBLE', lineWidth: 0 })}---\n\n${body}\n`;
 }
 
-export const PUT: APIRoute = withErrors(async ({ params, request }) => {
+export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const slug = String(params.slug ?? '');
 	const availability = await canPublish();
 	if (!availability.ok) return jsonError(availability.reason!, 503);
@@ -74,20 +75,32 @@ export const PUT: APIRoute = withErrors(async ({ params, request }) => {
 	const { title, restore, purge, errors } = await updateNews(slug, markdown, coverChange);
 	if (!restore || !purge) return jsonError(errors.join(' '), errors[0]?.includes('introuvable') ? 404 : 422);
 
+	// Journalisé avant la publication, dont le résultat suit dans le journal.
+	await logEvent({
+		by: locals.user,
+		action: 'actualite.modification',
+		label: title,
+		href: `/actualites/${slug}`,
+		message: [coverChange.action !== 'keep' ? `photo : ${coverChange.action === 'remove' ? 'retirée' : 'remplacée'}` : '', fields.isPublish === false ? 'brouillon' : '']
+			.filter(Boolean)
+			.join(' · ') || undefined,
+	});
 	const started = await publish({
 		label: `Modification : ${title}`,
 		href: fields.isPublish === false ? undefined : `/actualites/${slug}`,
+		by: locals.user!,
 		onFailure: restore,
 		onSuccess: purge,
 	});
 	if (!started.started) {
 		await restore();
+		await logEvent({ by: locals.user, action: 'publication', label: `Modification : ${title}`, outcome: 'echec', message: started.reason });
 		return jsonError(started.reason!, 409);
 	}
 	return json({ ok: true, href: `/actualites/${slug}` }, 202);
 });
 
-export const DELETE: APIRoute = withErrors(async ({ params, request }) => {
+export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const slug = String(params.slug ?? '');
 	const availability = await canPublish();
 	if (!availability.ok) return jsonError(availability.reason!, 503);
@@ -100,13 +113,17 @@ export const DELETE: APIRoute = withErrors(async ({ params, request }) => {
 	const aside = await setAsideNews(slug);
 	if (!aside) return jsonError('Actualité introuvable dans les sources (déjà supprimée ?).', 404);
 
+	// Journalisé avant la publication, dont le résultat suit dans le journal.
+	await logEvent({ by: locals.user, action: 'actualite.suppression', label: title, message: slug });
 	const started = await publish({
 		label: `Suppression : ${title}`,
+		by: locals.user!,
 		onFailure: aside.restore,
 		onSuccess: aside.purge,
 	});
 	if (!started.started) {
 		await aside.restore();
+		await logEvent({ by: locals.user, action: 'publication', label: `Suppression : ${title}`, outcome: 'echec', message: started.reason });
 		return jsonError(started.reason!, 409);
 	}
 	return json({ ok: true }, 202);

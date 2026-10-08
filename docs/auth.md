@@ -49,11 +49,38 @@ updated: 2026-10-06T10:00:00.000Z
 
 | Groupe | Droits |
 | :--- | :--- |
-| `admin` | Tout : toutes les pages réservées + tous les modules (dont « Comptes ») |
+| `superadmin` | Tout ce que peut `admin` + module « Journal » (seul à le voir). Créé au déploiement par `auth-user init`, jamais attribué ni visible dans le module « Comptes » (les routes `/api/admin/comptes/<login>` répondent 404 pour ce compte) |
+| `admin` | Tout : toutes les pages réservées + tous les modules (dont « Comptes »), sauf « Journal » |
 | `animateur` | Pages réservées dont l'`access:` cite `animateur` (ou `true`) |
 | `redacteur` | Module « Actualités » (publication des actualités, cf. [publication.md](publication.md)) |
 
 Ajouter un groupe = une entrée dans `AUTH_GROUPS` (`src/lib/auth/groups.ts`).
+
+### Mot de passe provisoire imposé
+
+`must_change_password: true` dans le YAML du compte (posé par `auth-user init`,
+et par `auth-user reset` sur un super admin) : à la connexion, une modale non
+refermable impose de choisir un mot de passe personnel ; tant que ce n'est pas
+fait, toute route `/api/admin/*` autre que `mot-de-passe` répond 403. Le
+drapeau est retiré par `POST /api/admin/mot-de-passe`.
+
+## Journal des modifications
+
+`src/lib/journal.ts` — `logEvent()` ajoute une ligne JSON à
+`<DATA_DIR>/journal/<AAAA>.jsonl` (jamais réécrit depuis le site) :
+connexions, changements de mot de passe, actualités ajoutées / modifiées /
+supprimées, résultat de chaque publication (réussie ou en échec, avec le
+message), message de publication fermé, comptes créés / modifiés (détail des
+changements) / réinitialisés / supprimés. Lu par le module « Journal »
+(`GET /api/admin/journal?annee=AAAA`, `superadmin` seul : garde `noAdmin`
+dans `GUARDS`, module `exclusive` dans `modules.ts`). Nouvelle action
+d'administration = un `logEvent()` dans sa route + son libellé dans
+`JournalModule.vue`.
+
+L'encadré du dernier résultat de publication (module « Actualités ») se ferme
+**pour tout le monde et définitivement** (`DELETE /api/admin/publication` →
+`dismissStatus()` remet `status.json` à `idle`) ; le résultat reste dans le
+journal.
 
 ## Réserver une page de contenu
 
@@ -121,7 +148,8 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `GET/POST /api/admin/actualites` | Liste (brouillons compris) + état de publication / dépôt `{ markdown, cover?: { type, data } }` → écrit `src/content/news/…` et reconstruit le site — `redacteur` |
 | `GET/PUT /api/admin/actualites/<slug>` | Lecture des sources (formulaire) / modification `{ fields, body, cover: { action: keep\|remove\|replace } }` : même dossier (URL inchangée), sauvegarde restaurée si le build échoue — `redacteur` |
 | `DELETE /api/admin/actualites/<slug>` | Suppression `{ confirm: <slug> }` : dossier mis de côté, site reconstruit, dossier effacé (ou remis en place si échec) — `redacteur` |
-| `GET /api/admin/publication` | État de la dernière publication — `redacteur` |
+| `GET/DELETE /api/admin/publication` | État de la dernière publication / fermeture définitive de son encadré (journalisée) — `redacteur` |
+| `GET /api/admin/journal` | Journal des modifications, `?annee=AAAA` — `superadmin` seul |
 | `PATCH/POST/DELETE /api/admin/comptes/<login>` | Modification / réinitialisation du mot de passe / suppression (`{ confirm: <login> }`) — `admin` |
 
 Garde : `src/middleware.ts` — `/api/auth/*` et `/api/admin/*` n'acceptent
@@ -187,9 +215,13 @@ npm run auth:user -- reset xavier                       # nouveau mot de passe p
 1. Ajouter `AUTH_SECRET=…` au `.env` du VPS.
 2. Le `docker-compose.yml` monte `./data` sur `/app/data` (`DATA_DIR`) :
    les comptes survivent aux redéploiements. Sauvegarder ce dossier.
-3. Créer le premier admin, puis tout se fait depuis le module « Comptes » :
+3. Créer le super admin (mot de passe à changer à la première connexion ;
+   relançable sans risque, ne fait rien s'il existe déjà), puis le premier
+   admin ; ensuite tout se fait depuis le module « Comptes » :
 
    ```sh
+   ./auth-user.sh init                              # login « superadmin », mot de passe provisoire affiché
+   SUPERADMIN_PASSWORD='…' ./auth-user.sh init      # ou mot de passe provisoire imposé (script de déploiement)
    ./auth-user.sh add xavier "Xavier Burke" admin   # = docker compose exec web node dist/cli/auth-user.mjs …
    ```
 

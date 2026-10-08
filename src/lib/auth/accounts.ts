@@ -8,6 +8,7 @@
  *   groups: [animateur]
  *   state: enabled
  *   hashed_password: scrypt$16384$8$1$…
+ *   must_change_password: true        # facultatif : à changer à la prochaine connexion
  *   created: 2026-10-06T10:00:00.000Z
  *   updated: 2026-10-06T10:00:00.000Z
  *
@@ -33,6 +34,8 @@ export interface Account {
 	/** `disabled` = connexion refusée, sessions en cours coupées. */
 	state: 'enabled' | 'disabled';
 	hashedPassword: string;
+	/** Mot de passe provisoire : seul le changement de mot de passe est permis tant qu'il n'est pas remplacé. */
+	mustChangePassword?: boolean;
 	created: string;
 	updated: string;
 }
@@ -65,6 +68,7 @@ function fromYaml(login: string, raw: Record<string, unknown>): Account {
 		groups: Array.isArray(raw.groups) ? raw.groups.filter(isAuthGroup) : [],
 		state: raw.state === 'disabled' ? 'disabled' : 'enabled',
 		hashedPassword: String(raw.hashed_password ?? ''),
+		...(raw.must_change_password === true ? { mustChangePassword: true } : {}),
 		created: String(raw.created ?? ''),
 		updated: String(raw.updated ?? ''),
 	};
@@ -108,6 +112,7 @@ export async function saveAccount(account: Account): Promise<void> {
 		groups: account.groups,
 		state: account.state,
 		hashed_password: account.hashedPassword,
+		...(account.mustChangePassword ? { must_change_password: true } : {}),
 		created: account.created,
 		updated: new Date().toISOString(),
 	};
@@ -119,6 +124,10 @@ export async function saveAccount(account: Account): Promise<void> {
 
 export async function deleteAccount(login: string): Promise<void> {
 	await rm(accountPath(login), { force: true });
+}
+
+export function isSuperadminAccount(account: Pick<Account, 'groups'>): boolean {
+	return account.groups.includes('superadmin');
 }
 
 export function isAdminAccount(account: Pick<Account, 'groups' | 'state'>): boolean {

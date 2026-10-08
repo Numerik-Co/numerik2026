@@ -6,6 +6,10 @@ import { ADMIN_CONTEXT, inputClass } from '../context';
 
 const { user, sessionExpired } = inject(ADMIN_CONTEXT)!;
 
+/** `forced` : mot de passe provisoire à remplacer avant de continuer (`done` une fois changé). */
+const props = defineProps<{ forced?: boolean }>();
+const emit = defineEmits<{ done: [] }>();
+
 const current = ref('');
 const next = ref('');
 const confirm = ref('');
@@ -23,6 +27,7 @@ async function submit() {
 	busy.value = true;
 	try {
 		await authApi.changePassword(current.value, next.value);
+		if (props.forced) return emit('done');
 		done.value = true;
 		current.value = next.value = confirm.value = '';
 	} catch (e) {
@@ -36,13 +41,18 @@ async function submit() {
 
 <template>
 	<form class="space-y-4" @submit.prevent="submit">
+		<p v-if="props.forced" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+			Votre mot de passe est provisoire : choisissez le vôtre pour accéder à l'espace bénévoles.
+		</p>
 		<p v-if="done" class="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800" role="status">
 			Mot de passe modifié. Vos autres appareils sont déconnectés.
 		</p>
 		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 		<input type="text" :value="user?.login" autocomplete="username" hidden />
 		<div>
-			<label for="pw-current" class="block text-sm font-medium text-gray-700">Mot de passe actuel</label>
+			<label for="pw-current" class="block text-sm font-medium text-gray-700">
+				{{ props.forced ? 'Mot de passe provisoire' : 'Mot de passe actuel' }}
+			</label>
 			<input id="pw-current" v-model="current" type="password" required autocomplete="current-password" :class="inputClass" />
 		</div>
 		<div>

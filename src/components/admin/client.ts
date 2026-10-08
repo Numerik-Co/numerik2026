@@ -10,6 +10,8 @@ export interface AdminUser {
 	fullname: string;
 	email: string | null;
 	groups: AuthGroup[];
+	/** Mot de passe provisoire : à remplacer avant tout le reste. */
+	mustChangePassword: boolean;
 }
 
 export interface ReservedPage {
@@ -65,6 +67,17 @@ export interface PublishStatus {
 	href?: string;
 	startedAt?: string;
 	finishedAt?: string;
+	message?: string;
+}
+
+/** Événement du journal des modifications, cf. src/lib/journal.ts. */
+export interface JournalEntry {
+	at: string;
+	by?: { login: string; fullname: string };
+	action: string;
+	label?: string;
+	href?: string;
+	outcome?: 'ok' | 'echec';
 	message?: string;
 }
 
@@ -128,9 +141,18 @@ export const newsApi = {
 	create: (markdown: string, cover: { type: string; data: string } | null) =>
 		request<{ slug: string; href: string }>('POST', '/api/admin/actualites', { markdown, cover: cover ?? undefined }),
 	status: () => request<PublishStatus>('GET', '/api/admin/publication'),
+	dismissStatus: () => request<{ ok: true }>('DELETE', '/api/admin/publication'),
 	get: (slug: string) => request<NewsSource>('GET', `/api/admin/actualites/${encodeURIComponent(slug)}`),
 	update: (slug: string, fields: NewsFields, body: string, cover: CoverUpdate) =>
 		request<{ ok: true; href: string }>('PUT', `/api/admin/actualites/${encodeURIComponent(slug)}`, { fields, body, cover }),
 	remove: (slug: string) =>
 		request<{ ok: true }>('DELETE', `/api/admin/actualites/${encodeURIComponent(slug)}`, { confirm: slug }),
+};
+
+export const journalApi = {
+	list: (year?: string) =>
+		request<{ years: string[]; year: string; entries: JournalEntry[] }>(
+			'GET',
+			`/api/admin/journal${year ? `?annee=${encodeURIComponent(year)}` : ''}`,
+		),
 };

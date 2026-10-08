@@ -3,10 +3,14 @@ import { readAccount, saveAccount } from '../../../lib/auth/accounts';
 import { json, jsonError, readJson } from '../../../lib/auth/api';
 import { hashPassword, passwordProblem, verifyPassword } from '../../../lib/auth/password';
 import { openSession } from '../../../lib/auth/session';
+import { logEvent } from '../../../lib/journal';
 
 export const prerender = false;
 
-/** Module « Mon mot de passe » : `{ current, next }`. Ferme les autres sessions, garde celle-ci. */
+/**
+ * Module « Mon mot de passe » (et changement imposé d'un mot de passe
+ * provisoire) : `{ current, next }`. Ferme les autres sessions, garde celle-ci.
+ */
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
 	const body = await readJson(request);
 	const current = String(body?.current ?? '');
@@ -20,8 +24,11 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 	const problem = passwordProblem(next);
 	if (problem) return jsonError(problem);
 
+	const wasProvisional = Boolean(account.mustChangePassword);
 	account.hashedPassword = await hashPassword(next);
+	delete account.mustChangePassword;
 	await saveAccount(account);
 	openSession(cookies, account);
+	await logEvent({ by: account, action: 'mot-de-passe', label: account.login, message: wasProvisional ? 'mot de passe provisoire remplacé' : undefined });
 	return json({ ok: true });
 };

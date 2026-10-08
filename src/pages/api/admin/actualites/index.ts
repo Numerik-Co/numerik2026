@@ -14,6 +14,7 @@ import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { json, jsonError, readJson, withErrors } from '../../../../lib/auth/api';
 import { COVER_MAX_BYTES, MARKDOWN_MAX_BYTES, removeNews, writeNews } from '../../../../lib/news-writer';
+import { logEvent } from '../../../../lib/journal';
 import { canPublish, isPublishing, publish, readStatus, type BuildStatus } from '../../../../lib/site-build';
 
 export const prerender = false;
@@ -30,6 +31,7 @@ const STATUS_RECALL_MS = 24 * 60 * 60 * 1000;
  */
 function statusToShow(status: BuildStatus, hrefs: Set<string>): BuildStatus {
 	if (status.state === 'idle' || status.state === 'running') return status;
+	// (un encadré fermé a déjà remis l'état à `idle`, cf. `dismissStatus`)
 	const finished = status.finishedAt ? Date.parse(status.finishedAt) : 0;
 	if (Date.now() - finished > STATUS_RECALL_MS) return { state: 'idle' };
 	if (status.state === 'succeeded' && status.href && !hrefs.has(status.href)) return { state: 'idle' };
@@ -54,7 +56,7 @@ export const GET: APIRoute = withErrors(async () => {
 	return json({ news, status, availability: await canPublish() });
 });
 
-export const POST: APIRoute = withErrors(async ({ request }) => {
+export const POST: APIRoute = withErrors(async ({ request, locals }) => {
 	const availability = await canPublish();
 	if (!availability.ok) return jsonError(availability.reason!, 503);
 	if (isPublishing()) return jsonError('Une publication est déjà en cours, réessayez dans une minute.', 409);
@@ -77,9 +79,12 @@ export const POST: APIRoute = withErrors(async ({ request }) => {
 	if (!slug) return jsonError(errors.join(' '), 422);
 
 	const href = `/actualites/${slug}`;
-	const started = await publish({ label: title!, href, onFailure: () => removeNews(slug) });
+	// Journalisé avant la publication, dont le résultat suit dans le journal.
+	await logEvent({ by: locals.user, action: 'actualite.ajout', label: title!, href });
+	const started = await publish({ label: title!, href, by: locals.user!, onFailure: () => removeNews(slug) });
 	if (!started.started) {
 		await removeNews(slug);
+		await logEvent({ by: locals.user, action: 'publication', label: title!, outcome: 'echec', message: started.reason });
 		return jsonError(started.reason!, 409);
 	}
 	return json({ slug, href }, 202);

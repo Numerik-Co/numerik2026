@@ -4,6 +4,7 @@ import { json, jsonError, publicUser, readJson } from '../../../lib/auth/api';
 import { verifyPassword } from '../../../lib/auth/password';
 import { clearFailures, lockedMinutes, recordFailure } from '../../../lib/auth/rate-limit';
 import { isAuthConfigured, openSession } from '../../../lib/auth/session';
+import { logEvent } from '../../../lib/journal';
 
 export const prerender = false;
 
@@ -33,5 +34,6 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
 
 	clearFailures(...keys);
 	openSession(cookies, account);
+	await logEvent({ by: account, action: 'connexion', label: account.login, message: account.mustChangePassword ? 'mot de passe provisoire : changement imposé' : undefined });
 	return json({ user: publicUser(account) });
 };

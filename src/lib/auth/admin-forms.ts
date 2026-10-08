@@ -4,7 +4,7 @@
  */
 
 import { isAdminAccount, listAccounts, type Account } from './accounts.ts';
-import { isAuthGroup, type AuthGroup } from './groups.ts';
+import { ASSIGNABLE_GROUPS, isAuthGroup, type AuthGroup } from './groups.ts';
 
 export interface AccountFields {
 	fullname: string;
@@ -23,6 +23,7 @@ export function readAccountFields(body: Record<string, unknown>): { fields: Acco
 	if (!fullname) errors.push('Le nom est obligatoire.');
 	if (email && !EMAIL_PATTERN.test(email)) errors.push("L'adresse email n'est pas valide.");
 	if (groups.length === 0) errors.push('Choisissez au moins un groupe.');
+	if (groups.some((g) => !ASSIGNABLE_GROUPS.includes(g))) errors.push('Le rôle super admin ne s’attribue pas depuis ce module.');
 	return { fields: { fullname, email: email || undefined, groups }, errors };
 }
 

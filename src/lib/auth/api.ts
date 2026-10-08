@@ -8,6 +8,7 @@
  */
 
 import type { APIContext, APIRoute } from 'astro';
+import type { Account } from './accounts.ts';
 import type { SessionUser } from './session.ts';
 
 export function json(data: unknown, status = 200): Response {
@@ -40,8 +41,14 @@ export async function readJson(request: Request): Promise<Record<string, unknown
 }
 
 /** Vue publique d'une personne connectée, renvoyée au navigateur. */
-export function publicUser(user: SessionUser) {
-	return { login: user.login, fullname: user.fullname, email: user.email ?? null, groups: user.groups };
+export function publicUser(user: SessionUser | Account) {
+	return {
+		login: user.login,
+		fullname: user.fullname,
+		email: user.email ?? null,
+		groups: user.groups,
+		mustChangePassword: Boolean(user.mustChangePassword),
+	};
 }
 
 /**

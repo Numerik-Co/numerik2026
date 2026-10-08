@@ -12,7 +12,7 @@
  * bref redémarrage du serveur. L'aperçu du frontmatter est indicatif ; le
  * serveur fait la vraie validation.
  */
-import { computed, inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem, type PublishStatus } from '../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 
@@ -26,14 +26,20 @@ const availability = ref<{ ok: boolean; reason?: string }>({ ok: true });
 const status = ref<PublishStatus>({ state: 'idle' });
 /** Vrai pendant qu'on suit une publication lancée depuis ce module (ou trouvée en cours). */
 const following = ref(false);
-/** Encadré du dernier résultat fermé par l'utilisateur·rice ; réaffiché à la publication suivante. */
-const statusDismissed = ref(false);
-watch(
-	() => status.value.state,
-	(state) => {
-		if (state === 'running') statusDismissed.value = false;
-	},
-);
+/**
+ * Ferme définitivement l'encadré du dernier résultat (pour tout le monde,
+ * cf. `dismissStatus`) ; il reste consultable dans le journal du super admin.
+ */
+async function dismissStatus() {
+	const previous = status.value;
+	status.value = { state: 'idle' };
+	try {
+		await newsApi.dismissStatus();
+	} catch (e) {
+		status.value = previous;
+		fail(e);
+	}
+}
 
 const mdFile = ref<File | null>(null);
 const mdText = ref('');
@@ -359,7 +365,7 @@ onMounted(load);
 		</span>
 	</div>
 	<div
-		v-else-if="status.state === 'succeeded' && !statusDismissed"
+		v-else-if="status.state === 'succeeded'"
 		class="relative mb-4 rounded-xl border border-green-200 bg-green-50 p-4 pr-10 text-sm text-green-800"
 		role="status"
 	>
@@ -368,7 +374,7 @@ onMounted(load);
 			class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
 			aria-label="Fermer ce message"
 			title="Fermer"
-			@click="statusDismissed = true"
+			@click="dismissStatus"
 		>
 			<i class="fa-solid fa-xmark" aria-hidden="true"></i>
 		</button>
@@ -378,7 +384,7 @@ onMounted(load);
 		<span v-if="status.message" class="mt-1 block text-amber-800">{{ status.message }}</span>
 	</div>
 	<p
-		v-else-if="status.state === 'failed' && !statusDismissed"
+		v-else-if="status.state === 'failed'"
 		class="relative mb-4 rounded-xl bg-red-50 p-4 pr-10 text-sm text-red-700"
 		role="alert"
 	>
@@ -387,7 +393,7 @@ onMounted(load);
 			class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 leading-none opacity-60 hover:bg-black/5 hover:opacity-100"
 			aria-label="Fermer ce message"
 			title="Fermer"
-			@click="statusDismissed = true"
+			@click="dismissStatus"
 		>
 			<i class="fa-solid fa-xmark" aria-hidden="true"></i>
 		</button>

@@ -76,7 +76,11 @@ Connexion du bureau, des rédacteur·rice·s et des animateur·rice·s **sans
 base de données**, façon Grav : un YAML par compte dans
 `data/accounts/<login>.yaml` (`DATA_DIR`, volume Docker `./data`), cookie de
 session signé HMAC (`AUTH_SECRET`), groupes `admin` / `animateur` /
-`redacteur` (`src/lib/auth/groups.ts`).
+`redacteur`, plus `superadmin` (`src/lib/auth/groups.ts`) : compte technique
+créé au déploiement (`auth-user init`, mot de passe provisoire imposé —
+`must_change_password`, modale non refermable, `/api/admin/*` bloqué sauf
+`mot-de-passe`), tous les droits + seul à voir le **journal**, invisible et
+intouchable depuis le module « Comptes ».
 
 **Pas de pages d'administration** : tout se superpose au site. Lien
 « Espace bénévoles » du pied de page (`[data-auth-open]`) → modale de
@@ -93,7 +97,13 @@ sous `/api/admin/`).
   connexion ; `GUARDS` réserve des préfixes à des groupes
   (`/api/admin/comptes` → `admin`, `/api/admin/actualites` et
   `/api/admin/publication` → `redacteur`).
-- Modules : Pages réservées, **Actualités**, Comptes ; Mon mot de passe
+- **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
+  `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
+  d'admin et par `site-build.ts` (résultat des publications). Fermer
+  l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
+  Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
+- Modules : Pages réservées, **Actualités**, Comptes, Journal (`exclusive`,
+  `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
 

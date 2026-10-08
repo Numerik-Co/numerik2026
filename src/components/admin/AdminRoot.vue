@@ -10,6 +10,7 @@
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
+import PasswordModule from './modules/PasswordModule.vue';
 import { ApiError, authApi, type AdminUser, type ReservedPage } from './client';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
 import { modulesFor } from './modules';
@@ -27,7 +28,9 @@ const activeId = ref<string | null>(null);
  */
 const isDev = import.meta.env.DEV;
 
-const modules = computed(() => (user.value ? modulesFor(user.value.groups) : []));
+/** Mot de passe provisoire : rien d'autre n'est accessible avant de l'avoir changé. */
+const mustChangePassword = computed(() => Boolean(user.value?.mustChangePassword));
+const modules = computed(() => (user.value && !mustChangePassword.value ? modulesFor(user.value.groups) : []));
 const activeModule = computed(() => modules.value.find((m) => m.id === activeId.value) ?? null);
 const barModules = computed(() => modules.value.filter((m) => m.placement !== 'user'));
 const userModules = computed(() => modules.value.filter((m) => m.placement === 'user'));
@@ -200,6 +203,13 @@ onBeforeUnmount(() => {
 
 	<AdminOverlay v-if="activeModule" :key="activeModule.id" :title="activeModule.label" @close="closeModule">
 		<component :is="activeModule.component" />
+	</AdminOverlay>
+
+	<AdminOverlay v-if="mustChangePassword" title="Choisissez votre mot de passe" variant="modal" :closable="false">
+		<PasswordModule forced @done="reload" />
+		<button type="button" class="mt-4 w-full text-center text-xs text-gray-500 underline hover:text-gray-900" @click="logout">
+			Me déconnecter
+		</button>
 	</AdminOverlay>
 
 	<AdminOverlay v-if="loginOpen && !user" title="Espace Administration" variant="modal" @close="loginOpen = false">
