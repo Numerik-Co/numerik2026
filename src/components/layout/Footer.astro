@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import logo from '../../styles/img/logo_transparent.png';
+import { logo, logoWidth } from '../../lib/site-images';
 import { association, getFullAddress } from '../../lib/association';
 const year = new Date().getFullYear();
 
@@ -26,7 +26,7 @@ const socialLinks = Object.entries(association.social)
 	<div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">
 		<div>
 			<p class="font-heading text-lg">
-				<Image src={logo} alt={association.name} width={420} height={192} class="h-16 w-auto" />
+				<Image src={logo} alt={association.name} width={logoWidth(192)} height={192} class="h-16 w-auto" />
 			</p>
 			<p class="mt-2 text-sm text-white/80">
 				{association.description}

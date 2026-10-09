@@ -222,6 +222,11 @@ contenu hors de `src/content/`.**
   absente si liste vide), `relaisAdhesion` (`relais: true` : cités sur
   `/adherer` et, en prop, dans le récap de `AdhesionForm.vue` — jamais le
   YAML côté visiteur), `avantage` (`**gras**`, `avantageHtml()`).
+- `images/` (pas une collection) — logo (obligatoire), photo d'accueil,
+  favicon(s) de l'asso, retrouvés par `import.meta.glob` (extension libre)
+  dans `src/lib/site-images.ts` (`logo`, `logoWidth()`, `accueilImage`,
+  `favicons`) ; `/favicon.ico` servi par `src/pages/favicon.ico.ts`.
+  `public/` est vide : n'y rien mettre de propre à une asso.
 - `annonces` — `src/content/annonces.yaml` (loader `file()`, liste avec
   `id`) ; `position` ajoutée par le parser du loader pour garder l'ordre du
   fichier. `src/lib/annonces.ts` : `getAnnonces()` (async). Détail :

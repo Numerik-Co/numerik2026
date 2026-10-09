@@ -7,6 +7,7 @@ import Article from '../components/article/Article.astro';
 import { getImage } from 'astro:assets';
 import '../styles/global.css';
 import { association } from '../lib/association';
+import { favicons } from '../lib/site-images';
 
 interface Props {
 	title?: string;
@@ -54,8 +55,7 @@ const ogImage = og ? new URL(og.src, canonicalUrl).href : undefined;
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		{favicons.map((icon) => <link rel="icon" type={icon.type} href={icon.href} />)}
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<title>{title}</title>

@@ -12,7 +12,7 @@ import CtaSection from '../components/sections/CtaSection.astro';
 import PartenairesSection from '../components/sections/PartenairesSection.astro';
 import RdvCtaSection from '../components/sections/RdvCtaSection.astro';
 import TexteSection from '../components/sections/TexteSection.astro';
-import heroImage from '../styles/img/hero-mediation-numerique.jpg';
+import { accueilImage } from '../lib/site-images';
 import { applyPageVariablesText } from '../lib/page-variables';
 import { getSitePage, inactiveSiteHrefs } from '../lib/site-pages-content';
 
@@ -38,7 +38,7 @@ type Overlay = 'white' | 'black' | 'none';
 					primaryHref={link(m['bouton1-lien'])}
 					secondaryLabel={txt(m['bouton2-texte'])}
 					secondaryHref={link(m['bouton2-lien'])}
-					backgroundImage={heroImage}
+					backgroundImage={accueilImage}
 					overlay={m.voile as Overlay}
 				/>
 			)}

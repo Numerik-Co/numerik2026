@@ -67,7 +67,7 @@ src/
 
 À la racine du projet : `.env.example` liste les variables d'environnement attendues (à copier en `.env`, jamais commité). Elles sont déclarées dans `astro.config.mjs` (`astro:env`, lues au démarrage, jamais figées dans `dist/`) — voir [api.md](api.md#variables-denvironnement).
 
-Pas de dossier `src/assets/` ni `public/` actif à ce stade (contenu de démarrage Astro supprimé) ; les images du site vivent à côté de ce qui les utilise (`src/styles/img/` pour le logo, `src/content/news/<slug>/` et `src/content/activites/<slug>/` pour les visuels).
+Pas de dossier `src/assets/` ni `public/` actif à ce stade (contenu de démarrage Astro supprimé) ; les images du site vivent à côté de ce qui les utilise (`src/content/images/` pour le logo, le favicon et la photo d'accueil, cf. [theme.md](theme.md#logo) ; `src/content/news/<slug>/` et `src/content/activites/<slug>/` pour les visuels).
 
 ## Configuration Astro (`astro.config.mjs`)
 

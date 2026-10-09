@@ -47,9 +47,18 @@ Utilisables via les classes `font-heading` et `font-body`.
 
 ## Logo
 
-Le logo est importé directement dans les composants qui l'affichent (`Header.astro`, `Footer.astro`) depuis `src/styles/img/logo_transparent.png`, via le composant `<Image>` d'Astro (`astro:assets`) — ce qui l'optimise et le convertit automatiquement (redimensionnement, conversion WebP) au build.
+Les images propres à l'association vivent dans `src/content/images/` (dossier
+de l'association, jamais remplacé par une mise à jour du modèle), retrouvées
+par `src/lib/site-images.ts` quelle que soit leur extension :
 
-Pour changer de logo : remplacer le fichier `src/styles/img/logo_transparent.png` par le nouveau (même nom, ou mettre à jour l'import dans `Header.astro` et `Footer.astro` si le nom change), en gardant si possible un fond transparent.
+| Fichier | Rôle |
+| --- | --- |
+| `logo.(png\|jpg\|webp\|svg)` | **Obligatoire.** En-tête et pied de page, via `<Image>` (`astro:assets` : redimensionné, converti en WebP au build). Largeur calculée d'après ses proportions (`logoWidth()`) : carré, large ou haut, il n'est ni rogné ni déformé. Fond transparent conseillé. |
+| `accueil.(jpg\|png\|webp)` | Facultatif. Photo de fond du bandeau d'accueil ; absente = bandeau sans photo. |
+| `favicon.(svg\|png\|ico)` | Facultatif, un ou plusieurs formats. Icône de l'onglet (une balise `<link rel="icon">` par fichier) ; `favicon.ico` (ou `.png`) est aussi servi à l'adresse `/favicon.ico` (`src/pages/favicon.ico.ts`). |
+
+Pour changer de logo : remplacer `src/content/images/logo.png` (une autre
+extension convient ; un seul fichier `logo.*`, sinon le build échoue).
 
 ## Styles de base
 

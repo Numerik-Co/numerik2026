@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import logo from '../../styles/img/logo_transparent.png';
+import { logo, logoWidth } from '../../lib/site-images';
 import { association } from '../../lib/association';
 import { getNavTree } from '../../lib/navigation';
 import { site } from '../../config/site';
@@ -16,7 +16,7 @@ const presence = site.presence;
 <header class="sticky top-[var(--admin-bar-h,0px)] z-50 isolate bg-white/90 backdrop-blur">
 	<div class="mx-auto flex max-w-6xl items-center justify-between sm:px-6">
 		<a href="/" class="flex items-center gap-2 font-heading text-xl text-gray-900">
-			<Image src={logo} alt={association.name} width={240} height={96} loading="eager" fetchpriority="high" class="h-16 w-auto" />
+			<Image src={logo} alt={association.name} width={logoWidth(96)} height={96} loading="eager" fetchpriority="high" class="h-16 w-auto" />
 		</a>
 
 		<nav class="hidden items-center gap-8 md:flex">

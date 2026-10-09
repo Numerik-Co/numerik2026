@@ -15,6 +15,7 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | `partenaires.yaml` | Partenaires (cartes de la page Adhérer et de l'accueil), relais d'adhésion, avantages adhérent·e·s (commentaires dans le fichier) |
 | `conseiller-numerique.yaml` | Permanences du·de la Conseiller·ère Numérique : jours, horaires, lieux (planning, prise de RDV, encart d'accueil) |
 | `zones-geographiques.yaml` | Zones proposées à la prise de RDV Conseiller Numérique selon la commune (libellés = choix Grist) |
+| `images/` | Logo (`logo.png`, obligatoire), photo d'accueil (`accueil.jpg`), icône d'onglet (`favicon.svg` / `.ico`) — remplacer le fichier en gardant le nom ; voir `docs/theme.md` |
 | `association.yaml` | Nom, coordonnées, réseaux sociaux et mentions légales de l'association (commentaires dans le fichier) |
 
 Les pages du site (Accueil, Activités, Actualités, Contact) sont fournies par
