@@ -146,13 +146,16 @@ sous `/api/admin/`).
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
-  (`/api/admin/comptes` → `admin`, `/api/admin/actualites`,
+  (`/api/admin/comptes` et `/api/admin/version` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
-  d'admin et par `site-build.ts` (résultat des publications). Fermer
+  d'admin et par `site-build.ts` (résultat des publications).
+- **Badge « Mise à jour X.Y.Z »** (barre, bureau seul) : `GET
+  /api/admin/version` → `src/lib/model-version.ts` (`package.json` construit
+  vs dernière Release GitHub, cache mémoire 6 h, jamais bloquant). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
 - Modules : Pages réservées, **Actualités**, **Pages**, Comptes, Journal (`exclusive`,

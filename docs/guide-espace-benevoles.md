@@ -196,6 +196,12 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - Un badge, juste avant le nom, indique le **mode du serveur** : **Production** (vert, icône serveur) —
   chaque publication reconstruit le site — ou **Développement** (ambre) —
   serveur de test, modifications visibles aussitôt, sans reconstruction.
+- **Bureau seulement** : quand une version plus récente du modèle est
+  publiée, un badge bleu **Mise à jour X.Y.Z** apparaît avant ce badge. Un
+  clic ouvre les nouveautés (Release GitHub) ; la mise à jour se fait sur le
+  serveur avec `./update.sh` ([mise-a-jour.md](mise-a-jour.md)). Simple
+  information : le site fonctionne normalement en attendant. Le survol du
+  badge **Production** indique la version en place.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur

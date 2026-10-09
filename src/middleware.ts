@@ -23,6 +23,7 @@ import { readSession } from './lib/auth/session';
 const GUARDS: { prefix: string; groups: AuthGroup[]; message: string; noAdmin?: true }[] = [
 	{ prefix: '/api/admin/journal', groups: ['superadmin'], message: 'Le journal est réservé au super admin.', noAdmin: true },
 	{ prefix: '/api/admin/comptes', groups: ['admin'], message: 'La gestion des comptes est réservée au bureau.' },
+	{ prefix: '/api/admin/version', groups: ['admin'], message: 'Réservé au bureau.' },
 	{ prefix: '/api/admin/actualites', groups: ['redacteur'], message: 'La publication des actualités est réservée aux rédacteur·rice·s.' },
 	{ prefix: '/api/admin/publication', groups: ['redacteur'], message: 'Réservé aux rédacteur·rice·s.' },
 	{ prefix: '/api/admin/pages', groups: ['redacteur'], message: 'La gestion des pages est réservée aux rédacteur·rice·s.' },

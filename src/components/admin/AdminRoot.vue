@@ -10,7 +10,9 @@
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
-import { ApiError, authApi, type AdminUser, type ReservedPage } from './client';
+import { hasAdminRights } from '../../lib/auth/groups';
+import type { ModelVersionInfo } from '../../lib/model-version';
+import { ApiError, authApi, versionApi, type AdminUser, type ReservedPage } from './client';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
 import { modulesFor } from './modules';
 
@@ -29,6 +31,21 @@ const activeId = ref<string | null>(null);
  * contenu est relu à chaud et les publications ne reconstruisent pas le site.
  */
 const isDev = import.meta.env.DEV;
+
+/**
+ * Version du modèle (bureau seulement) : badge « mise à jour disponible »
+ * quand une version plus récente est publiée (`src/lib/model-version.ts`).
+ * Simple information, jamais bloquante.
+ */
+const version = ref<ModelVersionInfo | null>(null);
+async function loadVersion() {
+	if (!user.value || !hasAdminRights(user.value.groups) || mustChangePassword.value) return;
+	try {
+		version.value = await versionApi.get();
+	} catch {
+		version.value = null;
+	}
+}
 
 /** Mot de passe provisoire : rien d'autre n'est accessible avant de l'avoir changé. */
 const mustChangePassword = computed(() => Boolean(user.value?.mustChangePassword));
@@ -107,6 +124,7 @@ onMounted(async () => {
 	}
 	// `AdminLoader.astro` a pu poser la classe d'avance (indicateur présent) : on la confirme ou on la retire.
 	document.documentElement.classList.toggle('has-admin-bar', Boolean(user.value));
+	void loadVersion();
 	if (props.openOnMount) open();
 	// Rechargement automatique en dev après une publication : on rouvre le module.
 	const reopen = takeModuleToReopen();
@@ -143,6 +161,16 @@ onBeforeUnmount(() => {
 					<span class="hidden sm:inline">{{ m.label }}</span>
 				</button>
 			</nav>
+			<a
+				v-if="version?.updateAvailable"
+				:href="version.url ?? undefined"
+				target="_blank"
+				rel="noopener"
+				class="ml-1 shrink-0 rounded-full bg-sky-400 px-2 py-0.5 text-xs font-semibold text-sky-950 hover:bg-sky-300"
+				:title="`Version ${version.latest} disponible (site en version ${version.current}). Sur le serveur : ./update.sh — cliquer pour voir les nouveautés.`"
+			>
+				<i class="fa-solid fa-circle-arrow-up mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Mise à jour {{ version.latest }}</span><span class="sm:hidden">{{ version.latest }}</span>
+			</a>
 			<span
 				v-if="isDev"
 				class="ml-1 shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-semibold text-amber-950"
@@ -153,7 +181,7 @@ onBeforeUnmount(() => {
 			<span
 				v-else
 				class="ml-1 shrink-0 rounded-full bg-green-400 px-2 py-0.5 text-xs font-semibold text-green-950"
-				title="Serveur de production : chaque publication reconstruit le site."
+				:title="`Serveur de production : chaque publication reconstruit le site.${version ? ` Version ${version.current}.` : ''}`"
 			>
 				<i class="fa-solid fa-server mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Production</span><span class="sm:hidden">Prod.</span>
 			</span>

@@ -152,6 +152,7 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `GET /api/admin/journal` | Journal des modifications, `?annee=AAAA` — `superadmin` seul |
 | `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>` | Pages de contenu (sources), cf. [pages.md](pages.md#module-pages-espace-bénévoles) — `redacteur` |
 | `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>` | Menus déroulants (`_group.md`) — `redacteur` |
+| `GET /api/admin/version` | Version du site et dernière version publiée (badge « mise à jour disponible », cache 6 h) — `admin` |
 | `PATCH/POST/DELETE /api/admin/comptes/<login>` | Modification / réinitialisation du mot de passe / suppression (`{ confirm: <login> }`) — `admin` |
 
 Garde : `src/middleware.ts` — `/api/auth/*` et `/api/admin/*` n'acceptent

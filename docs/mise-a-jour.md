@@ -69,6 +69,10 @@ Suivi : onglet **Actions** du dépôt ; résultat : onglet **Releases** et
 
 ## Mettre à jour un site (association)
 
+Le bureau est prévenu dans l'espace bénévoles : badge **Mise à jour X.Y.Z**
+dans la barre dès qu'une version plus récente est publiée
+(`src/lib/model-version.ts`, vérifié au plus toutes les 6 h).
+
 Dans le dossier du site, sur le serveur :
 
 ```bash

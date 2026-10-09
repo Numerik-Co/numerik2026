@@ -6,6 +6,7 @@
 import type { AuthGroup } from '../../lib/auth/groups';
 import type { Bloc } from '../../lib/blocs';
 import type { HomeModule } from '../../lib/home-modules';
+import type { ModelVersionInfo } from '../../lib/model-version';
 import type { SitePageState } from '../../lib/site-pages';
 
 export interface AdminUser {
@@ -231,6 +232,10 @@ export const dropdownsApi = {
 	update: (folder: string, input: { label: string }) =>
 		request<{ ok: true }>('PUT', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, input),
 	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, { confirm: folder }),
+};
+
+export const versionApi = {
+	get: () => request<ModelVersionInfo>('GET', '/api/admin/version'),
 };
 
 export const journalApi = {
