@@ -6,7 +6,7 @@ directement dans le document Grist **« RDV Conseiller Numérique »** (tables
 `Beneficiaires`, `RDV`, `Demarches`) — aucune saisie à reprendre ensuite.
 
 - **Ouvrir / fermer** la prise de RDV en ligne : `forms.rdvConseillerNumerique.enabled`
-  dans `src/config/site.ts` (`true` = ouvert). Fermé, le formulaire est
+  dans `src/content/reglages.yaml` (`true` = ouvert). Fermé, le formulaire est
   remplacé par un message ; l'encart de la page d'accueil reste affiché mais
   son bouton devient « Voir les permanences ».
 - Chaque étape n'apparaît qu'une fois la précédente validée.
@@ -57,9 +57,9 @@ flowchart TD
 - Le jour même, un créneau qui commence dans **moins de 30 minutes** n'est plus
   proposé.
 - Jours, horaires et lieux des permanences **ne sont pas dans Grist** : ils sont
-  définis dans le code (`conseillerNumerique`, `src/lib/agenda.ts`). Actuellement
-  du lundi au vendredi, 9 h – 12 h, à l'Ancienne mairie (le mercredi au
-  Quartier de la Moustey).
+  réglés dans `src/content/conseiller-numerique.yaml` (fichier de
+  l'association, commenté ; lu par `conseillerNumerique`, `src/lib/agenda.ts`).
+  Une permanence par jour au plus, heures piles ou demies.
 
 ### Étape 3 · Vous
 
@@ -88,7 +88,10 @@ Deux choix, pour **ne pas créer de doublons** dans `Beneficiaires` :
 ### Étape 4 · Profil *(premier rendez-vous uniquement, facultatif)*
 
 - **Commune** avec autocomplétion ; l'**origine géographique** est déduite
-  de la commune (modifiable).
+  de la commune (modifiable). Zones, communes et code postal de repli :
+  `src/content/zones-geographiques.yaml` (fichier de l'association ; chaque
+  `label` = un choix de la colonne Grist `Zone_geographique`). Liste vide =
+  question non posée.
 - **Tranche d'âge** et **statut**.
 - Ces informations servent aux statistiques du dispositif (valeurs alignées sur
   le CRA de la Coop de la médiation numérique).
@@ -153,7 +156,8 @@ orientation, notes…) : ces colonnes ne sont jamais écrites par le site.
 | Fichier | Rôle |
 | :--- | :--- |
 | `grist.ts` | Tables et colonnes du document Grist — **seul endroit à modifier** si le schéma change |
-| `choices.ts` | Valeurs des listes de choix (genre, tranche d'âge, statut, thématiques, zones, statuts de RDV) |
+| `choices.ts` | Valeurs des listes de choix (genre, tranche d'âge, statut, thématiques, statuts de RDV) |
+| `zones.ts` / `geographie.ts` | Zones lues dans `src/content/zones-geographiques.yaml` (serveur, passées en prop à `RdvForm.vue`, revalidées par `/api/rdv/prendre`) / `deduireZone(zones, commune, cp)` sans dépendance, partagée avec l'îlot |
 | `demarches.ts` | Lecture du catalogue `Demarches` |
 | `creneaux.ts` | Créneaux de 30 min dérivés de `conseillerNumerique`, fenêtre de 21 jours, créneaux pris |
 | `beneficiaires.ts` | Création / rapprochement (e-mail ou téléphone), recherche prénom + nom, contrôle de la fiche choisie |

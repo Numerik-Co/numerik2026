@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ─────────────────────────────────────────────────────────────
-# Étape 1 — build : installe les deps et génère dist/
+# Étape 1 — dépendances (dont les outils de build) + sources
 # ─────────────────────────────────────────────────────────────
 FROM node:22-slim AS build
 WORKDIR /app
@@ -10,9 +10,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Sources + build Astro (adaptateur node, mode standalone)
+# Sources. Pas de `npm run build` ici : l'image est la même pour toutes les
+# associations, le site est construit AU DÉMARRAGE par scripts/start.mjs avec
+# le contenu (volume src/content) et le SITE_URL (.env) du déploiement, puis
+# seulement quand l'un d'eux ou la version change (cf. docs/mise-a-jour.md).
 COPY . .
-RUN npm run build
 
 # ─────────────────────────────────────────────────────────────
 # Étape 2 — runtime : n'embarque que ce qu'il faut pour servir
@@ -25,8 +27,7 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-# Tout le projet construit : le serveur (dist/) MAIS AUSSI les sources et
-# les outils de build (node_modules complet). Indispensable pour publier
+# Tout le projet : les sources ET les outils de build (node_modules complet). Indispensable pour publier
 # depuis l'espace bénévoles : le conteneur reconstruit lui-même le site après
 # l'ajout d'une actualité (cf. docs/publication.md). src/content/ est monté
 # depuis le VPS (docker-compose.yml) pour que ce contenu survive aux
@@ -35,5 +36,6 @@ COPY --from=build /app ./
 
 EXPOSE 4321
 
-# @astrojs/node standalone : ce serveur sert AUSSI les fichiers statiques de dist/client
-CMD ["node", "./dist/server/entry.mjs"]
+# Construit le site si besoin, puis lance le serveur @astrojs/node (standalone :
+# il sert AUSSI les fichiers statiques de dist/client).
+CMD ["node", "scripts/start.mjs"]

@@ -247,19 +247,20 @@ import { association } from '../lib/association';
 ```astro
 ---
 import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro';
+import { conseillerNumerique } from '../lib/agenda';
 ---
 
-<WeeklyAgenda showHeading={false} />
+<WeeklyAgenda sessions={conseillerNumerique} showHeading={false} />
 ```
 
-Sans `sessions`, c'est le planning figé de secours (`weeklyAgenda`) ;
-`/activites` passe les créneaux lus dans Grist. Props : `sessions`,
-`showHeading`, `title`, `description`, `showLegend`, `startHour`, `endHour`,
-`class`.
+`sessions` est obligatoire (plus de planning figé) ; `/activites` passe les
+permanences + les créneaux lus dans Grist. Props : `sessions`, `notice`
+(avertissement au-dessus de la grille), `showHeading`, `title`,
+`description`, `showLegend`, `startHour`, `endHour`, `class`.
 
 ### Formulaire ouvert / fermé
 
-1. Déclarer la clé dans `site.forms` (`src/config/site.ts`) :
+1. Déclarer la clé et ses valeurs par défaut dans `DEFAULTS.forms` (`src/config/site.ts`) ; chaque asso peut ensuite l'ouvrir/fermer dans `src/content/reglages.yaml` :
 
 ```ts
 forms: {

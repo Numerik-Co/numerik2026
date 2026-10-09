@@ -1,0 +1,151 @@
+# Intégration continue : à chaque envoi sur GitHub (branches master et DEV)
+# et à chaque pull request, vérifie que le site se construit — sans rien
+# déployer. Une croix rouge sur GitHub = ne pas déployer cette version.
+# Détail : docs/ci.md.
+
+name: CI
+
+on:
+  push:
+    branches: [master, DEV]
+  pull_request:
+  # Bouton « Run workflow » dans l'onglet Actions de GitHub.
+  workflow_dispatch:
+  # Réutilisée telle quelle par la publication d'une version (release.yml).
+  workflow_call:
+
+# Un nouvel envoi sur la même branche annule la vérification en cours.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    name: Vérification et construction du site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Adresse fictive : la vraie (SITE_URL) n'est connue que des serveurs.
+      SITE_URL: https://www.exemple.org
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Même version majeure que l'image Docker (node:22-slim).
+          node-version: 22
+          cache: npm
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Vérification du code (types, composants Astro et Vue)
+        run: npx astro check
+
+      - name: Construction du site
+        run: npm run build
+        env:
+          # Valeurs « témoins » : si l'une d'elles se retrouve dans dist/, un
+          # secret serait figé dans le build (import.meta.env au lieu de
+          # astro:env/server, cf. astro.config.mjs) — l'étape suivante échoue.
+          GRIST_API_KEY: temoin-ci-grist-api-key
+          AUTH_SECRET: temoin-ci-auth-secret-0123456789abcdef
+          BULLETIN_SECRET: temoin-ci-bulletin-secret
+          GOTENBERG_PASSWORD: temoin-ci-gotenberg-password
+
+      - name: Contrôle — aucun secret figé dans le site construit
+        run: |
+          if grep -rIl "temoin-ci-" dist; then
+            echo "::error::Une valeur secrète a été recopiée dans dist/ (fichiers ci-dessus) : la lire via astro:env/server, jamais import.meta.env."
+            exit 1
+          fi
+          echo "Aucun secret dans dist/."
+
+  docker:
+    name: Image Docker (construction et démarrage)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: docker build
+        run: docker build -t numerik2026:ci .
+
+      - name: Démarrage du conteneur (construction du site au démarrage)
+        # Comme sur un serveur : le site est construit par scripts/start.mjs au
+        # premier démarrage, puis servi. On attend la réponse de la page
+        # d'accueil (5 min au plus), sinon on affiche les logs et on échoue.
+        run: |
+          docker run -d --name site -p 4321:4321 -e SITE_URL=https://www.exemple.org numerik2026:ci
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://127.0.0.1:4321/; then
+              echo "Le site répond."
+              docker logs site 2>&1 | grep "\[démarrage\]"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Le conteneur ne répond pas après 5 minutes."
+          docker logs site
+          exit 1
+
+  mise-a-jour-docker:
+    name: Mise à jour Docker (update.sh)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      IMAGE: ghcr.io/numerik-co/numerik2026
+    steps:
+      - uses: actions/checkout@v4
+
+      # Trois versions fabriquées localement à partir du même code :
+      # 0.0.1 (en ligne au départ), 0.0.2 (mise à jour) et 0.0.3 (cassée).
+      - name: Images 0.0.1, 0.0.2 et 0.0.3 (cassée)
+        run: |
+          docker build -q -t $IMAGE:0.0.1 .
+          for v in 0.0.2 0.0.3; do
+            rm -rf /tmp/v && mkdir /tmp/v && git archive HEAD | tar -x -C /tmp/v
+            node -e "for (const f of ['package.json','package-lock.json']) { const p='/tmp/v/'+f, j=require(p); j.version='$v'; if (j.packages) j.packages[''].version='$v'; require('fs').writeFileSync(p, JSON.stringify(j, null, 2)+'\n'); }"
+            [ "$v" = 0.0.3 ] && echo "export const casse = ;" >> /tmp/v/src/lib/association.ts
+            docker build -q -t $IMAGE:$v /tmp/v
+          done
+
+      - name: Site en ligne en version 0.0.1
+        run: |
+          mkdir -p data
+          printf 'SITE_URL=https://www.exemple.org\nNUMERIK_VERSION=0.0.1\n' > .env
+          docker compose up -d --no-build web
+          curl -fsS --retry 60 --retry-all-errors --retry-delay 5 -o /dev/null http://127.0.0.1:4321/
+          docker compose logs web | grep "\[démarrage\]"
+
+      - name: ./update.sh v0.0.2 (site sondé pendant la mise à jour)
+        run: |
+          # `|| true` : bash -e arrêterait la sonde au premier refus (code 000).
+          ( while true; do curl -s -o /dev/null -w "%{http_code}\n" --max-time 2 http://127.0.0.1:4321/ >> sonde.log || true; sleep 0.5; done ) &
+          SONDE=$!
+          ./update.sh v0.0.2 --docker --no-pull
+          kill $SONDE || true
+          echo "Réponses du site pendant la mise à jour :"; sort sonde.log | uniq -c
+          docker compose logs web | grep "\[démarrage\]"
+          docker compose ps --format '{{.Image}}' web | grep -q ':0.0.2$'
+          grep -q '^NUMERIK_VERSION=0.0.2$' .env
+          # Bascule sans reconstruction : coupure de quelques secondes au plus.
+          echecs=$(grep -vc '^200$' sonde.log || true)
+          [ "$echecs" -le 30 ] || { echo "::error::Site indisponible $echecs × 0,5 s pendant la bascule."; exit 1; }
+
+      - name: ./update.sh v0.0.3 (cassée) → refusée, site inchangé
+        run: |
+          if ./update.sh v0.0.3 --docker --no-pull; then
+            echo "::error::La version cassée aurait dû être refusée."; exit 1
+          fi
+          grep -q '^NUMERIK_VERSION=0.0.2$' .env
+          docker compose ps --format '{{.Image}}' web | grep -q ':0.0.2$'
+          curl -fsS -o /dev/null http://127.0.0.1:4321/
+          echo "Version cassée refusée, site toujours en 0.0.2."
+
+      - name: Journal du conteneur (en cas d'échec)
+        if: failure()
+        run: docker compose logs web

@@ -4,6 +4,7 @@ import PageHeader from '../components/sections/PageHeader.astro';
 import FormGate from '../components/forms/FormGate.astro';
 import RdvForm from '../components/rdv/RdvForm.vue';
 import { association } from '../lib/association';
+import { zonesGeographiques } from '../lib/rdv/zones';
 ---
 
 <Layout
@@ -18,6 +19,6 @@ import { association } from '../lib/association';
 	/>
 
 	<FormGate form="rdvConseillerNumerique">
-		<RdvForm client:load />
+		<RdvForm client:load zones={zonesGeographiques} />
 	</FormGate>
 </Layout>

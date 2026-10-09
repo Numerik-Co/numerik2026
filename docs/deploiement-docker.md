@@ -67,6 +67,13 @@ Les clés Grist (`GRIST_API_KEY`…) **ne doivent pas** être copiées dans l'im
 - stockées dans un fichier `.env` **présent sur le VPS uniquement**, hors dépôt
   Git (déjà dans `.gitignore`).
 
+L'image ne contient **aucun site construit** : elle est la même pour toutes
+les associations. Au démarrage du conteneur, `scripts/start.mjs` construit le
+site avec le contenu monté (`./src/content`) et `SITE_URL` (`.env`), puis
+seulement quand l'un d'eux ou la version change (cf.
+[mise-a-jour.md](mise-a-jour.md)). Premier démarrage : compter une à
+quelques minutes avant que le site réponde (`docker compose logs -f`).
+
 ### Bulletin PDF : instance Gotenberg (optionnel)
 
 Le bulletin d'adhésion en PDF ([bulletin-pdf.md](bulletin-pdf.md)) a besoin d'une
@@ -121,7 +128,7 @@ cd numerik2026
 
 # 2. Créer le .env (secrets Grist) — NE PAS commiter
 cp .env.example .env
-nano .env       # renseigner GRIST_BASE_URL / GRIST_DOC_ID / GRIST_API_KEY
+nano .env       # renseigner SITE_URL (obligatoire) puis GRIST_BASE_URL / GRIST_DOC_ID / GRIST_API_KEY
 
 # 3. Construire et démarrer
 docker compose up -d --build

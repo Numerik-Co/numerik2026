@@ -33,20 +33,32 @@ export default defineConfig({
 
 En développement (`astro dev`), tout fonctionne de façon transparente. En production sur un VPS/serveur dédié (OVH ou autre) :
 
-1. `npm run build` — génère `dist/server/entry.mjs` (le serveur Node) en plus des fichiers statiques (`dist/client/`). Le build n'a **pas besoin** du `.env` et n'en recopie rien (voir plus bas).
-2. Lancer ce serveur en continu avec un process manager. `npm start` lance `node --env-file-if-exists=.env dist/server/entry.mjs` : le `.env` est lu **au démarrage** (ex. PM2 : `pm2 start npm --name numerik2026 -- start`).
+1. Lancer le serveur en continu avec un process manager : `npm start`
+   (= `node --env-file-if-exists=.env scripts/start.mjs`, ex. PM2 :
+   `pm2 start npm --name numerik2026 -- start`). Le `.env` est lu **au
+   démarrage**. `scripts/start.mjs` construit d'abord le site (`npm run build`
+   → `dist/server/entry.mjs` + `dist/client/`) s'il n'existe pas ou si la
+   version, `SITE_URL` ou `src/content/` ont changé depuis le dernier build
+   (empreinte `dist/build-info.json`, cf. [mise-a-jour.md](mise-a-jour.md)),
+   puis lance le serveur. Le build ne recopie aucun secret (voir plus bas).
 3. Mettre nginx/Apache en reverse proxy devant, avec le vrai nom de domaine.
 4. Définir les variables d'environnement (voir plus bas) directement sur le serveur — jamais dans les fichiers commités. Après une modification du `.env`, **redémarrer** le serveur suffit : pas de rebuild.
 
 ## Variables d'environnement
 
-Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner. Toutes
+Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner.
+**`SITE_URL`** (adresse publique, ex. `https://www.mon-asso.fr`) est
+**obligatoire pour construire** et lue **à la construction**
+(`astro.config.mjs`, via `loadEnv` : `.env` ou environnement) ; la changer
+puis redémarrer suffit : `scripts/start.mjs` détecte le changement et
+reconstruit. Toutes les autres
 sont **facultatives** : une fonction non configurée se désactive proprement
 (formulaires Grist en erreur gérée, bulletin PDF masqué, connexion « non
 configurée »), le reste du site fonctionne.
 
 | Variable | Rôle |
 | :--- | :--- |
+| `SITE_URL` | Adresse publique du site — **obligatoire**, lue à la construction (`site`, `security.allowedDomains`) |
 | `GRIST_BASE_URL` | URL de l'instance Grist (ex. `https://grist.exemple.org`) |
 | `GRIST_DOC_ID` | Identifiant du document Grist contenant les tables d'adhésion |
 | `GRIST_API_KEY` | Clé API Grist — **secret**, ne doit exister que dans `.env` côté serveur |
@@ -95,7 +107,7 @@ Nouvelle variable : l'ajouter à `env.schema` (`astro.config.mjs`) et à
 
 `src/pages/adherer/formulaire.astro` monte l'îlot `src/components/adhesion/AdhesionForm.vue` en `client:load`, entouré de `<FormGate form="adhesion">`. Deux parcours (**Nouveau membre** / **Renouvellement**) et un déroulé : identité → cotisation → *(membres du groupe si cotisation multiple)* → activité → récapitulatif, chaque étape n'étant révélée qu'après le retour de la précédente. En **renouvellement**, l'étape 1 marque une pause « confirmation de la fiche + préférences » (cases `newsletter` / `droitImage` pré-cochées, écrites via `/api/adhesion/preferences`) ; si `Membres.Adhesion_en_cours` est vrai, la cotisation est **sautée** et on passe directement à l'activité (permet à un membre à jour de s'inscrire à une nouvelle activité).
 
-**Fermer les adhésions en ligne** : passer `site.forms.adhesion.enabled` à `false` dans `src/config/site.ts`. Le formulaire est alors remplacé par le message `closedTitle` / `closedMessage`, et le bouton « Adhérer en ligne » de `src/pages/adherer.astro` disparaît (`isFormOpen('adhesion')`). Voir [composants.md](composants.md#forms) pour le mécanisme `FormGate`.
+**Fermer les adhésions en ligne** : passer `site.forms.adhesion.enabled` à `false` dans `src/content/reglages.yaml`. Le formulaire est alors remplacé par le message `closedTitle` / `closedMessage`, et le bouton « Adhérer en ligne » de `src/pages/adherer.astro` disparaît (`isFormOpen('adhesion')`). Voir [composants.md](composants.md#forms) pour le mécanisme `FormGate`.
 
 | Composant | Rôle |
 | :--- | :--- |
@@ -155,14 +167,16 @@ encadrant·e·s) — pas de table séparée : seules les lignes `Publiee = true`
 de la **saison en cours** sont retenues, et celles sans `Categorie_agenda`
 valide (colonne pas encore renseignée) sont ignorées.
 
-Les permanences du·de la **Conseiller·ère Numérique** restent générées en dur par
-`conseillerNumerique` (`src/lib/agenda.ts`) — dispositif géré à part de la
+Les permanences du·de la **Conseiller·ère Numérique** viennent de
+`src/content/conseiller-numerique.yaml` (`conseillerNumerique`,
+`src/lib/agenda.ts`) — dispositif géré à part de la
 programmation de l'association, jamais dans `Activite`. La page les
 recombine : `[...conseillerNumerique, ...(await fetchPlanningAgenda())]`.
 
-Si Grist est injoignable, la page se rabat sur `weeklyAgenda` (le planning
-en dur, désormais un simple filet de sécurité — plus la source affichée en
-fonctionnement normal).
+Si Grist est injoignable (ou non configuré), la page n'affiche que les
+permanences du Conseiller Numérique, avec un avertissement « planning
+momentanément indisponible » (prop `notice` de `WeeklyAgenda`). Plus de
+planning figé de secours : il devenait faux sans que personne le voie.
 
 Colonnes du planning sur `Activite` (mapping `COLS.activite` dans
 `src/lib/adhesion/grist.ts`), en plus de celles déjà utilisées par

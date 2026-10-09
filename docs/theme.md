@@ -12,7 +12,26 @@ Tout le thème visuel part d'un seul fichier : **`src/styles/global.css`**.
 }
 ```
 
-Pour changer une couleur de marque, modifier ces 3 valeurs hexadécimales : tout le site (boutons, liens, bandeaux, pastilles de catégorie) se met à jour automatiquement.
+Ce sont les couleurs **par défaut du modèle**. Chaque association règle les
+siennes dans `src/content/reglages.yaml` :
+
+```yaml
+colors:
+  primary: '#2f7fc1'
+  secondary: '#1fa39e'
+  accent: '#7cb93f'
+  stripe: ['#4b4a9e', '#2f7fc1', '#1fa39e', '#7cb93f', '#e8b830', '#e2792f']  # bande sous l'en-tête
+```
+
+Les layouts injectent ces valeurs dans `<head>` (`themeCss`,
+`src/config/site.ts`) : elles remplacent celles de `@theme`, et tout le site
+suit (boutons, liens, bandeaux, pastilles, calendrier RDV, bordures de
+l'agenda). Tailwind compile les classes avec `var(--color-…)` ; pour les
+opacités (`bg-primary/10`), il ajoute une valeur figée de repli utilisée
+seulement par les navigateurs sans `color-mix()` (antérieurs à 2023).
+Dans le code, ne jamais recopier une couleur en hexadécimal : utiliser
+`var(--color-primary)` ou une classe Tailwind. Les valeurs de `@theme`
+restent alignées sur `DEFAULTS.colors`.
 
 Ces couleurs sont utilisables partout dans le code via les classes Tailwind générées automatiquement : `bg-primary`, `text-secondary`, `border-accent`, `from-primary`, `to-secondary`, etc. (y compris avec opacité : `bg-primary/10`).
 
@@ -47,9 +66,18 @@ Utilisables via les classes `font-heading` et `font-body`.
 
 ## Logo
 
-Le logo est importé directement dans les composants qui l'affichent (`Header.astro`, `Footer.astro`) depuis `src/styles/img/logo_transparent.png`, via le composant `<Image>` d'Astro (`astro:assets`) — ce qui l'optimise et le convertit automatiquement (redimensionnement, conversion WebP) au build.
+Les images propres à l'association vivent dans `src/content/images/` (dossier
+de l'association, jamais remplacé par une mise à jour du modèle), retrouvées
+par `src/lib/site-images.ts` quelle que soit leur extension :
 
-Pour changer de logo : remplacer le fichier `src/styles/img/logo_transparent.png` par le nouveau (même nom, ou mettre à jour l'import dans `Header.astro` et `Footer.astro` si le nom change), en gardant si possible un fond transparent.
+| Fichier | Rôle |
+| --- | --- |
+| `logo.(png\|jpg\|webp\|svg)` | **Obligatoire.** En-tête et pied de page, via `<Image>` (`astro:assets` : redimensionné, converti en WebP au build). Largeur calculée d'après ses proportions (`logoWidth()`) : carré, large ou haut, il n'est ni rogné ni déformé. Fond transparent conseillé. |
+| `accueil.(jpg\|png\|webp)` | Facultatif. Photo de fond du bandeau d'accueil ; absente = bandeau sans photo. |
+| `favicon.(svg\|png\|ico)` | Facultatif, un ou plusieurs formats. Icône de l'onglet (une balise `<link rel="icon">` par fichier) ; `favicon.ico` (ou `.png`) est aussi servi à l'adresse `/favicon.ico` (`src/pages/favicon.ico.ts`). |
+
+Pour changer de logo : remplacer `src/content/images/logo.png` (une autre
+extension convient ; un seul fichier `logo.*`, sinon le build échoue).
 
 ## Styles de base
 

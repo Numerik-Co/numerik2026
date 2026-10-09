@@ -132,7 +132,7 @@ Il est **masqué** :
   champ, le bouton est affiché.
 
 - **partout** : quand le formulaire est fermé dans `site.forms.inscription`
-  (`src/config/site.ts`, voir plus bas).
+  (`src/content/reglages.yaml`, voir plus bas).
 
 ### Présélection
 
@@ -170,16 +170,14 @@ formulaire »).
 
 ## Ouvrir / fermer les inscriptions en ligne
 
-Dans `src/config/site.ts` :
+Dans `src/content/reglages.yaml` (valeurs par défaut : `src/config/site.ts`) :
 
-```ts
-forms: {
-	inscription: {
-		enabled: true,
-		closedTitle: 'Inscriptions en ligne momentanément fermées',
-		closedMessage: "Le formulaire d'inscription en ligne n'est pas ouvert actuellement. …",
-	},
-},
+```yaml
+forms:
+  inscription:
+    enabled: true
+    closedTitle: 'Inscriptions en ligne momentanément fermées'
+    closedMessage: "Le formulaire d'inscription en ligne n'est pas ouvert actuellement. …"
 ```
 
 `enabled: false` :

@@ -8,14 +8,14 @@ import type {
 	STATUT_BENEFICIAIRE_CHOICES,
 	THEMATIQUE_CHOICES,
 	TRANCHE_AGE_CHOICES,
-	ZONE_GEOGRAPHIQUE_CHOICES,
 } from './choices';
 
 export type Genre = (typeof GENRE_CHOICES)[number];
 export type TrancheAge = (typeof TRANCHE_AGE_CHOICES)[number];
 export type StatutBeneficiaire = (typeof STATUT_BENEFICIAIRE_CHOICES)[number];
 export type Thematique = (typeof THEMATIQUE_CHOICES)[number];
-export type ZoneGeographique = (typeof ZONE_GEOGRAPHIQUE_CHOICES)[number];
+/** Libellé d'une zone de `src/content/zones-geographiques.yaml` (= choix Grist `Zone_geographique`). */
+export type ZoneGeographique = string;
 
 /** Suggestion de l'autocomplétion de commune (API Adresse, `type=municipality`). */
 export interface CommuneSuggestion {

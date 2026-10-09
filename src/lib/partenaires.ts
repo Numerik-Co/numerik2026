@@ -1,33 +1,65 @@
-export interface Partenaire {
-	name: string;
-	role: string;
-	url?: string;
+/**
+ * Partenaires de l'association, propres à chaque déploiement : lus dans
+ * `src/content/partenaires.yaml` (fichier de l'association, jamais remplacé
+ * par une mise à jour du modèle). Même principe que `association.ts` (`?raw`,
+ * validation au chargement, lecture synchrone).
+ *
+ * Module serveur : l'îlot Vue de l'adhésion reçoit les noms des relais en
+ * prop (`relaisAdhesion`), pour ne pas embarquer le parseur YAML côté visiteur.
+ */
+
+import { z } from 'astro/zod';
+import { parse as parseYaml } from 'yaml';
+import raw from '../content/partenaires.yaml?raw';
+
+const text = z.string({ error: 'champ obligatoire' }).trim().min(1, 'champ obligatoire');
+const optional = z
+	.string({ error: 'texte attendu' })
+	.trim()
+	.nullish()
+	.transform((v) => v || undefined);
+
+const schema = z.strictObject({
+	partenaires: z
+		.array(
+			z.strictObject({
+				name: text,
+				role: text,
+				url: z.url({ error: 'adresse web invalide (https://…)' }).nullish().transform((v) => v || undefined),
+				relais: z.boolean({ error: 'true ou false attendu' }).default(false),
+				avantage: optional,
+			}),
+		)
+		.nullish()
+		.transform((v) => v ?? []),
+});
+
+export type Partenaire = z.infer<typeof schema>['partenaires'][number];
+
+function load(): Partenaire[] {
+	const result = schema.safeParse(parseYaml(raw) ?? {});
+	if (result.success) return result.data.partenaires;
+	const details = result.error.issues
+		.map((i) => {
+			const [, index, ...field] = i.path;
+			const where = typeof index === 'number' ? `partenaire n°${index + 1}${field.length ? ` · ${field.join('.')}` : ''}` : i.path.join('.') || '(fichier)';
+			const message = i.code === 'unrecognized_keys' ? `clé inconnue « ${i.keys.join(' », « ')} »` : i.message;
+			return `  - ${where} : ${message}`;
+		})
+		.join('\n');
+	throw new Error(`src/content/partenaires.yaml invalide :\n${details}`);
 }
 
-// Partenaires listés sur la plaquette de présentation 2025-2026.
-export const partenaires: Partenaire[] = [
-	{
-		name: 'Mairie de Saint-Pierre-du-Mont',
-		role: "Co-porte le poste de conseiller·ère numérique et soutient l'inclusion numérique sur la commune.",
-	},
-	{
-		name: "ALPI — Agence Landaise Pour l'Informatique",
-		role: "Coordonne le réseau des conseiller·ère·s numériques et le portail landais de l'inclusion numérique.",
-	},
-	{
-		name: 'Informatique40',
-		role: "Partenaire principal : 5 % de remise sur le matériel neuf et 10 % sur les consommables pour les adhérent·e·s.",
-	},
-	{
-		name: "La Ligue de l'enseignement — Fédération des Landes",
-		role: "Réseau d'éducation populaire auquel l'association est affiliée.",
-	},
-	{
-		name: 'Les Francas des Landes',
-		role: "Mouvement d'éducation populaire tourné vers l'enfance et la jeunesse.",
-	},
-	{
-		name: 'Alliance du Numérique',
-		role: "Membre du réseau national des acteurs de la médiation numérique.",
-	},
-];
+export const partenaires = load();
+
+/** Partenaires où l'on retire la fiche d'adhésion et règle sa cotisation (`relais: true`). */
+export const relaisAdhesion = partenaires.filter((p) => p.relais).map((p) => p.name);
+
+function escapeHtml(t: string): string {
+	return t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+}
+
+/** `**texte**` → gras ; tout le reste échappé (à rendre avec `set:html`). */
+export function avantageHtml(avantage: string): string {
+	return escapeHtml(avantage).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}

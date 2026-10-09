@@ -7,9 +7,8 @@ import {
 	GENRE_CHOICES,
 	STATUT_BENEFICIAIRE_CHOICES,
 	TRANCHE_AGE_CHOICES,
-	ZONE_GEOGRAPHIQUE_CHOICES,
 } from '../../lib/rdv/choices';
-import { deduireZone } from '../../lib/rdv/geographie';
+import { deduireZone, type ZoneGeographiqueConfig } from '../../lib/rdv/geographie';
 import { validatePriseRdv, hasErrors } from '../../lib/rdv/validation';
 import type {
 	BeneficiaireRecherche,
@@ -21,6 +20,14 @@ import type {
 import { contenuQrCode, documentsDemarches, evenementRdv, type EvenementRdv } from '../../lib/rdv/ics';
 import QRCode from 'qrcode';
 import { rdvApi } from './client';
+
+const props = withDefaults(
+	defineProps<{
+		/** Zones de `src/content/zones-geographiques.yaml` (lues par la page, côté serveur). */
+		zones?: ZoneGeographiqueConfig[];
+	}>(),
+	{ zones: () => [] },
+);
 
 function capitaliser(s: string): string {
 	return s.charAt(0).toUpperCase() + s.slice(1);
@@ -67,7 +74,7 @@ const form = reactive({
 	genre: '' as (typeof GENRE_CHOICES)[number] | '',
 	commune: '',
 	codePostal: '',
-	zoneGeographique: '' as (typeof ZONE_GEOGRAPHIQUE_CHOICES)[number] | '',
+	zoneGeographique: '',
 	trancheAge: '' as (typeof TRANCHE_AGE_CHOICES)[number] | '',
 	statut: '' as (typeof STATUT_BENEFICIAIRE_CHOICES)[number] | '',
 	consentement: false,
@@ -220,7 +227,7 @@ const joursDisponibles = computed(() => {
 });
 
 const marqueurs = computed(() =>
-	[...joursDisponibles.value].map((date) => ({ date: isoToDate(date), type: 'dot' as const, color: '#2f7fc1' })),
+	[...joursDisponibles.value].map((date) => ({ date: isoToDate(date), type: 'dot' as const, color: 'var(--color-primary)' })),
 );
 
 const minDate = computed(() => (creneaux.value.length ? isoToDate(creneaux.value[0].date) : undefined));
@@ -357,7 +364,7 @@ function onCommuneInput() {
 function choisirCommune(s: CommuneSuggestion) {
 	form.commune = s.commune;
 	form.codePostal = s.codePostal;
-	form.zoneGeographique = deduireZone(s.commune, s.codePostal) || form.zoneGeographique;
+	form.zoneGeographique = deduireZone(props.zones, s.commune, s.codePostal) || form.zoneGeographique;
 	communeOuverte.value = false;
 	suggestionsCommune.value = [];
 }
@@ -849,11 +856,11 @@ async function envoyer() {
 						</ul>
 					</div>
 
-					<div v-if="form.commune" class="mt-4">
+					<div v-if="form.commune && props.zones.length" class="mt-4">
 						<label class="text-sm font-medium text-gray-700">Origine géographique</label>
 						<div class="mt-2 flex flex-wrap gap-2">
 							<button
-								v-for="z in ZONE_GEOGRAPHIQUE_CHOICES"
+								v-for="z in props.zones.map((zone) => zone.label)"
 								:key="z"
 								type="button"
 								class="rounded-full border px-4 py-1.5 text-sm transition-colors"
@@ -932,7 +939,7 @@ async function envoyer() {
 <style scoped>
 /* Réaccorde le calendrier (vue-datepicker) sur les couleurs du site — voir src/styles/global.css. */
 .rdv-calendrier {
-	--dp-primary-color: #2f7fc1;
+	--dp-primary-color: var(--color-primary);
 	--dp-primary-text-color: #ffffff;
 	--dp-border-radius: 0.75rem;
 	--dp-cell-border-radius: 0.5rem;

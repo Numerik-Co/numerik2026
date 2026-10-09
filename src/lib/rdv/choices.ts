@@ -58,17 +58,6 @@ export const THEMATIQUE_CHOICES = [
 	'Aide aux démarches administratives',
 ] as const;
 
-/**
- * Origine géographique du bénéficiaire, déduite de la commune (voir
- * `./geographie.ts`) mais modifiable — pas de contrainte système.
- */
-export const ZONE_GEOGRAPHIQUE_CHOICES = [
-	'Saint-Pierre-du-Mont',
-	'Agglo du Marsan',
-	"Commune proche de l'agglo",
-	'Département',
-] as const;
-
 export const STATUT_RDV = {
 	confirme: 'Confirmé',
 	annule: 'Annulé',

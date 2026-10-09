@@ -148,10 +148,11 @@ et de **relever la taille maximale des requêtes** (photos des actualités :
 client_max_body_size 20m;
 ```
 
-Puis `nginx -t && systemctl reload nginx`. Vérifier aussi que le domaine
-public figure dans `security.allowedDomains`
-(`astro.config.mjs`, aujourd'hui `www.clubmicrosaintpierre.fr`). Si le site
-répond aussi sur un autre domaine (sans `www`, autre nom…), l'y ajouter.
+Puis `nginx -t && systemctl reload nginx`. Vérifier aussi que `SITE_URL`
+(`.env`) est bien l'adresse publique du site (ex. `https://www.mon-asso.fr`) :
+c'est le seul domaine accepté pour la connexion. Si le site répond aussi sur
+un autre domaine (sans `www`, autre nom…), le rediriger vers celui-ci dans
+nginx.
 
 ### En local (développement)
 
@@ -496,7 +497,7 @@ déploiement. Détail : [src/content/README.md](../src/content/README.md).
 | « Trop de tentatives » | 5 échecs en 15 min | Attendre 15 min (ou redémarrer le conteneur) |
 | « Ce compte est désactivé » | Désactivé par le bureau | Le réactiver dans **Comptes** |
 | Déconnecté·e sans raison | Mot de passe changé/réinitialisé, compte désactivé, `AUTH_SECRET` changé, 14 jours sans visite | Se reconnecter |
-| « Requête refusée » | Requête venant d'un autre site, ou domaine non prévu | Vérifier le domaine dans `astro.config.mjs` (`security.allowedDomains`) et l'en-tête `X-Forwarded-Host` de nginx |
+| « Requête refusée » | Requête venant d'un autre site, ou domaine non prévu | Vérifier `SITE_URL` dans le `.env` (puis reconstruire) et l'en-tête `X-Forwarded-Host` de nginx |
 | Comptes disparus après un déploiement | Volume `./data` non monté | Vérifier `volumes:` dans `docker-compose.yml`, restaurer la sauvegarde de `data/` |
 | `Cannot find package 'yaml'` en lançant `auth-user.mjs` | `node dist/cli/auth-user.mjs` lancé **sur le VPS, hors du conteneur** (chemin `/opt/…`) | Utiliser `./auth-user.sh …` |
 | `docker` : erreur de permission / config en lecture seule | `DOCKER_CONFIG` non posé (`/root` en lecture seule) | Passer par `./auth-user.sh` ou `./deploy.sh`, ou préfixer par `DOCKER_CONFIG=$PWD/.dockercfg` |

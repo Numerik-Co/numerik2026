@@ -2,48 +2,29 @@
  * Déduction de la zone géographique du bénéficiaire à partir de la commune
  * choisie (autocomplétion API Adresse, cf. `/api/adhesion/adresse`).
  *
- * Communes de Mont-de-Marsan Agglomération au 2026-01-01 (18 communes,
- * Saint-Pierre-du-Mont exclue ici car traitée comme sa propre catégorie —
- * source : data.gouv.fr / Banatic). À ajuster si le périmètre de
- * l'intercommunalité change.
+ * Les zones sont propres à chaque association (`src/content/zones-geographiques.yaml`,
+ * lu côté serveur par `./zones.ts`) et passées en paramètre : ce module reste
+ * sans dépendance, utilisable par l'îlot Vue sans embarquer le YAML.
  */
 
 import { normalize } from '../adhesion/http';
-import { ZONE_GEOGRAPHIQUE_CHOICES } from './choices';
 
-export type ZoneGeographique = (typeof ZONE_GEOGRAPHIQUE_CHOICES)[number];
-
-const SAINT_PIERRE_DU_MONT = 'Saint-Pierre-du-Mont';
-
-const COMMUNES_AGGLO_MARSAN = [
-	'Benquet',
-	'Bostens',
-	'Bougue',
-	'Bretagne-de-Marsan',
-	'Campagne',
-	'Campet-et-Lamolère',
-	'Gaillères',
-	'Geloux',
-	'Laglorieuse',
-	'Lucbardez-et-Bargues',
-	'Mazerolles',
-	'Mont-de-Marsan',
-	'Pouydesseaux',
-	'Saint-Avit',
-	"Saint-Martin-d'Oney",
-	'Saint-Perdon',
-	'Uchacq-et-Parentis',
-];
+/** Une zone proposée au bénéficiaire ; `label` = choix de la colonne Grist `Zone_geographique`. */
+export interface ZoneGeographiqueConfig {
+	label: string;
+	communes: string[];
+	codePostal?: string;
+}
 
 /**
  * Suggestion de zone à partir de la commune (et du code postal en repli) —
  * modifiable ensuite par le bénéficiaire, ne fait jamais foi seule.
  */
-export function deduireZone(commune: string, codePostal?: string): ZoneGeographique | '' {
+export function deduireZone(zones: ZoneGeographiqueConfig[], commune: string, codePostal?: string): string {
 	const c = normalize(commune);
 	if (!c) return '';
-	if (c === normalize(SAINT_PIERRE_DU_MONT)) return 'Saint-Pierre-du-Mont';
-	if (COMMUNES_AGGLO_MARSAN.some((m) => normalize(m) === c)) return 'Agglo du Marsan';
-	if (codePostal?.trim().startsWith('40')) return 'Département';
-	return '';
+	const parCommune = zones.find((z) => z.communes.some((m) => normalize(m) === c));
+	if (parCommune) return parCommune.label;
+	const cp = codePostal?.trim() ?? '';
+	return zones.find((z) => z.codePostal && cp.startsWith(z.codePostal))?.label ?? '';
 }

@@ -6,6 +6,7 @@ import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
 import { association } from '../lib/association';
 import { isFormOpen } from '../lib/forms';
+import { avantageHtml, partenaires, relaisAdhesion } from '../lib/partenaires';
 
 const adhesionEnLigneOuverte = isFormOpen('adhesion');
 
@@ -145,11 +146,12 @@ const activites = [
 						<span>aux conseils et à l'accompagnement de nos animateur·rice·s bénévoles et de notre service civique.</span>
 					</li>
 				</ul>
-				<p class="mt-6 font-light text-gray-600">
-					Auprès de notre partenaire principal <strong>Informatique40</strong>, l'adhésion ouvre
-					aussi droit à <strong>5 %</strong> de remise sur le matériel neuf et <strong>10 %</strong>
-					sur les consommables.
-				</p>
+				{partenaires.filter((p) => p.avantage).map((p) => (
+					<p class="mt-6 font-light text-gray-600">
+						Auprès de notre partenaire <strong>{p.name}</strong>, l'adhésion ouvre aussi droit à{' '}
+						<Fragment set:html={avantageHtml(p.avantage!)} />.
+					</p>
+				))}
 			</div>
 
 			<div>
@@ -162,10 +164,12 @@ const activites = [
 						<i class="fa-solid fa-location-dot mt-1 text-primary" aria-hidden="true"></i>
 						<span>lors de votre venue dans notre salle, pour découvrir nos activités ;</span>
 					</li>
-					<li class="flex gap-2">
-						<i class="fa-solid fa-handshake mt-1 text-primary" aria-hidden="true"></i>
-						<span>auprès de nos partenaires : Mairie de Saint-Pierre-du-Mont, Informatique40 ;</span>
-					</li>
+					{relaisAdhesion.length > 0 && (
+						<li class="flex gap-2">
+							<i class="fa-solid fa-handshake mt-1 text-primary" aria-hidden="true"></i>
+							<span>auprès de {relaisAdhesion.length > 1 ? 'nos partenaires' : 'notre partenaire'} : {relaisAdhesion.join(', ')} ;</span>
+						</li>
+					)}
 					<li class="flex gap-2">
 						<i class="fa-solid fa-envelope mt-1 text-primary" aria-hidden="true"></i>
 						<span>en <a href="/contact" class="text-primary hover:text-secondary">nous contactant</a> directement.</span>

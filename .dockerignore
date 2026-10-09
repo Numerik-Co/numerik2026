@@ -26,3 +26,5 @@ data
 .releases
 .tmp-publication
 src/content/.tmp-publication
+.update
+.dockercfg

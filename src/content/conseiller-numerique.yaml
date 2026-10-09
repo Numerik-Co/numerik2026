@@ -1,0 +1,54 @@
+# =============================================================================
+#  Permanences du·de la Conseiller·ère Numérique
+# =============================================================================
+#
+#  Jours, horaires et lieux des permanences. Ils alimentent :
+#    - le planning de la page Activités ;
+#    - les créneaux de 30 min proposés à la prise de RDV en ligne
+#      (/rdv-conseiller-numerique) ;
+#    - l'encart « Conseiller Numérique » de la page d'accueil.
+#  (Le dispositif est géré à part de la programmation de l'association :
+#  ces permanences ne viennent pas de Grist.)
+#
+#  Ce fichier appartient à l'association : une mise à jour du site ne le
+#  remplace jamais. Une erreur (jour inconnu, horaire mal écrit…) fait
+#  échouer la construction du site avec un message indiquant la ligne.
+#
+#  Champs de chaque permanence :
+#
+#    day       (obligatoire) Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi
+#              ou Dimanche. Une seule permanence par jour.
+#    start     (obligatoire) heure de début, au format 09h00.
+#    end       (obligatoire) heure de fin, au format 12h00.
+#              Heures piles ou demies (09h00, 09h30…), entre 09h00 et 20h00
+#              (bornes du planning).
+#    location  (facultatif) lieu de la permanence.
+#
+#  Pas de Conseiller·ère Numérique : permanences: [] (l'encart de l'accueil
+#  disparaît ; fermez aussi la prise de RDV dans reglages.yaml).
+# =============================================================================
+
+# Intitulé des permanences dans le planning.
+title: 'RDV du·de la Conseiller·ère Numérique'
+
+permanences:
+  - day: Lundi
+    start: '09h00'
+    end: '12h00'
+    location: 'Ancienne mairie'
+  - day: Mardi
+    start: '09h00'
+    end: '12h00'
+    location: 'Ancienne mairie'
+  - day: Mercredi
+    start: '09h00'
+    end: '12h00'
+    location: 'Quartier de la Moustey'
+  - day: Jeudi
+    start: '09h00'
+    end: '12h00'
+    location: 'Ancienne mairie'
+  - day: Vendredi
+    start: '09h00'
+    end: '12h00'
+    location: 'Ancienne mairie'

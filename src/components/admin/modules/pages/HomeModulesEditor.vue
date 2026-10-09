@@ -5,18 +5,23 @@
  * accordéon. Modifie la liste reçue sur place ; l'enregistrement est fait par
  * le formulaire parent (`SitePageForm.vue`).
  */
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { DEFAULT_HOME, HOME_MODULES, homeModuleDef, newHomeModule, type HomeModule, type HomeModuleDef, type HomeModuleType } from '../../../../lib/home-modules';
 import { iconButtonClass, inputClass } from '../../context';
 import BlocFields from './BlocFields.vue';
 
 const props = defineProps<{ modules: HomeModule[] }>();
 
-/** Modules dépliés, par objet (l'index change quand on déplace). */
-const open = ref(new Set<HomeModule>());
-function toggle(m: HomeModule) {
-	if (open.value.has(m)) open.value.delete(m);
-	else open.value.add(m);
+/**
+ * Module déplié, par objet (l'index change quand on déplace) : un seul à la
+ * fois, ouvrir un module referme le précédent.
+ */
+const open = ref<HomeModule | null>(null);
+function toggle(m: HomeModule, event: MouseEvent) {
+	open.value = open.value === m ? null : m;
+	// Refermer un module plus haut décale la liste : garder l'en-tête cliqué en vue.
+	const header = event.currentTarget as HTMLElement;
+	nextTick(() => header.scrollIntoView({ block: 'nearest' }));
 }
 
 const types = Object.entries(HOME_MODULES) as [HomeModuleType, HomeModuleDef][];
@@ -28,7 +33,7 @@ function add() {
 	if (!newType.value) return;
 	const m = newHomeModule(newType.value);
 	props.modules.push(m);
-	open.value.add(props.modules[props.modules.length - 1]);
+	open.value = props.modules[props.modules.length - 1];
 	newType.value = '';
 }
 
@@ -38,12 +43,13 @@ function move(index: number, delta: -1 | 1) {
 }
 
 function remove(index: number) {
-	props.modules.splice(index, 1);
+	const [m] = props.modules.splice(index, 1);
+	if (open.value === m) open.value = null;
 }
 
 function resetHome() {
 	props.modules.splice(0, props.modules.length, ...DEFAULT_HOME.map((m) => ({ ...m })));
-	open.value.clear();
+	open.value = null;
 }
 
 const VARIABLE_EXEMPLE = '{{association.nom}}';
@@ -62,18 +68,18 @@ const summary = (m: HomeModule) => m.titre || '';
 
 		<ol class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200">
 			<li v-for="(m, i) in props.modules" :key="i + m.type">
-				<div :class="['flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100', { 'bg-gray-100': open.has(m) }]">
+				<div :class="['flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100', { 'bg-gray-100': open === m }]">
 					<button
 						type="button"
 						class="flex min-w-0 flex-1 items-center gap-2 text-left"
-						:aria-expanded="open.has(m)"
-						@click="toggle(m)"
+						:aria-expanded="open === m"
+						@click="toggle(m, $event)"
 					>
 						<i :class="['fa-solid', homeModuleDef(m.type).icon, 'w-5 text-center text-primary']" aria-hidden="true"></i>
 						<span class="font-medium text-gray-900">{{ homeModuleDef(m.type).label }}</span>
 						<span class="min-w-0 truncate text-xs font-light text-gray-500">{{ summary(m) }}</span>
 						<i
-							:class="['fa-solid fa-chevron-down ml-auto text-xs text-gray-400 transition-transform', { 'rotate-180': open.has(m) }]"
+							:class="['fa-solid fa-chevron-down ml-auto text-xs text-gray-400 transition-transform', { 'rotate-180': open === m }]"
 							aria-hidden="true"
 						></i>
 					</button>
@@ -109,7 +115,7 @@ const summary = (m: HomeModule) => m.titre || '';
 						</button>
 					</span>
 				</div>
-				<div v-if="open.has(m)" class="border-t border-gray-100 px-4 py-4">
+				<div v-if="open === m" class="border-t border-gray-100 px-4 py-4">
 					<p class="mb-3 text-xs font-light text-gray-500">{{ homeModuleDef(m.type).description }}</p>
 					<BlocFields :fields="homeModuleDef(m.type).fields" :values="m" :id-prefix="`hm-${i}`" />
 				</div>

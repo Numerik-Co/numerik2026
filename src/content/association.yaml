@@ -1,0 +1,50 @@
+# =============================================================================
+#  Informations de l'association
+# =============================================================================
+#
+#  Propres à chaque structure qui déploie le site : nom, coordonnées, mentions
+#  légales. Affichées dans l'en-tête, le pied de page, la page Contact, les
+#  aperçus de partage… et dans le texte des pages via les variables
+#  {{association.nom}}, {{association.email}}… (voir README.md).
+#
+#  Ce fichier appartient à l'association : une mise à jour du site ne le
+#  remplace jamais. Un champ obligatoire manquant ou mal écrit fait échouer la
+#  construction du site avec un message indiquant le champ en cause.
+#
+#  Laissez '' (vide) un champ facultatif inconnu : les pages qui l'utilisent
+#  affichent alors « [À compléter : …] ».
+# =============================================================================
+
+# Nom affiché partout sur le site (obligatoire).
+name: 'NUMERIK&Co'
+
+# Une phrase de présentation : page d'accueil, moteurs de recherche (obligatoire).
+description: "Une association qui accompagne la découverte et l'appropriation du numérique pour toutes et tous."
+
+# Coordonnées de contact (obligatoires).
+email: 'contact@clubmicrosaintpierre.fr'
+phone: '09 51 93 77 06'
+
+# Adresse du siège (obligatoire).
+address:
+  street: '40, impasse Georges Sabde'
+  postalCode: '40280'
+  city: 'Saint-Pierre-du-Mont'
+
+# Réseaux sociaux, en pied de page (facultatif : supprimez la ligne ou laissez
+# '' pour masquer). Possibles : facebook, instagram, linkedin, twitter,
+# youtube, tiktok.
+social:
+  facebook: 'https://www.facebook.com/clubmicrosaintpierre'
+
+# Mentions légales (facultatives).
+legal:
+  registrationNumber: '' # Numéro RNA
+  siretNumber: '' # Numéro SIRET
+  president: 'M. BURKE Xavier'
+  publicationManager: 'M. BURKE Xavier' # Responsable de la publication (souvent le·la président·e)
+  publicationManagerRole: 'M. BURKE Xavier' # Fonction de ce·tte responsable dans l'association
+  hosting: # Hébergeur du site
+    name: ''
+    address: ''
+    phone: ''

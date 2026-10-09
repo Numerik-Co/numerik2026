@@ -1,7 +1,7 @@
 /**
  * Créneaux de RDV avec le Conseiller Numérique : dérivés des blocs
- * `conseillerNumerique` (`src/lib/agenda.ts`, 09h–12h Lundi→Vendredi,
- * jamais dans Grist), découpés en tranches de 30 min fixes — ni le·la
+ * `conseillerNumerique` (`src/lib/agenda.ts`, lu dans
+ * `src/content/conseiller-numerique.yaml`, jamais dans Grist), découpés en tranches de 30 min fixes — ni le·la
  * conseiller·ère ni le bénéficiaire ne peuvent choisir une autre durée.
  *
  * Les créneaux déjà pris (ligne `RDV` non annulée à la même Date+Heure)

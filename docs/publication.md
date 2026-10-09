@@ -42,7 +42,7 @@ Sinon, le module « Actualités » l'indique et le bouton d'ajout est désactiv�
 
 > Lancé à la main (`npm start` dans un terminal), le serveur se relance
 > lui-même après chaque publication, en arrière-plan : il n'est alors plus
-> lié au terminal (Ctrl+C ne l'arrête plus — `pkill -f dist/server/entry.mjs`).
+> lié au terminal (Ctrl+C ne l'arrête plus — `pkill -f scripts/start.mjs`).
 > Un gestionnaire (PM2, systemd `Restart=always`, Docker) reste recommandé en
 > production. `PUBLISH_RESTART=false` désactive tout redémarrage (le nouveau
 > contenu n'est alors servi qu'au prochain redémarrage manuel).

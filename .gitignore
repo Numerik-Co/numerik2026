@@ -1,5 +1,5 @@
 # build output
-dist/
+/dist
 
 # generated types
 .astro/
@@ -36,3 +36,5 @@ pnpm-debug.log*
 /.releases/
 /.tmp-publication/
 /src/content/.tmp-publication/
+/.update/
+/.dockercfg/

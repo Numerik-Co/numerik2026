@@ -8,8 +8,19 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
-Production sans Docker : `npm run build` puis `npm start`
-(`node --env-file-if-exists=.env dist/server/entry.mjs`).
+Mise à jour d'un site : `./update.sh [vX.Y.Z]` (Docker : `NUMERIK_VERSION`
+dans `.env`, construction à côté par `docker compose run` dans le volume
+`.releases`, bascule, vérification, retour arrière ; Node seul :
+`scripts/update.mjs`, sauvegarde `.update/`, code du modèle remplacé hors
+`src/content/`, `data/`, `.env`). `start.mjs` réutilise une version de
+`.releases/` déjà construite avec la même empreinte (`findRelease`) ;
+`pruneReleases` ne supprime jamais la version active.
+Production sans Docker : `npm start`
+(`node --env-file-if-exists=.env scripts/start.mjs` : construit le site si
+l'empreinte version + `SITE_URL` + `src/content/` diffère de
+`dist/build-info.json`, puis lance `dist/server/entry.mjs`). Docker : même
+script (`CMD`), image sans site construit. Versions publiées et mises à jour :
+[docs/mise-a-jour.md](docs/mise-a-jour.md).
 
 ### Variables d'environnement
 
@@ -23,7 +34,10 @@ non configurée se désactive. Changer le `.env` = redémarrer, pas rebuild.
 lire le secret à l'usage avec `getSecret('X')`, pas par import nommé : en
 dev, le middleware est chargé avant le `.env` et l'import vaudrait `undefined`.
 Exception : `DATA_DIR` (`process.env`, `src/lib/data-dir.ts`, partagé avec le
-CLI). Détail : [docs/api.md](docs/api.md#variables-denvironnement).
+CLI). Autre exception, **`SITE_URL`** (domaine public, obligatoire pour
+`build`, sinon `http://localhost:4321`) : lu **à la construction** par
+`astro.config.mjs` (`loadEnv`) pour `site` et `security.allowedDomains` ;
+le changer puis redémarrer suffit (`scripts/start.mjs` reconstruit). Détail : [docs/api.md](docs/api.md#variables-denvironnement).
 
 ## Contenu & navigation
 
@@ -73,9 +87,17 @@ Fonctionnement technique :
 - `src/lib/navigation.ts` — `getNavTree()` fusionne les pages du site actives et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
-- `src/config/site.ts` — seul fichier de config par déploiement : bouton CTA
-  « Adhérer », outils de partage et ouverture/fermeture des formulaires
-  (`site.forms`). Les pages du site se règlent dans l'espace bénévoles.
+- `src/config/site.ts` — réglages du site (couleurs `colors` → `themeCss`
+  injecté dans `<head>` par les deux layouts, remplace les `--color-*` de
+  `@theme` ; jamais de couleur du thème en hexadécimal dans le code :
+  `var(--color-primary)` ou classe Tailwind ; bouton CTA « Adhérer », « Je
+  participe », outils de partage, ouverture/fermeture des formulaires
+  `site.forms`) : `DEFAULTS` du modèle **fusionnés** avec
+  `src/content/reglages.yaml` (propre à l'asso, tout facultatif, clé inconnue
+  = build en échec ; `?raw` + zod, lecture synchrone comme
+  `association.ts`). Nouveau formulaire / outil = une entrée dans `DEFAULTS`
+  (fonctionne sans toucher au YAML des assos). Les pages du site se règlent
+  dans l'espace bénévoles.
 - `src/components/layout/Header.astro` — consomme `getNavTree()` ; markup
   inchangé, structure `{ label, href, children }`.
 
@@ -176,7 +198,7 @@ depuis le VPS. Détail : [docs/publication.md](docs/publication.md).
   sur le VPS `./auth-user.sh add …` (exécute `dist/cli/auth-user.mjs`,
   compilé par `build:cli`, dans le conteneur avec `DOCKER_CONFIG`).
 - `astro.config.mjs` `security.allowedDomains` : indispensable derrière le
-  proxy HTTPS.
+  proxy HTTPS ; tiré de `SITE_URL`, comme `site`.
 
 Détail : [docs/auth.md](docs/auth.md) ; guide déploiement + utilisation
 (à tenir à jour avec chaque nouveau module) :
@@ -203,6 +225,22 @@ contenu hors de `src/content/`.**
   aux slugs de `src/lib/categories.ts`, `cover:` via `image()`.
   `src/lib/activites.ts` : `getAllActivities()`, `getActivitiesByCategory()`,
   `renderActivity()` (async). Détail : [docs/activites.md](docs/activites.md).
+- `association.yaml` (pas une collection) — nom, coordonnées, mentions
+  légales de l'association, fichier propre à chaque déploiement qu'une mise
+  à jour du modèle ne remplace pas. Importé en `?raw` et validé (zod) par
+  `src/lib/association.ts`, lecture **synchrone** voulue (`association` est
+  utilisé partout, jusque dans `content.config.ts` et l'îlot Vue) ; champ
+  invalide = build en échec avec le chemin du champ.
+- `partenaires.yaml` (pas une collection, même principe qu'`association.yaml`)
+  — `src/lib/partenaires.ts` : `partenaires` (cartes `PartenairesSection`,
+  absente si liste vide), `relaisAdhesion` (`relais: true` : cités sur
+  `/adherer` et, en prop, dans le récap de `AdhesionForm.vue` — jamais le
+  YAML côté visiteur), `avantage` (`**gras**`, `avantageHtml()`).
+- `images/` (pas une collection) — logo (obligatoire), photo d'accueil,
+  favicon(s) de l'asso, retrouvés par `import.meta.glob` (extension libre)
+  dans `src/lib/site-images.ts` (`logo`, `logoWidth()`, `accueilImage`,
+  `favicons`) ; `/favicon.ico` servi par `src/pages/favicon.ico.ts`.
+  `public/` est vide : n'y rien mettre de propre à une asso.
 - `annonces` — `src/content/annonces.yaml` (loader `file()`, liste avec
   `id`) ; `position` ajoutée par le parser du loader pour garder l'ordre du
   fichier. `src/lib/annonces.ts` : `getAnnonces()` (async). Détail :
@@ -221,13 +259,14 @@ couleur par famille d'activité.
   `fablab`, `espace-jeune`, `bidouille-repair`, `conseiller-numerique`) un
   libellé, une icône Font Awesome et des classes / hex de couleur ; ajouter
   un `kind` = ajouter une entrée ici. Les permanences du Conseiller
-  Numérique sont générées par le helper exporté `conseillerNumerique`
-  (chaque matin de semaine, lieu variable) — dispositif géré à part de la
-  programmation de l'association, jamais dans Grist. `groupByDay()`
-  regroupe et trie les séances selon `AGENDA_DAYS`. `weeklyAgenda` reste un
-  planning figé en dur : **filet de sécurité uniquement**, utilisé si Grist
-  est injoignable (voir ci-dessous) ou comme valeur par défaut du
-  composant.
+  Numérique (`conseillerNumerique`, exporté) sont lues dans
+  `src/content/conseiller-numerique.yaml` (fichier de l'asso, validé : jours
+  d'`AGENDA_DAYS`, une par jour, heures « 09h00 » piles/demies dans
+  09h–20h ; liste vide = encart `RdvCtaSection` absent) — dispositif géré à
+  part de la programmation de l'association, jamais dans Grist. `groupByDay()`
+  regroupe et trie les séances selon `AGENDA_DAYS`. Plus de planning figé
+  (`weeklyAgenda` supprimé le 2026-10-09) : Grist injoignable = permanences
+  seules + avertissement (`notice`).
 - **Source du planning affiché sur `/activites`** : la table Grist
   `Activite` elle-même (chaque ligne est déjà un créneau précis : jour,
   horaires, lieu, encadrant·e·s), lue à chaque requête par
@@ -240,9 +279,9 @@ couleur par famille d'activité.
   **Modifier le planning = éditer les lignes `Activite` dans Grist**, pas
   le code. Détail des colonnes et du mapping : [docs/api.md](docs/api.md).
 - `src/components/sections/WeeklyAgenda.astro` — le composant.
-  `<WeeklyAgenda />` rend `weeklyAgenda` (le planning en dur) par défaut ;
-  props : `sessions` (jeu de séances personnalisé — c'est ce que passe
-  `/activites` avec les créneaux venus de Grist), `showHeading`, `title`,
+  props : `sessions` (**obligatoire** — `/activites` passe permanences +
+  créneaux venus de Grist), `notice` (avertissement au-dessus de la grille),
+  `showHeading`, `title`,
   `description`, `showLegend`, `startHour` / `endHour` (bornes de l'axe
   horaire, défaut 9 → 20), `alwaysShowDays` (jours affichés même vides,
   défaut lundi → samedi), `class` (utilitaires ajoutés au `<section>`).
@@ -255,8 +294,7 @@ couleur par famille d'activité.
 - Consommé par `src/pages/activites.astro` (`prerender = false`, pour lire
   Grist à chaque requête). Réutilisable ailleurs :
   `import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro'` puis
-  `<WeeklyAgenda showHeading={false} />` (ex. bloc dans une page d'accueil,
-  planning en dur par défaut sauf `sessions` fourni explicitement).
+  `<WeeklyAgenda sessions={…} showHeading={false} />`.
 
 ### Outils de partage (actualités et pages)
 
@@ -348,6 +386,12 @@ seulement) → consentement/envoi.
   quelle, étape 4 profil sautée — la dernière étape s'affiche alors « 4 »).
   Objectif : pas de doublons dans `Beneficiaires`. Les pièces à apporter ne
   sont rappelées qu'après l'envoi (écran de confirmation).
+- Zones géographiques (étape 4) : `src/content/zones-geographiques.yaml`
+  (fichier de l'asso ; `label` = choix Grist `Zone_geographique`, `communes`,
+  `codePostal` de repli), lu par `src/lib/rdv/zones.ts` côté serveur et passé
+  en prop `zones` à `RdvForm.vue` (pas de YAML côté visiteur) ;
+  `deduireZone(zones, …)` (`geographie.ts`) ; `/api/rdv/prendre` revalide
+  par `estZoneConnue()`.
 - `src/lib/rdv/beneficiaires.ts` — premier RDV : rapproche un bénéficiaire
   par **email OU téléphone** (un seul des deux est obligatoire à la saisie,
   jamais aucun — voir `validation.ts` — et le rapprochement ne compare que
@@ -375,6 +419,20 @@ Pistes de suite non traitées (à reprendre si redemandé) :
 3. Vue admin pour lister/annuler des RDV (aujourd'hui uniquement gérable
    depuis Grist directement).
 4. Suppression de `Table1` (table Grist vide créée par défaut, sans impact).
+
+## CI
+
+`.github/workflows/ci.yml` (GitHub Actions, push `master`/`DEV` + PR) :
+`npm ci`, `astro check`, `npm run build` avec `SITE_URL` fictif et secrets
+« témoins » (`temoin-ci-…`, échec s'ils apparaissent dans `dist/`), puis
+`docker build` + démarrage d'un conteneur (site construit au démarrage, doit
+répondre). Ne déploie rien. Détail : [docs/ci.md](docs/ci.md).
+Job `mise-a-jour-docker` : images locales 0.0.1/0.0.2/0.0.3 (cassée),
+`./update.sh` sondé pendant la bascule, version cassée refusée.
+Tag `vX.Y.Z` (créé par `npm version` sur master) →
+`.github/workflows/release.yml` : contrôles du tag, CI (`workflow_call`),
+image `ghcr.io/numerik-co/numerik2026` (`X.Y.Z`, `X.Y`, `latest`), Release
+GitHub avec notes. Détail : [docs/mise-a-jour.md](docs/mise-a-jour.md).
 
 ## Documentation
 

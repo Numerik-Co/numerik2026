@@ -21,6 +21,9 @@
 	font-display: swap;
 }
 
+/* Couleurs par défaut du modèle : chaque association les remplace dans
+   src/content/reglages.yaml (colors), injectées par les layouts (themeCss,
+   src/config/site.ts). Garder ces valeurs alignées sur DEFAULTS.colors. */
 @theme {
 	--color-primary: #2f7fc1;
 	--color-secondary: #1fa39e;

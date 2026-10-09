@@ -13,6 +13,8 @@ const props = defineProps<{
 	montantTotal: number | null;
 	/** Lien vers le bulletin d'adhésion PDF ; `null` si la génération n'est pas configurée. */
 	bulletinHref?: string | null;
+	/** Partenaires où régler sa cotisation (`src/content/partenaires.yaml`). */
+	relaisAdhesion?: string[];
 }>();
 
 const plusieursMembres = computed(
@@ -82,8 +84,9 @@ const emit = defineEmits<{ recommencer: [] }>();
 		</a>
 
 		<p class="mt-4 text-sm text-gray-600">
-			Le règlement se fait sur place lors de votre venue, ou auprès de nos partenaires
-			(Mairie de Saint-Pierre-du-Mont, Informatique40). La cotisation n'est pas remboursable.
+			Le règlement se fait sur place lors de votre venue<template v-if="relaisAdhesion?.length">, ou
+			auprès de {{ relaisAdhesion.length > 1 ? 'nos partenaires' : 'notre partenaire' }}
+			({{ relaisAdhesion.join(', ') }})</template>. La cotisation n'est pas remboursable.
 		</p>
 
 		<button
