@@ -12,7 +12,26 @@ Tout le thème visuel part d'un seul fichier : **`src/styles/global.css`**.
 }
 ```
 
-Pour changer une couleur de marque, modifier ces 3 valeurs hexadécimales : tout le site (boutons, liens, bandeaux, pastilles de catégorie) se met à jour automatiquement.
+Ce sont les couleurs **par défaut du modèle**. Chaque association règle les
+siennes dans `src/content/reglages.yaml` :
+
+```yaml
+colors:
+  primary: '#2f7fc1'
+  secondary: '#1fa39e'
+  accent: '#7cb93f'
+  stripe: ['#4b4a9e', '#2f7fc1', '#1fa39e', '#7cb93f', '#e8b830', '#e2792f']  # bande sous l'en-tête
+```
+
+Les layouts injectent ces valeurs dans `<head>` (`themeCss`,
+`src/config/site.ts`) : elles remplacent celles de `@theme`, et tout le site
+suit (boutons, liens, bandeaux, pastilles, calendrier RDV, bordures de
+l'agenda). Tailwind compile les classes avec `var(--color-…)` ; pour les
+opacités (`bg-primary/10`), il ajoute une valeur figée de repli utilisée
+seulement par les navigateurs sans `color-mix()` (antérieurs à 2023).
+Dans le code, ne jamais recopier une couleur en hexadécimal : utiliser
+`var(--color-primary)` ou une classe Tailwind. Les valeurs de `@theme`
+restent alignées sur `DEFAULTS.colors`.
 
 Ces couleurs sont utilisables partout dans le code via les classes Tailwind générées automatiquement : `bg-primary`, `text-secondary`, `border-accent`, `from-primary`, `to-secondary`, etc. (y compris avec opacité : `bg-primary/10`).
 

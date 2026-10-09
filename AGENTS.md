@@ -76,7 +76,10 @@ Fonctionnement technique :
 - `src/lib/navigation.ts` — `getNavTree()` fusionne les pages du site actives et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
-- `src/config/site.ts` — réglages du site (bouton CTA « Adhérer », « Je
+- `src/config/site.ts` — réglages du site (couleurs `colors` → `themeCss`
+  injecté dans `<head>` par les deux layouts, remplace les `--color-*` de
+  `@theme` ; jamais de couleur du thème en hexadécimal dans le code :
+  `var(--color-primary)` ou classe Tailwind ; bouton CTA « Adhérer », « Je
   participe », outils de partage, ouverture/fermeture des formulaires
   `site.forms`) : `DEFAULTS` du modèle **fusionnés** avec
   `src/content/reglages.yaml` (propre à l'asso, tout facultatif, clé inconnue

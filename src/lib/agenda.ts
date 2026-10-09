@@ -42,6 +42,7 @@ export const AGENDA_DAYS = [
 
 export const AGENDA_KIND_META: Record<
 	AgendaKind,
+	/** `hex` : couleur CSS de la bordure (variable du thème pour les couleurs de l'association). */
 	{ label: string; icon: string; dot: string; text: string; hex: string }
 > = {
 	parcours: {
@@ -49,21 +50,21 @@ export const AGENDA_KIND_META: Record<
 		icon: 'fa-route',
 		dot: 'bg-primary',
 		text: 'text-primary',
-		hex: '#2f7fc1',
+		hex: 'var(--color-primary)',
 	},
 	fablab: {
 		label: 'FabLab',
 		icon: 'fa-cubes',
 		dot: 'bg-accent',
 		text: 'text-accent',
-		hex: '#7cb93f',
+		hex: 'var(--color-accent)',
 	},
 	'espace-jeune': {
 		label: 'Espace Jeune',
 		icon: 'fa-gamepad',
 		dot: 'bg-secondary',
 		text: 'text-secondary',
-		hex: '#1fa39e',
+		hex: 'var(--color-secondary)',
 	},
 	'bidouille-repair': {
 		label: 'Bidouille & Repair',

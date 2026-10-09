@@ -1,6 +1,6 @@
 /**
- * Réglages du site : bouton « Adhérer », lien « Je participe », outils de
- * partage, ouverture/fermeture des formulaires.
+ * Réglages du site : couleurs, bouton « Adhérer », lien « Je participe »,
+ * outils de partage, ouverture/fermeture des formulaires.
  *
  * Les valeurs ci-dessous (`DEFAULTS`) sont celles du modèle. Chaque
  * association les remplace dans `src/content/reglages.yaml`, fichier qui lui
@@ -33,6 +33,20 @@ interface LinkToggle {
 }
 
 const DEFAULTS = {
+	/**
+	 * Couleurs du thème. `primary` / `secondary` / `accent` remplacent au
+	 * rendu les variables `--color-*` de Tailwind (`themeCss`, injecté par les
+	 * layouts : `bg-primary`, `text-accent/80`… suivent) ; `stripe` = bande
+	 * de couleurs sous l'en-tête (`BrandStripe.astro`). Valeurs par défaut =
+	 * celles de `@theme` dans `src/styles/global.css`, à garder alignées.
+	 */
+	colors: {
+		primary: '#2f7fc1',
+		secondary: '#1fa39e',
+		accent: '#7cb93f',
+		stripe: ['#4b4a9e', '#2f7fc1', '#1fa39e', '#7cb93f', '#e8b830', '#e2792f'],
+	},
+
 	/**
 	 * Bouton d'appel à l'action affiché à droite de la barre de navigation.
 	 * Ce n'est jamais une entrée de menu. `enabled: false` le masque complètement.
@@ -112,6 +126,9 @@ type ShareKey = keyof typeof DEFAULTS.share;
 
 const text = z.string({ error: 'texte attendu' }).trim().min(1, 'texte vide');
 const bool = z.boolean({ error: 'true ou false attendu' });
+const color = z
+	.string({ error: "couleur attendue, entre apostrophes (ex. '#2f7fc1')" })
+	.regex(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i, "couleur au format '#2f7fc1'");
 
 const linkSchema = z.strictObject({ label: text, href: text, enabled: bool }).partial();
 const formSchema = z.strictObject({ enabled: bool, closedTitle: text, closedMessage: text }).partial();
@@ -119,6 +136,14 @@ const formSchema = z.strictObject({ enabled: bool, closedTitle: text, closedMess
 /** Réglages de l'association : tout facultatif, clés inconnues refusées. */
 const overridesSchema = z
 	.strictObject({
+		colors: z
+			.strictObject({
+				primary: color,
+				secondary: color,
+				accent: color,
+				stripe: z.array(color, { error: 'liste de couleurs attendue' }).min(1, 'au moins une couleur'),
+			})
+			.partial(),
 		cta: linkSchema,
 		presence: linkSchema,
 		share: z.strictObject(Object.fromEntries(Object.keys(DEFAULTS.share).map((k) => [k, bool])) as Record<ShareKey, z.ZodBoolean>).partial(),
@@ -142,6 +167,7 @@ function load() {
 	}
 	const o = result.data;
 	return {
+		colors: { ...DEFAULTS.colors, ...o.colors },
 		cta: { ...DEFAULTS.cta, ...o.cta },
 		presence: { ...DEFAULTS.presence, ...o.presence },
 		share: { ...DEFAULTS.share, ...o.share },
@@ -152,3 +178,6 @@ function load() {
 }
 
 export const site = load();
+
+/** Variables CSS des couleurs du thème, injectées dans `<head>` par les layouts. */
+export const themeCss = `:root{--color-primary:${site.colors.primary};--color-secondary:${site.colors.secondary};--color-accent:${site.colors.accent}}`;

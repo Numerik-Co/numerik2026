@@ -11,7 +11,7 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | `news/` | Articles d'actualité (un dossier par article ; photo citée par `cover: ./cover.jpg` dans le frontmatter) — voir `docs/actualites.md` |
 | `activites/` | Fiches d'activité |
 | `annonces.yaml` | Annonces de la bannière en haut du site (liste, ordre = ordre de défilement) — voir `docs/annonces.md` |
-| `reglages.yaml` | Bouton « Adhérer », lien « Je participe », partage, ouverture/fermeture des formulaires (commentaires dans le fichier) |
+| `reglages.yaml` | Couleurs du site, bouton « Adhérer », lien « Je participe », partage, ouverture/fermeture des formulaires (commentaires dans le fichier) |
 | `partenaires.yaml` | Partenaires (cartes de la page Adhérer et de l'accueil), relais d'adhésion, avantages adhérent·e·s (commentaires dans le fichier) |
 | `conseiller-numerique.yaml` | Permanences du·de la Conseiller·ère Numérique : jours, horaires, lieux (planning, prise de RDV, encart d'accueil) |
 | `zones-geographiques.yaml` | Zones proposées à la prise de RDV Conseiller Numérique selon la commune (libellés = choix Grist) |

@@ -8,6 +8,7 @@ import { getImage } from 'astro:assets';
 import '../styles/global.css';
 import { association } from '../lib/association';
 import { favicons } from '../lib/site-images';
+import { themeCss } from '../config/site';
 
 interface Props {
 	title?: string;
@@ -56,6 +57,8 @@ const ogImage = og ? new URL(og.src, canonicalUrl).href : undefined;
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		{favicons.map((icon) => <link rel="icon" type={icon.type} href={icon.href} />)}
+		{/* Couleurs du thème (src/content/reglages.yaml) : remplacent celles de global.css. */}
+		<style is:inline set:html={themeCss} />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<title>{title}</title>

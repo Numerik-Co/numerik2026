@@ -227,7 +227,7 @@ const joursDisponibles = computed(() => {
 });
 
 const marqueurs = computed(() =>
-	[...joursDisponibles.value].map((date) => ({ date: isoToDate(date), type: 'dot' as const, color: '#2f7fc1' })),
+	[...joursDisponibles.value].map((date) => ({ date: isoToDate(date), type: 'dot' as const, color: 'var(--color-primary)' })),
 );
 
 const minDate = computed(() => (creneaux.value.length ? isoToDate(creneaux.value[0].date) : undefined));
@@ -939,7 +939,7 @@ async function envoyer() {
 <style scoped>
 /* Réaccorde le calendrier (vue-datepicker) sur les couleurs du site — voir src/styles/global.css. */
 .rdv-calendrier {
-	--dp-primary-color: #2f7fc1;
+	--dp-primary-color: var(--color-primary);
 	--dp-primary-text-color: #ffffff;
 	--dp-border-radius: 0.75rem;
 	--dp-cell-border-radius: 0.5rem;
