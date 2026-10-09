@@ -1,0 +1,60 @@
+# =============================================================================
+#  Zones géographiques des bénéficiaires (prise de RDV Conseiller Numérique)
+# =============================================================================
+#
+#  Au premier RDV, le·la bénéficiaire indique sa commune ; le formulaire
+#  propose alors une « origine géographique » parmi ces zones, qu'il·elle peut
+#  corriger. La zone choisie est enregistrée dans Grist (table Beneficiaires,
+#  colonne Zone_geographique) : chaque `label` doit être EXACTEMENT un des
+#  choix de cette colonne.
+#
+#  Ce fichier appartient à l'association : une mise à jour du site ne le
+#  remplace jamais. Une erreur fait échouer la construction du site avec un
+#  message indiquant la zone en cause.
+#
+#  Champs de chaque zone (boutons affichés dans l'ordre de ce fichier) :
+#
+#    label       (obligatoire) libellé, identique au choix Grist.
+#    communes    (facultatif) communes qui proposent cette zone
+#                automatiquement (accents, majuscules et tirets ignorés).
+#    codePostal  (facultatif) début de code postal qui la propose, si la
+#                commune ne figure dans aucune liste (ex. '40' = Landes).
+#
+#  La première zone qui correspond est proposée : communes d'abord (dans
+#  l'ordre du fichier), puis codePostal. Une zone sans communes ni codePostal
+#  se choisit seulement à la main.
+#
+#  Liste vide (zones: []) : la question n'est pas posée.
+# =============================================================================
+
+zones:
+  - label: 'Saint-Pierre-du-Mont'
+    communes:
+      - 'Saint-Pierre-du-Mont'
+
+  # Mont-de-Marsan Agglomération au 2026-01-01 (hors Saint-Pierre-du-Mont,
+  # zone à part ; source : data.gouv.fr / Banatic).
+  - label: 'Agglo du Marsan'
+    communes:
+      - 'Benquet'
+      - 'Bostens'
+      - 'Bougue'
+      - 'Bretagne-de-Marsan'
+      - 'Campagne'
+      - 'Campet-et-Lamolère'
+      - 'Gaillères'
+      - 'Geloux'
+      - 'Laglorieuse'
+      - 'Lucbardez-et-Bargues'
+      - 'Mazerolles'
+      - 'Mont-de-Marsan'
+      - 'Pouydesseaux'
+      - 'Saint-Avit'
+      - "Saint-Martin-d'Oney"
+      - 'Saint-Perdon'
+      - 'Uchacq-et-Parentis'
+
+  - label: "Commune proche de l'agglo"
+
+  - label: 'Département'
+    codePostal: '40'

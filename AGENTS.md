@@ -367,6 +367,12 @@ seulement) → consentement/envoi.
   quelle, étape 4 profil sautée — la dernière étape s'affiche alors « 4 »).
   Objectif : pas de doublons dans `Beneficiaires`. Les pièces à apporter ne
   sont rappelées qu'après l'envoi (écran de confirmation).
+- Zones géographiques (étape 4) : `src/content/zones-geographiques.yaml`
+  (fichier de l'asso ; `label` = choix Grist `Zone_geographique`, `communes`,
+  `codePostal` de repli), lu par `src/lib/rdv/zones.ts` côté serveur et passé
+  en prop `zones` à `RdvForm.vue` (pas de YAML côté visiteur) ;
+  `deduireZone(zones, …)` (`geographie.ts`) ; `/api/rdv/prendre` revalide
+  par `estZoneConnue()`.
 - `src/lib/rdv/beneficiaires.ts` — premier RDV : rapproche un bénéficiaire
   par **email OU téléphone** (un seul des deux est obligatoire à la saisie,
   jamais aucun — voir `validation.ts` — et le rapprochement ne compare que

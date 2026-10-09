@@ -3,8 +3,8 @@ import {
 	GENRE_CHOICES,
 	STATUT_BENEFICIAIRE_CHOICES,
 	TRANCHE_AGE_CHOICES,
-	ZONE_GEOGRAPHIQUE_CHOICES,
 } from '../../../lib/rdv/choices';
+import { estZoneConnue } from '../../../lib/rdv/zones';
 import { GristError } from '../../../lib/rdv/grist';
 import { prendreRendezVous } from '../../../lib/rdv/reservation';
 import { isNonEmptyString, json } from '../../../lib/adhesion/http';
@@ -44,10 +44,7 @@ function estValide(body: unknown): body is PriseRdvPayload {
 
 	if (b.commune !== undefined && typeof b.commune !== 'string') return false;
 	if (b.codePostal !== undefined && typeof b.codePostal !== 'string') return false;
-	if (
-		b.zoneGeographique !== undefined &&
-		!(ZONE_GEOGRAPHIQUE_CHOICES as readonly string[]).includes(b.zoneGeographique as string)
-	)
+	if (b.zoneGeographique !== undefined && !(typeof b.zoneGeographique === 'string' && estZoneConnue(b.zoneGeographique)))
 		return false;
 	if (b.genre !== undefined && !(GENRE_CHOICES as readonly string[]).includes(b.genre as string)) return false;
 	if (b.trancheAge !== undefined && !(TRANCHE_AGE_CHOICES as readonly string[]).includes(b.trancheAge as string))
