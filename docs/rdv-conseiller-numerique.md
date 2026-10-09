@@ -57,9 +57,9 @@ flowchart TD
 - Le jour même, un créneau qui commence dans **moins de 30 minutes** n'est plus
   proposé.
 - Jours, horaires et lieux des permanences **ne sont pas dans Grist** : ils sont
-  définis dans le code (`conseillerNumerique`, `src/lib/agenda.ts`). Actuellement
-  du lundi au vendredi, 9 h – 12 h, à l'Ancienne mairie (le mercredi au
-  Quartier de la Moustey).
+  réglés dans `src/content/conseiller-numerique.yaml` (fichier de
+  l'association, commenté ; lu par `conseillerNumerique`, `src/lib/agenda.ts`).
+  Une permanence par jour au plus, heures piles ou demies.
 
 ### Étape 3 · Vous
 

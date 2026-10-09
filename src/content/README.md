@@ -13,6 +13,7 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | `annonces.yaml` | Annonces de la bannière en haut du site (liste, ordre = ordre de défilement) — voir `docs/annonces.md` |
 | `reglages.yaml` | Bouton « Adhérer », lien « Je participe », partage, ouverture/fermeture des formulaires (commentaires dans le fichier) |
 | `partenaires.yaml` | Partenaires (cartes de la page Adhérer et de l'accueil), relais d'adhésion, avantages adhérent·e·s (commentaires dans le fichier) |
+| `conseiller-numerique.yaml` | Permanences du·de la Conseiller·ère Numérique : jours, horaires, lieux (planning, prise de RDV, encart d'accueil) |
 | `association.yaml` | Nom, coordonnées, réseaux sociaux et mentions légales de l'association (commentaires dans le fichier) |
 
 Les pages du site (Accueil, Activités, Actualités, Contact) sont fournies par

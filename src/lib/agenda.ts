@@ -1,3 +1,7 @@
+import { z } from 'astro/zod';
+import { parse as parseYaml } from 'yaml';
+import permanencesRaw from '../content/conseiller-numerique.yaml?raw';
+
 export type AgendaKind =
 	| 'parcours'
 	| 'fablab'
@@ -85,17 +89,73 @@ export const AGENDA_KIND_META: Record<
 
 };
 
-/** Permanences du Conseiller Numérique : chaque matin de semaine, 09h–12h. */
-export const conseillerNumerique: AgendaSession[] = (
-	['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'] as const
-).map((day) => ({
-	day,
-	start: '09h00',
-	end: '12h00',
-	title: 'RDV du·de la Conseiller·ère Numérique',
-	location: day === 'Mercredi' ? 'Quartier de la Moustey' : 'Ancienne mairie',
-	kind: 'conseiller-numerique' as const,
-}));
+/**
+ * Permanences du Conseiller Numérique, propres à chaque déploiement : lues
+ * dans `src/content/conseiller-numerique.yaml` (fichier de l'association,
+ * jamais remplacé par une mise à jour du modèle ; même principe que
+ * `association.ts`). Une par jour au plus (`rdv/creneaux.ts` cherche par
+ * jour), heures « 09h00 » piles ou demies dans 09h00–20h00 (grille de
+ * `WeeklyAgenda`), triées dans l'ordre de la semaine.
+ */
+const heureSchema = z
+	.string({ error: 'heure attendue, ex. 09h00' })
+	.regex(/^\d{2}h\d{2}$/, 'heure au format 09h00')
+	// Contrôles suivants seulement si le format est bon (un message à la fois).
+	.refine((h) => !/^\d{2}h\d{2}$/.test(h) || /h(00|30)$/.test(h), 'heure pile ou demie (09h00, 09h30…)')
+	.refine((h) => {
+		if (!/^\d{2}h\d{2}$/.test(h)) return true;
+		const n = Number(h.slice(0, 2)) * 60 + Number(h.slice(3));
+		return n >= 9 * 60 && n <= 20 * 60;
+	}, 'entre 09h00 et 20h00');
+
+const permanencesSchema = z.strictObject({
+	title: z.string({ error: 'champ obligatoire' }).trim().min(1, 'champ obligatoire'),
+	permanences: z
+		.array(
+			z
+				.strictObject({
+					day: z.enum(AGENDA_DAYS, { error: `jour attendu : ${AGENDA_DAYS.join(', ')}` }),
+					start: heureSchema,
+					end: heureSchema,
+					location: z
+						.string({ error: 'texte attendu' })
+						.trim()
+						.nullish()
+						.transform((v) => v || undefined),
+				})
+				.refine((p) => !/^\d{2}h\d{2}$/.test(p.start) || !/^\d{2}h\d{2}$/.test(p.end) || p.start < p.end, {
+					message: 'fin avant le début',
+					path: ['end'],
+				}),
+		)
+		.nullish()
+		.transform((v) => v ?? [])
+		.refine((list) => new Set(list.map((p) => p.day)).size === list.length, 'deux permanences le même jour'),
+});
+
+function loadConseillerNumerique(): AgendaSession[] {
+	const result = permanencesSchema.safeParse(parseYaml(permanencesRaw) ?? {});
+	if (!result.success) {
+		const details = result.error.issues
+			.map((i) => {
+				const [, index, ...field] = i.path;
+				const where =
+					i.path[0] === 'permanences' && typeof index === 'number'
+						? `permanence n°${index + 1}${field.length ? ` · ${field.join('.')}` : ''}`
+						: i.path.join('.') || '(fichier)';
+				const message = i.code === 'unrecognized_keys' ? `clé inconnue « ${i.keys.join(' », « ')} »` : i.message;
+				return `  - ${where} : ${message}`;
+			})
+			.join('\n');
+		throw new Error(`src/content/conseiller-numerique.yaml invalide :\n${details}`);
+	}
+	const { title, permanences } = result.data;
+	return permanences
+		.toSorted((a, b) => AGENDA_DAYS.indexOf(a.day) - AGENDA_DAYS.indexOf(b.day))
+		.map((p) => ({ ...p, title, kind: 'conseiller-numerique' as const }));
+}
+
+export const conseillerNumerique: AgendaSession[] = loadConseillerNumerique();
 
 /** Planning hebdomadaire par défaut de l'association. */
 export const weeklyAgenda: AgendaSession[] = [

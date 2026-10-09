@@ -240,9 +240,11 @@ couleur par famille d'activité.
   `fablab`, `espace-jeune`, `bidouille-repair`, `conseiller-numerique`) un
   libellé, une icône Font Awesome et des classes / hex de couleur ; ajouter
   un `kind` = ajouter une entrée ici. Les permanences du Conseiller
-  Numérique sont générées par le helper exporté `conseillerNumerique`
-  (chaque matin de semaine, lieu variable) — dispositif géré à part de la
-  programmation de l'association, jamais dans Grist. `groupByDay()`
+  Numérique (`conseillerNumerique`, exporté) sont lues dans
+  `src/content/conseiller-numerique.yaml` (fichier de l'asso, validé : jours
+  d'`AGENDA_DAYS`, une par jour, heures « 09h00 » piles/demies dans
+  09h–20h ; liste vide = encart `RdvCtaSection` absent) — dispositif géré à
+  part de la programmation de l'association, jamais dans Grist. `groupByDay()`
   regroupe et trie les séances selon `AGENDA_DAYS`. `weeklyAgenda` reste un
   planning figé en dur : **filet de sécurité uniquement**, utilisé si Grist
   est injoignable (voir ci-dessous) ou comme valeur par défaut du

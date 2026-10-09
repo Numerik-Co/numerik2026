@@ -160,8 +160,9 @@ encadrant·e·s) — pas de table séparée : seules les lignes `Publiee = true`
 de la **saison en cours** sont retenues, et celles sans `Categorie_agenda`
 valide (colonne pas encore renseignée) sont ignorées.
 
-Les permanences du·de la **Conseiller·ère Numérique** restent générées en dur par
-`conseillerNumerique` (`src/lib/agenda.ts`) — dispositif géré à part de la
+Les permanences du·de la **Conseiller·ère Numérique** viennent de
+`src/content/conseiller-numerique.yaml` (`conseillerNumerique`,
+`src/lib/agenda.ts`) — dispositif géré à part de la
 programmation de l'association, jamais dans `Activite`. La page les
 recombine : `[...conseillerNumerique, ...(await fetchPlanningAgenda())]`.
 
