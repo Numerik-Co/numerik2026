@@ -36,3 +36,5 @@ pnpm-debug.log*
 /.releases/
 /.tmp-publication/
 /src/content/.tmp-publication/
+/.update/
+/.dockercfg/

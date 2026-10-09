@@ -8,6 +8,13 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
+Mise à jour d'un site : `./update.sh [vX.Y.Z]` (Docker : `NUMERIK_VERSION`
+dans `.env`, construction à côté par `docker compose run` dans le volume
+`.releases`, bascule, vérification, retour arrière ; Node seul :
+`scripts/update.mjs`, sauvegarde `.update/`, code du modèle remplacé hors
+`src/content/`, `data/`, `.env`). `start.mjs` réutilise une version de
+`.releases/` déjà construite avec la même empreinte (`findRelease`) ;
+`pruneReleases` ne supprime jamais la version active.
 Production sans Docker : `npm start`
 (`node --env-file-if-exists=.env scripts/start.mjs` : construit le site si
 l'empreinte version + `SITE_URL` + `src/content/` diffère de
@@ -420,6 +427,8 @@ Pistes de suite non traitées (à reprendre si redemandé) :
 « témoins » (`temoin-ci-…`, échec s'ils apparaissent dans `dist/`), puis
 `docker build` + démarrage d'un conteneur (site construit au démarrage, doit
 répondre). Ne déploie rien. Détail : [docs/ci.md](docs/ci.md).
+Job `mise-a-jour-docker` : images locales 0.0.1/0.0.2/0.0.3 (cassée),
+`./update.sh` sondé pendant la bascule, version cassée refusée.
 Tag `vX.Y.Z` (créé par `npm version` sur master) →
 `.github/workflows/release.yml` : contrôles du tag, CI (`workflow_call`),
 image `ghcr.io/numerik-co/numerik2026` (`X.Y.Z`, `X.Y`, `latest`), Release

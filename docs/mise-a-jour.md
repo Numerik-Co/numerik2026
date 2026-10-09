@@ -69,7 +69,64 @@ Suivi : onglet **Actions** du dépôt ; résultat : onglet **Releases** et
 
 ## Mettre à jour un site (association)
 
-*À venir (étape 4) : script `update.sh` — Docker : télécharge l'image de la
-version voulue et redémarre ; Node seul : télécharge l'archive, remplace le
-code sans toucher `src/content/`, `data/`, `.env`, puis redémarre. Le site se
-reconstruit au démarrage (voir plus haut).*
+Dans le dossier du site, sur le serveur :
+
+```bash
+./update.sh            # dernière version publiée
+./update.sh v1.2.0     # version précise — sert aussi à revenir en arrière
+```
+
+Le mode est détecté (Docker si `docker-compose.yml` et la commande `docker`
+sont présents, sinon Node seul) ; `--docker` / `--node` pour l'imposer.
+`SITE_URL` doit être dans le `.env`.
+
+Le principe est le même dans les deux modes :
+
+1. **la nouvelle version est construite à côté**, avec le contenu et le
+   `.env` de l'association, pendant que le site en ligne continue sur
+   l'ancienne. Si elle ne se construit pas (bug, contenu devenu invalide),
+   **rien n'est changé** et le message dit pourquoi ;
+2. **bascule** : au redémarrage, `scripts/start.mjs` trouve la version déjà
+   construite (même empreinte) — coupure d'environ une seconde ;
+3. Docker : **vérification** que le site répond, sinon **retour automatique**
+   à la version précédente.
+
+### Docker
+
+- l'image vient de `ghcr.io/numerik-co/numerik2026`, version choisie par
+  `NUMERIK_VERSION` dans le `.env` (écrite par `update.sh`) ;
+- la construction à côté se fait dans un conteneur temporaire
+  (`docker compose run`), dans le volume `./.releases` partagé avec le
+  conteneur en ligne ;
+- bascule : `docker compose up -d` (nouveau conteneur), puis le site doit
+  répondre en 3 minutes, sinon `NUMERIK_VERSION` reprend son ancienne valeur.
+
+Testé par la CI à chaque envoi (tâche « Mise à jour Docker ») : 0.0.1 →
+0.0.2 en sondant le site, puis une 0.0.3 cassée qui doit être refusée.
+
+### Node seul (sans Docker ni git)
+
+`./update.sh` lance `scripts/update.mjs` (`node`, `npm` et `tar` suffisent) :
+
+1. télécharge l'archive des sources de la version (Release GitHub) ;
+2. met le code actuel de côté (`.update/sauvegarde-<version>.tar.gz`) ;
+3. remplace le code du modèle — `src/` (sauf `src/content/`), `scripts/`,
+   `docs/`, `.github/` remplacés, fichiers de la racine écrasés ; jamais
+   touchés : `src/content/`, `data/`, `.env`, `.releases/`, `dist`, fichiers
+   ajoutés à la racine ;
+4. `npm ci` puis construction à côté ; en cas d'échec, l'ancien code est
+   remis (`npm ci` compris) et le site, jamais arrêté, reste tel quel ;
+5. redémarrage par la commande `UPDATE_RESTART` du `.env` (ex.
+   `pm2 restart numerik2026`), sinon consigne affichée.
+
+Pendant l'étape 4, `node_modules` change sous le serveur en marche : choisir
+un moment calme (aucune publication en cours).
+
+### Passer à ce système (site déjà installé)
+
+- **Docker, installé avec `git clone` + `./deploy.sh`** (cas du premier
+  site) : ajouter `SITE_URL` au `.env`, `git pull`, puis `./update.sh` une
+  fois une version publiée. `./deploy.sh` reste utilisable par le mainteneur
+  (construction locale depuis les sources).
+- **Node seul** : ajouter `SITE_URL` au `.env`, remplacer `npm run build &&
+  npm start` par `npm start` dans le gestionnaire de process.

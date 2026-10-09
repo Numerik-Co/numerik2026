@@ -91,3 +91,60 @@ jobs:
           echo "::error::Le conteneur ne répond pas après 5 minutes."
           docker logs site
           exit 1
+
+  mise-a-jour-docker:
+    name: Mise à jour Docker (update.sh)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      IMAGE: ghcr.io/numerik-co/numerik2026
+    steps:
+      - uses: actions/checkout@v4
+
+      # Trois versions fabriquées localement à partir du même code :
+      # 0.0.1 (en ligne au départ), 0.0.2 (mise à jour) et 0.0.3 (cassée).
+      - name: Images 0.0.1, 0.0.2 et 0.0.3 (cassée)
+        run: |
+          docker build -q -t $IMAGE:0.0.1 .
+          for v in 0.0.2 0.0.3; do
+            rm -rf /tmp/v && mkdir /tmp/v && git archive HEAD | tar -x -C /tmp/v
+            node -e "for (const f of ['package.json','package-lock.json']) { const p='/tmp/v/'+f, j=require(p); j.version='$v'; if (j.packages) j.packages[''].version='$v'; require('fs').writeFileSync(p, JSON.stringify(j, null, 2)+'\n'); }"
+            [ "$v" = 0.0.3 ] && echo "export const casse = ;" >> /tmp/v/src/lib/association.ts
+            docker build -q -t $IMAGE:$v /tmp/v
+          done
+
+      - name: Site en ligne en version 0.0.1
+        run: |
+          mkdir -p data
+          printf 'SITE_URL=https://www.exemple.org\nNUMERIK_VERSION=0.0.1\n' > .env
+          docker compose up -d --no-build web
+          curl -fsS --retry 60 --retry-all-errors --retry-delay 5 -o /dev/null http://127.0.0.1:4321/
+          docker compose logs web | grep "\[démarrage\]"
+
+      - name: ./update.sh v0.0.2 (site sondé pendant la mise à jour)
+        run: |
+          ( while true; do curl -s -o /dev/null -w "%{http_code}\n" --max-time 2 http://127.0.0.1:4321/ >> sonde.log; sleep 0.5; done ) &
+          SONDE=$!
+          ./update.sh v0.0.2 --docker --no-pull
+          kill $SONDE
+          echo "Réponses du site pendant la mise à jour :"; sort sonde.log | uniq -c
+          docker compose logs web | grep "\[démarrage\]"
+          docker compose ps --format '{{.Image}}' web | grep -q ':0.0.2$'
+          grep -q '^NUMERIK_VERSION=0.0.2$' .env
+          # Bascule sans reconstruction : coupure de quelques secondes au plus.
+          echecs=$(grep -vc '^200$' sonde.log || true)
+          [ "$echecs" -le 30 ] || { echo "::error::Site indisponible $echecs × 0,5 s pendant la bascule."; exit 1; }
+
+      - name: ./update.sh v0.0.3 (cassée) → refusée, site inchangé
+        run: |
+          if ./update.sh v0.0.3 --docker --no-pull; then
+            echo "::error::La version cassée aurait dû être refusée."; exit 1
+          fi
+          grep -q '^NUMERIK_VERSION=0.0.2$' .env
+          docker compose ps --format '{{.Image}}' web | grep -q ':0.0.2$'
+          curl -fsS -o /dev/null http://127.0.0.1:4321/
+          echo "Version cassée refusée, site toujours en 0.0.2."
+
+      - name: Journal du conteneur (en cas d'échec)
+        if: failure()
+        run: docker compose logs web

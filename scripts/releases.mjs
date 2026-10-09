@@ -13,8 +13,9 @@
  */
 
 import { createHash } from 'node:crypto';
-import { lstat, readdir, readFile, rename, rm, symlink } from 'node:fs/promises';
-import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { lstat, readdir, readFile, readlink, rename, rm, symlink } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 
 export const RELEASES_DIR = '.releases';
 /** Nombre de versions gardées dans `.releases/` (l'active + la précédente). */
@@ -73,6 +74,26 @@ export async function readBuildInfo(root) {
 	}
 }
 
+/**
+ * Version déjà construite dans `.releases/` dont l'empreinte correspond (la
+ * plus récente), ou `null`. Permet de construire À L'AVANCE (mise à jour :
+ * `update.sh` construit la nouvelle version pendant que l'ancienne tourne) :
+ * au démarrage, `start.mjs` bascule dessus au lieu de reconstruire.
+ */
+export async function findRelease(root, fingerprint) {
+	const dir = join(root, RELEASES_DIR);
+	const names = (await readdir(dir).catch(() => [])).sort().reverse();
+	for (const name of names) {
+		try {
+			const info = JSON.parse(await readFile(join(dir, name, BUILD_INFO), 'utf8'));
+			if (info.fingerprint === fingerprint && existsSync(join(dir, name, 'server/entry.mjs'))) return name;
+		} catch {
+			// Version incomplète ou sans build-info.json : ignorée.
+		}
+	}
+	return null;
+}
+
 /** Heure UTC compacte, triable : `20261006T221530Z`. */
 export function releaseStamp() {
 	return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
@@ -99,9 +120,18 @@ export async function swapDist(root, release) {
 	await rename(tmpLink, dist);
 }
 
-/** Supprime les anciennes versions (garde les `KEEP_RELEASES` plus récentes). */
+/**
+ * Supprime les anciennes versions : garde les `KEEP_RELEASES` plus récentes
+ * et, en plus, celle sur laquelle pointe `dist` (jamais effacée, même plus
+ * ancienne — ex. après un retour à la version précédente).
+ */
 export async function pruneReleases(root) {
 	const dir = join(root, RELEASES_DIR);
+	const active = await readlink(join(root, 'dist'))
+		.then((target) => basename(target))
+		.catch(() => null);
 	const names = (await readdir(dir)).sort().reverse();
-	for (const name of names.slice(KEEP_RELEASES)) await rm(join(dir, name), { recursive: true, force: true });
+	for (const name of names.slice(KEEP_RELEASES)) {
+		if (name !== active) await rm(join(dir, name), { recursive: true, force: true });
+	}
 }

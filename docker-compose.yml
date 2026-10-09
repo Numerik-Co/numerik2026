@@ -1,7 +1,10 @@
 services:
   web:
+    # Image publiée du modèle, version choisie par NUMERIK_VERSION dans le .env
+    # (écrit par ./update.sh ; défaut : la dernière). `build: .` sert seulement
+    # à ./deploy.sh (construction locale depuis les sources, mainteneur).
+    image: ghcr.io/numerik-co/numerik2026:${NUMERIK_VERSION:-latest}
     build: .
-    image: numerik2026:latest
     container_name: numerik2026
     restart: unless-stopped
 
@@ -25,3 +28,7 @@ services:
       # copie git du VPS, donc conservé au redéploiement (à commiter pour
       # l'avoir aussi dans le dépôt). Cf. docs/publication.md.
       - ./src/content:/app/src/content
+      # Versions construites du site : gardées d'un conteneur à l'autre, pour
+      # que ./update.sh construise la nouvelle version AVANT de remplacer le
+      # conteneur (bascule en quelques secondes, cf. docs/mise-a-jour.md).
+      - ./.releases:/app/.releases

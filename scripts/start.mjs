@@ -7,7 +7,9 @@
  *    contenu de src/content/ — cf. releases.mjs) à celle du site en place
  *    (`dist/build-info.json`) ;
  * 2. si elles diffèrent (premier démarrage, mise à jour du modèle, domaine ou
- *    contenu changés hors publication) : `npm run build` dans
+ *    contenu changés hors publication) : bascule sur une version de
+ *    `.releases/` déjà construite avec cette empreinte s'il y en a une
+ *    (construite à l'avance par `update.sh`), sinon `npm run build` dans
  *    `.releases/<horodatage>`, puis `dist` pointe dessus. Pendant ce temps le
  *    site ne répond pas (le serveur n'est pas encore lancé) ;
  * 3. lance le serveur (`dist/server/entry.mjs`).
@@ -25,7 +27,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { RELEASES_DIR, computeFingerprint, pruneReleases, readBuildInfo, releaseStamp, swapDist } from './releases.mjs';
+import { RELEASES_DIR, computeFingerprint, findRelease, pruneReleases, readBuildInfo, releaseStamp, swapDist } from './releases.mjs';
 
 const root = resolve(process.env.SITE_ROOT || process.cwd());
 const log = (message) => console.log(`[démarrage] ${message}`);
@@ -47,6 +49,15 @@ async function buildIfNeeded() {
 			: built.siteUrl !== current.siteUrl
 				? `adresse du site changée (${built.siteUrl || '—'} → ${current.siteUrl || '—'})`
 				: 'contenu modifié';
+
+	// Déjà construite à l'avance (mise à jour, publication…) : simple bascule.
+	const ready = await findRelease(root, current.fingerprint);
+	if (ready) {
+		await swapDist(root, ready);
+		log(`${reason} : version déjà construite (${ready}), aucune construction.`);
+		return;
+	}
+
 	log(`construction du site : ${reason}…`);
 
 	const release = releaseStamp();
