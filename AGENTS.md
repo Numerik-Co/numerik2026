@@ -8,8 +8,12 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
-Production sans Docker : `npm run build` puis `npm start`
-(`node --env-file-if-exists=.env dist/server/entry.mjs`).
+Production sans Docker : `npm start`
+(`node --env-file-if-exists=.env scripts/start.mjs` : construit le site si
+l'empreinte version + `SITE_URL` + `src/content/` diffère de
+`dist/build-info.json`, puis lance `dist/server/entry.mjs`). Docker : même
+script (`CMD`), image sans site construit. Versions publiées et mises à jour :
+[docs/mise-a-jour.md](docs/mise-a-jour.md).
 
 ### Variables d'environnement
 
@@ -26,7 +30,7 @@ Exception : `DATA_DIR` (`process.env`, `src/lib/data-dir.ts`, partagé avec le
 CLI). Autre exception, **`SITE_URL`** (domaine public, obligatoire pour
 `build`, sinon `http://localhost:4321`) : lu **à la construction** par
 `astro.config.mjs` (`loadEnv`) pour `site` et `security.allowedDomains` ;
-Docker le passe en `build.args` depuis le `.env`. Le changer = reconstruire. Détail : [docs/api.md](docs/api.md#variables-denvironnement).
+le changer puis redémarrer suffit (`scripts/start.mjs` reconstruit). Détail : [docs/api.md](docs/api.md#variables-denvironnement).
 
 ## Contenu & navigation
 
@@ -414,7 +418,12 @@ Pistes de suite non traitées (à reprendre si redemandé) :
 `.github/workflows/ci.yml` (GitHub Actions, push `master`/`DEV` + PR) :
 `npm ci`, `astro check`, `npm run build` avec `SITE_URL` fictif et secrets
 « témoins » (`temoin-ci-…`, échec s'ils apparaissent dans `dist/`), puis
-`docker build`. Ne déploie rien. Détail : [docs/ci.md](docs/ci.md).
+`docker build` + démarrage d'un conteneur (site construit au démarrage, doit
+répondre). Ne déploie rien. Détail : [docs/ci.md](docs/ci.md).
+Tag `vX.Y.Z` (créé par `npm version` sur master) →
+`.github/workflows/release.yml` : contrôles du tag, CI (`workflow_call`),
+image `ghcr.io/numerik-co/numerik2026` (`X.Y.Z`, `X.Y`, `latest`), Release
+GitHub avec notes. Détail : [docs/mise-a-jour.md](docs/mise-a-jour.md).
 
 ## Documentation
 

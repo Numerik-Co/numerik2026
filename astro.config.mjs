@@ -11,6 +11,7 @@ import mdx from '@astrojs/mdx';
 import vue from '@astrojs/vue';
 
 import sitePages from './src/integrations/site-pages.ts';
+import buildInfo from './src/integrations/build-info.ts';
 
 /**
  * Domaine public du site, propre à chaque association : `SITE_URL` dans le
@@ -113,5 +114,6 @@ export default defineConfig({
   }),
 
   // sitePages : retire du build le HTML des pages du site désactivées (404 réel).
-  integrations: [mdx(), vue(), sitePages()]
+  // buildInfo : empreinte du build (build-info.json), lue par scripts/start.mjs.
+  integrations: [mdx(), vue(), sitePages(), buildInfo()]
 });

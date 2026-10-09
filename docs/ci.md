@@ -30,8 +30,13 @@ Deux tâches indépendantes, lancées en parallèle :
      retrouve dans `dist/`, un secret est lu via `import.meta.env` au lieu
      de `astro:env/server` (cf. [api.md](api.md#variables-denvironnement))
      et l'étape échoue en nommant le fichier.
-2. **Construction de l'image Docker** — `docker build` du `Dockerfile`, sans
-   publier l'image.
+2. **Image Docker** — `docker build` du `Dockerfile` (sans publier l'image),
+   puis **démarrage d'un conteneur** comme sur un serveur : le site doit être
+   construit par `scripts/start.mjs` et répondre en moins de 5 minutes.
+
+Publication d'une version (tag `vX.Y.Z`) : `.github/workflows/release.yml`
+réutilise cette CI puis publie l'image et la Release — voir
+[mise-a-jour.md](mise-a-jour.md).
 
 `SITE_URL` vaut `https://www.exemple.org` en CI : la vraie adresse n'est
 connue que des serveurs (`.env`). La CI n'a accès à aucun secret ni à Grist.

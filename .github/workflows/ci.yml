@@ -11,10 +11,12 @@ on:
   pull_request:
   # Bouton « Run workflow » dans l'onglet Actions de GitHub.
   workflow_dispatch:
+  # Réutilisée telle quelle par la publication d'une version (release.yml).
+  workflow_call:
 
 # Un nouvel envoi sur la même branche annule la vérification en cours.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -63,11 +65,29 @@ jobs:
           echo "Aucun secret dans dist/."
 
   docker:
-    name: Construction de l'image Docker
+    name: Image Docker (construction et démarrage)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
       - name: docker build
-        run: docker build --build-arg SITE_URL=https://www.exemple.org -t numerik2026:ci .
+        run: docker build -t numerik2026:ci .
+
+      - name: Démarrage du conteneur (construction du site au démarrage)
+        # Comme sur un serveur : le site est construit par scripts/start.mjs au
+        # premier démarrage, puis servi. On attend la réponse de la page
+        # d'accueil (5 min au plus), sinon on affiche les logs et on échoue.
+        run: |
+          docker run -d --name site -p 4321:4321 -e SITE_URL=https://www.exemple.org numerik2026:ci
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://127.0.0.1:4321/; then
+              echo "Le site répond."
+              docker logs site 2>&1 | grep "\[démarrage\]"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Le conteneur ne répond pas après 5 minutes."
+          docker logs site
+          exit 1

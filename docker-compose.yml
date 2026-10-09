@@ -1,11 +1,6 @@
 services:
   web:
-    build:
-      context: .
-      # Domaine public, nécessaire dès la construction de l'image : lu dans le
-      # .env à côté de ce fichier (interpolation Docker Compose).
-      args:
-        SITE_URL: ${SITE_URL:?SITE_URL manquant dans .env (ex. SITE_URL=https://www.mon-asso.fr)}
+    build: .
     image: numerik2026:latest
     container_name: numerik2026
     restart: unless-stopped

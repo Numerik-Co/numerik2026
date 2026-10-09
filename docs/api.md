@@ -33,8 +33,14 @@ export default defineConfig({
 
 En développement (`astro dev`), tout fonctionne de façon transparente. En production sur un VPS/serveur dédié (OVH ou autre) :
 
-1. `npm run build` — génère `dist/server/entry.mjs` (le serveur Node) en plus des fichiers statiques (`dist/client/`). Le build n'a **pas besoin** du `.env` et n'en recopie rien (voir plus bas).
-2. Lancer ce serveur en continu avec un process manager. `npm start` lance `node --env-file-if-exists=.env dist/server/entry.mjs` : le `.env` est lu **au démarrage** (ex. PM2 : `pm2 start npm --name numerik2026 -- start`).
+1. Lancer le serveur en continu avec un process manager : `npm start`
+   (= `node --env-file-if-exists=.env scripts/start.mjs`, ex. PM2 :
+   `pm2 start npm --name numerik2026 -- start`). Le `.env` est lu **au
+   démarrage**. `scripts/start.mjs` construit d'abord le site (`npm run build`
+   → `dist/server/entry.mjs` + `dist/client/`) s'il n'existe pas ou si la
+   version, `SITE_URL` ou `src/content/` ont changé depuis le dernier build
+   (empreinte `dist/build-info.json`, cf. [mise-a-jour.md](mise-a-jour.md)),
+   puis lance le serveur. Le build ne recopie aucun secret (voir plus bas).
 3. Mettre nginx/Apache en reverse proxy devant, avec le vrai nom de domaine.
 4. Définir les variables d'environnement (voir plus bas) directement sur le serveur — jamais dans les fichiers commités. Après une modification du `.env`, **redémarrer** le serveur suffit : pas de rebuild.
 
@@ -42,9 +48,10 @@ En développement (`astro dev`), tout fonctionne de façon transparente. En prod
 
 Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner.
 **`SITE_URL`** (adresse publique, ex. `https://www.mon-asso.fr`) est
-**obligatoire pour construire** et lue **à la construction**, pas au démarrage
-(`astro.config.mjs`, via `loadEnv` : `.env` ou environnement ; Docker :
-`build.args`) — la changer demande de reconstruire. Toutes les autres
+**obligatoire pour construire** et lue **à la construction**
+(`astro.config.mjs`, via `loadEnv` : `.env` ou environnement) ; la changer
+puis redémarrer suffit : `scripts/start.mjs` détecte le changement et
+reconstruit. Toutes les autres
 sont **facultatives** : une fonction non configurée se désactive proprement
 (formulaires Grist en erreur gérée, bulletin PDF masqué, connexion « non
 configurée »), le reste du site fonctionne.

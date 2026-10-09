@@ -29,8 +29,9 @@
 import { PUBLISH_HOOK, PUBLISH_RESTART, SITE_ROOT } from 'astro:env/server';
 import { spawn } from 'node:child_process';
 import { createWriteStream, existsSync } from 'node:fs';
-import { access, constants, lstat, mkdir, readdir, readFile, rename, rm, symlink, writeFile } from 'node:fs/promises';
+import { access, constants, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { RELEASES_DIR, pruneReleases, releaseStamp, swapDist } from '../../scripts/releases.mjs';
 import { dataDir } from './data-dir';
 import { logEvent, type JournalActor } from './journal';
 
@@ -50,10 +51,6 @@ export interface BuildStatus {
 
 /** Publication en cours dans ce process, ou `null`. */
 let current: Promise<void> | null = null;
-
-/** Nombre de versions gardées dans `.releases/` (l'active + la précédente). */
-const KEEP_RELEASES = 2;
-const RELEASES_DIR = '.releases';
 
 function root(): string {
 	return resolve(SITE_ROOT || process.cwd());
@@ -143,35 +140,6 @@ function run(command: string, args: string[], env: NodeJS.ProcessEnv, log: NodeJ
 	});
 }
 
-/** Fait pointer `dist` sur la nouvelle version, sans instant où `dist` n'existe pas. */
-async function swapDist(release: string): Promise<void> {
-	const base = root();
-	const dist = join(base, 'dist');
-	const info = await lstat(dist).catch(() => null);
-	if (info && !info.isSymbolicLink()) {
-		// Premier passage : le `dist` d'origine (dossier réel) est rangé comme version précédente.
-		try {
-			await rename(dist, join(base, RELEASES_DIR, `${release}-avant`));
-		} catch (err) {
-			// Docker (overlayfs) : un dossier venu de l'image ne peut pas être renommé
-			// (EXDEV), mais peut être supprimé — l'image le contient de toute façon.
-			if ((err as NodeJS.ErrnoException).code !== 'EXDEV') throw err;
-			await rm(dist, { recursive: true, force: true });
-		}
-	}
-	const tmpLink = join(base, `dist.${process.pid}.tmp`);
-	await rm(tmpLink, { force: true });
-	await symlink(join(RELEASES_DIR, release), tmpLink);
-	await rename(tmpLink, dist);
-}
-
-/** Supprime les anciennes versions (garde les `KEEP_RELEASES` plus récentes). */
-async function pruneReleases(): Promise<void> {
-	const dir = join(root(), RELEASES_DIR);
-	const names = (await readdir(dir)).sort().reverse();
-	for (const name of names.slice(KEEP_RELEASES)) await rm(join(dir, name), { recursive: true, force: true });
-}
-
 /**
  * Le process tourne-t-il sous un gestionnaire qui le relancera s'il s'arrête ?
  * Docker (politique `restart`) et PM2 sont détectés. Pas systemd : sa
@@ -210,11 +178,6 @@ function restartServer(log: NodeJS.WritableStream): void {
 	setTimeout(() => process.exit(0), 500);
 }
 
-/** Heure UTC compacte, triable : `20261006T221530Z`. */
-function stamp(): string {
-	return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
-}
-
 export interface PublishRequest {
 	label: string;
 	/** Personne qui publie (journal). */
@@ -245,13 +208,13 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 
 	await writeStatus({ state: 'running', label: request.label, href: request.href, startedAt, by });
 	current = (async () => {
-		const release = stamp();
+		const release: string = releaseStamp();
 		const outDir = join(RELEASES_DIR, release);
 		await mkdir(statusDir(), { recursive: true });
 		const log = createWriteStream(join(statusDir(), 'build.log'));
 		try {
 			await run('npm', ['run', '-s', 'build'], { ASTRO_OUT_DIR: outDir }, log);
-			await swapDist(release);
+			await swapDist(root(), release);
 			await request.onSuccess?.().catch(() => {});
 			let message: string | undefined;
 			if (PUBLISH_HOOK) {
@@ -261,7 +224,7 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 					message = `Site reconstruit, mais la commande PUBLISH_HOOK a échoué : ${(err as Error).message}.`;
 				}
 			}
-			await pruneReleases().catch(() => {});
+			await pruneReleases(root()).catch(() => {});
 			await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: new Date().toISOString(), message, by });
 			await logEvent({ by, action: 'publication', label: request.label, href: request.href, outcome: 'ok', message });
 			if (PUBLISH_RESTART) {
