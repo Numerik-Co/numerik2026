@@ -190,10 +190,11 @@ impossible et la modale l'indique.
 - **CSRF** : cookie `SameSite=Lax`, contrôle `Sec-Fetch-Site`/`Origin` du
   middleware sur les routes JSON, et protection native d'Astro
   (`security.checkOrigin`). Derrière le reverse proxy HTTPS, `security.allowedDomains`
-  (`astro.config.mjs`) autorise `X-Forwarded-Host`/`-Proto` pour
-  `www.clubmicrosaintpierre.fr` uniquement. **Le proxy doit transmettre ces
-  deux en-têtes**, sinon les requêtes de l'espace bénévoles risquent d'être refusées (403). Si le site est
-  aussi servi sur un autre domaine (sans `www`…), l'ajouter à la liste.
+  (`astro.config.mjs`) autorise `X-Forwarded-Host`/`-Proto` pour le domaine
+  de `SITE_URL` (`.env`) uniquement. **Le proxy doit transmettre ces
+  deux en-têtes**, sinon les requêtes de l'espace bénévoles risquent d'être refusées (403). Si le site
+  répond aussi sur un autre domaine (sans `www`…), le rediriger vers
+  `SITE_URL` dans nginx.
 - **Force brute** : 5 échecs en 15 min par identifiant et par adresse IP →
   blocage temporaire (`src/lib/auth/rate-limit.ts`, en mémoire, remis à zéro
   au redémarrage). Un identifiant inconnu coûte le même temps de calcul

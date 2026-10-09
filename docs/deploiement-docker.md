@@ -67,6 +67,11 @@ Les clés Grist (`GRIST_API_KEY`…) **ne doivent pas** être copiées dans l'im
 - stockées dans un fichier `.env` **présent sur le VPS uniquement**, hors dépôt
   Git (déjà dans `.gitignore`).
 
+Seule exception : `SITE_URL` (adresse publique du site, pas un secret), qui
+sert dès la construction de l'image. `docker-compose.yml` la lit dans le même
+`.env` et la passe en argument de build (`build.args`) ; absente,
+`docker compose` refuse de construire avec un message explicite.
+
 ### Bulletin PDF : instance Gotenberg (optionnel)
 
 Le bulletin d'adhésion en PDF ([bulletin-pdf.md](bulletin-pdf.md)) a besoin d'une
@@ -121,7 +126,7 @@ cd numerik2026
 
 # 2. Créer le .env (secrets Grist) — NE PAS commiter
 cp .env.example .env
-nano .env       # renseigner GRIST_BASE_URL / GRIST_DOC_ID / GRIST_API_KEY
+nano .env       # renseigner SITE_URL (obligatoire) puis GRIST_BASE_URL / GRIST_DOC_ID / GRIST_API_KEY
 
 # 3. Construire et démarrer
 docker compose up -d --build

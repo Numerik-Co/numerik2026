@@ -52,17 +52,18 @@ share:
 `false` masque l'icône correspondante. Si tous les outils sont à `false`,
 l'encart disparaît entièrement.
 
-### Domaine public — `astro.config.mjs`
+### Domaine public — `SITE_URL` dans le `.env`
 
 Les adresses envoyées à Facebook (lien partagé, `og:url`, `og:image`) sont
-construites à partir de `site` :
+construites à partir de `site` (`astro.config.mjs`), lui-même tiré de
+`SITE_URL` :
 
-```js
-site: 'https://www.clubmicrosaintpierre.fr',
+```sh
+SITE_URL=https://www.mon-asso.fr
 ```
 
-**Chaque structure qui déploie le template doit y mettre son propre
-domaine**, sinon les partages pointeront vers le mauvais site.
+**Chaque structure qui déploie le template y met son propre domaine.** Sans
+`SITE_URL`, `npm run build` échoue ; le changer demande de reconstruire.
 
 ## Fonctionnement technique
 

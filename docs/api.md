@@ -40,13 +40,18 @@ En développement (`astro dev`), tout fonctionne de façon transparente. En prod
 
 ## Variables d'environnement
 
-Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner. Toutes
+Copier `.env.example` en `.env` (déjà dans `.gitignore`) et renseigner.
+**`SITE_URL`** (adresse publique, ex. `https://www.mon-asso.fr`) est
+**obligatoire pour construire** et lue **à la construction**, pas au démarrage
+(`astro.config.mjs`, via `loadEnv` : `.env` ou environnement ; Docker :
+`build.args`) — la changer demande de reconstruire. Toutes les autres
 sont **facultatives** : une fonction non configurée se désactive proprement
 (formulaires Grist en erreur gérée, bulletin PDF masqué, connexion « non
 configurée »), le reste du site fonctionne.
 
 | Variable | Rôle |
 | :--- | :--- |
+| `SITE_URL` | Adresse publique du site — **obligatoire**, lue à la construction (`site`, `security.allowedDomains`) |
 | `GRIST_BASE_URL` | URL de l'instance Grist (ex. `https://grist.exemple.org`) |
 | `GRIST_DOC_ID` | Identifiant du document Grist contenant les tables d'adhésion |
 | `GRIST_API_KEY` | Clé API Grist — **secret**, ne doit exister que dans `.env` côté serveur |

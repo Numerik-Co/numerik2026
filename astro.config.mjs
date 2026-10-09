@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig, envField } from 'astro/config';
+import { loadEnv } from 'vite';
 
 import tailwindcss from '@tailwindcss/vite';
 
@@ -11,6 +12,35 @@ import vue from '@astrojs/vue';
 
 import sitePages from './src/integrations/site-pages.ts';
 
+/**
+ * Domaine public du site, propre à chaque association : `SITE_URL` dans le
+ * `.env` (ex. `https://www.mon-asso.fr`), ou variable d'environnement.
+ * Contrairement aux autres variables, il sert À LA CONSTRUCTION (URL absolues
+ * du flux RSS, des aperçus de partage, `allowedDomains`) : le changer demande
+ * de reconstruire. Absent : refusé pour un build (le site serait faux en
+ * ligne), `http://localhost:4321` sinon (dev, check).
+ */
+function siteUrl() {
+  const value = loadEnv(process.env.NODE_ENV ?? 'production', process.cwd(), '').SITE_URL?.trim();
+  if (!value) {
+    if (process.argv.includes('build')) {
+      throw new Error("SITE_URL manquant : ajoutez l'adresse publique du site dans le .env (ex. SITE_URL=https://www.mon-asso.fr).");
+    }
+    return new URL('http://localhost:4321');
+  }
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`SITE_URL invalide : « ${value} » (attendu : https://www.mon-asso.fr).`);
+  }
+  if (!['http:', 'https:'].includes(url.protocol) || url.pathname !== '/' || url.search || url.hash) {
+    throw new Error(`SITE_URL invalide : « ${value} » (attendu : adresse seule, sans chemin, ex. https://www.mon-asso.fr).`);
+  }
+  return url;
+}
+const site = siteUrl();
+
 // https://astro.build/config
 export default defineConfig({
   // Dossier de sortie : `dist` ; la publication depuis l'espace bénévoles
@@ -18,15 +48,15 @@ export default defineConfig({
   // src/lib/site-build.ts) puis fait pointer `dist` dessus.
   outDir: process.env.ASTRO_OUT_DIR || './dist',
 
-  // Nom de domaine public (URLs absolues du flux RSS, sitemap…).
-  site: 'https://www.clubmicrosaintpierre.fr',
+  // Nom de domaine public (URLs absolues du flux RSS, sitemap…) : SITE_URL.
+  site: site.origin,
 
   // Derrière le reverse proxy HTTPS (cf. docker-compose.yml) : fait confiance à
   // X-Forwarded-Host/Proto pour ce domaine seulement. Sans cela, Astro voit
   // http://… alors que le navigateur envoie Origin: https://…, et refuse les
   // formulaires POST (connexion, espace bénévoles) avec un 403.
   security: {
-    allowedDomains: [{ hostname: 'www.clubmicrosaintpierre.fr', protocol: 'https' }]
+    allowedDomains: [{ hostname: site.hostname, protocol: site.protocol.slice(0, -1) }]
   },
 
   // Variables d'environnement (.env) : toutes en `access: 'secret'`, donc lues

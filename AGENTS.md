@@ -23,7 +23,10 @@ non configurée se désactive. Changer le `.env` = redémarrer, pas rebuild.
 lire le secret à l'usage avec `getSecret('X')`, pas par import nommé : en
 dev, le middleware est chargé avant le `.env` et l'import vaudrait `undefined`.
 Exception : `DATA_DIR` (`process.env`, `src/lib/data-dir.ts`, partagé avec le
-CLI). Détail : [docs/api.md](docs/api.md#variables-denvironnement).
+CLI). Autre exception, **`SITE_URL`** (domaine public, obligatoire pour
+`build`, sinon `http://localhost:4321`) : lu **à la construction** par
+`astro.config.mjs` (`loadEnv`) pour `site` et `security.allowedDomains` ;
+Docker le passe en `build.args` depuis le `.env`. Le changer = reconstruire. Détail : [docs/api.md](docs/api.md#variables-denvironnement).
 
 ## Contenu & navigation
 
@@ -181,7 +184,7 @@ depuis le VPS. Détail : [docs/publication.md](docs/publication.md).
   sur le VPS `./auth-user.sh add …` (exécute `dist/cli/auth-user.mjs`,
   compilé par `build:cli`, dans le conteneur avec `DOCKER_CONFIG`).
 - `astro.config.mjs` `security.allowedDomains` : indispensable derrière le
-  proxy HTTPS.
+  proxy HTTPS ; tiré de `SITE_URL`, comme `site`.
 
 Détail : [docs/auth.md](docs/auth.md) ; guide déploiement + utilisation
 (à tenir à jour avec chaque nouveau module) :

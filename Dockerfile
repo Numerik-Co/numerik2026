@@ -10,7 +10,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Sources + build Astro (adaptateur node, mode standalone)
+# Sources + build Astro (adaptateur node, mode standalone).
+# SITE_URL (domaine public) sert à la construction, pas seulement au runtime :
+# transmis par docker-compose.yml depuis le .env (`build.args`).
+ARG SITE_URL
 COPY . .
 RUN npm run build
 
