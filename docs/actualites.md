@@ -38,7 +38,7 @@ Les actualités sont des fichiers **Markdown**, un dossier par article, dans `sr
    | `tag` | non | Catégorie affichée en pastille + utilisée par les **filtres** de la page Actualités |
    | `author` | non | Affiché à côté de la date |
    | `cover` | non | Photo de couverture, chemin **relatif au dossier** (`./cover.jpg`). Le fichier doit exister : sinon le build échoue. Formats : jpg, png, webp, avif |
-   | `imageCredit` | non | Légende affichée sous l'image **sur la page de détail uniquement** (ex. `"Photo : Prénom Nom / Source"`). Si absent ou vide, retombe automatiquement sur `"Photo : <nom de l'association>"` (voir `src/lib/association.ts`) |
+   | `imageCredit` | non | Légende affichée sous l'image **sur la page de détail uniquement** (ex. `"Photo : Prénom Nom / Source"`). Si absent ou vide, retombe automatiquement sur `"Photo : <nom de l'association>"` (voir `src/content/association.yaml`) |
 
 3. (Optionnel) Déposer la photo de couverture dans le même dossier et la citer dans le frontmatter (`cover: ./cover.jpg`) :
 

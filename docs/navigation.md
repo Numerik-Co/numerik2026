@@ -104,7 +104,7 @@ n'affiche rien (accueil, 404).
 
 `src/components/layout/Footer.astro` affiche :
 - le logo et la description de l'association,
-- les coordonnées (email, téléphone, adresse) depuis `src/lib/association.ts`,
+- les coordonnées (email, téléphone, adresse) depuis `src/content/association.yaml`,
 - les liens réseaux sociaux, générés à partir de `association.social` (seuls les
   réseaux renseignés s'affichent — voir [composants.md](composants.md)),
 - le copyright (année automatique),

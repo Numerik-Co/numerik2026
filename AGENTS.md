@@ -203,6 +203,12 @@ contenu hors de `src/content/`.**
   aux slugs de `src/lib/categories.ts`, `cover:` via `image()`.
   `src/lib/activites.ts` : `getAllActivities()`, `getActivitiesByCategory()`,
   `renderActivity()` (async). Détail : [docs/activites.md](docs/activites.md).
+- `association.yaml` (pas une collection) — nom, coordonnées, mentions
+  légales de l'association, fichier propre à chaque déploiement qu'une mise
+  à jour du modèle ne remplace pas. Importé en `?raw` et validé (zod) par
+  `src/lib/association.ts`, lecture **synchrone** voulue (`association` est
+  utilisé partout, jusque dans `content.config.ts` et l'îlot Vue) ; champ
+  invalide = build en échec avec le chemin du champ.
 - `annonces` — `src/content/annonces.yaml` (loader `file()`, liste avec
   `id`) ; `position` ajoutée par le parser du loader pour garder l'ordre du
   fichier. `src/lib/annonces.ts` : `getAnnonces()` (async). Détail :

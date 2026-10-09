@@ -1,7 +1,7 @@
 /**
  * Variables utilisables dans le texte des pages de contenu `.md` :
  * `{{association.nom}}` est remplacé à l'affichage par la valeur de
- * `src/lib/association.ts` (configuration propre à chaque déploiement).
+ * `src/content/association.yaml` (lu par `association.ts`, propre à chaque déploiement).
  * Évite de recopier nom, adresse, responsable… dans les pages (ex.
  * mentions légales). Une valeur non renseignée affiche un repère
  * « [À compléter : …] » plutôt qu'un vide.

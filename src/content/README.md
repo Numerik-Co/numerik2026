@@ -11,6 +11,7 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | `news/` | Articles d'actualité (un dossier par article ; photo citée par `cover: ./cover.jpg` dans le frontmatter) — voir `docs/actualites.md` |
 | `activites/` | Fiches d'activité |
 | `annonces.yaml` | Annonces de la bannière en haut du site (liste, ordre = ordre de défilement) — voir `docs/annonces.md` |
+| `association.yaml` | Nom, coordonnées, réseaux sociaux et mentions légales de l'association (commentaires dans le fichier) |
 
 Les pages du site (Accueil, Activités, Actualités, Contact) sont fournies par
 le template : on les active et on règle leurs textes depuis le module
@@ -106,7 +107,7 @@ construire, avec un message qui nomme la page.
 
 `{{association.nom}}`, `{{association.email}}`, `{{association.adresse}}`…
 sont remplacés par les valeurs configurées pour le site
-(`src/lib/association.ts`) : pas de recopie qui se périme. Liste complète :
+(`src/content/association.yaml`) : pas de recopie qui se périme. Liste complète :
 `src/lib/page-variables.ts` (exemple : `pages/mentions-legales/index.md`).
 
 ### Page accessible mais absente du menu

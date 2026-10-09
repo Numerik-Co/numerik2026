@@ -50,7 +50,7 @@ Ce registre vit dans **`src/lib/categories.ts`** — c'est la seule source de v�
    | `order` | non | Nombre entier, détermine l'ordre d'affichage au sein de sa catégorie (croissant). Sans ce champ, l'activité est affichée en dernier |
    | `level` | non | Niveau du cours (ex. `"Grand débutant"`, `"Initiation"`, `"Perfectionnement"`), affiché en pastille en bas à droite de la carte, à côté du lien "En savoir plus". Sans ce champ, la pastille ne s'affiche pas |
    | `cover` | non | Photo, chemin relatif au dossier (`./cover.jpg`). Le fichier doit exister, sinon le build échoue. Sans `cover:`, un placeholder « Image à venir » s'affiche sur la carte |
-   | `imageCredit` | non | Légende affichée sous l'image **sur la page de détail uniquement** (ex. `"Photo : Prénom Nom / Source"`). Si absent ou vide, retombe automatiquement sur `"Photo : <nom de l'association>"` (voir `src/lib/association.ts`) |
+   | `imageCredit` | non | Légende affichée sous l'image **sur la page de détail uniquement** (ex. `"Photo : Prénom Nom / Source"`). Si absent ou vide, retombe automatiquement sur `"Photo : <nom de l'association>"` (voir `src/content/association.yaml`) |
    | `inscription` | non | `false` masque le bouton « S'inscrire » de la page de détail (ex. permanences sur RDV). Absent = bouton affiché — voir [inscription.md](inscription.md) |
    | `activiteGrist` | non | Nom (ou liste de noms) de l'activité dans Grist (`Activite.Nom`) ciblée par le bouton « S'inscrire » ; `*` final = préfixe (`"Initiation*"`). Absent = le `title` — voir [inscription.md](inscription.md#présélection) |
    | `typeGrist` | non | Type Grist (`Séances`, `Ateliers`, `Atelier CN`) ciblé par le bouton « S'inscrire », seul ou avec `activiteGrist` |
