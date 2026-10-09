@@ -123,10 +123,11 @@ jobs:
 
       - name: ./update.sh v0.0.2 (site sondé pendant la mise à jour)
         run: |
-          ( while true; do curl -s -o /dev/null -w "%{http_code}\n" --max-time 2 http://127.0.0.1:4321/ >> sonde.log; sleep 0.5; done ) &
+          # `|| true` : bash -e arrêterait la sonde au premier refus (code 000).
+          ( while true; do curl -s -o /dev/null -w "%{http_code}\n" --max-time 2 http://127.0.0.1:4321/ >> sonde.log || true; sleep 0.5; done ) &
           SONDE=$!
           ./update.sh v0.0.2 --docker --no-pull
-          kill $SONDE
+          kill $SONDE || true
           echo "Réponses du site pendant la mise à jour :"; sort sonde.log | uniq -c
           docker compose logs web | grep "\[démarrage\]"
           docker compose ps --format '{{.Image}}' web | grep -q ':0.0.2$'

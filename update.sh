@@ -73,6 +73,8 @@ if [ "$pull" = 1 ]; then
   etape "Téléchargement de l'image $IMAGE:$cible"
   docker pull "$IMAGE:$cible" || echec "image introuvable : $IMAGE:$cible (version publiée ? paquet public ?)."
 fi
+docker image inspect "$IMAGE:$cible" >/dev/null 2>&1 \
+  || echec "image absente localement : $IMAGE:$cible (relancer sans --no-pull)."
 
 # 1. Construction à côté, avec le contenu et le .env de l'association, dans
 #    le volume .releases — le site en ligne n'est pas touché.
@@ -80,10 +82,15 @@ release=$(date -u +%Y%m%dT%H%M%SZ)
 etape "Construction de la version $cible à côté du site en ligne (.releases/$release)"
 # `compose run` reprend la configuration du service (.env, volumes), avec
 # l'image visée ; pas de ports publiés, le conteneur en ligne continue.
-if ! NUMERIK_VERSION="$cible" docker compose run --rm --no-deps --no-build \
-     -e "ASTRO_OUT_DIR=.releases/$release" web npm run -s build; then
-  rm -rf ".releases/$release"
-  echec "la version $cible ne se construit pas avec votre contenu : rien n'a été changé, le site reste en version $actuelle."
+# (`run` n'a pas d'option --no-build : --pull never + image vérifiée ci-dessus.)
+compose_run() {
+  NUMERIK_VERSION="$cible" docker compose run --rm --no-deps -T --pull never "$@"
+}
+if ! compose_run -e "ASTRO_OUT_DIR=.releases/$release" web npm run -s build; then
+  # Fichiers écrits par le conteneur (root) : effacés depuis le conteneur.
+  compose_run --entrypoint rm web -rf ".releases/$release" >/dev/null 2>&1 \
+    || rm -rf ".releases/$release" 2>/dev/null || true
+  echec "la version $cible ne se construit pas (messages ci-dessus) : rien n'a été changé, le site reste en version $actuelle."
 fi
 
 # 2. Bascule : nouveau conteneur, qui trouve la version déjà construite.
