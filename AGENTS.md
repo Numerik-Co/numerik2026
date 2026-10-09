@@ -60,7 +60,9 @@ Fonctionnement technique :
   type « Association » (code : `dropdown`). **Pages du site** :
   bibliothèque `src/lib/site-pages.ts` (`SITE_PAGES` : Accueil, Activités,
   Actualités, Contact), activables (désactivée = 404, HTML prérendu retiré par
-  `src/integrations/site-pages.ts` ; accueil toujours actif), lien et
+  `src/integrations/site-pages.ts` ; accueil toujours actif, composé de
+  **modules** : `src/lib/home-modules.ts`, `HomeModulesEditor.vue`, rendu
+  `src/pages/index.astro`), lien et
   **textes** réglables (`SitePageForm.vue`, `PUT /api/admin/pages-du-site/<id>`,
   `saveSitePage()`), écarts écrits dans `src/content/pages/_pages-site.md`
   (collection `sitePages`) ; lecture au build `getSitePage(id)`

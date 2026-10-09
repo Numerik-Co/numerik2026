@@ -2,7 +2,8 @@
 /**
  * Formulaire d'une page du site (bibliothèque `src/lib/site-pages.ts` :
  * Accueil, Activités…) dans le module « Pages » : lien dans le menu
- * (libellé, visibilité) et textes de la page, section par section. Un texte
+ * (libellé, visibilité) et textes de la page, section par section — ou,
+ * pour l'accueil, ses modules (`HomeModulesEditor.vue`). Un texte
  * vidé reprend sa valeur par défaut ; le serveur n'enregistre que les écarts.
  * Activer / désactiver se fait depuis la liste.
  */
@@ -11,13 +12,19 @@ import { PAGE_VARIABLES } from '../../../../lib/page-variables';
 import { SITE_PAGES } from '../../../../lib/site-pages';
 import { ApiError, sitePagesApi, type SitePageView } from '../../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule } from '../../context';
+import HomeModulesEditor from './HomeModulesEditor.vue';
 
 const props = defineProps<{ page: SitePageView; disabled: boolean }>();
 const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
 const def = SITE_PAGES.find((p) => p.id === props.page.id)!;
-const form = reactive({ label: props.page.label, show: props.page.show, textes: { ...props.page.textes } });
+const form = reactive({
+	label: props.page.label,
+	show: props.page.show,
+	textes: { ...props.page.textes },
+	modules: (props.page.modules ?? []).map((m) => ({ ...m })),
+});
 const error = ref('');
 const busy = ref(false);
 
@@ -40,7 +47,13 @@ async function submit() {
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		await sitePagesApi.update(props.page.id, { label: form.label, show: form.show, active: props.page.active, textes: form.textes });
+		await sitePagesApi.update(props.page.id, {
+			label: form.label,
+			show: form.show,
+			active: props.page.active,
+			textes: form.textes,
+			...(def.modules ? { modules: form.modules } : {}),
+		});
 		emit('published', `Page du site : ${form.label}`);
 	} catch (e) {
 		if (e instanceof ApiError && e.status === 401) return sessionExpired();
@@ -57,7 +70,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 	<form class="space-y-5" @submit.prevent="submit">
 		<p class="text-sm font-light text-gray-600">
 			Page du site <strong class="font-medium text-gray-800">{{ def.label }}</strong> ({{ props.page.href }}) : sa mise en
-			page est fournie par le site ; vous réglez son lien dans le menu et ses textes.
+			page est fournie par le site ; vous réglez son lien dans le menu et {{ def.modules ? 'ses modules' : 'ses textes' }}.
 		</p>
 		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -76,6 +89,9 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 				<p class="mt-1 text-xs font-light text-gray-500">Décoché : la page reste accessible par son adresse.</p>
 			</div>
 		</fieldset>
+
+		<!-- Page à modules (accueil) -->
+		<HomeModulesEditor v-if="def.modules" :modules="form.modules" />
 
 		<!-- Textes, par section -->
 		<fieldset v-for="section in def.sections" :key="section.title" class="space-y-3">
@@ -102,7 +118,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 			</ul>
 		</details>
 
-		<p class="text-xs font-light text-gray-500">
+		<p v-if="!def.modules" class="text-xs font-light text-gray-500">
 			Un texte vidé reprend sa valeur d'origine.
 			<template v-if="changed">
 				{{ changed }} texte{{ changed > 1 ? 's' : '' }} modifié{{ changed > 1 ? 's' : '' }} —

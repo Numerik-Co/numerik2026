@@ -131,6 +131,17 @@ reconstruit le site, comme le module « Actualités »
   page, activation (`canDisable`, l'accueil est toujours actif), lien dans le
   menu (libellé, position, visibilité) et **textes** décrits par sections
   (`{ name, label, default, multiline? }`, variables `{{association.…}}`).
+  **L'accueil** (`modules: true`) est une suite de **modules** :
+  catalogue `src/lib/home-modules.ts` (`HOME_MODULES` : bandeau, actualites,
+  activites, rdv-conseiller, appel, partenaires, texte ; champs au format
+  des blocs, `default` par champ, `multiple` pour les types répétables),
+  liste complète enregistrée dans `pages.accueil.modules` (valeurs
+  explicites ; absente = `DEFAULT_HOME`, identique à `DEFAULT_HOME` = non
+  écrite), validée par `validateHomeModules()` (build et écriture), éditée
+  par `HomeModulesEditor.vue` (réutilise `BlocFields.vue`), rendue par
+  `src/pages/index.astro`. Nouveau type = entrée `HOME_MODULES` + branche dans
+  `index.astro`. Le planning (`WeeklyAgenda`) n'en fait pas partie : il lit
+  Grist à chaque requête, l'accueil est prérendu.
   Seuls les écarts aux valeurs par défaut sont écrits dans
   `src/content/pages/_pages-site.md` (collection `sitePages`,
   `pages: { <id>: { active, label, order, show, textes } }` ; fichier

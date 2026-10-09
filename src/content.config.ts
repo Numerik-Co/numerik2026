@@ -14,6 +14,7 @@ import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import { parseAccess } from './lib/auth/access';
 import { validateBloc, type Bloc } from './lib/blocs';
+import { validateHomeModules } from './lib/home-modules';
 import { SITE_PAGE_IDS, SITE_PAGES, sitePageTextNames } from './lib/site-pages';
 import { categories } from './lib/categories';
 
@@ -142,6 +143,8 @@ const sitePages = defineCollection({
 					order: z.number().optional(),
 					show: z.boolean().optional(),
 					textes: z.record(z.string(), z.string()).optional(),
+					/** Page à modules (accueil) : cf. src/lib/home-modules.ts. */
+					modules: z.array(z.unknown()).optional(),
 				}),
 			)
 			.default({})
@@ -154,6 +157,10 @@ const sitePages = defineCollection({
 					}
 					if (!def.canDisable && settings.active === false) {
 						ctx.addIssue({ code: 'custom', message: `La page « ${id} » ne peut pas être désactivée.` });
+					}
+					if (settings.modules) {
+						if (!def.modules) ctx.addIssue({ code: 'custom', message: `La page « ${id} » n'est pas composée de modules.` });
+						for (const message of validateHomeModules(settings.modules).errors) ctx.addIssue({ code: 'custom', message });
 					}
 					const names = sitePageTextNames(id);
 					for (const name of Object.keys(settings.textes ?? {})) {

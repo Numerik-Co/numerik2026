@@ -1,7 +1,7 @@
 /**
  * Page du site (bibliothèque `src/lib/site-pages.ts` : Accueil, Activités…),
  * groupes `redacteur` / `admin` :
- *  - PUT : `{ label, show, active, textes }` → `src/content/pages/_pages-site.md`
+ *  - PUT : `{ label, show, active, textes, modules? }` (modules : accueil) → `src/content/pages/_pages-site.md`
  *          (cf. `saveSitePage()`), puis reconstruction du site.
  */
 import type { APIRoute } from 'astro';
@@ -19,7 +19,8 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const raw = body.textes && typeof body.textes === 'object' ? (body.textes as Record<string, unknown>) : {};
 	const textes = Object.fromEntries(Object.entries(raw).map(([name, value]) => [name, typeof value === 'string' ? value : '']));
 	const active = body.active !== false;
-	const result = await saveSitePage(id, { label: String(body.label ?? ''), show: body.show !== false, active, textes });
+	const modules = Array.isArray(body.modules) ? (body.modules as unknown[]) : undefined;
+	const result = await saveSitePage(id, { label: String(body.label ?? ''), show: body.show !== false, active, textes, modules });
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
 		user: locals.user!,

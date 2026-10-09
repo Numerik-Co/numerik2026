@@ -5,6 +5,7 @@
  */
 import type { AuthGroup } from '../../lib/auth/groups';
 import type { Bloc } from '../../lib/blocs';
+import type { HomeModule } from '../../lib/home-modules';
 import type { SitePageState } from '../../lib/site-pages';
 
 export interface AdminUser {
@@ -117,6 +118,8 @@ export interface SitePageInput {
 	show: boolean;
 	active: boolean;
 	textes: Record<string, string>;
+	/** Accueil : liste complète des modules (absent = inchangée). */
+	modules?: HomeModule[];
 }
 
 /** Menu déroulant de la barre de navigation (`_group.md`). */

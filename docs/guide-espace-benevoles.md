@@ -360,10 +360,19 @@ page est fournie par le site, l'association règle le reste.
 
 - **Modifier** (crayon) : libellé et visibilité du lien dans le menu
   (masqué, la page reste accessible par son adresse), puis les **textes** de
-  la page, section par section (titres, accroches, boutons ; pour l'accueil :
-  bandeau, section Actualités, section Activités, appel à nous rejoindre).
-  Les variables `{{association.nom}}`… sont acceptées. Un texte vidé reprend
-  sa valeur d'origine ; « rétablir les textes d'origine » les remet tous.
+  la page, section par section (titres, accroches, boutons). Les variables
+  `{{association.nom}}`… sont acceptées. Un texte vidé reprend sa valeur
+  d'origine ; « rétablir les textes d'origine » les remet tous.
+- **L'accueil** est composé de **modules**, dans l'ordre d'affichage :
+  bandeau, dernières actualités, activités, RDV Conseiller Numérique, appel à
+  l'action, partenaires, texte libre. Le crayon de l'Accueil permet d'en
+  **ajouter** (liste « Ajouter un module… » ; l'appel à l'action et le texte
+  libre peuvent figurer plusieurs fois), d'en **retirer** (corbeille), de
+  les **ordonner** (↑/↓) et de **modifier leur contenu** (clic sur le module :
+  titres, textes, boutons et leurs liens, nombre d'actualités…). Un champ
+  facultatif vidé masque l'élément (ex. second bouton du bandeau). « Revenir
+  à l'accueil d'origine » remet les modules de départ. Rien n'est publié
+  avant **Enregistrer et publier**.
 - **Désactiver** (corbeille, après confirmation) : la page disparaît du menu
   **et** du site (son adresse affiche « page introuvable ») ; les liens de
   l'accueil vers elle sont masqués. Elle passe dans la **Bibliothèque**, d'où

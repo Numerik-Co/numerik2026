@@ -31,6 +31,7 @@ import { blocMarkdownTexts, blocMarkersIn, validateBloc, type Bloc } from './blo
 import { RESERVED_FOLDER } from './content-pages';
 import { checkBody, COVER_ERROR, siteRoot, slugify, workDir, workRoot, writeCover, type CoverChange } from './news-writer';
 import { unknownPageVariables } from './page-variables';
+import { DEFAULT_HOME, homeModuleDef, validateHomeModules, type HomeModule } from './home-modules';
 import { SITE_PAGES, sitePagesState, type SitePageSettings, type SitePageState } from './site-pages';
 
 export { type CoverChange };
@@ -490,6 +491,8 @@ export interface SitePageInput {
 	active: boolean;
 	/** Textes par nom ; vide = texte par défaut. */
 	textes: Record<string, string>;
+	/** Page à modules (accueil) : nouvelle liste ; absent = modules actuels gardés. */
+	modules?: unknown[];
 }
 
 const SITE_TEXT_MAX = 2000;
@@ -519,6 +522,27 @@ export async function saveSitePage(id: string, input: SitePageInput): Promise<{ 
 			textes[t.name] = value;
 		}
 	}
+
+	const pages = await readSitePagesSettings();
+	let modules: HomeModule[] | undefined;
+	if (def.modules && input.modules !== undefined) {
+		const checked = validateHomeModules(input.modules);
+		errors.push(...checked.errors);
+		for (const module of checked.modules) {
+			const moduleDef = homeModuleDef(module.type);
+			for (const field of moduleDef.fields) {
+				const value = module[field.name] ?? '';
+				if (value.length > SITE_TEXT_MAX) errors.push(`${moduleDef.label} : « ${field.label} » est trop long.`);
+				const unknown = unknownPageVariables(value);
+				if (unknown.length) errors.push(`${moduleDef.label} : variable(s) inconnue(s) ${unknown.map((v) => `{{${v}}}`).join(', ')}.`);
+				if (field.type === 'markdown') errors.push(...checkBody(value).map((e) => `${moduleDef.label} : ${e}`));
+			}
+		}
+		// Identique à l'accueil d'origine : rien à enregistrer.
+		modules = JSON.stringify(checked.modules) === JSON.stringify(DEFAULT_HOME) ? undefined : checked.modules;
+	} else if (def.modules && Array.isArray(pages[id]?.modules)) {
+		modules = pages[id]!.modules as HomeModule[];
+	}
 	if (errors.length) return { errors };
 
 	const settings: SitePageSettings = {};
@@ -527,7 +551,7 @@ export async function saveSitePage(id: string, input: SitePageInput): Promise<{ 
 	if (state.order !== def.order) settings.order = state.order;
 	if (!input.show) settings.show = false;
 	if (Object.keys(textes).length) settings.textes = textes;
-	const pages = await readSitePagesSettings();
+	if (modules) settings.modules = modules;
 	if (Object.keys(settings).length) pages[id] = settings;
 	else delete pages[id];
 

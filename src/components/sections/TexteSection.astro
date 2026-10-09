@@ -1,0 +1,40 @@
+---
+/**
+ * Module « Texte libre » de l'accueil (`src/lib/home-modules.ts`) : un titre
+ * facultatif et un texte Markdown court, nettoyé comme les blocs de page
+ * (`renderMarkdownFragment`).
+ */
+import { renderMarkdownFragment, typographie } from '../../lib/markdown-fragment';
+
+interface Props {
+	title?: string;
+	markdown: string;
+}
+
+const { title = '', markdown } = Astro.props;
+---
+
+<section class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+	{title && <h2 class="text-3xl text-gray-900">{typographie(title)}</h2>}
+	<div class:list={['texte-libre font-light text-gray-600', title && 'mt-4']} set:html={renderMarkdownFragment(markdown)} />
+</section>
+
+<style>
+	.texte-libre :global(p + p),
+	.texte-libre :global(p + ul),
+	.texte-libre :global(ul + p) {
+		margin-top: 1rem;
+	}
+	.texte-libre :global(ul) {
+		margin-top: 1rem;
+		list-style: disc;
+		padding-left: 1.25rem;
+	}
+	.texte-libre :global(li + li) {
+		margin-top: 0.25rem;
+	}
+	.texte-libre :global(a) {
+		color: var(--color-primary);
+		text-decoration: underline;
+	}
+</style>

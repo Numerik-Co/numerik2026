@@ -1,50 +1,72 @@
 ---
+/**
+ * Page d'accueil : suite de modules choisis, ordonnés et rédigés depuis le
+ * module « Pages » (catalogue src/lib/home-modules.ts, réglages dans
+ * src/content/pages/_pages-site.md ; sans réglage : DEFAULT_HOME).
+ */
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/sections/Hero.astro';
 import ActivitesSection from '../components/sections/ActivitesSection.astro';
 import ActualitesSection from '../components/sections/ActualitesSection.astro';
 import CtaSection from '../components/sections/CtaSection.astro';
+import PartenairesSection from '../components/sections/PartenairesSection.astro';
 import RdvCtaSection from '../components/sections/RdvCtaSection.astro';
+import TexteSection from '../components/sections/TexteSection.astro';
 import heroImage from '../styles/img/hero-mediation-numerique.jpg';
+import { applyPageVariablesText } from '../lib/page-variables';
 import { getSitePage, inactiveSiteHrefs } from '../lib/site-pages-content';
 
-// Textes réglés depuis le module « Pages » (bibliothèque src/lib/site-pages.ts).
-const { t } = await getSitePage('accueil');
+const { modules = [] } = await getSitePage('accueil');
 // Liens vers une page du site désactivée : masqués ('' et non undefined, qui
 // rendrait au composant son lien par défaut).
 const off = await inactiveSiteHrefs();
-const link = (href: string) => (off.has(href) ? '' : href);
+const link = (href: string) => (off.has(href.replace(/\/$/, '') || '/') ? '' : href);
+/** Texte d'un champ, variables {{association.…}} remplacées. */
+const txt = (value: string | undefined) => applyPageVariablesText(value ?? '');
+type Overlay = 'white' | 'black' | 'none';
 ---
 
 <Layout>
-	<Hero
-		title={t['hero-titre']}
-		highlight={t['hero-mot']}
-		description={t['hero-accroche']}
-		primaryLabel={t['hero-bouton-1']}
-		primaryHref={link('/activites')}
-		secondaryLabel={t['hero-bouton-2']}
-		secondaryHref="/adherer"
-		backgroundImage={heroImage}
-		overlay="black"
-	/>
-	<ActualitesSection
-		eyebrow={t['actus-surtitre']}
-		title={t['actus-titre']}
-		ctaLabel={t['actus-lien']}
-		ctaHref={link('/actualites')}
-		limit={3}
-	/>
-	<RdvCtaSection />
-	<ActivitesSection
-		title={t['activites-titre']}
-		ctaLabel={t['activites-lien']}
-		ctaHref={link('/activites')}
-	/>
-	<CtaSection
-		title={t['rejoindre-titre']}
-		description={t['rejoindre-texte']}
-		buttonLabel={t['rejoindre-bouton']}
-		buttonHref="/adherer"
-	/>
+	{modules.map((m) => (
+		<>
+			{m.type === 'bandeau' && (
+				<Hero
+					title={txt(m.titre)}
+					highlight={txt(m.mot)}
+					description={txt(m.accroche)}
+					primaryLabel={txt(m['bouton1-texte'])}
+					primaryHref={link(m['bouton1-lien'])}
+					secondaryLabel={txt(m['bouton2-texte'])}
+					secondaryHref={link(m['bouton2-lien'])}
+					backgroundImage={heroImage}
+					overlay={m.voile as Overlay}
+				/>
+			)}
+			{m.type === 'actualites' && (
+				<ActualitesSection
+					eyebrow={txt(m.surtitre)}
+					title={txt(m.titre)}
+					ctaLabel={txt(m['lien-texte'])}
+					ctaHref={link('/actualites')}
+					limit={Number(m.nombre) || 3}
+				/>
+			)}
+			{m.type === 'rdv-conseiller' && (
+				<RdvCtaSection eyebrow={txt(m.surtitre)} title={txt(m.titre)} description={txt(m.texte)} buttonLabel={txt(m['bouton-texte'])} />
+			)}
+			{m.type === 'activites' && (
+				<ActivitesSection title={txt(m.titre)} ctaLabel={txt(m['lien-texte'])} ctaHref={link('/activites')} />
+			)}
+			{m.type === 'appel' && (
+				<CtaSection
+					title={txt(m.titre)}
+					description={txt(m.texte)}
+					buttonLabel={txt(m['bouton-texte'])}
+					buttonHref={link(m['bouton-lien'])}
+				/>
+			)}
+			{m.type === 'partenaires' && <PartenairesSection title={txt(m.titre)} description={txt(m.texte)} />}
+			{m.type === 'texte' && <TexteSection title={txt(m.titre)} markdown={m.texte} />}
+		</>
+	))}
 </Layout>

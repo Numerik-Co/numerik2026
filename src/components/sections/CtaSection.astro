@@ -19,12 +19,16 @@ const {
 
 <section class="bg-gradient-to-r from-primary to-secondary py-16 text-center text-white">
 	<h2 class="text-3xl">{title}</h2>
-	<p class="mx-auto mt-4 max-w-xl font-light text-white/90">
-		{description}
-	</p>
-	<div class="mt-8">
-		<Button href={buttonHref} variant="secondary" class="!bg-white !text-primary">
-			{buttonLabel}
-		</Button>
-	</div>
+	{description && (
+		<p class="mx-auto mt-4 max-w-xl font-light text-white/90">
+			{description}
+		</p>
+	)}
+	{buttonHref && buttonLabel && (
+		<div class="mt-8">
+			<Button href={buttonHref} variant="secondary" class="!bg-white !text-primary">
+				{buttonLabel}
+			</Button>
+		</div>
+	)}
 </section>

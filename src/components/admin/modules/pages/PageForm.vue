@@ -7,7 +7,7 @@
  * « Menu » = menu de navigation (frontmatter `menu:`). Le serveur valide
  * tout (src/lib/page-writer.ts) et reconstruit le site.
  */
-import { computed, inject, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
+import { computed, inject, nextTick, onBeforeUnmount, reactive, ref, toRaw } from 'vue';
 import { ASSIGNABLE_GROUPS, AUTH_GROUPS } from '../../../../lib/auth/groups';
 import { blocMarker, type Bloc } from '../../../../lib/blocs';
 import { PAGE_VARIABLES } from '../../../../lib/page-variables';
@@ -51,7 +51,7 @@ const form = reactive({
 	body: editing?.body ?? '',
 	imageCredit: editing?.imageCredit ?? '',
 });
-const blocs = reactive<Record<string, Bloc>>(structuredClone(editing?.blocs ?? {}));
+const blocs = reactive<Record<string, Bloc>>(structuredClone(toRaw(editing?.blocs ?? {})));
 /** Création : type pas encore choisi (écran de choix classique / enrichie). */
 const typeChosen = ref(Boolean(editing));
 /** L'adresse suit le titre tant qu'elle n'a pas été modifiée à la main (création seulement). */

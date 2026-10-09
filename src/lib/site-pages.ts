@@ -5,7 +5,8 @@
  *  - activée ou non (désactivée = absente du menu ET introuvable, 404 ;
  *    l'accueil reste toujours actif) ;
  *  - lien dans le menu de navigation : libellé, position, visibilité ;
- *  - textes (titres, accroches…), variables `{{association.nom}}` admises.
+ *  - textes (titres, accroches…), variables `{{association.nom}}` admises ;
+ *    l'accueil est composé de modules (`src/lib/home-modules.ts`).
  *
  * Seuls les écarts aux valeurs par défaut ci-dessous sont enregistrés, dans
  * `src/content/pages/_pages-site.md` (collection `sitePages`, frontmatter
@@ -18,6 +19,7 @@
  * Module sans dépendance à Astro ni à Node : aussi utilisé par l'îlot Vue.
  */
 
+import { DEFAULT_HOME, validateHomeModules, type HomeModule } from './home-modules.ts';
 import { applyPageVariablesText } from './page-variables.ts';
 
 export interface SitePageText {
@@ -39,6 +41,8 @@ export interface SitePageDef {
 	canDisable: boolean;
 	/** Une phrase pour la bibliothèque du module. */
 	summary: string;
+	/** Page composée de modules (accueil, cf. `src/lib/home-modules.ts`) plutôt que de textes fixes. */
+	modules?: boolean;
 	sections: { title: string; texts: SitePageText[] }[];
 }
 
@@ -51,58 +55,10 @@ export const SITE_PAGES: SitePageDef[] = [
 		href: '/',
 		order: 0,
 		canDisable: false,
-		summary: "Page d'entrée du site : bandeau, dernières actualités, activités, appel à adhérer.",
-		sections: [
-			{
-				title: 'Bandeau',
-				texts: [
-					{ name: 'hero-titre', label: 'Titre', default: 'Le numérique, ensemble et pour toutes et tous' },
-					{
-						name: 'hero-mot',
-						label: 'Mot mis en couleur',
-						default: 'ensemble',
-						help: 'Doit figurer tel quel dans le titre ; vide = aucun.',
-					},
-					{
-						name: 'hero-accroche',
-						label: 'Accroche',
-						multiline: true,
-						default:
-							"{{association.nom}} accompagne les habitant·e·s, les associations et les écoles dans la découverte et l'appropriation des outils numériques.",
-					},
-					{ name: 'hero-bouton-1', label: 'Bouton principal (vers Activités)', default: 'Découvrir nos activités' },
-					{ name: 'hero-bouton-2', label: 'Second bouton (vers Adhérer)', default: 'Nous rejoindre' },
-				],
-			},
-			{
-				title: 'Section Actualités',
-				texts: [
-					{ name: 'actus-surtitre', label: 'Surtitre', default: 'Actualités' },
-					{ name: 'actus-titre', label: 'Titre', default: "Les dernières actus de l'association" },
-					{ name: 'actus-lien', label: 'Lien vers la page Actualités', default: 'Voir toutes les actualités' },
-				],
-			},
-			{
-				title: 'Section Activités',
-				texts: [
-					{ name: 'activites-titre', label: 'Titre', default: 'Nos activités' },
-					{ name: 'activites-lien', label: 'Lien vers la page Activités', default: 'Accéder à la page' },
-				],
-			},
-			{
-				title: 'Appel à nous rejoindre',
-				texts: [
-					{ name: 'rejoindre-titre', label: 'Titre', default: 'Envie de nous rejoindre ?' },
-					{
-						name: 'rejoindre-texte',
-						label: 'Texte',
-						multiline: true,
-						default: 'Bénévoles, adhérent·e·s ou partenaires : chacun·e a sa place chez {{association.nom}}.',
-					},
-					{ name: 'rejoindre-bouton', label: 'Bouton (vers Adhérer)', default: "Adhérer à l'association" },
-				],
-			},
-		],
+		summary: "Page d'entrée du site, composée de modules (bandeau, actualités, appel à l'action…).",
+		// Contenu : modules (src/lib/home-modules.ts), pas de textes fixes.
+		modules: true,
+		sections: [],
 	},
 	{
 		id: 'activites',
@@ -231,6 +187,8 @@ export interface SitePageSettings {
 	order?: number;
 	show?: boolean;
 	textes?: Record<string, string>;
+	/** Page à modules (accueil) : liste complète, cf. `validateHomeModules()`. */
+	modules?: unknown[];
 }
 
 /** Page de la bibliothèque avec ses réglages appliqués (textes bruts, variables non remplacées). */
@@ -245,6 +203,8 @@ export interface SitePageState {
 	defaultLabel: string;
 	defaultOrder: number;
 	textes: Record<string, string>;
+	/** Page à modules : modules effectifs (enregistrés ou `DEFAULT_HOME`). */
+	modules?: HomeModule[];
 }
 
 export function sitePagesState(settings: Record<string, SitePageSettings> = {}): SitePageState[] {
@@ -265,6 +225,7 @@ export function sitePagesState(settings: Record<string, SitePageSettings> = {}):
 			defaultLabel: page.label,
 			defaultOrder: page.order,
 			textes,
+			...(page.modules ? { modules: s.modules ? validateHomeModules(s.modules).modules : DEFAULT_HOME.map((m) => ({ ...m })) } : {}),
 		};
 	});
 }
