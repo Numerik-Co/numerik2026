@@ -102,13 +102,17 @@ Groupes `redacteur` / `admin` / `superadmin`. Écrit dans les sources puis
 reconstruit le site, comme le module « Actualités »
 ([publication.md](publication.md)) :
 
-- `src/components/admin/modules/SitePagesModule.vue` — liste en trois blocs :
-  menu de navigation tel qu'affiché (liens vers les pages du site
-  `site.builtinNav`, liens directs,
+- `src/components/admin/modules/SitePagesModule.vue` — liste en quatre blocs :
+  menu de navigation tel qu'affiché (pages du site actives, liens directs,
   menus déroulants et leurs pages, triés par position), pages libres (racine,
-  `menu.show` faux), pages réservées, formulaires (`pages/PageForm.vue`,
+  `menu.show` faux), pages réservées, bibliothèque (pages du site
+  désactivées, bouton « Activer ») ; formulaires (`pages/SitePageForm.vue` pour
+  une page du site), (`pages/PageForm.vue`,
   `pages/BlocsEditor.vue`, `pages/BlocFields.vue`) ; création = choix
-  **page classique** ou **page enrichie**.
+  **page classique** ou **page enrichie**, ou dépôt d'un fichier `.md` qui
+  pré-remplit le formulaire (`pages/page-markdown.ts` : `parsePageMarkdown()`,
+  modèles `downloadPageTemplate()` ; emplacement, adresse, accès et photo
+  restent à régler dans le formulaire, le serveur revalide tout).
 - `src/lib/page-writer.ts` — validation identique au schéma (adresse libre et
   non prise par une page applicative de `src/pages/` ou un fichier de
   `public/`, liens sûrs, variables connues, blocs valides, marqueurs ↔ blocs),
@@ -122,22 +126,48 @@ reconstruit le site, comme le module « Actualités »
   un menu déroulant vide se supprime ; sans page, il n'apparaît pas sur le
   site. Un seul niveau. (« Menu » seul = menu de navigation, frontmatter
   `menu:`.)
-- Liens vers les pages du site (`site.builtinNav` : Accueil, Activités…) :
-  libellé et visibilité réglables (formulaire), position par les flèches ; seuls les écarts aux valeurs
-  de `src/config/site.ts` sont écrits dans `src/content/pages/_navigation.md`
-  (collection `navigation`, `liens: { <id>: { label, order, show } }`,
-  fichier facultatif, supprimé s'il ne reste aucun écart ; id inconnu = build
-  en échec). Fusion : `builtinLinks()` (`src/lib/builtin-nav.ts`), utilisée
-  par `getNavTree()` et par le module.
+- **Pages du site** (bibliothèque `src/lib/site-pages.ts`, `SITE_PAGES` :
+  Accueil, Activités, Actualités, Contact ; pages `.astro` du code) : par
+  page, activation (`canDisable`, l'accueil est toujours actif), lien dans le
+  menu (libellé, position, visibilité) et **textes** décrits par sections
+  (`{ name, label, default, multiline? }`, variables `{{association.…}}`).
+  **L'accueil** (`modules: true`) est une suite de **modules** :
+  catalogue `src/lib/home-modules.ts` (`HOME_MODULES` : bandeau, actualites,
+  activites, rdv-conseiller, appel, partenaires, texte ; champs au format
+  des blocs, `default` par champ, `multiple` pour les types répétables),
+  liste complète enregistrée dans `pages.accueil.modules` (valeurs
+  explicites ; absente = `DEFAULT_HOME`, identique à `DEFAULT_HOME` = non
+  écrite), validée par `validateHomeModules()` (build et écriture), éditée
+  par `HomeModulesEditor.vue` (réutilise `BlocFields.vue`), rendue par
+  `src/pages/index.astro`. Nouveau type = entrée `HOME_MODULES` + branche dans
+  `index.astro`. Le planning (`WeeklyAgenda`) n'en fait pas partie : il lit
+  Grist à chaque requête, l'accueil est prérendu.
+  Seuls les écarts aux valeurs par défaut sont écrits dans
+  `src/content/pages/_pages-site.md` (collection `sitePages`,
+  `pages: { <id>: { active, label, order, show, textes } }` ; fichier
+  toujours présent, `pages: {}` sans réglage — une collection vide ferait
+  avertir Astro à chaque requête ; page ou texte inconnu, accueil désactivé =
+  build en échec). Lecture au build : `getSitePage(id)`
+  (`src/lib/site-pages-content.ts`, textes prêts dans `t`), utilisée par les
+  pages et `getNavTree()` ; écriture : `saveSitePage()`.
+- **Page désactivée = 404** : la page renvoie `new Response(null, { status: 404 })`
+  (page 404 du site) ; une page prérendue étant quand même écrite dans
+  `dist/client`, l'intégration `src/integrations/site-pages.ts` retire son HTML
+  en fin de build. Les liens de l'accueil vers une page désactivée sont
+  masqués (`inactiveSiteHrefs()`) ; les autres liens du site vers elle (ex.
+  « Nous contacter » de /adherer) mènent à la 404.
+- Nouvelle page dans la bibliothèque : une entrée `SITE_PAGES` (textes et
+  valeurs par défaut), lecture de ses textes avec `getSitePage()` dans la page
+  `.astro`, et `if (!page.active) return new Response(null, { status: 404 })`.
 - Ordre : flèches ↑/↓ dans le bloc « Menu de navigation » (premier niveau :
   liens du site, liens directs, menus déroulants ; ou pages d'un menu
   déroulant), brouillon local puis `PUT /api/admin/ordre-menu`
   (`saveMenuOrder()` : liste complète du niveau exigée, positions
   renumérotées 0, 10, 20… dans `menu.order`, `_group.md` et
-  `_navigation.md`, une seule transaction et une seule publication).
+  `_pages-site.md`, une seule transaction et une seule publication).
 - Routes : `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>`,
   `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>`,
-  `PUT /api/admin/liens-menu/<id>`, `PUT /api/admin/ordre-menu` ; chaque
+  `PUT /api/admin/pages-du-site/<id>`, `PUT /api/admin/ordre-menu` ; chaque
   action est consignée au journal.
 
 ### Comment ça marche
@@ -207,9 +237,10 @@ import PageHeader from '../components/sections/PageHeader.astro';
 </Layout>
 ```
 
-Pour l'ajouter au menu, l'inscrire dans `builtinNav` de `src/config/site.ts`
-(voir [navigation.md](navigation.md)) — le routage par fichiers crée la route,
-mais pas l'entrée de menu.
+Pour qu'elle soit réglable depuis l'espace bénévoles (menu, textes,
+activation), l'ajouter à la bibliothèque `SITE_PAGES` de
+`src/lib/site-pages.ts` (voir plus haut) — le routage par fichiers crée la
+route, mais pas l'entrée de menu.
 
 ## Lien vers une page inexistante
 

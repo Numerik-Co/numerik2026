@@ -310,7 +310,7 @@ de process) : voir [publication.md](publication.md).
 
 ### Gérer les pages et les menus déroulants
 
-Module **🗂 Pages** (groupes *Rédacteur·rice* et *Bureau*). La liste a trois
+Module **🗂 Pages** (groupes *Rédacteur·rice* et *Bureau*). La liste a quatre
 blocs :
 
 1. **Menu de navigation**, dans l'ordre d'affichage : pages du site
@@ -321,7 +321,9 @@ blocs :
    déroulant) ; un bandeau propose alors **Enregistrer et publier** (une
    seule reconstruction pour tous les déplacements) ou **Annuler** ;
 2. **Pages libres** : hors du menu, accessibles par leur adresse seulement ;
-3. **Pages réservées** (espace bénévoles).
+3. **Pages réservées** (espace bénévoles) ;
+4. **Bibliothèque de pages du site** : les pages fournies par le site
+   (Activités, Actualités, Contact) désactivées, avec un bouton **Activer**.
 
 **Nouvelle page** : choisir d'abord le type —
 
@@ -332,6 +334,13 @@ blocs :
   Numérique). « Ajouter un bloc » le crée et insère son marqueur
   `[[bloc:…]]` dans le texte à l'endroit du curseur ; le bloc s'affiche à
   cet endroit (on peut déplacer la ligne du marqueur).
+
+**Ou à partir d'un fichier `.md`** (même écran) : « Télécharger un modèle »
+(page classique ou page enrichie, avec des exemples de chaque bloc), le
+compléter dans un éditeur de texte, puis le déposer. Le formulaire est
+pré-rempli (titre, description, texte, blocs, libellé du menu) ; il reste à
+vérifier, choisir l'emplacement et publier. Les champs non repris
+(`access`, `cover`…) sont signalés en tête du formulaire.
 
 Puis : titre, description, **emplacement** (hors menu déroulant — avec ou
 sans lien direct dans le menu de navigation —, dans un menu déroulant, ou
@@ -346,12 +355,28 @@ d'échec, rien n'est modifié. Changer l'emplacement ou l'adresse d'une page
 **change son adresse** : les liens déjà partagés vers l'ancienne ne
 fonctionnent plus.
 
-**Modifier** sur une *page du site* (Accueil, Activités, Actualités,
-Contact) règle seulement son lien dans le menu : libellé et
-visibilité (masqué, la page reste accessible par son adresse). « Rétablir »
-remet les valeurs d'origine. La corbeille **retire le lien du menu** (après
-confirmation) sans supprimer la page ; l'œil l'y remet. Le contenu de ces
-pages se modifie dans le code.
+**Pages du site** (Accueil, Activités, Actualités, Contact) : leur mise en
+page est fournie par le site, l'association règle le reste.
+
+- **Modifier** (crayon) : libellé et visibilité du lien dans le menu
+  (masqué, la page reste accessible par son adresse), puis les **textes** de
+  la page, section par section (titres, accroches, boutons). Les variables
+  `{{association.nom}}`… sont acceptées. Un texte vidé reprend sa valeur
+  d'origine ; « rétablir les textes d'origine » les remet tous.
+- **L'accueil** est composé de **modules**, dans l'ordre d'affichage :
+  bandeau, dernières actualités, activités, RDV Conseiller Numérique, appel à
+  l'action, partenaires, texte libre. Le crayon de l'Accueil permet d'en
+  **ajouter** (liste « Ajouter un module… » ; l'appel à l'action et le texte
+  libre peuvent figurer plusieurs fois), d'en **retirer** (corbeille), de
+  les **ordonner** (↑/↓) et de **modifier leur contenu** (clic sur le module :
+  titres, textes, boutons et leurs liens, nombre d'actualités…). Un champ
+  facultatif vidé masque l'élément (ex. second bouton du bandeau). « Revenir
+  à l'accueil d'origine » remet les modules de départ. Rien n'est publié
+  avant **Enregistrer et publier**.
+- **Désactiver** (corbeille, après confirmation) : la page disparaît du menu
+  **et** du site (son adresse affiche « page introuvable ») ; les liens de
+  l'accueil vers elle sont masqués. Elle passe dans la **Bibliothèque**, d'où
+  **Activer** la remet en place. L'accueil ne se désactive pas.
 
 **Nouveau menu déroulant** : un libellé (non cliquable sur le site) ; il se
 place en dernière position du menu de navigation (flèches ↑/↓ pour le

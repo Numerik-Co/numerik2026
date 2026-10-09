@@ -30,6 +30,7 @@ export type JournalAction =
 	| 'menu-deroulant.modification'
 	| 'menu-deroulant.suppression'
 	| 'lien-menu.modification'
+	| 'page-site.modification'
 	| 'ordre-menu.modification'
 	| 'compte.creation'
 	| 'compte.modification'

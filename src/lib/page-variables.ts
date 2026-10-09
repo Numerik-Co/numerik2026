@@ -51,6 +51,11 @@ export function applyPageVariables(html: string): string {
 	});
 }
 
+/** Remplace les variables connues dans un texte brut (titre, accroche…, échappé ensuite par Astro). */
+export function applyPageVariablesText(text: string): string {
+	return text.replace(VARIABLE, (whole, name: string) => PAGE_VARIABLES[name]?.value() ?? whole);
+}
+
 /** Variables inconnues citées dans un texte (contrôle avant écriture). */
 export function unknownPageVariables(text: string): string[] {
 	return [...new Set([...text.matchAll(VARIABLE)].map((m) => m[1]).filter((name) => !PAGE_VARIABLES[name]))];

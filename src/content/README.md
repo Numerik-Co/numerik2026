@@ -12,9 +12,10 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | `activites/` | Fiches d'activité |
 | `annonces.yaml` | Annonces de la bannière en haut du site (liste, ordre = ordre de défilement) — voir `docs/annonces.md` |
 
-Le reste de la navigation (Accueil, Activités, Actualités, Contact) et le bouton
-**Adhérer** sont configurés une seule fois par l'intégrateur dans
-`src/config/site.ts`.
+Les pages du site (Accueil, Activités, Actualités, Contact) sont fournies par
+le template : on les active et on règle leurs textes depuis le module
+« Pages » (fichier `pages/_pages-site.md`, voir plus bas). Le bouton
+**Adhérer** est configuré par l'intégrateur dans `src/config/site.ts`.
 
 ---
 
@@ -199,20 +200,26 @@ mélangées sur la même échelle). Repères actuels :
 
 Choisir un `order` intermédiaire (ex. `25`) pour intercaler une nouvelle page.
 
-Libellé, position et visibilité d'Accueil, Activités, Actualités et Contact
-se règlent depuis le module « Pages » (bouton « Modifier »), qui les écrit dans
-`pages/_navigation.md` :
+Activation, libellé, position, visibilité et textes d'Accueil, Activités,
+Actualités et Contact se règlent depuis le module « Pages », qui écrit
+seulement ce qui diffère des valeurs d'origine dans `pages/_pages-site.md` :
 
 ```yaml
 ---
-liens:
+pages:
   contact:
     label: "Nous écrire"
     order: 5
+    textes:
+      titre: "Écrivez-nous"
   actualites:
-    show: false   # retiré du menu, la page reste accessible
+    show: false     # retiré du menu, la page reste accessible
+  activites:
+    active: false   # page désactivée : absente du site (404)
 ---
 ```
+
+Les noms des textes de chaque page sont dans `src/lib/site-pages.ts`.
 
 ---
 

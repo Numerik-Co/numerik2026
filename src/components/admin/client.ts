@@ -5,6 +5,8 @@
  */
 import type { AuthGroup } from '../../lib/auth/groups';
 import type { Bloc } from '../../lib/blocs';
+import type { HomeModule } from '../../lib/home-modules';
+import type { SitePageState } from '../../lib/site-pages';
 
 export interface AdminUser {
 	login: string;
@@ -108,15 +110,16 @@ export interface PageSourceView extends PageInput {
 	coverUrl?: string | null;
 }
 
-/** Lien du menu de navigation vers une page applicative (Accueil, Activités…), cf. src/lib/builtin-nav.ts. */
-export interface BuiltinLinkView {
-	id: string;
-	href: string;
+/** Page du site (bibliothèque Accueil, Activités…) avec ses réglages, cf. src/lib/site-pages.ts. */
+export type SitePageView = SitePageState;
+
+export interface SitePageInput {
 	label: string;
-	order: number;
 	show: boolean;
-	defaultLabel: string;
-	defaultOrder: number;
+	active: boolean;
+	textes: Record<string, string>;
+	/** Accueil : liste complète des modules (absent = inchangée). */
+	modules?: HomeModule[];
 }
 
 /** Menu déroulant de la barre de navigation (`_group.md`). */
@@ -198,7 +201,7 @@ export const newsApi = {
 export const pagesApi = {
 	list: () =>
 		request<{
-			links: BuiltinLinkView[];
+			sitePages: SitePageView[];
 			dropdowns: DropdownView[];
 			pages: PageSourceView[];
 			status: PublishStatus;
@@ -217,9 +220,9 @@ export const menuOrderApi = {
 	save: (levels: Record<string, string[]>) => request<{ ok: true }>('PUT', '/api/admin/ordre-menu', { levels }),
 };
 
-export const linksApi = {
-	update: (id: string, input: { label: string; show: boolean }) =>
-		request<{ ok: true }>('PUT', `/api/admin/liens-menu/${encodeURIComponent(id)}`, input),
+export const sitePagesApi = {
+	update: (id: string, input: SitePageInput) =>
+		request<{ ok: true }>('PUT', `/api/admin/pages-du-site/${encodeURIComponent(id)}`, input),
 };
 
 export const dropdownsApi = {

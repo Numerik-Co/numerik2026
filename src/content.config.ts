@@ -14,7 +14,8 @@ import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import { parseAccess } from './lib/auth/access';
 import { validateBloc, type Bloc } from './lib/blocs';
-import { BUILTIN_LINK_IDS } from './lib/builtin-nav';
+import { validateHomeModules } from './lib/home-modules';
+import { SITE_PAGE_IDS, SITE_PAGES, sitePageTextNames } from './lib/site-pages';
 import { categories } from './lib/categories';
 
 /**
@@ -125,25 +126,48 @@ const pageGroups = defineCollection({
 });
 
 /**
- * Réglages des liens du menu de navigation vers les pages applicatives
- * (`site.builtinNav`) : `src/content/pages/_navigation.md` (frontmatter seul,
- * écrit par le module « Pages », facultatif). Identifiant inconnu = build en échec.
+ * Pages du site (bibliothèque `src/lib/site-pages.ts` : Accueil, Activités…) :
+ * réglages de l'association dans `src/content/pages/_pages-site.md`
+ * (frontmatter seul, écrit par le module « Pages », `pages: {}` sans
+ * réglage). Page ou texte inconnu, accueil désactivé = build en échec.
  */
-const navigation = defineCollection({
-	loader: glob({ pattern: '_navigation.md', base: './src/content/pages' }),
+const sitePages = defineCollection({
+	loader: glob({ pattern: '_pages-site.md', base: './src/content/pages' }),
 	schema: z.object({
-		liens: z
+		pages: z
 			.record(
-				z.string().refine((id) => BUILTIN_LINK_IDS.includes(id), {
-					message: `Lien inconnu ; attendus : ${BUILTIN_LINK_IDS.join(', ')}.`,
-				}),
+				z.string(),
 				z.object({
+					active: z.boolean().optional(),
 					label: z.string().optional(),
 					order: z.number().optional(),
 					show: z.boolean().optional(),
+					textes: z.record(z.string(), z.string()).optional(),
+					/** Page à modules (accueil) : cf. src/lib/home-modules.ts. */
+					modules: z.array(z.unknown()).optional(),
 				}),
 			)
-			.default({}),
+			.default({})
+			.superRefine((pages, ctx) => {
+				for (const [id, settings] of Object.entries(pages)) {
+					const def = SITE_PAGES.find((p) => p.id === id);
+					if (!def) {
+						ctx.addIssue({ code: 'custom', message: `Page du site inconnue « ${id} » ; attendues : ${SITE_PAGE_IDS.join(', ')}.` });
+						continue;
+					}
+					if (!def.canDisable && settings.active === false) {
+						ctx.addIssue({ code: 'custom', message: `La page « ${id} » ne peut pas être désactivée.` });
+					}
+					if (settings.modules) {
+						if (!def.modules) ctx.addIssue({ code: 'custom', message: `La page « ${id} » n'est pas composée de modules.` });
+						for (const message of validateHomeModules(settings.modules).errors) ctx.addIssue({ code: 'custom', message });
+					}
+					const names = sitePageTextNames(id);
+					for (const name of Object.keys(settings.textes ?? {})) {
+						if (!names.includes(name)) ctx.addIssue({ code: 'custom', message: `Page « ${id} » : texte inconnu « ${name} ».` });
+					}
+				}
+			}),
 	}),
 });
 
@@ -218,4 +242,4 @@ const annonces = defineCollection({
 		.refine((a) => a.endDate >= a.startDate, { message: '`endDate` doit être postérieure ou égale à `startDate`.' }),
 });
 
-export const collections = { news, pages, pageGroups, navigation, activites, annonces };
+export const collections = { news, pages, pageGroups, sitePages, activites, annonces };

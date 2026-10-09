@@ -165,7 +165,7 @@ export function isBlocType(value: unknown): value is BlocType {
 
 const ICON = /^[a-z0-9-]{1,40}$/;
 
-function checkField(field: BlocField, value: unknown, where: string, errors: string[]): string | undefined {
+export function checkBlocField(field: BlocField, value: unknown, where: string, errors: string[]): string | undefined {
 	if (value === undefined || value === null || value === '') {
 		if (field.required) errors.push(`${where} : « ${field.label} » est obligatoire.`);
 		return field.type === 'select' ? field.options?.[0]?.value : undefined;
@@ -205,7 +205,7 @@ export function validateBloc(id: string, raw: unknown): { bloc?: Bloc; errors: s
 	const def: BlocTypeDef = BLOC_TYPES[data.type];
 	const bloc: Bloc = { type: data.type };
 	for (const field of def.fields) {
-		const value = checkField(field, data[field.name], where, errors);
+		const value = checkBlocField(field, data[field.name], where, errors);
 		if (value !== undefined) bloc[field.name] = value;
 	}
 	if (def.items) {
@@ -216,7 +216,7 @@ export function validateBloc(id: string, raw: unknown): { bloc?: Bloc; errors: s
 			const out: Record<string, string> = {};
 			const source = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
 			for (const field of def.items!.fields) {
-				const value = checkField(field, source[field.name], `${where}, ${def.items!.label.toLowerCase()} ${i + 1}`, errors);
+				const value = checkBlocField(field, source[field.name], `${where}, ${def.items!.label.toLowerCase()} ${i + 1}`, errors);
 				if (value !== undefined) out[field.name] = value;
 			}
 			return out;

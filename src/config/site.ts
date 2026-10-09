@@ -7,15 +7,6 @@
  * (voir `src/content/README.md`).
  */
 
-export interface BuiltinNavItem {
-	/** Clé stable : libellé, position et visibilité réglables depuis le module « Pages » (`src/content/pages/_navigation.md`). */
-	id: string;
-	label: string;
-	href: string;
-	/** Position dans la navbar ; se mélange avec le `menu.order` des pages de contenu. */
-	order: number;
-}
-
 export interface FormToggle {
 	/** `false` masque le formulaire et affiche `closedTitle` + `closedMessage` à la place. */
 	enabled: boolean;
@@ -41,7 +32,7 @@ export const site = {
 	 * Pensé pour un usage « téléphone en main » pendant un atelier : affiché
 	 * uniquement sur mobile/tablette (`lg:hidden` dans `Header.astro`), jamais
 	 * dans la navbar desktop ni dans le menu déroulant mobile. Ce n'est pas
-	 * une entrée de `builtinNav`.
+	 * une page du menu de navigation.
 	 */
 	presence: {
 		label: 'Je participe',
@@ -49,23 +40,9 @@ export const site = {
 		enabled: true,
 	},
 
-	/**
-	 * Pages applicatives fournies par le template (listing d'activités,
-	 * liste d'actualités, formulaire de contact…). Elles n'ont pas de
-	 * frontmatter éditable : on les déclare ici.
-	 *
-	 * Retirer une ligne masque l'entrée du menu (la page reste accessible).
-	 * Modifier `order` permet de la repositionner par rapport aux pages de contenu.
-	 * Valeurs par défaut : le module « Pages » de l'espace bénévoles peut
-	 * changer libellé, position et visibilité (`src/content/pages/_navigation.md`,
-	 * cf. `src/lib/builtin-nav.ts`).
-	 */
-	builtinNav: [
-		{ id: 'accueil', label: 'Accueil', href: '/', order: 0 },
-		{ id: 'activites', label: 'Activités', href: '/activites', order: 20 },
-		{ id: 'actualites', label: 'Actualités', href: '/actualites', order: 30 },
-		{ id: 'contact', label: 'Contact', href: '/contact', order: 40 },
-	] satisfies BuiltinNavItem[],
+	// Pages du site (Accueil, Activités, Actualités, Contact…) : bibliothèque
+	// `src/lib/site-pages.ts`, activées et réglées depuis le module « Pages »
+	// (`src/content/pages/_pages-site.md`), plus ici.
 
 	/**
 	 * Outils de partage affichés en bas des actualités et des pages de

@@ -4,33 +4,38 @@ import PageHeader from '../components/sections/PageHeader.astro';
 import Button from '../components/ui/Button.astro';
 import FormGate from '../components/forms/FormGate.astro';
 import { association, getFullAddress } from '../lib/association';
+import { getSitePage } from '../lib/site-pages-content';
+
+// Page du site désactivable et textes réglés depuis le module « Pages ».
+const page = await getSitePage('contact');
+// Désactivée : la page 404 du site (le HTML prérendu est retiré par src/integrations/site-pages.ts).
+if (!page.active) return new Response(null, { status: 404 });
+const { t } = page;
 
 const inputClass =
 	'w-full rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
 ---
 
 <Layout
-	title={`Contact · ${association.name}`}
-	description={`Contactez l'association ${association.name} pour toute question, demande de partenariat ou d'accompagnement.`}
-	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: 'Contact' }]}
+	title={`${page.label} · ${association.name}`}
+	description={t.description}
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: page.label }]}
 >
 	<PageHeader
 		slot="page-header"
-		title="Contactez-nous"
-		description="Une question, un projet, une envie de vous impliquer ? Écrivez-nous."
+		title={t.titre}
+		description={t.accroche}
 	/>
 
 	<section class="mx-auto grid max-w-5xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-2">
 		<div>
-			<h2 class="text-xl text-gray-900">Nos coordonnées</h2>
+			<h2 class="text-xl text-gray-900">{t['coordonnees-titre']}</h2>
 			<ul class="mt-4 space-y-3 font-light text-gray-600">
 				<li><a href={`mailto:${association.email}`} class="hover:text-primary">{association.email}</a></li>
 				<li><a href={`tel:${association.phone.replace(/\s/g, '')}`} class="hover:text-primary">{association.phone}</a></li>
 				<li>{getFullAddress()}</li>
 			</ul>
-			<p class="mt-6 font-light text-gray-600">
-				Vous pouvez aussi nous retrouver directement lors de nos permanences en atelier.
-			</p>
+			<p class="mt-6 font-light text-gray-600">{t['coordonnees-texte']}</p>
 		</div>
 
 		<FormGate form="contact">
