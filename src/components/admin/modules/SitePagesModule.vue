@@ -303,7 +303,7 @@ onMounted(load);
 			</div>
 
 			<!-- 1. Menu de navigation : pages du site, liens directs, menus déroulants -->
-			<section class="rounded-xl border border-gray-200">
+			<section class="overflow-hidden rounded-xl border border-gray-200">
 				<header class="flex items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 px-4 py-2.5">
 					<i class="fa-solid fa-compass text-gray-400" aria-hidden="true"></i>
 					<span class="font-heading font-semibold text-gray-900">Menu de navigation</span>
@@ -311,14 +311,14 @@ onMounted(load);
 				</header>
 				<ul class="divide-y divide-gray-100">
 					<template v-for="(item, i) in navItems" :key="navKey(item)">
-						<li v-if="item.kind === 'site'" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
+						<li v-if="item.kind === 'site'" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-100">
 							<span :class="['min-w-0', { 'opacity-60': !item.site.show }]">
 								<a :href="item.site.href" class="font-medium text-gray-900 hover:underline">{{ item.site.label }}</a>
 							</span>
-							<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600" title="Page fournie par le site : vous réglez son lien et ses textes">
+							<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600" title="Page fournie par le site : vous réglez son lien et ses textes">
 								page du site
 							</span>
-							<span v-if="!item.site.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">masquée du menu</span>
+							<span v-if="!item.site.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600">masquée du menu</span>
 							<span class="ml-auto flex items-center gap-1">
 								<OrderArrows
 									:label="item.site.label"
@@ -374,7 +374,8 @@ onMounted(load);
 							</template>
 						</PageRow>
 						<li v-else>
-							<div class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
+							<!-- Menu déroulant déplié : la ligne reste grisée. -->
+							<div :class="['flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-100', { 'bg-gray-100': expanded.has(item.dropdown.folder) }]">
 								<button
 									type="button"
 									class="flex items-center gap-2 font-medium text-gray-900 hover:text-primary"
@@ -390,7 +391,7 @@ onMounted(load);
 										]"
 										aria-hidden="true"
 									></i>
-									<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-600">
+									<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 font-normal text-gray-600">
 										{{ item.dropdown.pages.length }} page{{ item.dropdown.pages.length > 1 ? 's' : '' }}
 									</span>
 								</button>
@@ -436,10 +437,11 @@ onMounted(load);
 								]"
 								:inert="!expanded.has(item.dropdown.folder)"
 							>
-								<ul class="ml-6 min-h-0 overflow-hidden divide-y divide-gray-100 border-l border-gray-200">
+								<ul class="min-h-0 overflow-hidden divide-y divide-gray-100">
 									<PageRow
 										v-for="(p, j) in dropdownPages(item.dropdown)"
 										:key="p.path"
+										nested
 										:page="p"
 										:locked="locked"
 										:confirming="confirming === `page:${p.path}`"
@@ -448,7 +450,7 @@ onMounted(load);
 										@confirm-delete="removePage(p)"
 										@cancel-delete="confirming = null"
 									>
-										<span v-if="!p.menu.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">masquée du menu</span>
+										<span v-if="!p.menu.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600">masquée du menu</span>
 										<template #order>
 											<OrderArrows
 												:label="p.title"
@@ -460,7 +462,7 @@ onMounted(load);
 											/>
 										</template>
 									</PageRow>
-									<li v-if="!dropdownPages(item.dropdown).some((p) => p.menu.show)" class="px-4 py-2.5 text-sm font-light text-gray-500">
+									<li v-if="!dropdownPages(item.dropdown).some((p) => p.menu.show)" class="py-2.5 pr-4 pl-8 text-sm font-light text-gray-500">
 										{{ item.dropdown.pages.length ? 'Aucune page visible' : 'Aucune page' }} : ce menu déroulant n'apparaît pas
 										encore sur le site.
 									</li>
@@ -484,7 +486,7 @@ onMounted(load);
 					{ key: 'reservee', title: 'Pages réservées', hint: 'espace bénévoles, connexion requise', icon: 'fa-lock', list: reservedPages },
 				]"
 				:key="group.key"
-				class="rounded-xl border border-gray-200"
+				class="overflow-hidden rounded-xl border border-gray-200"
 			>
 				<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 px-4 py-2.5">
 					<i :class="['fa-solid', group.icon, 'text-gray-400']" aria-hidden="true"></i>
@@ -503,7 +505,7 @@ onMounted(load);
 						@confirm-delete="removePage(p)"
 						@cancel-delete="confirming = null"
 					>
-						<span v-if="group.key === 'reservee'" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+						<span v-if="group.key === 'reservee'" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600">
 							{{ p.access.length ? p.access.join(', ') : 'toute personne connectée' }}
 						</span>
 					</PageRow>
@@ -512,14 +514,14 @@ onMounted(load);
 			</section>
 
 			<!-- 4. Bibliothèque : pages du site désactivées -->
-			<section class="rounded-xl border border-dashed border-gray-300">
+			<section class="overflow-hidden rounded-xl border border-dashed border-gray-300">
 				<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 px-4 py-2.5">
 					<i class="fa-solid fa-book-open text-gray-400" aria-hidden="true"></i>
 					<span class="font-heading font-semibold text-gray-900">Bibliothèque de pages du site</span>
 					<span class="text-xs text-gray-500">pages prêtes à l'emploi, à activer</span>
 				</header>
 				<ul class="divide-y divide-gray-100">
-					<li v-for="p in inactiveSitePages" :key="p.id" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
+					<li v-for="p in inactiveSitePages" :key="p.id" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-100">
 						<span class="min-w-0 flex-1">
 							<span class="font-medium text-gray-900">{{ p.defaultLabel }}</span>
 							<span class="block text-xs font-light text-gray-500">{{ SITE_PAGES.find((d) => d.id === p.id)?.summary }}</span>

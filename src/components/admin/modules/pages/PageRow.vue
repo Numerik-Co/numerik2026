@@ -4,12 +4,13 @@ import type { PageSourceView } from '../../client';
 import ConfirmIconButton from '../../ConfirmIconButton.vue';
 import { iconButtonClass } from '../../context';
 
-const props = defineProps<{ page: PageSourceView; locked: boolean; confirming: boolean }>();
+/** `nested` : page d'un menu déroulant, légèrement en retrait sous son libellé. */
+const props = defineProps<{ page: PageSourceView; locked: boolean; confirming: boolean; nested?: boolean }>();
 const emit = defineEmits<{ edit: []; askDelete: []; confirmDelete: []; cancelDelete: [] }>();
 </script>
 
 <template>
-	<li class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm">
+	<li :class="['flex flex-wrap items-center gap-2 py-2.5 pr-4 text-sm transition-colors hover:bg-gray-100', props.nested ? 'pl-8' : 'pl-4']">
 		<span class="min-w-0">
 			<a :href="`/${props.page.path}`" class="font-medium text-gray-900 hover:underline">{{ props.page.title || props.page.path }}</a>
 		</span>
