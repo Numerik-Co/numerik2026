@@ -4,7 +4,7 @@ import PageHeader from '../components/sections/PageHeader.astro';
 import ActivitesSection from '../components/sections/ActivitesSection.astro';
 import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro';
 import { association } from '../lib/association';
-import { conseillerNumerique, weeklyAgenda } from '../lib/agenda';
+import { conseillerNumerique } from '../lib/agenda';
 import { fetchPlanningAgenda } from '../lib/adhesion/planning';
 
 import { getSitePage } from '../lib/site-pages-content';
@@ -17,11 +17,17 @@ const page = await getSitePage('activites');
 if (!page.active) return new Response(null, { status: 404 });
 const { t } = page;
 
-let sessions = weeklyAgenda;
+// Grist injoignable : pas de planning figé (il deviendrait vite faux), les
+// seules permanences du Conseiller Numérique et un avertissement.
+let sessions = conseillerNumerique;
+let notice: string | undefined;
 try {
 	sessions = [...conseillerNumerique, ...(await fetchPlanningAgenda())];
 } catch (err) {
-	console.error('[activites] Grist injoignable pour le planning, repli sur le planning par défaut.', err);
+	console.error('[activites] Grist injoignable pour le planning : permanences seules.', err);
+	notice =
+		'Le planning des activités est momentanément indisponible. ' +
+		'Contactez-nous pour connaître les horaires des séances.';
 }
 ---
 
@@ -37,7 +43,7 @@ try {
 	/>
 	<ActivitesSection showHeading={false} />
 
-	<WeeklyAgenda sessions={sessions} class="border-t border-gray-100" />
+	<WeeklyAgenda sessions={sessions} notice={notice} class="border-t border-gray-100" />
 
 	<section class="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
 		<h2 class="text-2xl text-gray-900">{t['bas-titre']}</h2>

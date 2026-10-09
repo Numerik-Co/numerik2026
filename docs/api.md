@@ -166,9 +166,10 @@ Les permanences du·de la **Conseiller·ère Numérique** viennent de
 programmation de l'association, jamais dans `Activite`. La page les
 recombine : `[...conseillerNumerique, ...(await fetchPlanningAgenda())]`.
 
-Si Grist est injoignable, la page se rabat sur `weeklyAgenda` (le planning
-en dur, désormais un simple filet de sécurité — plus la source affichée en
-fonctionnement normal).
+Si Grist est injoignable (ou non configuré), la page n'affiche que les
+permanences du Conseiller Numérique, avec un avertissement « planning
+momentanément indisponible » (prop `notice` de `WeeklyAgenda`). Plus de
+planning figé de secours : il devenait faux sans que personne le voie.
 
 Colonnes du planning sur `Activite` (mapping `COLS.activite` dans
 `src/lib/adhesion/grist.ts`), en plus de celles déjà utilisées par

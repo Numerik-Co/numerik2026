@@ -245,10 +245,9 @@ couleur par famille d'activité.
   d'`AGENDA_DAYS`, une par jour, heures « 09h00 » piles/demies dans
   09h–20h ; liste vide = encart `RdvCtaSection` absent) — dispositif géré à
   part de la programmation de l'association, jamais dans Grist. `groupByDay()`
-  regroupe et trie les séances selon `AGENDA_DAYS`. `weeklyAgenda` reste un
-  planning figé en dur : **filet de sécurité uniquement**, utilisé si Grist
-  est injoignable (voir ci-dessous) ou comme valeur par défaut du
-  composant.
+  regroupe et trie les séances selon `AGENDA_DAYS`. Plus de planning figé
+  (`weeklyAgenda` supprimé le 2026-10-09) : Grist injoignable = permanences
+  seules + avertissement (`notice`).
 - **Source du planning affiché sur `/activites`** : la table Grist
   `Activite` elle-même (chaque ligne est déjà un créneau précis : jour,
   horaires, lieu, encadrant·e·s), lue à chaque requête par
@@ -261,9 +260,9 @@ couleur par famille d'activité.
   **Modifier le planning = éditer les lignes `Activite` dans Grist**, pas
   le code. Détail des colonnes et du mapping : [docs/api.md](docs/api.md).
 - `src/components/sections/WeeklyAgenda.astro` — le composant.
-  `<WeeklyAgenda />` rend `weeklyAgenda` (le planning en dur) par défaut ;
-  props : `sessions` (jeu de séances personnalisé — c'est ce que passe
-  `/activites` avec les créneaux venus de Grist), `showHeading`, `title`,
+  props : `sessions` (**obligatoire** — `/activites` passe permanences +
+  créneaux venus de Grist), `notice` (avertissement au-dessus de la grille),
+  `showHeading`, `title`,
   `description`, `showLegend`, `startHour` / `endHour` (bornes de l'axe
   horaire, défaut 9 → 20), `alwaysShowDays` (jours affichés même vides,
   défaut lundi → samedi), `class` (utilitaires ajoutés au `<section>`).
@@ -276,8 +275,7 @@ couleur par famille d'activité.
 - Consommé par `src/pages/activites.astro` (`prerender = false`, pour lire
   Grist à chaque requête). Réutilisable ailleurs :
   `import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro'` puis
-  `<WeeklyAgenda showHeading={false} />` (ex. bloc dans une page d'accueil,
-  planning en dur par défaut sauf `sessions` fourni explicitement).
+  `<WeeklyAgenda sessions={…} showHeading={false} />`.
 
 ### Outils de partage (actualités et pages)
 

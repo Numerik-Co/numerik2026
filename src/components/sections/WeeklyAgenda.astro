@@ -2,13 +2,14 @@
 import {
 	AGENDA_KIND_META,
 	groupByDay,
-	weeklyAgenda,
 	type AgendaSession,
 } from '../../lib/agenda';
 
 interface Props {
-	/** Séances à afficher. Par défaut : le planning de l'association. */
-	sessions?: AgendaSession[];
+	/** Séances à afficher (ex. `/activites` : permanences + lignes Grist). */
+	sessions: AgendaSession[];
+	/** Message d'avertissement au-dessus de la grille (ex. planning Grist indisponible). */
+	notice?: string;
 	/** Affiche le titre et l'intro de la section. */
 	showHeading?: boolean;
 	title?: string;
@@ -25,7 +26,8 @@ interface Props {
 }
 
 const {
-	sessions = weeklyAgenda,
+	sessions,
+	notice,
 	showHeading = true,
 	title = 'Le planning de la semaine',
 	description = 'Toutes nos séances hebdomadaires. Les créneaux sont susceptibles d’évoluer en cours d’année.',
@@ -96,6 +98,13 @@ const gridStyle = [
 				</li>
 			))}
 		</ul>
+	)}
+
+	{notice && (
+		<p role="status" class="mt-6 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+			<i class="fa-solid fa-circle-info mt-0.5 text-amber-500" aria-hidden="true"></i>
+			<span>{notice}</span>
+		</p>
 	)}
 
 	<div class="mt-10 overflow-x-auto">
