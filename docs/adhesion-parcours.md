@@ -8,7 +8,8 @@ reprendre ensuite.
   `src/content/reglages.yaml` (`true` = ouvert). Fermé, le formulaire est remplacé par
   un message et le bouton « Adhérer en ligne » disparaît.
 - Chaque étape n'apparaît qu'une fois la précédente validée.
-- Le **règlement se fait sur place** (ou chez les partenaires) : le formulaire
+- Le **règlement se fait sur place** (ou chez les partenaires `relais: true`
+  de `src/content/partenaires.yaml`, passés en prop à l'îlot) : le formulaire
   n'encaisse rien.
 
 ## Vue d'ensemble

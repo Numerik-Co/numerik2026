@@ -20,6 +20,11 @@ import type {
 	Mode,
 } from '../../lib/adhesion/types';
 
+defineProps<{
+	/** Partenaires où régler sa cotisation (`relais: true` de `src/content/partenaires.yaml`). */
+	relaisAdhesion?: string[];
+}>();
+
 type Step = 'identite' | 'cotisation' | 'membres' | 'activite' | 'recap' | 'contact-ok';
 
 const emptyIdentite = (): MembrePayload => ({
@@ -519,6 +524,7 @@ function annuler() {
 				:inscriptions="inscriptions"
 				:montant-total="montantTotal"
 				:bulletin-href="bulletinHref"
+				:relais-adhesion="relaisAdhesion"
 				@recommencer="recommencer"
 			/>
 		</ol>
