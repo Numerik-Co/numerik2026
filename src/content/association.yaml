@@ -43,7 +43,7 @@ legal:
   siretNumber: '' # Numéro SIRET
   president: 'M. BURKE Xavier'
   publicationManager: 'M. BURKE Xavier' # Responsable de la publication (souvent le·la président·e)
-  publicationManagerRole: 'M. BURKE Xavier' # Fonction de ce·tte responsable dans l'association
+  publicationManagerRole: 'Président' # Fonction de ce·tte responsable dans l'association
   hosting: # Hébergeur du site
     name: ''
     address: ''
