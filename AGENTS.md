@@ -409,6 +409,13 @@ Pistes de suite non traitées (à reprendre si redemandé) :
    depuis Grist directement).
 4. Suppression de `Table1` (table Grist vide créée par défaut, sans impact).
 
+## CI
+
+`.github/workflows/ci.yml` (GitHub Actions, push `master`/`DEV` + PR) :
+`npm ci`, `astro check`, `npm run build` avec `SITE_URL` fictif et secrets
+« témoins » (`temoin-ci-…`, échec s'ils apparaissent dans `dist/`), puis
+`docker build`. Ne déploie rien. Détail : [docs/ci.md](docs/ci.md).
+
 ## Documentation
 
 Snippets prêts à copier (frontmatter, blocs de page, variables, FormGate, route API Grist…) :

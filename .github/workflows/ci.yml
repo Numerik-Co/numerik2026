@@ -1,0 +1,73 @@
+# Intégration continue : à chaque envoi sur GitHub (branches master et DEV)
+# et à chaque pull request, vérifie que le site se construit — sans rien
+# déployer. Une croix rouge sur GitHub = ne pas déployer cette version.
+# Détail : docs/ci.md.
+
+name: CI
+
+on:
+  push:
+    branches: [master, DEV]
+  pull_request:
+  # Bouton « Run workflow » dans l'onglet Actions de GitHub.
+  workflow_dispatch:
+
+# Un nouvel envoi sur la même branche annule la vérification en cours.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    name: Vérification et construction du site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Adresse fictive : la vraie (SITE_URL) n'est connue que des serveurs.
+      SITE_URL: https://www.exemple.org
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Même version majeure que l'image Docker (node:22-slim).
+          node-version: 22
+          cache: npm
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Vérification du code (types, composants Astro et Vue)
+        run: npx astro check
+
+      - name: Construction du site
+        run: npm run build
+        env:
+          # Valeurs « témoins » : si l'une d'elles se retrouve dans dist/, un
+          # secret serait figé dans le build (import.meta.env au lieu de
+          # astro:env/server, cf. astro.config.mjs) — l'étape suivante échoue.
+          GRIST_API_KEY: temoin-ci-grist-api-key
+          AUTH_SECRET: temoin-ci-auth-secret-0123456789abcdef
+          BULLETIN_SECRET: temoin-ci-bulletin-secret
+          GOTENBERG_PASSWORD: temoin-ci-gotenberg-password
+
+      - name: Contrôle — aucun secret figé dans le site construit
+        run: |
+          if grep -rIl "temoin-ci-" dist; then
+            echo "::error::Une valeur secrète a été recopiée dans dist/ (fichiers ci-dessus) : la lire via astro:env/server, jamais import.meta.env."
+            exit 1
+          fi
+          echo "Aucun secret dans dist/."
+
+  docker:
+    name: Construction de l'image Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: docker build
+        run: docker build --build-arg SITE_URL=https://www.exemple.org -t numerik2026:ci .
