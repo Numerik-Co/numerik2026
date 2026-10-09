@@ -9,7 +9,7 @@ Le menu du header est **construit automatiquement au build** par
    (Accueil, Activités, Actualités, Contact) ; activation, libellé, position,
    visibilité et textes se règlent depuis le module « Pages »
    (`src/content/pages/_pages-site.md`, cf. [pages.md](pages.md)). Le bouton
-   CTA « Adhérer » reste dans `src/config/site.ts` (`cta`, jamais une entrée
+   CTA « Adhérer » se règle dans `src/content/reglages.yaml` (`cta`, jamais une entrée
    de menu).
 2. **Les pages de `src/content/pages/`** dont le frontmatter porte
    `menu.show: true` — voir [pages.md](pages.md) et le guide éditeur
@@ -25,7 +25,7 @@ source des données a changé. Le tableau `navLinks` codé en dur a disparu.
 | --- | --- |
 | Page éditoriale (contenu) | Frontmatter `menu:` de `src/content/pages/<...>/index.md` |
 | Page du site (Accueil, Activités…) | Module « Pages » (libellé, masquer, activer/désactiver, flèches ↑/↓ pour l'ordre) ; nouvelle page : `SITE_PAGES` de `src/lib/site-pages.ts` |
-| Bouton « Adhérer » | Objet `cta` de `src/config/site.ts` (`enabled: false` le masque) |
+| Bouton « Adhérer » | `cta` dans `src/content/reglages.yaml` (`enabled: false` le masque) |
 | Ordre | Champ `order` — builtin et contenu sont triés sur la **même échelle** |
 
 Repères d'`order` actuels : Accueil `0`, Association `10`, Activités `20`,

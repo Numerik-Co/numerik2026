@@ -55,7 +55,7 @@ Les briques sont rangées par famille dans des sous-dossiers de `src/components/
 
 | Composant | Usage |
 | :--- | :--- |
-| `forms/FormGate.astro` | Entoure un formulaire : `<FormGate form="<clé>">…</FormGate>`. Si `site.forms.<clé>.enabled` (dans `src/config/site.ts`) vaut `true`, rend le contenu du slot par défaut tel quel ; sinon, le remplace par un encart informatif (`closedTitle` + `closedMessage`). Slot nommé `fallback` optionnel : un bouton d'alternative affiché sous le message de fermeture (ex. `<Button slot="fallback" href="/contact">Nous contacter</Button>`). Clés actuelles : `adhesion` (`src/pages/adherer/formulaire.astro`), `contact` (`src/pages/contact.astro`). |
+| `forms/FormGate.astro` | Entoure un formulaire : `<FormGate form="<clé>">…</FormGate>`. Si `site.forms.<clé>.enabled` (défaut dans `src/config/site.ts`, réglé dans `src/content/reglages.yaml`) vaut `true`, rend le contenu du slot par défaut tel quel ; sinon, le remplace par un encart informatif (`closedTitle` + `closedMessage`). Slot nommé `fallback` optionnel : un bouton d'alternative affiché sous le message de fermeture (ex. `<Button slot="fallback" href="/contact">Nous contacter</Button>`). Clés actuelles : `adhesion` (`src/pages/adherer/formulaire.astro`), `contact` (`src/pages/contact.astro`). |
 
 Pour la logique côté page — masquer un bouton d'accès quand le formulaire est
 fermé, par exemple — `src/lib/forms.ts` expose `isFormOpen(name)` et

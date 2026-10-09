@@ -1,11 +1,21 @@
 /**
- * Configuration propre à chaque structure qui déploie ce template.
+ * Réglages du site : bouton « Adhérer », lien « Je participe », outils de
+ * partage, ouverture/fermeture des formulaires.
  *
- * C'est le SEUL fichier hors de `src/content/` qu'un intégrateur doit
- * ajuster pour mettre en route une nouvelle plateforme. Toutes les autres
- * pages de contenu se déclarent elles-mêmes via leur frontmatter
- * (voir `src/content/README.md`).
+ * Les valeurs ci-dessous (`DEFAULTS`) sont celles du modèle. Chaque
+ * association les remplace dans `src/content/reglages.yaml`, fichier qui lui
+ * appartient et qu'une mise à jour du modèle ne remplace pas. Tout y est
+ * facultatif : une clé absente garde la valeur par défaut — un formulaire
+ * ajouté par une mise à jour fonctionne donc sans toucher au YAML. Une clé
+ * inconnue (faute de frappe) fait échouer le build avec son chemin.
+ *
+ * Même principe que `src/lib/association.ts` (`?raw`, lecture synchrone).
+ * Pages du site (Accueil, Activités…) : module « Pages », pas ici.
  */
+
+import { z } from 'astro/zod';
+import { parse as parseYaml } from 'yaml';
+import raw from '../content/reglages.yaml?raw';
 
 export interface FormToggle {
 	/** `false` masque le formulaire et affiche `closedTitle` + `closedMessage` à la place. */
@@ -16,7 +26,13 @@ export interface FormToggle {
 	closedMessage: string;
 }
 
-export const site = {
+interface LinkToggle {
+	label: string;
+	href: string;
+	enabled: boolean;
+}
+
+const DEFAULTS = {
 	/**
 	 * Bouton d'appel à l'action affiché à droite de la barre de navigation.
 	 * Ce n'est jamais une entrée de menu. `enabled: false` le masque complètement.
@@ -25,7 +41,7 @@ export const site = {
 		label: 'Adhérer',
 		href: '/adherer',
 		enabled: true,
-	},
+	} as LinkToggle,
 
 	/**
 	 * Lien rapide vers le dispositif de présence (« Je participe »).
@@ -38,11 +54,7 @@ export const site = {
 		label: 'Je participe',
 		href: '/je-participe',
 		enabled: true,
-	},
-
-	// Pages du site (Accueil, Activités, Actualités, Contact…) : bibliothèque
-	// `src/lib/site-pages.ts`, activées et réglées depuis le module « Pages »
-	// (`src/content/pages/_pages-site.md`), plus ici.
+	} as LinkToggle,
 
 	/**
 	 * Outils de partage affichés en bas des actualités et des pages de
@@ -94,3 +106,49 @@ export const site = {
 		},
 	} satisfies Record<string, FormToggle>,
 };
+
+type FormKey = keyof typeof DEFAULTS.forms;
+type ShareKey = keyof typeof DEFAULTS.share;
+
+const text = z.string({ error: 'texte attendu' }).trim().min(1, 'texte vide');
+const bool = z.boolean({ error: 'true ou false attendu' });
+
+const linkSchema = z.strictObject({ label: text, href: text, enabled: bool }).partial();
+const formSchema = z.strictObject({ enabled: bool, closedTitle: text, closedMessage: text }).partial();
+
+/** Réglages de l'association : tout facultatif, clés inconnues refusées. */
+const overridesSchema = z
+	.strictObject({
+		cta: linkSchema,
+		presence: linkSchema,
+		share: z.strictObject(Object.fromEntries(Object.keys(DEFAULTS.share).map((k) => [k, bool])) as Record<ShareKey, z.ZodBoolean>).partial(),
+		forms: z.strictObject(Object.fromEntries(Object.keys(DEFAULTS.forms).map((k) => [k, formSchema])) as Record<FormKey, typeof formSchema>).partial(),
+	})
+	.partial()
+	.nullish()
+	.transform((v) => v ?? {});
+
+function load() {
+	const result = overridesSchema.safeParse(parseYaml(raw));
+	if (!result.success) {
+		const details = result.error.issues
+			.map((i) => {
+				const where = i.path.join('.') || '(fichier)';
+				const message = i.code === 'unrecognized_keys' ? `clé inconnue « ${i.keys.join(' », « ')} »` : i.message;
+				return `  - ${where} : ${message}`;
+			})
+			.join('\n');
+		throw new Error(`src/content/reglages.yaml invalide :\n${details}`);
+	}
+	const o = result.data;
+	return {
+		cta: { ...DEFAULTS.cta, ...o.cta },
+		presence: { ...DEFAULTS.presence, ...o.presence },
+		share: { ...DEFAULTS.share, ...o.share },
+		forms: Object.fromEntries(
+			Object.entries(DEFAULTS.forms).map(([k, d]) => [k, { ...d, ...o.forms?.[k as FormKey] }]),
+		) as Record<FormKey, FormToggle>,
+	};
+}
+
+export const site = load();

@@ -1,0 +1,57 @@
+# =============================================================================
+#  Réglages du site
+# =============================================================================
+#
+#  Bouton « Adhérer », lien « Je participe », outils de partage et
+#  ouverture/fermeture des formulaires en ligne.
+#
+#  Ce fichier appartient à l'association : une mise à jour du site ne le
+#  remplace jamais. Tout est facultatif : supprimez une ligne pour revenir à la
+#  valeur par défaut du site. Une clé mal orthographiée fait échouer la
+#  construction du site avec un message indiquant laquelle.
+#
+#  Les pages du site (Accueil, Activités, Actualités, Contact) ne se règlent
+#  pas ici mais dans l'espace bénévoles, module « Pages ».
+# =============================================================================
+
+# Bouton mis en avant à droite de la barre de navigation.
+# enabled: false pour le masquer.
+cta:
+  label: 'Adhérer'
+  href: '/adherer'
+  enabled: true
+
+# Lien rapide « Je participe » (présence pendant un atelier), affiché sur
+# téléphone et tablette uniquement. enabled: false pour le masquer.
+presence:
+  label: 'Je participe'
+  href: '/je-participe'
+  enabled: true
+
+# Outils de partage en bas des actualités et des pages (true / false).
+share:
+  facebook: true
+
+# Formulaires en ligne. enabled: false ferme le formulaire : à sa place
+# s'affiche un encart avec closedTitle et closedMessage.
+#   adhesion               → /adherer/formulaire
+#   contact                → /contact
+#   inscription            → /inscription (inscription à une activité)
+#   rdvConseillerNumerique → /rdv-conseiller-numerique
+forms:
+  adhesion:
+    enabled: true
+    closedTitle: 'Adhésions en ligne momentanément fermées'
+    closedMessage: "Le formulaire d'adhésion en ligne n'est pas ouvert actuellement. Vous pouvez adhérer sur place ou nous écrire, nous vous répondrons rapidement."
+  contact:
+    enabled: true
+    closedTitle: 'Formulaire de contact indisponible'
+    closedMessage: "Le formulaire de contact n'est pas ouvert actuellement. Vous pouvez nous joindre par téléphone ou par e-mail (coordonnées ci-contre)."
+  inscription:
+    enabled: true
+    closedTitle: 'Inscriptions en ligne momentanément fermées'
+    closedMessage: "Le formulaire d'inscription en ligne n'est pas ouvert actuellement. Vous pouvez nous contacter directement pour vous inscrire à une activité."
+  rdvConseillerNumerique:
+    enabled: true
+    closedTitle: 'Prise de RDV en ligne momentanément fermée'
+    closedMessage: "La prise de rendez-vous en ligne avec le·la Conseiller·ère Numérique n'est pas ouverte actuellement. Vous pouvez vous présenter directement à ses permanences ou nous contacter."

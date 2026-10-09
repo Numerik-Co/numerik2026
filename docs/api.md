@@ -95,7 +95,7 @@ Nouvelle variable : l'ajouter à `env.schema` (`astro.config.mjs`) et à
 
 `src/pages/adherer/formulaire.astro` monte l'îlot `src/components/adhesion/AdhesionForm.vue` en `client:load`, entouré de `<FormGate form="adhesion">`. Deux parcours (**Nouveau membre** / **Renouvellement**) et un déroulé : identité → cotisation → *(membres du groupe si cotisation multiple)* → activité → récapitulatif, chaque étape n'étant révélée qu'après le retour de la précédente. En **renouvellement**, l'étape 1 marque une pause « confirmation de la fiche + préférences » (cases `newsletter` / `droitImage` pré-cochées, écrites via `/api/adhesion/preferences`) ; si `Membres.Adhesion_en_cours` est vrai, la cotisation est **sautée** et on passe directement à l'activité (permet à un membre à jour de s'inscrire à une nouvelle activité).
 
-**Fermer les adhésions en ligne** : passer `site.forms.adhesion.enabled` à `false` dans `src/config/site.ts`. Le formulaire est alors remplacé par le message `closedTitle` / `closedMessage`, et le bouton « Adhérer en ligne » de `src/pages/adherer.astro` disparaît (`isFormOpen('adhesion')`). Voir [composants.md](composants.md#forms) pour le mécanisme `FormGate`.
+**Fermer les adhésions en ligne** : passer `site.forms.adhesion.enabled` à `false` dans `src/content/reglages.yaml`. Le formulaire est alors remplacé par le message `closedTitle` / `closedMessage`, et le bouton « Adhérer en ligne » de `src/pages/adherer.astro` disparaît (`isFormOpen('adhesion')`). Voir [composants.md](composants.md#forms) pour le mécanisme `FormGate`.
 
 | Composant | Rôle |
 | :--- | :--- |

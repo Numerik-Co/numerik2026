@@ -6,7 +6,7 @@ directement dans le document Grist **« RDV Conseiller Numérique »** (tables
 `Beneficiaires`, `RDV`, `Demarches`) — aucune saisie à reprendre ensuite.
 
 - **Ouvrir / fermer** la prise de RDV en ligne : `forms.rdvConseillerNumerique.enabled`
-  dans `src/config/site.ts` (`true` = ouvert). Fermé, le formulaire est
+  dans `src/content/reglages.yaml` (`true` = ouvert). Fermé, le formulaire est
   remplacé par un message ; l'encart de la page d'accueil reste affiché mais
   son bouton devient « Voir les permanences ».
 - Chaque étape n'apparaît qu'une fois la précédente validée.

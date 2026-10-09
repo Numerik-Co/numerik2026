@@ -5,7 +5,7 @@ Grist (tables `Membres`, `Adhesions`, `Inscription`) — aucune saisie manuelle 
 reprendre ensuite.
 
 - **Ouvrir / fermer** les adhésions en ligne : `forms.adhesion.enabled` dans
-  `src/config/site.ts` (`true` = ouvert). Fermé, le formulaire est remplacé par
+  `src/content/reglages.yaml` (`true` = ouvert). Fermé, le formulaire est remplacé par
   un message et le bouton « Adhérer en ligne » disparaît.
 - Chaque étape n'apparaît qu'une fois la précédente validée.
 - Le **règlement se fait sur place** (ou chez les partenaires) : le formulaire

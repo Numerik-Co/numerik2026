@@ -73,9 +73,14 @@ Fonctionnement technique :
 - `src/lib/navigation.ts` — `getNavTree()` fusionne les pages du site actives et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
-- `src/config/site.ts` — seul fichier de config par déploiement : bouton CTA
-  « Adhérer », outils de partage et ouverture/fermeture des formulaires
-  (`site.forms`). Les pages du site se règlent dans l'espace bénévoles.
+- `src/config/site.ts` — réglages du site (bouton CTA « Adhérer », « Je
+  participe », outils de partage, ouverture/fermeture des formulaires
+  `site.forms`) : `DEFAULTS` du modèle **fusionnés** avec
+  `src/content/reglages.yaml` (propre à l'asso, tout facultatif, clé inconnue
+  = build en échec ; `?raw` + zod, lecture synchrone comme
+  `association.ts`). Nouveau formulaire / outil = une entrée dans `DEFAULTS`
+  (fonctionne sans toucher au YAML des assos). Les pages du site se règlent
+  dans l'espace bénévoles.
 - `src/components/layout/Header.astro` — consomme `getNavTree()` ; markup
   inchangé, structure `{ label, href, children }`.
 

@@ -259,7 +259,7 @@ Sans `sessions`, c'est le planning figé de secours (`weeklyAgenda`) ;
 
 ### Formulaire ouvert / fermé
 
-1. Déclarer la clé dans `site.forms` (`src/config/site.ts`) :
+1. Déclarer la clé et ses valeurs par défaut dans `DEFAULTS.forms` (`src/config/site.ts`) ; chaque asso peut ensuite l'ouvrir/fermer dans `src/content/reglages.yaml` :
 
 ```ts
 forms: {

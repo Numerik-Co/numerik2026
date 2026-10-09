@@ -11,12 +11,14 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | `news/` | Articles d'actualité (un dossier par article ; photo citée par `cover: ./cover.jpg` dans le frontmatter) — voir `docs/actualites.md` |
 | `activites/` | Fiches d'activité |
 | `annonces.yaml` | Annonces de la bannière en haut du site (liste, ordre = ordre de défilement) — voir `docs/annonces.md` |
+| `reglages.yaml` | Bouton « Adhérer », lien « Je participe », partage, ouverture/fermeture des formulaires (commentaires dans le fichier) |
 | `association.yaml` | Nom, coordonnées, réseaux sociaux et mentions légales de l'association (commentaires dans le fichier) |
 
 Les pages du site (Accueil, Activités, Actualités, Contact) sont fournies par
 le template : on les active et on règle leurs textes depuis le module
 « Pages » (fichier `pages/_pages-site.md`, voir plus bas). Le bouton
-**Adhérer** est configuré par l'intégrateur dans `src/config/site.ts`.
+**Adhérer**, les outils de partage et l'ouverture des formulaires se règlent
+dans `reglages.yaml`.
 
 ---
 
