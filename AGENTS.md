@@ -185,6 +185,9 @@ clavier) : les deux modifient le même brouillon d'ordre, enregistré à part.
   `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
+  Actualités et Pages sont regroupées sous **Contenu ▾** (`menu: 'contenu'`,
+  `ADMIN_MENUS` / `barEntries()` dans `modules.ts`, sous-liens côte à côte ;
+  un seul module visible du menu = bouton direct).
 
 ### HTML des actualités
 

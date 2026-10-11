@@ -205,6 +205,10 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
   (ex. « Production v0.2.0 »), visible du bureau seulement.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
+- **Contenu ▾** regroupe **Actualités** et **Pages** : un clic affiche les
+  deux, côte à côte, juste en dessous (fermé par un clic ailleurs ou
+  **Échap**). Sans le droit d'en voir les deux, le module visible a son
+  propre bouton.
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
   la partie assombrie de la page. Dans un formulaire (actualité, page ou
   activité à ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent

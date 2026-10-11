@@ -14,7 +14,7 @@ import { hasAdminRights } from '../../lib/auth/groups';
 import type { ModelVersionInfo } from '../../lib/model-version';
 import { ApiError, authApi, versionApi, type AdminUser, type ReservedPage } from './client';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
-import { modulesFor } from './modules';
+import { barEntries, modulesFor } from './modules';
 
 // Chargé à la demande (seulement pour un mot de passe provisoire), comme dans le registre des modules.
 const PasswordModule = defineAsyncComponent(() => import('./modules/PasswordModule.vue'));
@@ -52,20 +52,30 @@ const mustChangePassword = computed(() => Boolean(user.value?.mustChangePassword
 const modules = computed(() => (user.value && !mustChangePassword.value ? modulesFor(user.value.groups) : []));
 const activeModule = computed(() => modules.value.find((m) => m.id === activeId.value) ?? null);
 const barModules = computed(() => modules.value.filter((m) => m.placement !== 'user'));
+const bar = computed(() => barEntries(modules.value));
 const userModules = computed(() => modules.value.filter((m) => m.placement === 'user'));
 
-/** Menu déroulant du nom : modules personnels (`placement: 'user'`) + déconnexion. */
-const userMenuOpen = ref(false);
-const userMenu = ref<HTMLElement | null>(null);
-function openUserModule(id: string) {
-	userMenuOpen.value = false;
+/**
+ * Menu déroulant ouvert : `user` (menu du nom : modules personnels + déconnexion) ou l'id d'un menu de
+ * la barre (`ADMIN_MENUS`). Un seul à la fois ; clic ailleurs ou Échap le referme.
+ */
+const openMenu = ref<string | null>(null);
+/** Sous-liens d'un menu de la barre : sous son bouton, hors de la `<nav>` qui défile (elle les rognerait). */
+const menuLeft = ref(0);
+const openBarMenu = computed(() => bar.value.find((e) => e.kind === 'menu' && e.id === openMenu.value) ?? null);
+function toggleBarMenu(id: string, event: MouseEvent) {
+	menuLeft.value = (event.currentTarget as HTMLElement).getBoundingClientRect().left;
+	openMenu.value = openMenu.value === id ? null : id;
+}
+function openModuleFromMenu(id: string) {
+	openMenu.value = null;
 	activeId.value = id;
 }
 function onDocumentClick(e: MouseEvent) {
-	if (userMenuOpen.value && !userMenu.value?.contains(e.target as Node)) userMenuOpen.value = false;
+	if (openMenu.value && !(e.target as Element).closest?.('[data-bar-menu]')) openMenu.value = null;
 }
 function onDocumentKeydown(e: KeyboardEvent) {
-	if (e.key === 'Escape') userMenuOpen.value = false;
+	if (e.key === 'Escape') openMenu.value = null;
 }
 
 function sessionExpired() {
@@ -147,20 +157,59 @@ onBeforeUnmount(() => {
 				Espace d'administration
 			</span>
 			<nav class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto" aria-label="Modules d'administration">
+				<template v-for="entry in bar" :key="entry.kind === 'menu' ? `menu:${entry.id}` : entry.module.id">
+					<button
+						v-if="entry.kind === 'module'"
+						type="button"
+						class="flex shrink-0 items-center gap-1.5 rounded px-2.5 py-1.5 hover:bg-white/10"
+						:class="activeId === entry.module.id ? 'bg-white/15' : ''"
+						:aria-pressed="activeId === entry.module.id"
+						:title="entry.module.label"
+						@click="activeId = activeId === entry.module.id ? null : entry.module.id"
+					>
+						<i :class="['fa-solid', entry.module.icon, 'text-gray-300']" aria-hidden="true"></i>
+						<span class="hidden sm:inline">{{ entry.module.label }}</span>
+					</button>
+					<!-- Menu déroulant (ex. « Contenu ») : en surbrillance quand l'un de ses modules est ouvert. -->
+					<button
+						v-else
+						type="button"
+						data-bar-menu
+						class="flex shrink-0 items-center gap-1.5 rounded px-2.5 py-1.5 hover:bg-white/10"
+						:class="openMenu === entry.id || entry.modules.some((m) => m.id === activeId) ? 'bg-white/15' : ''"
+						aria-haspopup="menu"
+						:aria-expanded="openMenu === entry.id"
+						:title="`${entry.label} : ${entry.modules.map((m) => m.label).join(', ')}`"
+						@click="toggleBarMenu(entry.id, $event)"
+					>
+						<i :class="['fa-solid', entry.icon, 'text-gray-300']" aria-hidden="true"></i>
+						<span class="hidden sm:inline">{{ entry.label }}</span>
+						<i class="fa-solid fa-chevron-down text-[0.65rem] transition-transform" :class="openMenu === entry.id ? 'rotate-180' : ''" aria-hidden="true"></i>
+					</button>
+				</template>
+			</nav>
+			<div
+				v-if="openBarMenu?.kind === 'menu'"
+				data-bar-menu
+				class="fixed top-[3.125rem] flex max-w-[calc(100vw-1rem)] items-stretch gap-1 overflow-x-auto whitespace-nowrap rounded-md bg-gray-900 p-1 shadow-lg ring-1 ring-white/10"
+				:style="{ left: `${Math.max(8, menuLeft)}px` }"
+				role="menu"
+				aria-orientation="horizontal"
+				:aria-label="openBarMenu.label"
+			>
 				<button
-					v-for="m in barModules"
+					v-for="m in openBarMenu.modules"
 					:key="m.id"
 					type="button"
-					class="flex shrink-0 items-center gap-1.5 rounded px-2.5 py-1.5 hover:bg-white/10"
+					role="menuitem"
+					class="flex items-center gap-2 rounded px-3 py-1.5 hover:bg-white/10"
 					:class="activeId === m.id ? 'bg-white/15' : ''"
-					:aria-pressed="activeId === m.id"
-					:title="m.label"
-					@click="activeId = activeId === m.id ? null : m.id"
+					@click="openModuleFromMenu(m.id)"
 				>
-					<i :class="['fa-solid', m.icon, 'text-gray-300']" aria-hidden="true"></i>
-					<span class="hidden sm:inline">{{ m.label }}</span>
+					<i :class="['fa-solid', m.icon, 'w-4 text-center text-gray-300']" aria-hidden="true"></i>
+					{{ m.label }}
 				</button>
-			</nav>
+			</div>
 			<a
 				v-if="version?.updateAvailable"
 				:href="version.url ?? undefined"
@@ -185,22 +234,22 @@ onBeforeUnmount(() => {
 			>
 				<i class="fa-solid fa-server mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Production</span><span class="sm:hidden">Prod.</span><span v-if="version" class="ml-1 font-normal opacity-80">v{{ version.current }}</span>
 			</span>
-			<div ref="userMenu" class="relative ml-1 shrink-0">
+			<div data-bar-menu class="relative ml-1 shrink-0">
 				<button
 					type="button"
 					class="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-gray-300 hover:bg-white/10 hover:text-white"
-					:class="userMenuOpen ? 'bg-white/15 text-white' : ''"
+					:class="openMenu === 'user' ? 'bg-white/15 text-white' : ''"
 					aria-haspopup="menu"
-					:aria-expanded="userMenuOpen"
+					:aria-expanded="openMenu === 'user'"
 					:title="user.fullname"
-					@click="userMenuOpen = !userMenuOpen"
+					@click="openMenu = openMenu === 'user' ? null : 'user'"
 				>
 					<i class="fa-solid fa-circle-user" aria-hidden="true"></i>
 					<span class="hidden max-w-[12rem] truncate sm:inline">{{ user.fullname }}</span>
-					<i class="fa-solid fa-chevron-down text-[0.65rem] transition-transform" :class="userMenuOpen ? 'rotate-180' : ''" aria-hidden="true"></i>
+					<i class="fa-solid fa-chevron-down text-[0.65rem] transition-transform" :class="openMenu === 'user' ? 'rotate-180' : ''" aria-hidden="true"></i>
 				</button>
 				<div
-					v-if="userMenuOpen"
+					v-if="openMenu === 'user'"
 					class="absolute right-0 top-full mt-2.5 flex items-stretch gap-1 overflow-hidden whitespace-nowrap rounded-md bg-gray-900 p-1 shadow-lg ring-1 ring-white/10"
 					role="menu"
 					aria-orientation="horizontal"
@@ -212,7 +261,7 @@ onBeforeUnmount(() => {
 						role="menuitem"
 						class="flex items-center gap-2 rounded px-3 py-1.5 hover:bg-white/10"
 						:class="activeId === m.id ? 'bg-white/15' : ''"
-						@click="openUserModule(m.id)"
+						@click="openModuleFromMenu(m.id)"
 					>
 						<i :class="['fa-solid', m.icon, 'w-4 text-center text-gray-300']" aria-hidden="true"></i>
 						{{ m.label }}
