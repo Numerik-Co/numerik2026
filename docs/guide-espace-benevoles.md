@@ -184,7 +184,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ ⚙ Espace d'administration   🔒 Pages réservées  👥 Comptes   🖥 Production  👤 Marie ▾ │
+│ ⚙ Espace d'administration   🔒 Pages réservées              🖥 Production  👤 Marie ▾ │
 └───────────────────────────────────────┬──────────────────────────────────┤
                                         │ 🔑 Mon mot de passe │ ⏻ Déconnexion │
                                         └──────────────────────────────────┘
@@ -215,13 +215,17 @@ Les modules visibles dépendent de votre groupe :
 
 | Module | Super admin | Bureau (`admin`) | Rédacteur·rice | Animateur·rice |
 | :--- | :---: | :---: | :---: | :---: |
-| Pages réservées | ✅ | ✅ | ✅ | ✅ |
+| Pages réservées | — | — | — | ✅ |
 | Actualités | ✅ | ✅ | ✅ | — |
 | Pages | ✅ | ✅ | ✅ | — |
 | Activités | ✅ | ✅ | ✅ | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
 | Mon mot de passe | ✅ | ✅ | ✅ | ✅ |
+
+Le bouton **Pages réservées** n'apparaît que pour qui n'a pas le module
+**Pages** : celui-ci liste déjà les pages réservées (bloc « Pages
+réservées »).
 
 **Journal** (super admin seulement) : toutes les modifications faites depuis
 l'espace bénévoles — qui, quand, quoi, avec quel résultat (connexions,
@@ -233,7 +237,9 @@ masquables, une page par année. Lecture seule.
 ### Pages réservées
 
 Liste les pages du site qui ne sont visibles qu'une fois connecté·e
-(fiches pratiques, documents internes…). Un clic ouvre la page.
+(fiches pratiques, documents internes…). Un clic ouvre la page. Bureau et
+rédacteur·rice·s les retrouvent dans le module **Pages** (bloc « Pages
+réservées »), qui remplace alors ce bouton.
 
 Si vous arrivez sur une page réservée **sans être connecté·e**, elle affiche
 un encart **« Page réservée »** avec un bouton **Se connecter**.
@@ -589,7 +595,8 @@ access: animateur        # ou : admin, redacteur, [animateur, admin]
 ```
 
 La page n'apparaît pas dans le menu public et figure dans **Pages réservées**
-pour les personnes autorisées. Comme tout contenu, elle est publiée au
+pour les personnes autorisées (module **Pages** pour le bureau et les
+rédacteur·rice·s). Comme tout contenu, elle est publiée au
 prochain build. Détail : [src/content/README.md](../src/content/README.md).
 
 ---
@@ -599,7 +606,8 @@ access: animateur        # ou : true (toute personne connectée), admin, [animat
 ```
 
 La page disparaît du menu public et apparaît dans **Pages réservées** pour
-les personnes autorisées. Comme tout contenu, elle est publiée au prochain
+les personnes autorisées (module **Pages** pour le bureau et les
+rédacteur·rice·s). Comme tout contenu, elle est publiée au prochain
 déploiement. Détail : [src/content/README.md](../src/content/README.md).
 
 ---

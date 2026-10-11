@@ -23,6 +23,8 @@ export interface AdminModule {
 	placement?: 'bar' | 'user';
 	/** Réservé aux seuls `groups`, même pour `admin` (ex. journal → `superadmin`). */
 	exclusive?: true;
+	/** Masqué pour qui voit aussi ce module-là, qui le contient déjà (ex. pages réservées → module « Pages »). */
+	replacedBy?: string;
 }
 
 export const ADMIN_MODULES: AdminModule[] = [
@@ -31,6 +33,7 @@ export const ADMIN_MODULES: AdminModule[] = [
 		label: 'Pages réservées',
 		icon: 'fa-lock',
 		groups: [],
+		replacedBy: 'pages-site',
 		component: defineAsyncComponent(() => import('./modules/PagesModule.vue')),
 	},
 	{
@@ -80,10 +83,11 @@ export const ADMIN_MODULES: AdminModule[] = [
 ];
 
 export function modulesFor(groups: AuthGroup[]): AdminModule[] {
-	return ADMIN_MODULES.filter(
+	const visible = ADMIN_MODULES.filter(
 		(m) =>
 			m.groups.length === 0 ||
 			(hasAdminRights(groups) && !m.exclusive) ||
 			m.groups.some((g) => groups.includes(g)),
 	);
+	return visible.filter((m) => !m.replacedBy || !visible.some((other) => other.id === m.replacedBy));
 }

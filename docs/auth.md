@@ -100,7 +100,9 @@ access: [animateur, admin]   # l'un de ces groupes
   « Se connecter » (ouvre la modale ; la page se recharge après connexion).
 - Connectée sans le bon groupe → **403** « Accès réservé ».
 - Une page réservée n'apparaît **jamais dans le menu** (calculé au build) ;
-  elle est listée dans le module « Pages réservées » des personnes autorisées.
+  elle est listée dans le module « Pages réservées » des personnes autorisées
+  (masqué pour qui a le module « Pages », qui la liste déjà : `replacedBy`
+  dans `src/components/admin/modules.ts`).
 - Pas d'outils de partage, `noindex`, en-tête `Cache-Control: private, no-store`.
 - Le build **échoue** si `access:` cite un groupe inconnu, ou s'il est posé sur
   une page hors de `espace-benevoles/` (elle serait prérendue, donc lisible par

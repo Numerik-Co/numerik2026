@@ -181,7 +181,7 @@ clavier) : les deux modifient le même brouillon d'ordre, enregistré à part.
   vs dernière Release GitHub, cache mémoire 6 h, jamais bloquant). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
-- Modules : Pages réservées, **Actualités**, **Pages**, **Activités**, Comptes, Journal (`exclusive`,
+- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, Comptes, Journal (`exclusive`,
   `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
