@@ -200,8 +200,9 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
   publiée, un badge bleu **Mise à jour X.Y.Z** apparaît avant ce badge. Un
   clic ouvre les nouveautés (Release GitHub) ; la mise à jour se fait sur le
   serveur avec `./update.sh` ([mise-a-jour.md](mise-a-jour.md)). Simple
-  information : le site fonctionne normalement en attendant. Le survol du
-  badge **Production** indique la version en place.
+  information : le site fonctionne normalement en attendant. Le
+  badge **Production** (ou **Développement**) affiche la version en place
+  (ex. « Production v0.2.0 »), visible du bureau seulement.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
@@ -391,6 +392,32 @@ déplacer). Il apparaît sur le site dès qu'il contient une page. Un menu déro
 
 > Les pages « technique » (fichiers `.mdx`) se modifient dans le code
 > uniquement.
+
+### Gérer les activités
+
+Module **🧑‍🏫 Activités** (groupes *Rédacteur·rice* et *Bureau*) : les fiches
+des parcours, ateliers… affichées sur `/activites`, rangées par
+**catégorie** (Parcours, Ateliers, Médiation numérique, FabLab), dans
+l'ordre du site. Chaque ligne montre la vignette, le titre et des
+pastilles : **brouillon** (fiche absente du site), le **niveau**, **sans
+inscription** (bouton « S'inscrire » masqué).
+
+- **Nouvelle activité** (ou le **+** d'une catégorie) : titre, résumé (carte
+  de l'activité), catégorie, adresse (déduite du titre, **fixée ensuite**),
+  publiée ou brouillon, niveau, photo et crédit, texte (Markdown, HTML
+  accepté et nettoyé), et le bouton **S'inscrire** : activité(s) et type
+  Grist visés (voir [inscription.md](inscription.md)). La fiche se place en
+  dernière position de sa catégorie.
+- **✏️** modifie une fiche. Changer de catégorie change son adresse
+  (`/activites/<catégorie>/<adresse>`) et la place en dernier.
+- Les flèches **↑/↓** changent l'ordre dans une catégorie ; un bandeau
+  propose **Enregistrer et publier** (une seule reconstruction) ou
+  **Annuler**.
+- **🗑** supprime une fiche (photo comprise), après confirmation.
+
+Chaque enregistrement reconstruit le site, comme pour les actualités ; en
+cas d'échec, la fiche est remise dans son état précédent. Les catégories
+elles-mêmes se règlent dans le code (`src/lib/categories.ts`).
 
 ### Changer mon mot de passe
 

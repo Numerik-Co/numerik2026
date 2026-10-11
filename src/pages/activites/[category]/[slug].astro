@@ -27,7 +27,7 @@ export async function getStaticPaths() {
 }
 
 const { activity, prev, next } = Astro.props;
-const { Content, headings } = await renderActivity(activity);
+const { html, headings } = await renderActivity(activity);
 const category = getCategory(activity.category);
 const inscriptionVisible = activity.inscription && isFormOpen('inscription');
 ---
@@ -75,7 +75,7 @@ const inscriptionVisible = activity.inscription && isFormOpen('inscription');
 	)}
 
 	<div class="markdown-content mt-6 font-light text-gray-700">
-		<Content />
+		<Fragment set:html={html} />
 	</div>
 
 	<div class="mt-12 border-t border-gray-100 pt-8">

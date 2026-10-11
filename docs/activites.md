@@ -65,6 +65,31 @@ L'activité apparaît alors sur :
 
 Elle n'apparaît **pas** directement sur l'accueil ni sur `/activites` : ces deux pages n'affichent que les 4 cartes de catégories (icônes), pas les activités individuelles.
 
+## Module « Activités » (espace bénévoles)
+
+Les fiches se créent, se modifient, se réordonnent et se suppriment aussi
+depuis l'espace bénévoles (module **Activités**, groupe `redacteur`), sans
+toucher aux fichiers : mode d'emploi dans
+[guide-espace-benevoles.md](guide-espace-benevoles.md#gérer-les-activités).
+Le module écrit les mêmes fichiers que ci-dessus :
+
+- `src/lib/activity-writer.ts` valide comme le schéma (catégorie connue,
+  résumé et texte obligatoires, liens Markdown sûrs, `typeGrist` parmi
+  `TYPES_ACTIVITE_INSCRIPTION`) puis écrit `index.md` (frontmatter modifié
+  en place : commentaires et champs gardés) et `cover.jpg` (photo
+  redressée, sans métadonnées, 1600 px au plus) ;
+- l'**adresse** (nom du dossier) est fixée à la création ; `ordre` est
+  réservé (route `/api/admin/activites/ordre`) ;
+- `order` vaut 1, 2, 3… dans chaque catégorie ; une nouvelle fiche (ou une
+  fiche qui change de catégorie) se place en dernier ;
+- chaque modification est une transaction sur tout `src/content/activites/`
+  (`src/lib/content-transaction.ts`) : remise en place si la reconstruction
+  échoue.
+
+Le texte est **nettoyé à l'affichage** comme celui des actualités
+(`renderActivity()` → `sanitizeNewsHtml()`) : HTML accepté, code exécutable
+retiré.
+
 ## ⚠️ Droits d'usage des images
 
 Avant d'ajouter une photo trouvée sur le web : vérifier sa licence. Une image créditée à une agence (Shutterstock, Getty...) trouvée sur un autre site n'est **pas** libre de réutilisation, même avec attribution — la licence appartient au site qui l'a achetée. Préférer une banque gratuite (Pexels, Unsplash, Pixabay) ou une photo dont l'association détient les droits.
@@ -76,7 +101,7 @@ Les fiches forment la **content collection** `activites` (`src/content.config.ts
 `src/lib/activites.ts` :
 - `getAllActivities()` (async) — `getCollection('activites')` filtré sur `isPublish`, trié par `order` (puis nom de dossier). Calcule `href` en `/activites/<category>/<slug>` et le lien du bouton « S'inscrire ».
 - `getActivitiesByCategory(categorySlug)` (async) — filtre `getAllActivities()` par catégorie.
-- `renderActivity(activity)` — `render()` de l'entrée : composant `Content` et `headings`.
+- `renderActivity(activity)` — HTML rendu au build, nettoyé (`sanitizeNewsHtml`), et `headings` (sommaire).
 
 Quatre endroits consomment ces fonctions :
 - `ActivitesSection.astro` (accueil + `/activites`) — affiche les 4 `CategoryCard` depuis `categories.ts`, pas les activités.

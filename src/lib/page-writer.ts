@@ -23,13 +23,14 @@
  * Code serveur uniquement.
  */
 
-import { cp, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { isAuthGroup, type AuthGroup } from './auth/groups';
 import { blocMarkdownTexts, blocMarkersIn, validateBloc, type Bloc } from './blocs';
 import { RESERVED_FOLDER } from './content-pages';
-import { checkBody, COVER_ERROR, siteRoot, slugify, workDir, workRoot, writeCover, type CoverChange } from './news-writer';
+import { contentTransaction, type Applied } from './content-transaction';
+import { checkBody, COVER_ERROR, siteRoot, slugify, writeCover, type CoverChange } from './news-writer';
 import { unknownPageVariables } from './page-variables';
 import { DEFAULT_HOME, homeModuleDef, validateHomeModules, type HomeModule } from './home-modules';
 import { SITE_PAGES, sitePagesState, type SitePageSettings, type SitePageState } from './site-pages';
@@ -330,33 +331,11 @@ function serialize(frontmatter: Record<string, unknown>, body: string): string {
 
 // --- Transactions ----------------------------------------------------------
 
-export interface Applied {
-	restore: () => Promise<void>;
-	purge: () => Promise<void>;
-}
+export type { Applied };
 
-/**
- * Sauvegarde `src/content/pages/`, applique `mutate`, et rend de quoi annuler
- * (`restore`) ou valider (`purge`). Une erreur pendant `mutate` remet tout en place.
- */
-async function transaction(mutate: (root: string) => Promise<void>): Promise<Applied> {
-	const root = pagesSourceDir();
-	await mkdir(workRoot(), { recursive: true });
-	const backup = workDir('pages-sauvegarde');
-	await cp(root, backup, { recursive: true });
-	const restore = async () => {
-		const trash = workDir('pages-annulees');
-		await rename(root, trash);
-		await rename(backup, root);
-		await rm(trash, { recursive: true, force: true });
-	};
-	try {
-		await mutate(root);
-	} catch (err) {
-		await restore();
-		throw err;
-	}
-	return { restore, purge: () => rm(backup, { recursive: true, force: true }) };
+/** Transaction sur tout `src/content/pages/` (cf. `content-transaction.ts`). */
+function transaction(mutate: (root: string) => Promise<void>): Promise<Applied> {
+	return contentTransaction(pagesSourceDir(), 'pages', mutate);
 }
 
 // --- Pages -----------------------------------------------------------------

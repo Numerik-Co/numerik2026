@@ -84,6 +84,15 @@ Fonctionnement technique :
   `SITE_PAGES` + `getSitePage()` dans la page `.astro`. Ordre : flèches ↑/↓ du
   module → `PUT /api/admin/ordre-menu` (`saveMenuOrder()`) ; une nouvelle
   page se place en dernier (`menuOrderFor()`).
+- **Module « Activités »** (`redacteur`) : `ActivitiesModule.vue` +
+  `modules/activites/ActivityForm.vue`, `src/lib/activity-writer.ts`
+  (validation = schéma `activites`, frontmatter modifié en place via `yaml`
+  Document — commentaires gardés —, transaction sur tout
+  `src/content/activites/` : `src/lib/content-transaction.ts`, partagée avec
+  `page-writer.ts`), routes `/api/admin/activites*` (`ordre` = flèches ↑/↓
+  par catégorie, `order` renuméroté 1, 2, 3…). Adresse (dossier) fixée à la
+  création ; changer de catégorie change l'URL et place la fiche en dernier.
+  Catégories : toujours `src/lib/categories.ts` (code).
 - `src/lib/navigation.ts` — `getNavTree()` fusionne les pages du site actives et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
@@ -147,7 +156,7 @@ sous `/api/admin/`).
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
   (`/api/admin/comptes` et `/api/admin/version` → `admin`, `/api/admin/actualites`,
-  `/api/admin/publication`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
+  `/api/admin/publication`, `/api/admin/activites`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
@@ -158,7 +167,7 @@ sous `/api/admin/`).
   vs dernière Release GitHub, cache mémoire 6 h, jamais bloquant). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
-- Modules : Pages réservées, **Actualités**, **Pages**, Comptes, Journal (`exclusive`,
+- Modules : Pages réservées, **Actualités**, **Pages**, **Activités**, Comptes, Journal (`exclusive`,
   `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
@@ -173,7 +182,8 @@ bloquer). Il est **nettoyé à l'affichage** par la page d'article
 (YouTube, Vimeo, PeerTube, OpenStreetMap) retirés. Le moteur Markdown du site
 (Satteri, défaut d'Astro 7) n'est PAS modifié. Même nettoyage pour les
 pages `.md` (`pageParts()`, publiables depuis le module « Pages ») et le
-texte de leurs blocs ; activités non concernées.
+texte de leurs blocs, et pour les fiches d'activité (`renderActivity()`,
+modifiables depuis le module « Activités »).
 
 ### Publication (module Actualités)
 

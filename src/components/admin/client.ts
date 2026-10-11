@@ -62,6 +62,43 @@ export interface NewsSource {
 
 export type NewsFields = Pick<NewsSource, 'title' | 'publishAt' | 'excerpt' | 'isPublish' | 'tag' | 'author' | 'imageCredit'>;
 
+/** Fiche d'activité telle qu'elle se saisit dans le module « Activités » (cf. src/lib/activity-writer.ts). */
+export interface ActivityInput {
+	slug: string;
+	title: string;
+	excerpt: string;
+	category: string;
+	isPublish: boolean;
+	level: string;
+	inscription: boolean;
+	activiteGrist: string[];
+	typeGrist: string;
+	imageCredit: string;
+	body: string;
+}
+
+/** Ligne de la liste du module (sans le texte). */
+export interface ActivityItem extends Omit<ActivityInput, 'body'> {
+	order: number;
+	cover: string | null;
+	href: string;
+	thumbnail: string | null;
+}
+
+/** Fiche des sources (formulaire d'édition). */
+export interface ActivitySourceView extends ActivityInput {
+	order: number;
+	cover: string | null;
+	/** Aperçu de la photo actuelle (site construit). */
+	coverUrl: string | null;
+}
+
+export interface ActivityCategory {
+	slug: string;
+	label: string;
+	icon: string;
+}
+
 export type CoverUpdate = { action: 'keep' } | { action: 'remove' } | { action: 'replace'; type: string; data: string };
 
 /** État de la dernière publication (reconstruction du site), cf. src/lib/site-build.ts. */
@@ -232,6 +269,23 @@ export const dropdownsApi = {
 	update: (folder: string, input: { label: string }) =>
 		request<{ ok: true }>('PUT', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, input),
 	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, { confirm: folder }),
+};
+
+export const activitiesApi = {
+	list: () =>
+		request<{
+			activities: ActivityItem[];
+			categories: ActivityCategory[];
+			status: PublishStatus;
+			availability: { ok: boolean; reason?: string };
+		}>('GET', '/api/admin/activites'),
+	get: (slug: string) => request<ActivitySourceView>('GET', `/api/admin/activites/${slug}`),
+	create: (activity: ActivityInput, cover: { type: string; data: string } | null) =>
+		request<{ ok: true; href: string | null }>('POST', '/api/admin/activites', { activity, cover: cover ?? undefined }),
+	update: (slug: string, activity: ActivityInput, cover: CoverUpdate) =>
+		request<{ ok: true; href: string | null }>('PUT', `/api/admin/activites/${slug}`, { activity, cover }),
+	remove: (slug: string) => request<{ ok: true }>('DELETE', `/api/admin/activites/${slug}`, { confirm: slug }),
+	saveOrder: (levels: Record<string, string[]>) => request<{ ok: true }>('PUT', '/api/admin/activites/ordre', { levels }),
 };
 
 export const versionApi = {

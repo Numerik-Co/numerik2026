@@ -3,9 +3,11 @@
  * dossier par fiche dans `src/content/activites/`. Résolu au build.
  */
 
-import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 import { association } from './association';
+import type { Heading } from './headings';
 import { estimateReadingTime } from './reading-time';
+import { sanitizeNewsHtml } from './sanitize-news';
 
 export type ActivityEntry = CollectionEntry<'activites'>;
 
@@ -71,7 +73,16 @@ export async function getActivitiesByCategory(categorySlug: string): Promise<Act
 	return (await getAllActivities()).filter((activity) => activity.category === categorySlug);
 }
 
-/** Contenu rendu d'une fiche : composant `Content` et titres (sommaire). */
-export async function renderActivity(activity: Activity) {
-	return render(activity.entry);
+/**
+ * Contenu rendu d'une fiche : HTML nettoyé et titres (sommaire). Les fiches
+ * se modifient depuis l'espace bénévoles : même nettoyage que les actualités
+ * (`sanitizeNewsHtml`, HTML autorisé, code exécutable retiré).
+ */
+export async function renderActivity(activity: Activity): Promise<{ html: string; headings: Heading[] }> {
+	// HTML rendu au build par le Content Layer (loader glob, rendu non différé).
+	const rendered = activity.entry.rendered;
+	return {
+		html: sanitizeNewsHtml(rendered?.html ?? ''),
+		headings: (rendered?.metadata?.headings as Heading[] | undefined) ?? [],
+	};
 }
