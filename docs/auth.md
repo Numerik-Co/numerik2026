@@ -159,8 +159,11 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 Garde : `src/middleware.ts` — `/api/auth/*` et `/api/admin/*` n'acceptent
 que les requêtes du site lui-même (`Sec-Fetch-Site`, à défaut `Origin`),
 `/api/admin/*` exige une connexion (401), et les préfixes de `GUARDS` un
-groupe (403) : `/api/admin/comptes*` → `admin`, `/api/admin/actualites*` et
-`/api/admin/publication` → `redacteur` (`admin` passe toujours). `Astro.locals.user` est renseigné sur chaque requête rendue à
+groupe (403) : `/api/admin/comptes*` et `/api/admin/version` → `admin` ;
+`/api/admin/actualites*`, `/api/admin/publication`, `/api/admin/activites*`,
+`/api/admin/pages*`, `/api/admin/menus-deroulants*`,
+`/api/admin/pages-du-site*` et `/api/admin/ordre-menu` → `redacteur`
+(`admin` passe toujours) ; `/api/admin/journal` → `superadmin` seul. `Astro.locals.user` est renseigné sur chaque requête rendue à
 la demande.
 
 Garde-fous des comptes : impossible de se retirer ses propres droits admin,

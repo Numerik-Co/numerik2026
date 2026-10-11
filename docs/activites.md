@@ -19,6 +19,10 @@ Ce registre vit dans **`src/lib/categories.ts`** — c'est la seule source de v�
 
 ## Créer une nouvelle activité
 
+Le plus simple : le **module « Activités »** de l'espace bénévoles (voir
+[plus bas](#module-activités-espace-bénévoles)). À la main, dans les
+sources :
+
 1. Créer un dossier dans `src/content/activites/`, nommé d'après le slug de l'activité :
 
    ```
@@ -67,28 +71,72 @@ Elle n'apparaît **pas** directement sur l'accueil ni sur `/activites` : ces deu
 
 ## Module « Activités » (espace bénévoles)
 
-Les fiches se créent, se modifient, se réordonnent et se suppriment aussi
-depuis l'espace bénévoles (module **Activités**, groupe `redacteur`), sans
-toucher aux fichiers : mode d'emploi dans
+Les fiches se créent, se modifient, se réordonnent et se suppriment depuis
+l'espace bénévoles (module **Activités**, groupe `redacteur`, le bureau
+passe toujours), sans toucher aux fichiers : mode d'emploi pour les
+bénévoles dans
 [guide-espace-benevoles.md](guide-espace-benevoles.md#gérer-les-activités).
-Le module écrit les mêmes fichiers que ci-dessus :
+Le module écrit **les mêmes fichiers** que ci-dessus : une fiche créée à la
+main reste modifiable depuis le module, et inversement.
 
-- `src/lib/activity-writer.ts` valide comme le schéma (catégorie connue,
-  résumé et texte obligatoires, liens Markdown sûrs, `typeGrist` parmi
-  `TYPES_ACTIVITE_INSCRIPTION`) puis écrit `index.md` (frontmatter modifié
-  en place : commentaires et champs gardés) et `cover.jpg` (photo
-  redressée, sans métadonnées, 1600 px au plus) ;
-- l'**adresse** (nom du dossier) est fixée à la création ; `ordre` est
-  réservé (route `/api/admin/activites/ordre`) ;
-- `order` vaut 1, 2, 3… dans chaque catégorie ; une nouvelle fiche (ou une
-  fiche qui change de catégorie) se place en dernier ;
-- chaque modification est une transaction sur tout `src/content/activites/`
-  (`src/lib/content-transaction.ts`) : remise en place si la reconstruction
-  échoue.
+| Élément | Rôle |
+| :--- | :--- |
+| `src/components/admin/modules/ActivitiesModule.vue` | Liste par catégorie (vignette, pastilles brouillon / niveau / sans inscription), flèches ↑/↓, bandeau « Enregistrer et publier », suppression confirmée |
+| `src/components/admin/modules/activites/ActivityForm.vue` | Formulaire de création / modification (même présentation que le module « Pages ») |
+| `src/lib/activity-writer.ts` | Lecture des sources, validation, écriture de `index.md` et de la photo, ordre |
+| `src/lib/content-transaction.ts` | Sauvegarde / remise en place de tout `src/content/activites/` (partagé avec `page-writer.ts`) |
+| `src/pages/api/admin/activites/` | Routes JSON (ci-dessous) |
+
+### Routes
+
+| Route | Rôle |
+| :--- | :--- |
+| `GET /api/admin/activites` | Fiches (brouillons compris, vignette, `href`), catégories de `categories.ts`, état de la dernière publication, disponibilité de la publication |
+| `POST /api/admin/activites` | Création `{ activity, cover?: { type, data } }` (`data` en base64) |
+| `GET /api/admin/activites/<slug>` | Sources de la fiche (formulaire), URL de la photo |
+| `PUT /api/admin/activites/<slug>` | Modification `{ activity, cover: { action: keep\|remove\|replace, type?, data? } }` |
+| `DELETE /api/admin/activites/<slug>` | Suppression `{ confirm: <slug> }` (dossier et photo) |
+| `PUT /api/admin/activites/ordre` | `{ levels: { <catégorie>: [slugs…] } }` : nouvel ordre d'une ou plusieurs catégories |
+
+Toutes passent par `publishChange()` (`src/lib/admin-publish.ts`) : écriture,
+reconstruction du site (`site-build.ts`), puis `purge` de la sauvegarde si
+elle réussit, `restore` sinon. Garde : `GUARDS` de `src/middleware.ts`
+(`/api/admin/activites` → `redacteur`). Journal : `activite.ajout`,
+`activite.modification`, `activite.suppression`, `activite.ordre`.
+
+### Règles d'écriture
+
+- **Validation = schéma** de la collection : titre, résumé et texte
+  obligatoires, catégorie connue de `src/lib/categories.ts`, `typeGrist`
+  parmi `TYPES_ACTIVITE_INSCRIPTION`, texte de 200 Ko au plus, liens
+  Markdown sûrs et pas d'image Markdown locale (mêmes contrôles que les
+  actualités, `checkBody`). Erreurs renvoyées en une fois, en français.
+- **Adresse** (nom du dossier) : déduite du titre ou saisie à la création
+  (`a-z`, `0-9`, tirets, 60 caractères), **fixée ensuite**. `ordre` est
+  réservé (route de l'ordre). Changer de catégorie garde le dossier mais
+  change l'URL (`/activites/<catégorie>/<slug>`).
+- **Frontmatter modifié en place** (`yaml` Document) : commentaires, champs
+  inconnus et ordre des clés conservés ; un champ facultatif vidé est
+  retiré (`level`, `imageCredit`, `activiteGrist`, `typeGrist`…).
+  `activiteGrist` est écrit en texte pour un seul nom, en liste pour
+  plusieurs ; `inscription: false` seulement quand le bouton est masqué.
+- **Ordre** : `order` vaut 1, 2, 3… dans chaque catégorie. Une nouvelle
+  fiche, ou une fiche qui change de catégorie, prend le dernier rang ;
+  la route `ordre` renumérote et ne réécrit que les fichiers dont le rang
+  change.
+- **Photo** : `cover.jpg` redressée, sans métadonnées (GPS…), 1600 px au plus
+  (`writeCover`, comme les actualités) ; JPEG, PNG ou WebP, 10 Mo max.
+- **Transaction** : copie de tout `src/content/activites/` avant
+  modification, remise en place si l'écriture ou la reconstruction échoue.
 
 Le texte est **nettoyé à l'affichage** comme celui des actualités
 (`renderActivity()` → `sanitizeNewsHtml()`) : HTML accepté, code exécutable
 retiré.
+
+**Limite** : les catégories elles-mêmes restent dans le code
+(`src/lib/categories.ts`) ; le module les lit mais ne les modifie pas. Une
+fiche dont la catégorie a été retirée du registre est signalée en rouge
+dans le module (sinon les prochaines publications échoueraient).
 
 ## ⚠️ Droits d'usage des images
 
@@ -103,7 +151,7 @@ Les fiches forment la **content collection** `activites` (`src/content.config.ts
 - `getActivitiesByCategory(categorySlug)` (async) — filtre `getAllActivities()` par catégorie.
 - `renderActivity(activity)` — HTML rendu au build, nettoyé (`sanitizeNewsHtml`), et `headings` (sommaire).
 
-Quatre endroits consomment ces fonctions :
+Trois endroits consomment ces fonctions :
 - `ActivitesSection.astro` (accueil + `/activites`) — affiche les 4 `CategoryCard` depuis `categories.ts`, pas les activités.
 - `activites/[category].astro` — une page statique par catégorie (`getStaticPaths()` sur le registre), grille d'`ActivityCard` via `getActivitiesByCategory()`, état vide si la catégorie n'a aucune activité.
 - `activites/[category]/[slug].astro` — une page statique par activité (`getStaticPaths()` sur `getAllActivities()`), avec un lien de retour vers la page de sa catégorie.

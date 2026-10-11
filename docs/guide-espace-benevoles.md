@@ -206,8 +206,8 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
-  la partie assombrie de la page. Dans un formulaire (actualité à
-  ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
+  la partie assombrie de la page. Dans un formulaire (actualité, page ou
+  activité à ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
   d'abord à la liste.
 - Vous naviguez normalement sur le site : la barre vous suit sur toutes les pages.
 
@@ -218,13 +218,15 @@ Les modules visibles dépendent de votre groupe :
 | Pages réservées | ✅ | ✅ | ✅ | ✅ |
 | Actualités | ✅ | ✅ | ✅ | — |
 | Pages | ✅ | ✅ | ✅ | — |
+| Activités | ✅ | ✅ | ✅ | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
 | Mon mot de passe | ✅ | ✅ | ✅ | ✅ |
 
 **Journal** (super admin seulement) : toutes les modifications faites depuis
 l'espace bénévoles — qui, quand, quoi, avec quel résultat (connexions,
-mots de passe, actualités ajoutées / modifiées / supprimées, résultat de
+mots de passe, actualités, pages et activités ajoutées / modifiées /
+supprimées, changements d'ordre, résultat de
 chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
 
@@ -396,28 +398,88 @@ déplacer). Il apparaît sur le site dès qu'il contient une page. Un menu déro
 ### Gérer les activités
 
 Module **🧑‍🏫 Activités** (groupes *Rédacteur·rice* et *Bureau*) : les fiches
-des parcours, ateliers… affichées sur `/activites`, rangées par
-**catégorie** (Parcours, Ateliers, Médiation numérique, FabLab), dans
-l'ordre du site. Chaque ligne montre la vignette, le titre et des
-pastilles : **brouillon** (fiche absente du site), le **niveau**, **sans
-inscription** (bouton « S'inscrire » masqué).
+des parcours, ateliers… proposés par l'association. Ce sont elles qu'on
+retrouve sur les pages de catégorie (`/activites/parcours`…) et sur leur
+propre page (`/activites/<catégorie>/<adresse>`). À ne pas confondre avec
+les **actualités** (annonces datées) ni avec le **planning** de la semaine,
+qui vient de Grist.
 
-- **Nouvelle activité** (ou le **+** d'une catégorie) : titre, résumé (carte
-  de l'activité), catégorie, adresse (déduite du titre, **fixée ensuite**),
-  publiée ou brouillon, niveau, photo et crédit, texte (Markdown, HTML
-  accepté et nettoyé), et le bouton **S'inscrire** : activité(s) et type
-  Grist visés (voir [inscription.md](inscription.md)). La fiche se place en
-  dernière position de sa catégorie.
-- **✏️** modifie une fiche. Changer de catégorie change son adresse
-  (`/activites/<catégorie>/<adresse>`) et la place en dernier.
-- Les flèches **↑/↓** changent l'ordre dans une catégorie ; un bandeau
-  propose **Enregistrer et publier** (une seule reconstruction) ou
-  **Annuler**.
-- **🗑** supprime une fiche (photo comprise), après confirmation.
+La liste a **une section par catégorie** (Parcours, Ateliers, Médiation
+numérique, FabLab), dans l'ordre du site. Chaque ligne montre la vignette,
+le titre (lien vers la fiche en ligne) et des pastilles :
 
-Chaque enregistrement reconstruit le site, comme pour les actualités ; en
-cas d'échec, la fiche est remise dans son état précédent. Les catégories
-elles-mêmes se règlent dans le code (`src/lib/categories.ts`).
+| Pastille | Signification |
+| :--- | :--- |
+| **brouillon** | Fiche enregistrée mais absente du site (titre grisé) |
+| *niveau* (ex. « Initiation ») | Pastille affichée sur la carte de l'activité |
+| **sans inscription** | Bouton « S'inscrire » masqué sur la fiche |
+
+Une catégorie vide indique « Aucune activité » : sa page affiche alors
+« bientôt ».
+
+#### Créer une activité
+
+1. **+ Nouvelle activité** (ou le **+** dans l'en-tête d'une catégorie, qui
+   la présélectionne).
+2. Remplir le formulaire :
+   - **Titre** et **Résumé** (une ou deux phrases, affiché sur la carte et
+     dans les moteurs de recherche) — obligatoires ;
+   - **Catégorie** — obligatoire ;
+   - **Adresse** — déduite du titre (`atelier-photo`), modifiable à la
+     création seulement : minuscules, chiffres et tirets ;
+   - **Publiée** — décocher pour garder la fiche en **brouillon** ;
+   - **Niveau** (facultatif) — ex. *Grand débutant*, *Tous niveaux* ;
+   - **Photo de couverture** (facultative, JPEG, PNG ou WebP, 10 Mo max ;
+     position GPS et métadonnées retirées) et son **crédit** (sinon
+     « Photo : <nom de l'association> ») ;
+   - **Texte de la fiche** — en Markdown, obligatoire ; le HTML est accepté
+     et nettoyé à l'affichage, comme pour les actualités ;
+   - **Inscription en ligne** — voir plus bas.
+3. **Créer et publier** : le site est reconstruit (encadré « Publication en
+   cours », comme pour les actualités). La fiche se place **en dernier** dans
+   sa catégorie.
+
+#### Le bouton « S'inscrire »
+
+Chaque fiche publiée a un bouton **S'inscrire** qui ouvre le formulaire
+d'inscription en présélectionnant les activités Grist correspondantes :
+
+- **Activité(s) Grist visée(s)** — un nom par ligne, tel qu'il est écrit dans
+  la colonne « Nom » de la table *Activite* de Grist. Un `*` final vise
+  tous les noms qui commencent ainsi (`Initiation*`). Vide = le titre de la
+  fiche.
+- **Type Grist visé** — *Séances*, *Ateliers* ou *Atelier CN*, seul ou avec
+  les noms.
+- Décocher **Bouton « S'inscrire » sur la fiche** pour le masquer (ex. activité sur
+  rendez-vous). Il est aussi masqué partout quand le formulaire
+  d'inscription est fermé.
+
+Détail : [inscription.md](inscription.md#présélection).
+
+#### Modifier, réordonner, supprimer
+
+- **✏️** ouvre la fiche, préremplie. **Enregistrer et publier** reconstruit
+  le site. La photo se **remplace** ou se **retire**.
+- L'**adresse** ne change pas, même si le titre change : les liens déjà
+  partagés continuent de fonctionner. **Changer de catégorie** change en
+  revanche l'URL (`/activites/<nouvelle-catégorie>/<adresse>`), ce que le
+  formulaire signale, et place la fiche en dernier de sa nouvelle catégorie.
+- Les flèches **↑/↓** changent l'ordre dans une catégorie. Un bandeau
+  propose alors **Enregistrer et publier** (une seule reconstruction pour
+  tous les déplacements) ou **Annuler**. Tant qu'il est affiché, les autres
+  actions attendent.
+- **🗑** supprime la fiche (photo comprise) après confirmation dans
+  l'encadré rouge. Pour la retirer du site sans la perdre, préférez la case
+  **Publiée** (brouillon).
+
+Si une reconstruction échoue, rien n'est publié : la fiche (ou l'ordre)
+revient à son état précédent et le site reste tel quel.
+
+> **Les catégories** (nom, icône, description) ne se règlent pas dans le
+> module : elles sont fixées dans le code (`src/lib/categories.ts`, voir
+> [activites.md](activites.md#les-catégories)). Une fiche dont la catégorie
+> a disparu est signalée en rouge en haut du module : ouvrez-la et
+> choisissez-en une autre.
 
 ### Changer mon mot de passe
 
@@ -444,7 +506,7 @@ Module **👥 Comptes**, réservé au groupe *Bureau / administration*.
      (ex. `marie.fruit`) ; il ne pourra plus être changé.
    - **Prénom et nom**, **email** (facultatif).
    - **Groupes** — *Animateur·rice* pour les encadrant·e·s,
-     *Rédacteur·rice* (publication des actualités), *Bureau /
+     *Rédacteur·rice* (actualités, pages et activités), *Bureau /
      administration* pour les membres du bureau (accès à tout, dont la
      gestion des comptes). Plusieurs groupes peuvent être cochés.
    - **Mot de passe provisoire** — laisser vide pour en générer un.
