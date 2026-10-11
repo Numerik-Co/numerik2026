@@ -48,7 +48,7 @@ src/
 │   ├── content-pages.ts                              # collections pages / pageGroups (getContentPages, renderPage, getGroups)
 │   ├── navigation.ts                                 # construction du menu au build (getNavTree)
 │   ├── reading-time.ts                               # estimation du temps de lecture (~200 mots/minute)
-│   └── categories.ts                                 # registre fixe des 4 catégories d'activités (label, icône)
+│   └── categories.ts                                 # catégories d'activités (lit src/content/activites/_categories.yaml)
 ├── pages/
 │   ├── index.astro, activites.astro, contact.astro...  # une route par fichier
 │   ├── [...slug].astro                               # route attrape-tout : rend les pages de content/pages/

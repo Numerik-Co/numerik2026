@@ -15,8 +15,8 @@ Deux mécanismes coexistent :
 | Fichier | URL | Type | Contenu |
 | :--- | :--- | :--- | :--- |
 | `src/pages/index.astro` | `/` | applicative | Accueil (Hero, Actualités, Activités, CTA) |
-| `src/pages/activites.astro` | `/activites` | applicative | Les 4 catégories d'activités |
-| `src/pages/activites/[category].astro` | `/activites/<categorie>` | applicative | Liste des activités d'une catégorie (`src/lib/categories.ts`) |
+| `src/pages/activites.astro` | `/activites` | applicative | Les catégories d'activités |
+| `src/pages/activites/[category].astro` | `/activites/<categorie>` | applicative | Liste des activités d'une catégorie (`src/content/activites/_categories.yaml`) |
 | `src/pages/activites/[category]/[slug].astro` | `/activites/<categorie>/<slug>` | applicative | Détail d'une activité (`src/content/activites/`) |
 | `src/pages/actualites.astro` | `/actualites` | applicative | Liste des actualités + filtres + RSS |
 | `src/pages/actualites/[slug].astro` | `/actualites/<slug>` | applicative | Détail d'un article (`src/content/news/`) |

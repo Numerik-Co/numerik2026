@@ -150,7 +150,7 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `DELETE /api/admin/actualites/<slug>` | Suppression `{ confirm: <slug> }` : dossier mis de côté, site reconstruit, dossier effacé (ou remis en place si échec) — `redacteur` |
 | `GET/DELETE /api/admin/publication` | État de la dernière publication / fermeture définitive de son encadré (journalisée) — `redacteur` |
 | `GET /api/admin/journal` | Journal des modifications, `?annee=AAAA` — `superadmin` seul |
-| `GET/POST /api/admin/activites`, `GET/PUT/DELETE /api/admin/activites/<slug>`, `PUT /api/admin/activites/ordre` | Fiches d'activité (sources), ordre par catégorie, cf. [activites.md](activites.md#module-activités-espace-bénévoles) — `redacteur` |
+| `GET/POST /api/admin/activites`, `GET/PUT/DELETE /api/admin/activites/<slug>`, `PUT /api/admin/activites/ordre`, `POST /api/admin/activites/categories`, `PUT/DELETE /api/admin/activites/categories/<slug>` | Fiches d'activité et catégories (sources), ordre des catégories et des fiches, cf. [activites.md](activites.md#module-activités-espace-bénévoles) — `redacteur` |
 | `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>` | Pages de contenu (sources), cf. [pages.md](pages.md#module-pages-espace-bénévoles) — `redacteur` |
 | `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>` | Menus déroulants (`_group.md`) — `redacteur` |
 | `GET /api/admin/version` | Version du site et dernière version publiée (badge « mise à jour disponible », cache 6 h) — `admin` |

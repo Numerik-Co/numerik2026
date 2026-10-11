@@ -1,0 +1,23 @@
+# Catégories d'activités, dans l'ordre du site (accueil, /activites).
+# Gérées depuis l'espace bénévoles (module « Activités »).
+# slug : adresse de la page (/activites/<slug>) et valeur de « category: »
+#        dans les fiches ; ne pas la changer à la main si des fiches l'utilisent.
+# icon : icône Font Awesome, style « solid » (https://fontawesome.com/search?ic=free&s=solid).
+# description : texte du bandeau de la page de la catégorie (facultatif).
+
+- slug: parcours
+  label: Parcours
+  icon: fa-route
+  description: Des parcours d'apprentissage progressifs, du grand débutant au perfectionnement.
+- slug: ateliers
+  label: Ateliers
+  icon: fa-screwdriver-wrench
+  description: Des ateliers pratiques pour prendre en main vos usages numériques du quotidien.
+- slug: mediation-numerique
+  label: Médiation numérique
+  icon: fa-people-group
+  description: Un accompagnement individuel ou collectif animé par notre conseiller·ère numérique.
+- slug: fablab
+  label: FabLab
+  icon: fa-cubes
+  description: Un espace de fabrication numérique pour créer, prototyper et apprendre en faisant.

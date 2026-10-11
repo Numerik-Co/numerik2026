@@ -1,6 +1,7 @@
 /**
  * Module « Activités » (groupes `redacteur` / `admin`, garde dans `src/middleware.ts`) :
- *  - GET  : fiches des sources (brouillons compris) + vignettes, catégories,
+ *  - GET  : fiches des sources (brouillons compris) + vignettes, catégories
+ *           des sources (`_categories.yaml`),
  *           état de la dernière publication, disponibilité de la publication ;
  *  - POST : `{ activity, cover?: { type, data (base64) } }` → crée
  *           `src/content/activites/<slug>/` (en dernier de sa catégorie) puis
@@ -13,7 +14,7 @@ import { json, jsonError, readJson, withErrors } from '../../../../lib/auth/api'
 import { publishBlocked, publishChange } from '../../../../lib/admin-publish';
 import { readCover } from '../../../../lib/admin-cover';
 import { listActivitySources, readActivityInput, saveActivity } from '../../../../lib/activity-writer';
-import { categories } from '../../../../lib/categories';
+import { readCategorySources } from '../../../../lib/category-writer';
 import { canPublish, readStatus } from '../../../../lib/site-build';
 
 export const prerender = false;
@@ -39,7 +40,7 @@ export const GET: APIRoute = withErrors(async () => {
 	const recent = status.state === 'running' || status.state === 'idle' || Date.now() - finished < STATUS_RECALL_MS;
 	return json({
 		activities,
-		categories: categories.map(({ slug, label, icon }) => ({ slug, label, icon })),
+		categories: await readCategorySources(),
 		status: recent ? status : { state: 'idle' },
 		availability: await canPublish(),
 	});

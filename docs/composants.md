@@ -36,7 +36,7 @@ Les briques sont rangées par famille dans des sous-dossiers de `src/components/
 | :--- | :--- |
 | `cards/ArticleCard.astro` | Carte d'actualité (image ou placeholder, date, auteur, titre, extrait, tag). Prend un objet `article` (voir [actualites.md](actualites.md)). Hauteur fixe `h-116` (464px, échelle dynamique Tailwind 4) pour harmoniser toutes les cartes d'une grille ; titre bloqué à 2 lignes (`line-clamp-2`, `leading-snug`), extrait bloqué à 4 lignes (`line-clamp-4`) ; carte en `flex flex-col`, le tag est poussé en bas via `mt-auto` quel que soit le nombre de lignes utilisées au-dessus. |
 | `cards/ActivityCard.astro` | Carte d'activité (image ou placeholder, titre, extrait, lien "En savoir plus" et pastille de niveau optionnelle, tous deux ancrés en bas de carte), utilisée sur une page catégorie. Prend un objet `activity` (voir [activites.md](activites.md)). |
-| `cards/CategoryCard.astro` | Carte de catégorie d'activité : badge icône [FontAwesome](https://fontawesome.com/search?ip=classic&s=solid) + libellé en majuscules, pas d'image. Prend un objet `category` (`{ slug, label, icon }` depuis `src/lib/categories.ts`). |
+| `cards/CategoryCard.astro` | Carte de catégorie d'activité : badge icône [FontAwesome](https://fontawesome.com/search?ip=classic&s=solid) + libellé en majuscules, pas d'image. Prend un objet `category` (`{ slug, label, icon }` depuis `src/lib/categories.ts`, lu dans `src/content/activites/_categories.yaml`). |
 
 ### `article/`
 
@@ -81,7 +81,7 @@ Une section = un bloc complet de page (souvent une balise `<section>` pleine lar
 | Section | Rôle | Où elle est utilisée |
 | :--- | :--- | :--- |
 | `Hero.astro` | Grand titre + accroche + 2 boutons | Accueil |
-| `ActivitesSection.astro` | Grille des 4 catégories d'activités (`CategoryCard`, depuis `src/lib/categories.ts` — pas les activités individuelles). Prop `showHeading` (défaut `true`) : sur l'accueil, affiche le titre "Activités" + bouton "Accéder à la page" ; sur `activites.astro`, passé à `false` car la page a déjà son `PageHeader` | Accueil, page Activités |
+| `ActivitesSection.astro` | Grille des catégories d'activités (`CategoryCard`, depuis `src/lib/categories.ts` — pas les activités individuelles). Prop `showHeading` (défaut `true`) : sur l'accueil, affiche le titre "Activités" + bouton "Accéder à la page" ; sur `activites.astro`, passé à `false` car la page a déjà son `PageHeader` | Accueil, page Activités |
 | `ActualitesSection.astro` | Les 3 actualités les plus récentes + lien "Voir toutes les actualités" | Accueil |
 | `CtaSection.astro` | Bandeau d'appel à l'action (dégradé primary→secondary) | Accueil |
 | `RdvCtaSection.astro` | Encart de prise de RDV avec le·la Conseiller·ère Numérique : permanences (déduites de `conseillerNumerique`) + bouton. Props facultatives : `eyebrow`, `title`, `description`, `buttonLabel`, `buttonHref` | Accueil |

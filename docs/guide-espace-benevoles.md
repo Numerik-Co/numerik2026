@@ -225,8 +225,8 @@ Les modules visibles dépendent de votre groupe :
 
 **Journal** (super admin seulement) : toutes les modifications faites depuis
 l'espace bénévoles — qui, quand, quoi, avec quel résultat (connexions,
-mots de passe, actualités, pages et activités ajoutées / modifiées /
-supprimées, changements d'ordre, résultat de
+mots de passe, actualités, pages, activités et catégories ajoutées /
+modifiées / supprimées, changements d'ordre, résultat de
 chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
 
@@ -404,8 +404,8 @@ propre page (`/activites/<catégorie>/<adresse>`). À ne pas confondre avec
 les **actualités** (annonces datées) ni avec le **planning** de la semaine,
 qui vient de Grist.
 
-La liste a **une section par catégorie** (Parcours, Ateliers, Médiation
-numérique, FabLab), dans l'ordre du site. Chaque ligne montre la vignette,
+La liste a **une section par catégorie** (Parcours, Ateliers…, voir
+[plus bas](#les-catégories)), dans l'ordre du site. Chaque ligne montre la vignette,
 le titre (lien vers la fiche en ligne) et des pastilles :
 
 | Pastille | Signification |
@@ -475,11 +475,28 @@ Détail : [inscription.md](inscription.md#présélection).
 Si une reconstruction échoue, rien n'est publié : la fiche (ou l'ordre)
 revient à son état précédent et le site reste tel quel.
 
-> **Les catégories** (nom, icône, description) ne se règlent pas dans le
-> module : elles sont fixées dans le code (`src/lib/categories.ts`, voir
-> [activites.md](activites.md#les-catégories)). Une fiche dont la catégorie
-> a disparu est signalée en rouge en haut du module : ouvrez-la et
-> choisissez-en une autre.
+#### Les catégories
+
+Les catégories (Parcours, Ateliers…) se gèrent dans le même module. Chacune
+a sa carte sur l'accueil et sur la page Activités, et sa propre page
+(`/activites/<adresse>`) qui liste ses activités.
+
+- **Nouvelle catégorie** (en haut du module) : **nom**, **adresse** (déduite
+  du nom, **fixée ensuite**), **icône** (à choisir dans la grille) et
+  **description** facultative (une phrase affichée en haut de sa page).
+  **Créer et publier** : elle se place en dernier.
+- **✏️** dans l'en-tête d'une catégorie : changer son nom, son icône ou sa
+  description. L'adresse ne change pas.
+- Les flèches **↑/↓** de l'en-tête changent l'**ordre des catégories** (sur
+  l'accueil et la page Activités). Comme pour les fiches, un bandeau propose
+  **Enregistrer et publier** : déplacements de catégories et de fiches
+  partent ensemble, en une seule reconstruction.
+- **🗑** n'apparaît que sur une catégorie **vide** (aucune fiche, brouillons
+  compris) : déplacez ou supprimez d'abord ses fiches. Il reste toujours au
+  moins une catégorie.
+
+Une fiche dont la catégorie a disparu (fichier modifié à la main) est
+signalée en rouge en haut du module : ouvrez-la et choisissez-en une autre.
 
 ### Changer mon mot de passe
 

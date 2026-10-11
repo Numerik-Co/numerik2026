@@ -5,7 +5,8 @@
  * `site-build.ts`, via `admin-publish.ts`.
  *
  * Tout est vérifié AVANT d'écrire, avec les règles du schéma de la collection
- * `activites` (`src/content.config.ts`, catégories `src/lib/categories.ts`) :
+ * `activites` (`src/content.config.ts`, catégories `src/lib/categories.ts`,
+ * gérées par `category-writer.ts`) :
  * une fiche qui ferait échouer le build est refusée avec un message clair.
  * Le texte suit les règles des actualités (`checkBody`) ; son HTML est
  * nettoyé à l'affichage (`renderActivity()` → `sanitizeNewsHtml()`).
@@ -15,7 +16,8 @@
  * fixée à la création ; l'URL publique `/activites/<catégorie>/<slug>` change
  * donc seulement si la catégorie change. Ordre dans une catégorie : `order`
  * (1, 2, 3…), une nouvelle fiche ou une fiche qui change de catégorie se
- * place en dernier ; les flèches ↑/↓ du module renumérotent (`saveActivityOrder`).
+ * place en dernier ; les flèches ↑/↓ du module renumérotent
+ * (`activityOrderChanges` + `writeActivityOrder`, via `saveCatalogOrder`).
  *
  * Chaque modification se fait dans une transaction sur tout
  * `src/content/activites/` (`content-transaction.ts`).
@@ -33,10 +35,10 @@ import { checkBody, COVER_ERROR, siteRoot, slugify, writeCover, type CoverChange
 
 export type { Applied, CoverChange };
 
-/** Nom de dossier (= dernier segment de l'URL). `ordre` est pris par la route d'ordre. */
+/** Nom de dossier (= dernier segment de l'URL). `ordre` et `categories` sont pris par des routes du module. */
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SLUG_MAX = 60;
-const RESERVED_SLUGS = new Set(['ordre']);
+const RESERVED_SLUGS = new Set(['ordre', 'categories']);
 const BODY_MAX = 200 * 1024;
 /** `cover:` acceptable : un fichier du dossier (`./cover.jpg`). */
 const COVER_FIELD = /^\.\/[\w.-]+$/;
@@ -207,7 +209,8 @@ async function applyCover(dir: string, current: string | null, change: CoverChan
 	return cover;
 }
 
-function transaction(mutate: (root: string) => Promise<void>): Promise<Applied> {
+/** Transaction sur tout `src/content/activites/` (fiches et `_categories.yaml`). */
+export function activitiesTransaction(mutate: (root: string) => Promise<void>): Promise<Applied> {
 	return contentTransaction(activitesSourceDir(), 'activites', mutate);
 }
 
@@ -238,7 +241,7 @@ export async function saveActivity(input: ActivityInput, currentSlug: string | n
 
 	let applied: Applied;
 	try {
-		applied = await transaction(async (root) => {
+		applied = await activitiesTransaction(async (root) => {
 			const dir = join(root, slug);
 			await mkdir(dir, { recursive: true });
 			const cover = await applyCover(dir, before?.cover ?? null, coverChange);
@@ -257,38 +260,43 @@ export async function saveActivity(input: ActivityInput, currentSlug: string | n
 export async function deleteActivity(slug: string): Promise<ActivityResult> {
 	const current = await readActivitySource(slug);
 	if (!current) return { errors: ['Activité introuvable dans les sources (déjà supprimée ?).'] };
-	const applied = await transaction((root) => rm(join(root, slug), { recursive: true, force: true }));
+	const applied = await activitiesTransaction((root) => rm(join(root, slug), { recursive: true, force: true }));
 	return { slug, title: current.title || slug, applied, errors: [] };
 }
 
+export type OrderChange = { slug: string; order: number };
+
 /**
- * Nouvel ordre d'une ou plusieurs catégories : `{ <catégorie>: [slugs…] }`,
- * chaque liste devant contenir exactement les fiches de la catégorie. Les
- * fiches sont renumérotées 1, 2, 3… (seules celles qui changent sont réécrites).
+ * Nouvel ordre des fiches d'une ou plusieurs catégories : `{ <catégorie>:
+ * [slugs…] }`, chaque liste devant contenir exactement les fiches de la
+ * catégorie. Rend les fiches à renuméroter (1, 2, 3…), seulement celles dont
+ * le rang change ; l'écriture se fait par `writeActivityOrder()` dans une
+ * transaction (`saveCatalogOrder()`, `category-writer.ts`).
  */
-export async function saveActivityOrder(levels: Record<string, string[]>): Promise<{ applied?: Applied; errors: string[] }> {
+export async function activityOrderChanges(levels: Record<string, string[]>): Promise<{ changes: OrderChange[]; errors: string[] }> {
 	const sources = await listActivitySources();
-	const changes: { slug: string; order: number }[] = [];
+	const changes: OrderChange[] = [];
 	for (const [category, slugs] of Object.entries(levels)) {
 		const expected = sources.filter((s) => s.category === category).map((s) => s.slug);
-		if (!categories.some((c) => c.slug === category)) return { errors: [`Catégorie inconnue : ${category}.`] };
+		if (!categories.some((c) => c.slug === category)) return { changes: [], errors: [`Catégorie inconnue : ${category}.`] };
 		if (slugs.length !== expected.length || new Set(slugs).size !== slugs.length || slugs.some((s) => !expected.includes(s))) {
-			return { errors: ['La liste a changé entre-temps : rechargez le module puis recommencez.'] };
+			return { changes: [], errors: ['La liste a changé entre-temps : rechargez le module puis recommencez.'] };
 		}
 		slugs.forEach((slug, i) => {
 			if (sources.find((s) => s.slug === slug)!.order !== i + 1) changes.push({ slug, order: i + 1 });
 		});
 	}
-	if (!changes.length) return { errors: ["L'ordre n'a pas changé."] };
-	const applied = await transaction(async (root) => {
-		for (const { slug, order } of changes) {
-			const file = await readSourceFile(slug);
-			if (!file) continue;
-			file.doc.set('order', order);
-			await writeFile(join(root, slug, 'index.md'), serialize(file.doc, file.body), 'utf8');
-		}
-	});
-	return { applied, errors: [] };
+	return { changes, errors: [] };
+}
+
+/** Écrit les nouveaux rangs (`order:`) dans `root` (dossier de la transaction). */
+export async function writeActivityOrder(root: string, changes: OrderChange[]): Promise<void> {
+	for (const { slug, order } of changes) {
+		const file = await readSourceFile(slug);
+		if (!file) continue;
+		file.doc.set('order', order);
+		await writeFile(join(root, slug, 'index.md'), serialize(file.doc, file.body), 'utf8');
+	}
 }
 
 /** Corps JSON du formulaire → `ActivityInput` (types forcés, rien n'est validé ici). */

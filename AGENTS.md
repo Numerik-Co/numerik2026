@@ -92,7 +92,13 @@ Fonctionnement technique :
   `page-writer.ts`), routes `/api/admin/activites*` (`ordre` = flèches ↑/↓
   par catégorie, `order` renuméroté 1, 2, 3…). Adresse (dossier) fixée à la
   création ; changer de catégorie change l'URL et place la fiche en dernier.
-  Catégories : toujours `src/lib/categories.ts` (code).
+  **Catégories** gérées dans le même module (`CategoryForm.vue`,
+  `src/lib/category-writer.ts`, routes `/api/admin/activites/categories*`,
+  ordre avec celui des fiches dans `ordre`) : fichier de l'asso
+  `src/content/activites/_categories.yaml` (lu par `src/lib/categories.ts`,
+  `?raw` + zod via `import.meta.glob` ; absent = `DEFAULT_CATEGORIES`),
+  adresse fixée à la création, suppression d'une catégorie vide seulement,
+  icônes proposées : `src/lib/category-icons.ts`.
 - `src/lib/navigation.ts` — `getNavTree()` fusionne les pages du site actives et les
   pages `menu.show: true`, l'arborescence de dossiers produisant les menus
   déroulants (libellé de dropdown non cliquable, enfants seuls cliquables).
@@ -235,7 +241,7 @@ contenu hors de `src/content/`.**
   validé par `parseAccess`. `src/lib/content-pages.ts`. Détail :
   [docs/pages.md](docs/pages.md).
 - `activites` — `src/content/activites/<slug>/index.md`, `category` limitée
-  aux slugs de `src/lib/categories.ts`, `cover:` via `image()`.
+  aux slugs de `_categories.yaml` (`src/lib/categories.ts`), `cover:` via `image()`.
   `src/lib/activites.ts` : `getAllActivities()`, `getActivitiesByCategory()`,
   `renderActivity()` (async). Détail : [docs/activites.md](docs/activites.md).
 - `association.yaml` (pas une collection) — nom, coordonnées, mentions

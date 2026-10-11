@@ -93,10 +93,12 @@ export interface ActivitySourceView extends ActivityInput {
 	coverUrl: string | null;
 }
 
+/** Catégorie d'activités (`src/content/activites/_categories.yaml`), cf. src/lib/categories.ts. */
 export interface ActivityCategory {
 	slug: string;
 	label: string;
 	icon: string;
+	description: string;
 }
 
 export type CoverUpdate = { action: 'keep' } | { action: 'remove' } | { action: 'replace'; type: string; data: string };
@@ -285,7 +287,16 @@ export const activitiesApi = {
 	update: (slug: string, activity: ActivityInput, cover: CoverUpdate) =>
 		request<{ ok: true; href: string | null }>('PUT', `/api/admin/activites/${slug}`, { activity, cover }),
 	remove: (slug: string) => request<{ ok: true }>('DELETE', `/api/admin/activites/${slug}`, { confirm: slug }),
-	saveOrder: (levels: Record<string, string[]>) => request<{ ok: true }>('PUT', '/api/admin/activites/ordre', { levels }),
+	/** Nouvel ordre des fiches (par catégorie) et/ou des catégories, en une publication. */
+	saveOrder: (levels: Record<string, string[]>, categories: string[] | null) =>
+		request<{ ok: true }>('PUT', '/api/admin/activites/ordre', { levels, categories: categories ?? undefined }),
+};
+
+export const activityCategoriesApi = {
+	create: (category: ActivityCategory) => request<{ ok: true }>('POST', '/api/admin/activites/categories', { category }),
+	update: (slug: string, category: ActivityCategory) =>
+		request<{ ok: true }>('PUT', `/api/admin/activites/categories/${slug}`, { category }),
+	remove: (slug: string) => request<{ ok: true }>('DELETE', `/api/admin/activites/categories/${slug}`, { confirm: slug }),
 };
 
 export const versionApi = {

@@ -4,7 +4,11 @@
 
 ## Les catégories
 
-L'accueil et `/activites` affichent 4 catégories fixes, chacune avec une icône [FontAwesome](https://fontawesome.com/search?ip=classic&s=solid) (auto-hébergée via le package `@fortawesome/fontawesome-free`, pas de CDN externe) :
+Les activités sont rangées par **catégorie**. Chacune a une carte (icône
+[Font Awesome](https://fontawesome.com/search?ic=free&s=solid), style
+« solid », auto-hébergé via `@fortawesome/fontawesome-free`, pas de CDN) sur
+l'accueil et `/activites`, et sa page `/activites/<slug>` qui liste ses
+activités. Catégories livrées par défaut :
 
 | Catégorie | Slug | Icône |
 | :--- | :--- | :--- |
@@ -13,9 +17,35 @@ L'accueil et `/activites` affichent 4 catégories fixes, chacune avec une icône
 | Médiation numérique | `mediation-numerique` | `fa-people-group` |
 | FabLab | `fablab` | `fa-cubes` |
 
-Ce registre vit dans **`src/lib/categories.ts`** — c'est la seule source de vérité pour le libellé, l'icône et la description de chaque catégorie (les activités n'y font référence que par leur slug). La `description` est affichée dans le bandeau (`PageHeader`) de la page `/activites/<slug>`, sous le titre de la catégorie.
+Elles sont **propres à chaque association** et se gèrent depuis l'espace
+bénévoles (module « Activités » : créer, renommer, changer l'icône ou la
+description, réordonner, supprimer une catégorie vide — voir
+[le guide](guide-espace-benevoles.md#les-catégories)). Elles vivent dans
+**`src/content/activites/_categories.yaml`**, fichier de l'association
+qu'une mise à jour du modèle ne remplace pas :
 
-**Pour ajouter une 5ᵉ catégorie** : ajouter une entrée `{ slug, label, icon, description }` dans `src/lib/categories.ts`. La carte sur l'accueil/`/activites`, la page `/activites/<slug>` (bandeau de présentation + état vide si aucune activité n'y est encore rattachée) et le routage se mettent à jour automatiquement — rien d'autre à faire.
+```yaml
+- slug: parcours          # adresse /activites/parcours, valeur de « category: » des fiches
+  label: Parcours
+  icon: fa-route          # icône Font Awesome « solid »
+  description: Des parcours d'apprentissage progressifs…   # bandeau de la page (facultatif)
+```
+
+- L'ordre du fichier est l'ordre du site.
+- Sans ce fichier (site installé avant la gestion des catégories), les
+  catégories par défaut ci-dessus s'appliquent (`DEFAULT_CATEGORIES`,
+  `src/lib/categories.ts`) ; la première modification depuis le module crée
+  le fichier.
+- Le fichier est validé à la construction (`parseCategories`) : slug en
+  minuscules/chiffres/tirets et unique, nom (40 caractères max), icône
+  `fa-…`, description (300 max), au moins une catégorie. Une erreur bloque
+  le build avec un message qui nomme le champ.
+- Changer un `slug` à la main oblige à changer aussi le `category:` des
+  fiches concernées, et casse les liens vers l'ancienne adresse : le module
+  ne le permet pas (adresse fixée à la création).
+
+La carte sur l'accueil/`/activites`, la page `/activites/<slug>` (bandeau +
+état vide « bientôt » sans activité) et le routage suivent automatiquement.
 
 ## Créer une nouvelle activité
 
@@ -50,7 +80,7 @@ sources :
    | `title` | oui | Titre affiché partout (carte, page de détail) |
    | `isPublish` | non | `false` pour masquer l'activité partout (page catégorie, accueil) et faire 404 sa page de détail — un brouillon reste dans le dossier sans être visible. Absent ou `true` = publiée |
    | `excerpt` | oui | Résumé court, utilisé dans les cartes et la description SEO de la page de détail |
-   | `category` | oui | Slug d'une catégorie de `src/lib/categories.ts` (`parcours`, `ateliers`, `mediation-numerique`, `fablab`). Détermine sous quelle page catégorie l'activité apparaît, et son URL |
+   | `category` | oui | Slug d'une catégorie de `_categories.yaml` (par défaut `parcours`, `ateliers`, `mediation-numerique`, `fablab`). Détermine sous quelle page catégorie l'activité apparaît, et son URL |
    | `order` | non | Nombre entier, détermine l'ordre d'affichage au sein de sa catégorie (croissant). Sans ce champ, l'activité est affichée en dernier |
    | `level` | non | Niveau du cours (ex. `"Grand débutant"`, `"Initiation"`, `"Perfectionnement"`), affiché en pastille en bas à droite de la carte, à côté du lien "En savoir plus". Sans ce champ, la pastille ne s'affiche pas |
    | `cover` | non | Photo, chemin relatif au dossier (`./cover.jpg`). Le fichier doit exister, sinon le build échoue. Sans `cover:`, un placeholder « Image à venir » s'affiche sur la carte |
@@ -83,6 +113,8 @@ main reste modifiable depuis le module, et inversement.
 | :--- | :--- |
 | `src/components/admin/modules/ActivitiesModule.vue` | Liste par catégorie (vignette, pastilles brouillon / niveau / sans inscription), flèches ↑/↓, bandeau « Enregistrer et publier », suppression confirmée |
 | `src/components/admin/modules/activites/ActivityForm.vue` | Formulaire de création / modification (même présentation que le module « Pages ») |
+| `src/components/admin/modules/activites/CategoryForm.vue` | Formulaire d'une catégorie : nom, adresse (création), icône dans une grille (`src/lib/category-icons.ts`), description |
+| `src/lib/category-writer.ts` | Lecture / écriture de `_categories.yaml` (en place, commentaires gardés), suppression d'une catégorie vide, ordre des catégories et des fiches en une transaction (`saveCatalogOrder`) |
 | `src/lib/activity-writer.ts` | Lecture des sources, validation, écriture de `index.md` et de la photo, ordre |
 | `src/lib/content-transaction.ts` | Sauvegarde / remise en place de tout `src/content/activites/` (partagé avec `page-writer.ts`) |
 | `src/pages/api/admin/activites/` | Routes JSON (ci-dessous) |
@@ -91,18 +123,22 @@ main reste modifiable depuis le module, et inversement.
 
 | Route | Rôle |
 | :--- | :--- |
-| `GET /api/admin/activites` | Fiches (brouillons compris, vignette, `href`), catégories de `categories.ts`, état de la dernière publication, disponibilité de la publication |
+| `GET /api/admin/activites` | Fiches (brouillons compris, vignette, `href`), catégories (lues dans `_categories.yaml`), état de la dernière publication, disponibilité de la publication |
 | `POST /api/admin/activites` | Création `{ activity, cover?: { type, data } }` (`data` en base64) |
 | `GET /api/admin/activites/<slug>` | Sources de la fiche (formulaire), URL de la photo |
 | `PUT /api/admin/activites/<slug>` | Modification `{ activity, cover: { action: keep\|remove\|replace, type?, data? } }` |
 | `DELETE /api/admin/activites/<slug>` | Suppression `{ confirm: <slug> }` (dossier et photo) |
-| `PUT /api/admin/activites/ordre` | `{ levels: { <catégorie>: [slugs…] } }` : nouvel ordre d'une ou plusieurs catégories |
+| `PUT /api/admin/activites/ordre` | `{ levels?: { <catégorie>: [slugs…] }, categories?: [slugs…] }` : nouvel ordre des fiches d'une ou plusieurs catégories et/ou des catégories, en une publication |
+| `POST /api/admin/activites/categories` | Nouvelle catégorie `{ category: { label, slug?, icon, description } }`, placée en dernier |
+| `PUT /api/admin/activites/categories/<slug>` | Modification `{ category: { label, icon, description } }` (adresse inchangée) |
+| `DELETE /api/admin/activites/categories/<slug>` | Suppression `{ confirm: <slug> }`, refusée si une fiche (brouillon compris) l'utilise ou si c'est la dernière |
 
 Toutes passent par `publishChange()` (`src/lib/admin-publish.ts`) : écriture,
 reconstruction du site (`site-build.ts`), puis `purge` de la sauvegarde si
 elle réussit, `restore` sinon. Garde : `GUARDS` de `src/middleware.ts`
 (`/api/admin/activites` → `redacteur`). Journal : `activite.ajout`,
-`activite.modification`, `activite.suppression`, `activite.ordre`.
+`activite.modification`, `activite.suppression`, `activite.ordre`,
+`categorie.ajout`, `categorie.modification`, `categorie.suppression`.
 
 ### Règles d'écriture
 
@@ -112,8 +148,8 @@ elle réussit, `restore` sinon. Garde : `GUARDS` de `src/middleware.ts`
   Markdown sûrs et pas d'image Markdown locale (mêmes contrôles que les
   actualités, `checkBody`). Erreurs renvoyées en une fois, en français.
 - **Adresse** (nom du dossier) : déduite du titre ou saisie à la création
-  (`a-z`, `0-9`, tirets, 60 caractères), **fixée ensuite**. `ordre` est
-  réservé (route de l'ordre). Changer de catégorie garde le dossier mais
+  (`a-z`, `0-9`, tirets, 60 caractères), **fixée ensuite**. `ordre` et
+  `categories` sont réservés (routes du module). Changer de catégorie garde le dossier mais
   change l'URL (`/activites/<catégorie>/<slug>`).
 - **Frontmatter modifié en place** (`yaml` Document) : commentaires, champs
   inconnus et ordre des clés conservés ; un champ facultatif vidé est
@@ -133,10 +169,9 @@ Le texte est **nettoyé à l'affichage** comme celui des actualités
 (`renderActivity()` → `sanitizeNewsHtml()`) : HTML accepté, code exécutable
 retiré.
 
-**Limite** : les catégories elles-mêmes restent dans le code
-(`src/lib/categories.ts`) ; le module les lit mais ne les modifie pas. Une
-fiche dont la catégorie a été retirée du registre est signalée en rouge
-dans le module (sinon les prochaines publications échoueraient).
+Une fiche dont la catégorie a été retirée de `_categories.yaml` à la main
+est signalée en rouge dans le module (sinon les prochaines publications
+échoueraient).
 
 ## ⚠️ Droits d'usage des images
 
@@ -152,7 +187,7 @@ Les fiches forment la **content collection** `activites` (`src/content.config.ts
 - `renderActivity(activity)` — HTML rendu au build, nettoyé (`sanitizeNewsHtml`), et `headings` (sommaire).
 
 Trois endroits consomment ces fonctions :
-- `ActivitesSection.astro` (accueil + `/activites`) — affiche les 4 `CategoryCard` depuis `categories.ts`, pas les activités.
+- `ActivitesSection.astro` (accueil + `/activites`) — affiche une `CategoryCard` par catégorie (`categories.ts`), pas les activités.
 - `activites/[category].astro` — une page statique par catégorie (`getStaticPaths()` sur le registre), grille d'`ActivityCard` via `getActivitiesByCategory()`, état vide si la catégorie n'a aucune activité.
 - `activites/[category]/[slug].astro` — une page statique par activité (`getStaticPaths()` sur `getAllActivities()`), avec un lien de retour vers la page de sa catégorie.
 
