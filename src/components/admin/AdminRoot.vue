@@ -176,14 +176,14 @@ onBeforeUnmount(() => {
 				class="ml-1 shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-semibold text-amber-950"
 				title="Serveur de développement : les modifications sont visibles aussitôt, sans reconstruction du site."
 			>
-				<i class="fa-solid fa-flask mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Développement</span><span class="sm:hidden">Dév.</span>
+				<i class="fa-solid fa-flask mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Développement</span><span class="sm:hidden">Dév.</span><span v-if="version" class="ml-1 font-normal opacity-80">v{{ version.current }}</span>
 			</span>
 			<span
 				v-else
 				class="ml-1 shrink-0 rounded-full bg-green-400 px-2 py-0.5 text-xs font-semibold text-green-950"
 				:title="`Serveur de production : chaque publication reconstruit le site.${version ? ` Version ${version.current}.` : ''}`"
 			>
-				<i class="fa-solid fa-server mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Production</span><span class="sm:hidden">Prod.</span>
+				<i class="fa-solid fa-server mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Production</span><span class="sm:hidden">Prod.</span><span v-if="version" class="ml-1 font-normal opacity-80">v{{ version.current }}</span>
 			</span>
 			<div ref="userMenu" class="relative ml-1 shrink-0">
 				<button
