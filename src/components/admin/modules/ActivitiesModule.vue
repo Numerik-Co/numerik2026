@@ -289,20 +289,21 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 					<li
 						v-for="(a, i) in inCategory(cat.slug)"
 						:key="a.slug"
-						class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-100"
+						class="flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-100"
 					>
 						<img v-if="a.thumbnail" :src="a.thumbnail" alt="" class="h-8 w-12 shrink-0 rounded object-cover" />
 						<span v-else class="flex h-8 w-12 shrink-0 items-center justify-center rounded bg-gray-100 text-gray-300" aria-hidden="true">
 							<i class="fa-solid fa-image text-xs"></i>
 						</span>
-						<span :class="['min-w-0', { 'opacity-60': !a.isPublish }]">
+						<!-- Titre sur une seule ligne, « … » si trop long (complet au survol). -->
+						<span :class="['min-w-0 truncate', { 'opacity-60': !a.isPublish }]" :title="a.title || a.slug">
 							<a v-if="a.isPublish" :href="a.href" class="font-medium text-gray-900 hover:underline">{{ a.title || a.slug }}</a>
 							<span v-else class="font-medium text-gray-900">{{ a.title || a.slug }}</span>
 						</span>
-						<span v-if="!a.isPublish" :class="[badge, 'bg-amber-50 text-amber-800']">brouillon</span>
-						<span v-if="a.level" :class="greyBadge">{{ a.level }}</span>
-						<span v-if="!a.inscription" :class="greyBadge" title="Bouton « S'inscrire » masqué">sans inscription</span>
-						<span class="ml-auto flex items-center gap-1">
+						<span v-if="!a.isPublish" :class="[badge, 'shrink-0 bg-amber-50 text-amber-800']">brouillon</span>
+						<span v-if="a.level" :class="[greyBadge, 'shrink-0 whitespace-nowrap']">{{ a.level }}</span>
+						<span v-if="!a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
+						<span class="ml-auto flex shrink-0 items-center gap-1">
 							<OrderArrows
 								:label="a.title"
 								:first="i === 0"
