@@ -111,7 +111,7 @@ main reste modifiable depuis le module, et inversement.
 
 | Élément | Rôle |
 | :--- | :--- |
-| `src/components/admin/modules/ActivitiesModule.vue` | Liste par catégorie (vignette, pastilles brouillon / niveau / sans inscription), flèches ↑/↓, bandeau « Enregistrer et publier », suppression confirmée |
+| `src/components/admin/modules/ActivitiesModule.vue` | Liste par catégorie (vignette, pastilles brouillon / niveau / sans inscription), ordre par glisser-déposer (poignée ⠿) ou flèches ↑/↓, bandeau « Enregistrer et publier », suppression confirmée |
 | `src/components/admin/modules/activites/ActivityForm.vue` | Formulaire de création / modification (même présentation que le module « Pages ») |
 | `src/components/admin/modules/activites/CategoryForm.vue` | Formulaire d'une catégorie : nom, adresse (création), icône dans une grille (`src/lib/category-icons.ts`), description |
 | `src/lib/category-writer.ts` | Lecture / écriture de `_categories.yaml` (en place, commentaires gardés), suppression d'une catégorie vide, ordre des catégories et des fiches en une transaction (`saveCatalogOrder`) |

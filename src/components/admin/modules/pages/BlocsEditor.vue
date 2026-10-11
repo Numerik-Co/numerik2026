@@ -1,13 +1,16 @@
 <script setup lang="ts">
 /**
  * Blocs d'une page enrichie : ajout depuis le catalogue (`src/lib/blocs.ts`),
- * champs de chaque bloc, éléments répétés (cartes…), et insertion du
+ * champs de chaque bloc, éléments répétés (cartes…, ordre par glisser-déposer ou ↑/↓), et insertion du
  * marqueur `[[bloc:<id>]]` dans le texte (`insert`).
  */
 import { computed, ref } from 'vue';
+import { VueDraggable } from 'vue-draggable-plus';
 import { BLOC_TYPES, blocMarkersIn, emptyBloc, type Bloc, type BlocType, type BlocTypeDef } from '../../../../lib/blocs';
-import { inputClass } from '../../context';
+import { iconButtonClass, inputClass, sortableProps } from '../../context';
 import BlocFields from './BlocFields.vue';
+import DragHandle from './DragHandle.vue';
+import OrderArrows from './OrderArrows.vue';
 
 const props = defineProps<{ blocs: Record<string, Bloc>; body: string }>();
 const emit = defineEmits<{ insert: [id: string] }>();
@@ -39,6 +42,11 @@ function moveItem(bloc: Bloc, index: number, delta: number) {
 	const [item] = items.splice(index, 1);
 	items.splice(index + delta, 0, item);
 }
+
+/** Éléments glissés-déposés : nouvel ordre complet. */
+function reorderItems(bloc: Bloc, list: NonNullable<Bloc['items']>) {
+	bloc.items!.splice(0, bloc.items!.length, ...list);
+}
 </script>
 
 <template>
@@ -69,41 +77,40 @@ function moveItem(bloc: Bloc, index: number, delta: number) {
 			<BlocFields :fields="def(bloc.type).fields" :values="bloc" :id-prefix="`bloc-${id}`" />
 
 			<div v-if="def(bloc.type).items" class="mt-4 space-y-3">
-				<div v-for="(item, i) in bloc.items" :key="i" class="rounded-lg bg-gray-50 p-3">
-					<div class="mb-2 flex items-center gap-2 text-sm">
-						<span class="font-semibold text-gray-700">{{ def(bloc.type).items!.label }} {{ i + 1 }}</span>
-						<span class="ml-auto flex gap-1">
-							<button
-								type="button"
-								class="rounded px-1.5 py-0.5 text-gray-500 hover:bg-gray-200 disabled:opacity-30"
-								:disabled="i === 0"
-								aria-label="Monter"
-								@click="moveItem(bloc, i, -1)"
-							>
-								<i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
-							</button>
-							<button
-								type="button"
-								class="rounded px-1.5 py-0.5 text-gray-500 hover:bg-gray-200 disabled:opacity-30"
-								:disabled="i === (bloc.items?.length ?? 0) - 1"
-								aria-label="Descendre"
-								@click="moveItem(bloc, i, 1)"
-							>
-								<i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
-							</button>
-							<button
-								type="button"
-								class="rounded px-1.5 py-0.5 text-red-600 hover:bg-red-50 disabled:opacity-30"
-								:disabled="(bloc.items?.length ?? 0) <= def(bloc.type).items!.min"
-								aria-label="Retirer"
-								@click="bloc.items!.splice(i, 1)"
-							>
-								<i class="fa-solid fa-trash" aria-hidden="true"></i>
-							</button>
-						</span>
+				<VueDraggable
+					v-bind="sortableProps"
+					:model-value="bloc.items ?? []"
+					class="space-y-3"
+					@update:model-value="(list: NonNullable<Bloc['items']>) => reorderItems(bloc, list)"
+				>
+					<div v-for="(item, i) in bloc.items" :key="i" class="rounded-lg bg-gray-50 p-3">
+						<div class="mb-2 flex items-center gap-2 text-sm">
+							<DragHandle :disabled="false" />
+							<span class="font-semibold text-gray-700">{{ def(bloc.type).items!.label }} {{ i + 1 }}</span>
+							<span class="ml-auto flex items-center gap-1">
+								<OrderArrows
+									:label="`${def(bloc.type).items!.label} ${i + 1}`"
+									:first="i === 0"
+									:last="i === (bloc.items?.length ?? 0) - 1"
+									:disabled="false"
+									@up="moveItem(bloc, i, -1)"
+									@down="moveItem(bloc, i, 1)"
+								/>
+								<button
+									type="button"
+									:class="[iconButtonClass, 'text-red-600']"
+									:disabled="(bloc.items?.length ?? 0) <= def(bloc.type).items!.min"
+									aria-label="Retirer"
+									title="Retirer"
+									@click="bloc.items!.splice(i, 1)"
+								>
+									<i class="fa-solid fa-trash" aria-hidden="true"></i>
+								</button>
+							</span>
+						</div>
+						<BlocFields :fields="def(bloc.type).items!.fields" :values="item" :id-prefix="`bloc-${id}-${i}`" />
 					</div>
-					<BlocFields :fields="def(bloc.type).items!.fields" :values="item" :id-prefix="`bloc-${id}-${i}`" />
-				</div>
+				</VueDraggable>
 				<button
 					v-if="(bloc.items?.length ?? 0) < def(bloc.type).items!.max"
 					type="button"

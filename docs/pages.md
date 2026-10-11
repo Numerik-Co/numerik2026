@@ -122,7 +122,7 @@ reconstruit le site, comme le module « Actualités »
   place si la reconstruction échoue). Déplacer une page (autre menu déroulant,
   hors menu déroulant, réservée) ou changer son adresse **change son URL**.
 - Menus déroulants : `_group.md` (libellé, position dans le menu de
-  navigation : dernière à la création, puis flèches) ; l'adresse d'un menu déroulant est fixée à sa création ; seul
+  navigation : dernière à la création, puis glisser-déposer ou flèches) ; l'adresse d'un menu déroulant est fixée à sa création ; seul
   un menu déroulant vide se supprime ; sans page, il n'apparaît pas sur le
   site. Un seul niveau. (« Menu » seul = menu de navigation, frontmatter
   `menu:`.)
@@ -159,7 +159,7 @@ reconstruit le site, comme le module « Actualités »
 - Nouvelle page dans la bibliothèque : une entrée `SITE_PAGES` (textes et
   valeurs par défaut), lecture de ses textes avec `getSitePage()` dans la page
   `.astro`, et `if (!page.active) return new Response(null, { status: 404 })`.
-- Ordre : flèches ↑/↓ dans le bloc « Menu de navigation » (premier niveau :
+- Ordre : glisser-déposer (poignée ⠿) ou flèches ↑/↓ dans le bloc « Menu de navigation » (premier niveau :
   liens du site, liens directs, menus déroulants ; ou pages d'un menu
   déroulant), brouillon local puis `PUT /api/admin/ordre-menu`
   (`saveMenuOrder()` : liste complète du niveau exigée, positions

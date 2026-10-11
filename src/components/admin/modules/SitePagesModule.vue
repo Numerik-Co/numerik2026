@@ -5,15 +5,17 @@
  * sources (`src/content/pages/`). Création (page classique ou enrichie de
  * blocs), modification, déplacement, suppression ; menus déroulants :
  * création (en dernière position), libellé, suppression d'un menu déroulant
- * vide ; ordre du menu par flèches ↑/↓. Chaque modification reconstruit le
+ * vide ; ordre du menu par glisser-déposer ou flèches ↑/↓. Chaque modification reconstruit le
  * site (suivi par `usePublication`), comme le module « Actualités ».
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { VueDraggable } from 'vue-draggable-plus';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
 import PublishStatus from '../PublishStatus.vue';
 import { ApiError, dropdownsApi, menuOrderApi, pagesApi, sitePagesApi, type DropdownView, type PageSourceView, type SitePageView } from '../client';
-import { ADMIN_CONTEXT, iconButtonClass, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
+import { ADMIN_CONTEXT, iconButtonClass, inputClass, rememberOpenModule, sortableProps, takeModuleToReopen } from '../context';
 import { usePublication } from '../usePublication';
+import DragHandle from './pages/DragHandle.vue';
 import OrderArrows from './pages/OrderArrows.vue';
 import PageForm from './pages/PageForm.vue';
 import PageRow from './pages/PageRow.vue';
@@ -67,7 +69,7 @@ const { status, following, receive, started, dismiss: dismissStatus } = usePubli
 const publishLocked = computed(() => !availability.value.ok || following.value || busy.value);
 
 /**
- * Ordre changé par les flèches ↑/↓, pas encore enregistré : clés des éléments
+ * Ordre changé par glisser-déposer ou flèches ↑/↓, pas encore enregistré : clés des éléments
  * par niveau (`racine`, `dropdown:<dossier>`). Tant qu'il est en attente, les
  * autres actions sont bloquées (une publication enregistre tout l'ordre d'un coup).
  */
@@ -84,6 +86,10 @@ function move(level: string, keys: string[], index: number, delta: -1 | 1) {
 	const next = [...keys];
 	[next[index], next[index + delta]] = [next[index + delta], next[index]];
 	orderDraft.value = { ...orderDraft.value, [level]: next };
+}
+/** Liste glissée-déposée : nouvel ordre complet d'un niveau. */
+function reorder(level: string, keys: string[]) {
+	orderDraft.value = { ...orderDraft.value, [level]: keys };
 }
 
 async function saveOrder() {
@@ -283,7 +289,7 @@ onMounted(load);
 
 		<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 		<div v-else class="space-y-6">
-			<!-- Ordre changé par les flèches : enregistré en une seule publication -->
+			<!-- Ordre changé (glisser-déposer, flèches) : enregistré en une seule publication -->
 			<div
 				v-if="orderPending"
 				class="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200"
@@ -309,9 +315,16 @@ onMounted(load);
 					<span class="font-heading font-semibold text-gray-900">Menu de navigation</span>
 					<span class="text-xs text-gray-500">dans l'ordre d'affichage</span>
 				</header>
-				<ul class="divide-y divide-gray-100">
+				<VueDraggable
+					v-bind="sortableProps"
+					tag="ul"
+					:model-value="navItems"
+					class="divide-y divide-gray-100"
+					@update:model-value="(list: NavItem[]) => reorder('racine', list.map(navKey))"
+				>
 					<template v-for="(item, i) in navItems" :key="navKey(item)">
-						<li v-if="item.kind === 'site'" class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-100">
+						<li v-if="item.kind === 'site'" class="flex flex-wrap items-center gap-2 py-2.5 pr-4 pl-2 text-sm transition-colors hover:bg-gray-100">
+							<DragHandle :disabled="publishLocked" />
 							<span :class="['min-w-0', { 'opacity-60': !item.site.show }]">
 								<a :href="item.site.href" class="font-medium text-gray-900 hover:underline">{{ item.site.label }}</a>
 							</span>
@@ -362,6 +375,7 @@ onMounted(load);
 							@cancel-delete="confirming = null"
 						>
 							<span class="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">lien direct</span>
+							<template #handle><DragHandle :disabled="publishLocked" /></template>
 							<template #order>
 								<OrderArrows
 									:label="item.page.title"
@@ -375,7 +389,8 @@ onMounted(load);
 						</PageRow>
 						<li v-else>
 							<!-- Menu déroulant déplié : la ligne reste grisée. -->
-							<div :class="['flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-100', { 'bg-gray-100': expanded.has(item.dropdown.folder) }]">
+							<div :class="['flex flex-wrap items-center gap-2 py-2.5 pr-4 pl-2 text-sm transition-colors hover:bg-gray-100', { 'bg-gray-100': expanded.has(item.dropdown.folder) }]">
+								<DragHandle :disabled="publishLocked" />
 								<button
 									type="button"
 									class="flex items-center gap-2 font-medium text-gray-900 hover:text-primary"
@@ -437,40 +452,53 @@ onMounted(load);
 								]"
 								:inert="!expanded.has(item.dropdown.folder)"
 							>
-								<ul class="min-h-0 overflow-hidden divide-y divide-gray-100">
-									<PageRow
-										v-for="(p, j) in dropdownPages(item.dropdown)"
-										:key="p.path"
-										nested
-										:page="p"
-										:locked="locked"
-										:confirming="confirming === `page:${p.path}`"
-										@edit="openPage(p)"
-										@ask-delete="confirming = `page:${p.path}`"
-										@confirm-delete="removePage(p)"
-										@cancel-delete="confirming = null"
+								<div class="min-h-0 overflow-hidden">
+									<VueDraggable
+										v-bind="sortableProps"
+										tag="ul"
+										:model-value="dropdownPages(item.dropdown)"
+										class="divide-y divide-gray-100"
+										@update:model-value="(list: PageSourceView[]) => reorder(`dropdown:${item.dropdown.folder}`, list.map((p) => `page:${p.path}`))"
 									>
-										<span v-if="!p.menu.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600">masquée du menu</span>
-										<template #order>
-											<OrderArrows
-												:label="p.title"
-												:first="j === 0"
-												:last="j === item.dropdown.pages.length - 1"
-												:disabled="publishLocked"
-												@up="move(`dropdown:${item.dropdown.folder}`, dropdownKeys(item.dropdown), j, -1)"
-												@down="move(`dropdown:${item.dropdown.folder}`, dropdownKeys(item.dropdown), j, 1)"
-											/>
-										</template>
-									</PageRow>
-									<li v-if="!dropdownPages(item.dropdown).some((p) => p.menu.show)" class="py-2.5 pr-4 pl-8 text-sm font-light text-gray-500">
+										<PageRow
+											v-for="(p, j) in dropdownPages(item.dropdown)"
+											:key="p.path"
+											nested
+											:page="p"
+											:locked="locked"
+											:confirming="confirming === `page:${p.path}`"
+											@edit="openPage(p)"
+											@ask-delete="confirming = `page:${p.path}`"
+											@confirm-delete="removePage(p)"
+											@cancel-delete="confirming = null"
+										>
+											<span v-if="!p.menu.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600">masquée du menu</span>
+											<template #handle><DragHandle :disabled="publishLocked" /></template>
+											<template #order>
+												<OrderArrows
+													:label="p.title"
+													:first="j === 0"
+													:last="j === item.dropdown.pages.length - 1"
+													:disabled="publishLocked"
+													@up="move(`dropdown:${item.dropdown.folder}`, dropdownKeys(item.dropdown), j, -1)"
+													@down="move(`dropdown:${item.dropdown.folder}`, dropdownKeys(item.dropdown), j, 1)"
+												/>
+											</template>
+										</PageRow>
+									</VueDraggable>
+									<!-- Hors de la liste déplaçable : SortableJS n'y voit que les pages. -->
+									<p
+										v-if="!dropdownPages(item.dropdown).some((p) => p.menu.show)"
+										:class="['py-2.5 pr-4 pl-8 text-sm font-light text-gray-500', { 'border-t border-gray-100': item.dropdown.pages.length }]"
+									>
 										{{ item.dropdown.pages.length ? 'Aucune page visible' : 'Aucune page' }} : ce menu déroulant n'apparaît pas
 										encore sur le site.
-									</li>
-								</ul>
+									</p>
+								</div>
 							</div>
 						</li>
 					</template>
-				</ul>
+				</VueDraggable>
 			</section>
 
 			<!-- 2. Pages libres, 3. pages réservées -->

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-/** Flèches ↑/↓ d'une ligne du menu de navigation (module « Pages ») ; l'ordre est enregistré à part. */
+/**
+ * Flèches ↑/↓ d'une ligne ordonnable (modules « Pages » et « Activités », accueil, éléments d'un bloc). Sur
+ * grand écran (≥ lg), elles sont masquées au profit de la poignée de glisser-déposer (`DragHandle.vue`), mais
+ * réapparaissent quand on y arrive au clavier.
+ */
 import { iconButtonClass } from '../../context';
 
 const props = defineProps<{ label: string; first: boolean; last: boolean; disabled: boolean }>();
@@ -7,7 +11,7 @@ const emit = defineEmits<{ up: []; down: [] }>();
 </script>
 
 <template>
-	<span class="mr-1 flex items-center">
+	<span class="mr-1 flex items-center lg:sr-only lg:focus-within:not-sr-only">
 		<button
 			type="button"
 			:class="[iconButtonClass, 'text-gray-500 hover:text-gray-900']"

@@ -5,17 +5,19 @@
  * par catégorie (`src/content/activites/_categories.yaml`, cf.
  * `src/lib/categories.ts`). Fiches et catégories : création, modification,
  * suppression (catégorie vide seulement) ; ordre des catégories et des fiches
- * dans chaque catégorie par flèches ↑/↓, enregistré en une seule publication. Même présentation que le module « Pages » ; chaque
+ * dans chaque catégorie par glisser-déposer ou flèches ↑/↓, enregistré en une seule publication. Même présentation que le module « Pages » ; chaque
  * modification reconstruit le site (suivi par `usePublication`).
  */
 import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue';
+import { VueDraggable } from 'vue-draggable-plus';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
 import PublishStatus from '../PublishStatus.vue';
 import { activitiesApi, activityCategoriesApi, ApiError, type ActivityCategory, type ActivityItem, type ActivitySourceView } from '../client';
-import { ADMIN_CONTEXT, iconButtonClass, rememberOpenModule, takeModuleToReopen } from '../context';
+import { ADMIN_CONTEXT, iconButtonClass, rememberOpenModule, sortableProps, takeModuleToReopen } from '../context';
 import { usePublication } from '../usePublication';
 import ActivityForm from './activites/ActivityForm.vue';
 import CategoryForm from './activites/CategoryForm.vue';
+import DragHandle from './pages/DragHandle.vue';
 import OrderArrows from './pages/OrderArrows.vue';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
@@ -62,7 +64,7 @@ const { status, following, receive, started, dismiss: dismissStatus } = usePubli
 const publishLocked = computed(() => !availability.value.ok || following.value || busy.value);
 
 /**
- * Ordre changé par les flèches ↑/↓, pas encore enregistré : slugs par
+ * Ordre changé par glisser-déposer ou flèches ↑/↓, pas encore enregistré : slugs par
  * catégorie. Tant qu'il est en attente, les autres actions sont bloquées.
  */
 const orderDraft = ref<Record<string, string[]>>({});
@@ -85,6 +87,10 @@ function moveCategory(index: number, delta: -1 | 1) {
 	[next[index], next[index + delta]] = [next[index + delta], next[index]];
 	categoryDraft.value = next;
 }
+/** Catégories glissées-déposées : nouvelle liste complète. */
+function reorderCategories(list: ActivityCategory[]) {
+	categoryDraft.value = list.map((c) => c.slug);
+}
 const locked = computed(() => publishLocked.value || orderPending.value);
 
 /** Fiches d'une catégorie, dans l'ordre affiché (brouillon d'ordre compris). */
@@ -101,6 +107,10 @@ function move(category: string, index: number, delta: -1 | 1) {
 	const next = inCategory(category).map((a) => a.slug);
 	[next[index], next[index + delta]] = [next[index + delta], next[index]];
 	orderDraft.value = { ...orderDraft.value, [category]: next };
+}
+/** Fiches glissées-déposées dans une catégorie : nouvelle liste complète. */
+function reorder(category: string, list: ActivityItem[]) {
+	orderDraft.value = { ...orderDraft.value, [category]: list.map((a) => a.slug) };
 }
 
 async function saveOrder() {
@@ -213,7 +223,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 
 		<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 		<div v-else class="space-y-6">
-			<!-- Ordre changé par les flèches : enregistré en une seule publication -->
+			<!-- Ordre changé (glisser-déposer, flèches) : enregistré en une seule publication -->
 			<div
 				v-if="orderPending"
 				class="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200"
@@ -237,107 +247,122 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 				catégorie, sinon les prochaines publications échoueront.
 			</p>
 
-			<!-- Une section par catégorie, dans l'ordre du site -->
-			<section v-for="(cat, ci) in shownCategories" :key="cat.slug" class="overflow-hidden rounded-xl border border-gray-200">
-				<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 px-4 py-2.5">
-					<i :class="['fa-solid', cat.icon, 'text-gray-400']" aria-hidden="true"></i>
-					<a :href="`/activites/${cat.slug}`" class="font-heading font-semibold text-gray-900 hover:underline">{{ cat.label }}</a>
-					<span class="text-xs text-gray-500">dans l'ordre d'affichage</span>
-					<span class="ml-auto flex items-center gap-1">
-						<OrderArrows
-							:label="cat.label"
-							:first="ci === 0"
-							:last="ci === shownCategories.length - 1"
-							:disabled="publishLocked"
-							@up="moveCategory(ci, -1)"
-							@down="moveCategory(ci, 1)"
-						/>
-						<button
-							type="button"
-							:class="[iconButtonClass, 'text-primary']"
-							:disabled="locked"
-							:aria-label="`Modifier la catégorie « ${cat.label} »`"
-							title="Modifier la catégorie"
-							@click="go({ name: 'category', source: cat })"
-						>
-							<i class="fa-solid fa-pen" aria-hidden="true"></i>
-						</button>
-						<ConfirmIconButton
-							v-if="!inCategory(cat.slug).length && categories.length > 1"
-							label="Supprimer"
-							title="Supprimer la catégorie (vide)"
-							:confirming="confirming === `cat:${cat.slug}`"
-							:disabled="locked"
-							@ask="confirming = `cat:${cat.slug}`"
-							@confirm="removeCategory(cat)"
-							@cancel="confirming = null"
-						/>
-						<span v-else class="w-7" aria-hidden="true"></span>
-						<button
-							type="button"
-							:class="[iconButtonClass, 'text-primary']"
-							:disabled="locked"
-							:aria-label="`Nouvelle activité dans « ${cat.label} »`"
-							title="Nouvelle activité dans cette catégorie"
-							@click="openForm(null, cat.slug)"
-						>
-							<i class="fa-solid fa-plus" aria-hidden="true"></i>
-						</button>
-					</span>
-				</header>
-				<ul class="divide-y divide-gray-100">
-					<li
-						v-for="(a, i) in inCategory(cat.slug)"
-						:key="a.slug"
-						class="flex items-center gap-2 px-4 py-2.5 text-sm transition-colors hover:bg-gray-100"
-					>
-						<img v-if="a.thumbnail" :src="a.thumbnail" alt="" class="h-8 w-12 shrink-0 rounded object-cover" />
-						<span v-else class="flex h-8 w-12 shrink-0 items-center justify-center rounded bg-gray-100 text-gray-300" aria-hidden="true">
-							<i class="fa-solid fa-image text-xs"></i>
-						</span>
-						<!-- Titre sur une seule ligne, « … » si trop long (complet au survol). -->
-						<span :class="['min-w-0 truncate', { 'opacity-60': !a.isPublish }]" :title="a.title || a.slug">
-							<a v-if="a.isPublish" :href="a.href" class="font-medium text-gray-900 hover:underline">{{ a.title || a.slug }}</a>
-							<span v-else class="font-medium text-gray-900">{{ a.title || a.slug }}</span>
-						</span>
-						<span v-if="!a.isPublish" :class="[badge, 'shrink-0 bg-amber-50 text-amber-800']">brouillon</span>
-						<span v-if="a.level" :class="[greyBadge, 'shrink-0 whitespace-nowrap']">{{ a.level }}</span>
-						<span v-if="!a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
-						<span class="ml-auto flex shrink-0 items-center gap-1">
+			<!-- Une section par catégorie, dans l'ordre du site ; déplaçable par la poignée de son en-tête -->
+			<VueDraggable
+				v-bind="sortableProps"
+				:model-value="shownCategories"
+				class="space-y-6"
+				@update:model-value="reorderCategories"
+			>
+				<section v-for="(cat, ci) in shownCategories" :key="cat.slug" class="overflow-hidden rounded-xl border border-gray-200">
+					<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 py-2.5 pr-4 pl-2">
+						<DragHandle :disabled="publishLocked" />
+						<i :class="['fa-solid', cat.icon, 'text-gray-400']" aria-hidden="true"></i>
+						<a :href="`/activites/${cat.slug}`" class="font-heading font-semibold text-gray-900 hover:underline">{{ cat.label }}</a>
+						<span class="text-xs text-gray-500">dans l'ordre d'affichage</span>
+						<span class="ml-auto flex items-center gap-1">
 							<OrderArrows
-								:label="a.title"
-								:first="i === 0"
-								:last="i === inCategory(cat.slug).length - 1"
+								:label="cat.label"
+								:first="ci === 0"
+								:last="ci === shownCategories.length - 1"
 								:disabled="publishLocked"
-								@up="move(cat.slug, i, -1)"
-								@down="move(cat.slug, i, 1)"
+								@up="moveCategory(ci, -1)"
+								@down="moveCategory(ci, 1)"
 							/>
 							<button
 								type="button"
 								:class="[iconButtonClass, 'text-primary']"
 								:disabled="locked"
-								aria-label="Modifier"
-								title="Modifier"
-								@click="openForm(a)"
+								:aria-label="`Modifier la catégorie « ${cat.label} »`"
+								title="Modifier la catégorie"
+								@click="go({ name: 'category', source: cat })"
 							>
 								<i class="fa-solid fa-pen" aria-hidden="true"></i>
 							</button>
 							<ConfirmIconButton
+								v-if="!inCategory(cat.slug).length && categories.length > 1"
 								label="Supprimer"
-								title="Supprimer l'activité"
-								:confirming="confirming === a.slug"
+								title="Supprimer la catégorie (vide)"
+								:confirming="confirming === `cat:${cat.slug}`"
 								:disabled="locked"
-								@ask="confirming = a.slug"
-								@confirm="remove(a)"
+								@ask="confirming = `cat:${cat.slug}`"
+								@confirm="removeCategory(cat)"
 								@cancel="confirming = null"
 							/>
+							<span v-else class="w-7" aria-hidden="true"></span>
+							<button
+								type="button"
+								:class="[iconButtonClass, 'text-primary']"
+								:disabled="locked"
+								:aria-label="`Nouvelle activité dans « ${cat.label} »`"
+								title="Nouvelle activité dans cette catégorie"
+								@click="openForm(null, cat.slug)"
+							>
+								<i class="fa-solid fa-plus" aria-hidden="true"></i>
+							</button>
 						</span>
-					</li>
-					<li v-if="!inCategory(cat.slug).length" class="px-4 py-2.5 text-sm font-light text-gray-500">
-						Aucune activité : la page de la catégorie affiche « bientôt ».
-					</li>
-				</ul>
-			</section>
+					</header>
+					<VueDraggable
+						v-bind="sortableProps"
+						tag="ul"
+						:model-value="inCategory(cat.slug)"
+						class="divide-y divide-gray-100"
+						@update:model-value="(list: ActivityItem[]) => reorder(cat.slug, list)"
+					>
+						<li
+							v-for="(a, i) in inCategory(cat.slug)"
+							:key="a.slug"
+							class="flex items-center gap-2 py-2.5 pr-4 pl-2 text-sm transition-colors hover:bg-gray-100"
+						>
+							<DragHandle :disabled="publishLocked" />
+							<img v-if="a.thumbnail" :src="a.thumbnail" alt="" class="h-8 w-12 shrink-0 rounded object-cover" />
+							<span v-else class="flex h-8 w-12 shrink-0 items-center justify-center rounded bg-gray-100 text-gray-300" aria-hidden="true">
+								<i class="fa-solid fa-image text-xs"></i>
+							</span>
+							<!-- Titre sur une seule ligne, « … » si trop long (complet au survol). -->
+							<span :class="['min-w-0 truncate', { 'opacity-60': !a.isPublish }]" :title="a.title || a.slug">
+								<a v-if="a.isPublish" :href="a.href" class="font-medium text-gray-900 hover:underline">{{ a.title || a.slug }}</a>
+								<span v-else class="font-medium text-gray-900">{{ a.title || a.slug }}</span>
+							</span>
+							<span v-if="!a.isPublish" :class="[badge, 'shrink-0 bg-amber-50 text-amber-800']">brouillon</span>
+							<span v-if="a.level" :class="[greyBadge, 'shrink-0 whitespace-nowrap']">{{ a.level }}</span>
+							<span v-if="!a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
+							<span class="ml-auto flex shrink-0 items-center gap-1">
+								<OrderArrows
+									:label="a.title"
+									:first="i === 0"
+									:last="i === inCategory(cat.slug).length - 1"
+									:disabled="publishLocked"
+									@up="move(cat.slug, i, -1)"
+									@down="move(cat.slug, i, 1)"
+								/>
+								<button
+									type="button"
+									:class="[iconButtonClass, 'text-primary']"
+									:disabled="locked"
+									aria-label="Modifier"
+									title="Modifier"
+									@click="openForm(a)"
+								>
+									<i class="fa-solid fa-pen" aria-hidden="true"></i>
+								</button>
+								<ConfirmIconButton
+									label="Supprimer"
+									title="Supprimer l'activité"
+									:confirming="confirming === a.slug"
+									:disabled="locked"
+									@ask="confirming = a.slug"
+									@confirm="remove(a)"
+									@cancel="confirming = null"
+								/>
+							</span>
+						</li>
+						<li v-if="!inCategory(cat.slug).length" class="px-4 py-2.5 text-sm font-light text-gray-500">
+							Aucune activité : la page de la catégorie affiche « bientôt ».
+						</li>
+					</VueDraggable>
+				</section>
+			</VueDraggable>
 		</div>
 	</template>
 
