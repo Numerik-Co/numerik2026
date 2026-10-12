@@ -393,7 +393,11 @@ page est fournie par le site, l'association règle le reste.
   libre peuvent figurer plusieurs fois), d'en **retirer** (corbeille), de
   les **ordonner** (poignée ⠿ ou ↑/↓) et de **modifier leur contenu** (clic
   sur le module : titres, textes, boutons et leurs liens, nombre d'actualités…). Un champ
-  facultatif vidé masque l'élément (ex. second bouton du bandeau). « Revenir
+  facultatif vidé masque l'élément (ex. second bouton du bandeau). La
+  **photo de fond** se règle dans le module **Bandeau** : remplacer
+  (JPEG, PNG ou WebP, paysage d'au moins 1 600 px, 10 Mo max ; réduite à
+  2 400 px de large) ou retirer (fond uni) ; elle part avec le reste à
+  l'enregistrement. « Revenir
   à l'accueil d'origine » remet les modules de départ. Rien n'est publié
   avant **Enregistrer et publier**.
 - **Désactiver** (corbeille, après confirmation) : la page disparaît du menu

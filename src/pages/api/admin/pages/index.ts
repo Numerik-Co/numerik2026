@@ -1,6 +1,7 @@
 /**
  * Module « Pages » (groupes `redacteur` / `admin`, garde dans `src/middleware.ts`) :
- *  - GET  : arborescence des sources (menus déroulants, pages, pages réservées), état de
+ *  - GET  : arborescence des sources (menus déroulants, pages, pages réservées), aperçu de la
+ *           photo d'accueil (`homePhoto`), état de
  *           la dernière publication, disponibilité de la publication ;
  *  - POST : `{ page, cover?: { type, data (base64) } }` → crée
  *           `src/content/pages/<…>/index.md` puis reconstruit le site
@@ -10,6 +11,7 @@ import type { APIRoute } from 'astro';
 import { json, jsonError, readJson, withErrors } from '../../../../lib/auth/api';
 import { publishBlocked, publishChange } from '../../../../lib/admin-publish';
 import { readCover } from '../../../../lib/admin-cover';
+import { readHomePhotoPreview } from '../../../../lib/home-photo';
 import { listPagesSource, readPageInput, savePage } from '../../../../lib/page-writer';
 import { canPublish, readStatus } from '../../../../lib/site-build';
 
@@ -22,7 +24,12 @@ export const GET: APIRoute = withErrors(async () => {
 	const status = await readStatus();
 	const finished = status.finishedAt ? Date.parse(status.finishedAt) : 0;
 	const recent = status.state === 'running' || status.state === 'idle' || Date.now() - finished < STATUS_RECALL_MS;
-	return json({ ...(await listPagesSource()), status: recent ? status : { state: 'idle' }, availability: await canPublish() });
+	return json({
+		...(await listPagesSource()),
+		homePhoto: await readHomePhotoPreview(),
+		status: recent ? status : { state: 'idle' },
+		availability: await canPublish(),
+	});
 });
 
 export const POST: APIRoute = withErrors(async ({ request, locals }) => {

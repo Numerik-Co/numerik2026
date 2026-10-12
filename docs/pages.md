@@ -138,7 +138,10 @@ reconstruit le site, comme le module « Actualités »
   liste complète enregistrée dans `pages.accueil.modules` (valeurs
   explicites ; absente = `DEFAULT_HOME`, identique à `DEFAULT_HOME` = non
   écrite), validée par `validateHomeModules()` (build et écriture), éditée
-  par `HomeModulesEditor.vue` (réutilise `BlocFields.vue`), rendue par
+  par `HomeModulesEditor.vue` (réutilise `BlocFields.vue` ; photo du
+  bandeau = `HomePhotoField.vue`, envoyée avec la page — champ `photo` du
+  `PUT /api/admin/pages-du-site/accueil`, `src/lib/home-photo.ts` :
+  `images/accueil.jpg` réduite à 2 400 px, ou retirée), rendue par
   `src/pages/index.astro`. Nouveau type = entrée `HOME_MODULES` + branche dans
   `index.astro`. Le planning (`WeeklyAgenda`) n'en fait pas partie : il lit
   Grist à chaque requête, l'accueil est prérendu.

@@ -2,7 +2,7 @@
 /**
  * Modules de la page d'accueil (catalogue `src/lib/home-modules.ts`) :
  * ajout, retrait, ordre (glisser-déposer ou ↑/↓) et contenu de chaque module, replié en
- * accordéon. Modifie la liste reçue sur place ; l'enregistrement est fait par
+ * accordéon, photo du bandeau comprise (`HomePhotoField.vue`). Modifie la liste reçue sur place ; l'enregistrement est fait par
  * le formulaire parent (`SitePageForm.vue`).
  */
 import { computed, nextTick, ref } from 'vue';
@@ -10,10 +10,13 @@ import { VueDraggable } from 'vue-draggable-plus';
 import { DEFAULT_HOME, HOME_MODULES, homeModuleDef, newHomeModule, type HomeModule, type HomeModuleDef, type HomeModuleType } from '../../../../lib/home-modules';
 import { iconButtonClass, inputClass, sortableProps } from '../../context';
 import BlocFields from './BlocFields.vue';
+import HomePhotoField from './HomePhotoField.vue';
+import type { HomePhotoDraft } from './home-photo-draft';
 import DragHandle from './DragHandle.vue';
 import OrderArrows from './OrderArrows.vue';
 
-const props = defineProps<{ modules: HomeModule[] }>();
+/** `photo` : brouillon de la photo du bandeau (champ du module « Bandeau »). */
+const props = defineProps<{ modules: HomeModule[]; photo?: HomePhotoDraft }>();
 
 /**
  * Module déplié, par objet (l'index change quand on déplace) : un seul à la
@@ -120,6 +123,7 @@ const summary = (m: HomeModule) => m.titre || '';
 				</div>
 				<div v-if="open === m" class="border-t border-gray-100 px-4 py-4">
 					<p class="mb-3 text-xs font-light text-gray-500">{{ homeModuleDef(m.type).description }}</p>
+					<HomePhotoField v-if="m.type === 'bandeau' && props.photo" :draft="props.photo" :id-prefix="`hm-${i}`" />
 					<BlocFields :fields="homeModuleDef(m.type).fields" :values="m" :id-prefix="`hm-${i}`" />
 				</div>
 			</li>

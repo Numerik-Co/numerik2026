@@ -34,6 +34,8 @@ const view = ref<View>({ name: 'list' });
 const sitePages = ref<SitePageView[]>([]);
 const dropdowns = ref<DropdownView[]>([]);
 const pages = ref<PageSourceView[]>([]);
+/** Aperçu de la photo du bandeau d'accueil (formulaire de l'Accueil). */
+const homePhoto = ref<string | null>(null);
 const availability = ref<{ ok: boolean; reason?: string }>({ ok: true });
 const loading = ref(true);
 const busy = ref(false);
@@ -54,6 +56,7 @@ async function load() {
 		sitePages.value = res.sitePages;
 		dropdowns.value = res.dropdowns;
 		pages.value = res.pages;
+		homePhoto.value = res.homePhoto;
 		orderDraft.value = {};
 		availability.value = res.availability;
 		receive(res.status);
@@ -586,6 +589,7 @@ onMounted(load);
 		v-else-if="view.name === 'site'"
 		:key="view.page.id"
 		:page="view.page"
+		:home-photo="homePhoto"
 		:disabled="locked"
 		@published="onPublished"
 		@cancel="go({ name: 'list' })"

@@ -73,7 +73,7 @@ par `src/lib/site-images.ts` quelle que soit leur extension :
 | Fichier | Rôle |
 | --- | --- |
 | `logo.(png\|jpg\|webp\|svg)` | **Obligatoire.** En-tête et pied de page, via `<Image>` (`astro:assets` : redimensionné, converti en WebP au build). Largeur calculée d'après ses proportions (`logoWidth()`) : carré, large ou haut, il n'est ni rogné ni déformé. Fond transparent conseillé. |
-| `accueil.(jpg\|png\|webp)` | Facultatif. Photo de fond du bandeau d'accueil ; absente = bandeau sans photo. |
+| `accueil.(jpg\|png\|webp)` | Facultatif. Photo de fond du bandeau d'accueil ; absente = bandeau sans photo. Réglable depuis l'espace bénévoles : module « Pages » → Accueil → module « Bandeau ». |
 | `favicon.(svg\|png\|ico)` | Facultatif, un ou plusieurs formats. Icône de l'onglet (une balise `<link rel="icon">` par fichier) ; `favicon.ico` (ou `.png`) est aussi servi à l'adresse `/favicon.ico` (`src/pages/favicon.ico.ts`). |
 
 Pour changer de logo : remplacer `src/content/images/logo.png` (une autre

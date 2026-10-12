@@ -162,6 +162,8 @@ export interface SitePageInput {
 	textes: Record<string, string>;
 	/** Accueil : liste complète des modules (absent = inchangée). */
 	modules?: HomeModule[];
+	/** Accueil : nouvelle photo du bandeau, `'remove'` pour la retirer (absent = inchangée). */
+	photo?: { type: string; data: string } | 'remove';
 }
 
 /** Menu déroulant de la barre de navigation (`_group.md`). */
@@ -246,6 +248,8 @@ export const pagesApi = {
 			sitePages: SitePageView[];
 			dropdowns: DropdownView[];
 			pages: PageSourceView[];
+			/** Aperçu de la photo du bandeau d'accueil, `null` sans photo. */
+			homePhoto: string | null;
 			status: PublishStatus;
 			availability: { ok: boolean; reason?: string };
 		}>('GET', '/api/admin/pages'),

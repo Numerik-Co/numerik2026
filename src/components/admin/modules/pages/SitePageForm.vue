@@ -7,14 +7,16 @@
  * vidé reprend sa valeur par défaut ; le serveur n'enregistre que les écarts.
  * Activer / désactiver se fait depuis la liste.
  */
-import { computed, inject, reactive, ref } from 'vue';
+import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue';
 import { PAGE_VARIABLES } from '../../../../lib/page-variables';
 import { SITE_PAGES } from '../../../../lib/site-pages';
 import { ApiError, sitePagesApi, type SitePageView } from '../../client';
-import { ADMIN_CONTEXT, inputClass, rememberOpenModule } from '../../context';
+import { ADMIN_CONTEXT, fileToBase64, inputClass, rememberOpenModule } from '../../context';
+import type { HomePhotoDraft } from './home-photo-draft';
 import HomeModulesEditor from './HomeModulesEditor.vue';
 
-const props = defineProps<{ page: SitePageView; disabled: boolean }>();
+/** `homePhoto` : aperçu de la photo du bandeau (accueil). */
+const props = defineProps<{ page: SitePageView; disabled: boolean; homePhoto?: string | null }>();
 const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
@@ -27,6 +29,11 @@ const form = reactive({
 });
 const error = ref('');
 const busy = ref(false);
+/** Photo du bandeau (accueil) : modifiée depuis le module « Bandeau », envoyée avec la page. */
+const photo = reactive<HomePhotoDraft>({ current: props.homePhoto ?? null, change: { action: 'keep' }, error: '' });
+onBeforeUnmount(() => {
+	if (photo.change.action === 'replace') URL.revokeObjectURL(photo.change.url);
+});
 
 const defaults = Object.fromEntries(def.sections.flatMap((s) => s.texts.map((t) => [t.name, t.default])));
 /** Textes différents de l'origine (un texte vide compte comme l'origine). */
@@ -53,6 +60,10 @@ async function submit() {
 			active: props.page.active,
 			textes: form.textes,
 			...(def.modules ? { modules: form.modules } : {}),
+			...(photo.change.action === 'remove' ? { photo: 'remove' as const } : {}),
+			...(photo.change.action === 'replace'
+				? { photo: { type: photo.change.file.type, data: await fileToBase64(photo.change.file) } }
+				: {}),
 		});
 		emit('published', `Page du site : ${form.label}`);
 	} catch (e) {
@@ -91,7 +102,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 		</fieldset>
 
 		<!-- Page à modules (accueil) -->
-		<HomeModulesEditor v-if="def.modules" :modules="form.modules" />
+		<HomeModulesEditor v-if="def.modules" :modules="form.modules" :photo="photo" />
 
 		<!-- Textes, par section -->
 		<fieldset v-for="section in def.sections" :key="section.title" class="space-y-3">

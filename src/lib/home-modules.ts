@@ -43,7 +43,7 @@ const LIEN_HELP = 'Adresse du site (/adherer) ou externe (https://…).';
 export const HOME_MODULES = {
 	bandeau: {
 		label: 'Bandeau',
-		description: "Grand titre sur la photo d'accueil, accroche et deux boutons.",
+		description: "Photo d'accueil avec grand titre, accroche et deux boutons.",
 		icon: 'fa-image',
 		fields: [
 			{ name: 'titre', label: 'Titre', type: 'text', required: true, default: 'Le numérique, ensemble et pour toutes et tous' },

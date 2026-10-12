@@ -3,7 +3,8 @@
  * l'association, jamais remplacé par une mise à jour du modèle) :
  *
  * - `logo.(png|jpg|jpeg|webp|svg)` — obligatoire : en-tête et pied de page ;
- * - `accueil.(jpg|jpeg|png|webp)` — facultatif : fond du bandeau d'accueil ;
+ * - `accueil.(jpg|jpeg|png|webp)` — facultatif : fond du bandeau d'accueil
+ *   (réglé depuis le module « Bandeau » de l'accueil, `home-photo.ts`) ;
  * - `favicon.(svg|png|ico)` — facultatif, un ou plusieurs formats : icône
  *   de l'onglet (une balise `<link rel="icon">` par fichier trouvé).
  *
