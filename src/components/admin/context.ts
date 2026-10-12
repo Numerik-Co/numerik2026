@@ -52,6 +52,13 @@ export const inputClass =
 export const iconButtonClass =
 	'inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent';
 
+/**
+ * Réglages communs des listes ordonnables au glisser-déposer (`<VueDraggable v-bind="sortableProps">`,
+ * vue-draggable-plus / SortableJS) : on ne saisit une ligne que par sa poignée (`DragHandle.vue`), pour
+ * pouvoir faire défiler la liste au doigt. Les flèches ↑/↓ (`OrderArrows.vue`) restent pour le clavier.
+ */
+export const sortableProps = { handle: '.drag-handle', animation: 150, ghostClass: 'opacity-40' } as const;
+
 /** Photo déposée dans un module : formats et poids acceptés (le serveur revérifie). */
 export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const PHOTO_MAX = 10 * 1024 * 1024;

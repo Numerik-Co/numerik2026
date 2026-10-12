@@ -24,7 +24,7 @@ source des données a changé. Le tableau `navLinks` codé en dur a disparu.
 | Cas | Où agir |
 | --- | --- |
 | Page éditoriale (contenu) | Frontmatter `menu:` de `src/content/pages/<...>/index.md` |
-| Page du site (Accueil, Activités…) | Module « Pages » (libellé, masquer, activer/désactiver, flèches ↑/↓ pour l'ordre) ; nouvelle page : `SITE_PAGES` de `src/lib/site-pages.ts` |
+| Page du site (Accueil, Activités…) | Module « Pages » (libellé, masquer, activer/désactiver, glisser-déposer ou flèches ↑/↓ pour l'ordre) ; nouvelle page : `SITE_PAGES` de `src/lib/site-pages.ts` |
 | Bouton « Adhérer » | `cta` dans `src/content/reglages.yaml` (`enabled: false` le masque) |
 | Ordre | Champ `order` — builtin et contenu sont triés sur la **même échelle** |
 

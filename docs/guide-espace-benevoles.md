@@ -184,7 +184,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ ⚙ Espace d'administration   🔒 Pages réservées  👥 Comptes   🖥 Production  👤 Marie ▾ │
+│ ⚙ Espace d'administration   🔒 Pages réservées              🖥 Production  👤 Marie ▾ │
 └───────────────────────────────────────┬──────────────────────────────────┤
                                         │ 🔑 Mon mot de passe │ ⏻ Déconnexion │
                                         └──────────────────────────────────┘
@@ -205,6 +205,10 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
   (ex. « Production v0.2.0 »), visible du bureau seulement.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
+- **Contenu ▾** regroupe **Actualités** et **Pages** : un clic affiche les
+  deux, côte à côte, juste en dessous (fermé par un clic ailleurs ou
+  **Échap**). Sans le droit d'en voir les deux, le module visible a son
+  propre bouton.
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
   la partie assombrie de la page. Dans un formulaire (actualité, page ou
   activité à ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
@@ -215,13 +219,17 @@ Les modules visibles dépendent de votre groupe :
 
 | Module | Super admin | Bureau (`admin`) | Rédacteur·rice | Animateur·rice |
 | :--- | :---: | :---: | :---: | :---: |
-| Pages réservées | ✅ | ✅ | ✅ | ✅ |
+| Pages réservées | — | — | — | ✅ |
 | Actualités | ✅ | ✅ | ✅ | — |
 | Pages | ✅ | ✅ | ✅ | — |
 | Activités | ✅ | ✅ | ✅ | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
 | Mon mot de passe | ✅ | ✅ | ✅ | ✅ |
+
+Le bouton **Pages réservées** n'apparaît que pour qui n'a pas le module
+**Pages** : celui-ci liste déjà les pages réservées (bloc « Pages
+réservées »).
 
 **Journal** (super admin seulement) : toutes les modifications faites depuis
 l'espace bénévoles — qui, quand, quoi, avec quel résultat (connexions,
@@ -233,7 +241,9 @@ masquables, une page par année. Lecture seule.
 ### Pages réservées
 
 Liste les pages du site qui ne sont visibles qu'une fois connecté·e
-(fiches pratiques, documents internes…). Un clic ouvre la page.
+(fiches pratiques, documents internes…). Un clic ouvre la page. Bureau et
+rédacteur·rice·s les retrouvent dans le module **Pages** (bloc « Pages
+réservées »), qui remplace alors ce bouton.
 
 Si vous arrivez sur une page réservée **sans être connecté·e**, elle affiche
 un encart **« Page réservée »** avec un bouton **Se connecter**.
@@ -327,8 +337,10 @@ blocs :
    (Accueil, Activités…), liens directs et **menus
    déroulants** (comme « Association ») ; un clic sur le nom d'un menu
    déroulant déplie ou replie ses pages ;
-   Les flèches **↑/↓** changent l'ordre (premier niveau, ou pages d'un menu
-   déroulant) ; un bandeau propose alors **Enregistrer et publier** (une
+   Pour changer l'ordre (premier niveau, ou pages d'un menu déroulant),
+   **glissez la ligne par sa poignée ⠿** (souris ou doigt), ou utilisez les
+   flèches **↑/↓** (affichées sur téléphone et tablette ; sur grand écran,
+   elles réapparaissent au clavier avec Tab) ; un bandeau propose alors **Enregistrer et publier** (une
    seule reconstruction pour tous les déplacements) ou **Annuler** ;
 2. **Pages libres** : hors du menu, accessibles par leur adresse seulement ;
 3. **Pages réservées** (espace bénévoles) ;
@@ -378,8 +390,8 @@ page est fournie par le site, l'association règle le reste.
   l'action, partenaires, texte libre. Le crayon de l'Accueil permet d'en
   **ajouter** (liste « Ajouter un module… » ; l'appel à l'action et le texte
   libre peuvent figurer plusieurs fois), d'en **retirer** (corbeille), de
-  les **ordonner** (↑/↓) et de **modifier leur contenu** (clic sur le module :
-  titres, textes, boutons et leurs liens, nombre d'actualités…). Un champ
+  les **ordonner** (poignée ⠿ ou ↑/↓) et de **modifier leur contenu** (clic
+  sur le module : titres, textes, boutons et leurs liens, nombre d'actualités…). Un champ
   facultatif vidé masque l'élément (ex. second bouton du bandeau). « Revenir
   à l'accueil d'origine » remet les modules de départ. Rien n'est publié
   avant **Enregistrer et publier**.
@@ -389,8 +401,8 @@ page est fournie par le site, l'association règle le reste.
   **Activer** la remet en place. L'accueil ne se désactive pas.
 
 **Nouveau menu déroulant** : un libellé (non cliquable sur le site) ; il se
-place en dernière position du menu de navigation (flèches ↑/↓ pour le
-déplacer). Il apparaît sur le site dès qu'il contient une page. Un menu déroulant ne se supprime que vide.
+place en dernière position du menu de navigation (poignée ⠿ ou flèches ↑/↓
+pour le déplacer). Il apparaît sur le site dès qu'il contient une page. Un menu déroulant ne se supprime que vide.
 
 > Les pages « technique » (fichiers `.mdx`) se modifient dans le code
 > uniquement.
@@ -464,7 +476,8 @@ Détail : [inscription.md](inscription.md#présélection).
   partagés continuent de fonctionner. **Changer de catégorie** change en
   revanche l'URL (`/activites/<nouvelle-catégorie>/<adresse>`), ce que le
   formulaire signale, et place la fiche en dernier de sa nouvelle catégorie.
-- Les flèches **↑/↓** changent l'ordre dans une catégorie. Un bandeau
+- La **poignée ⠿** en début de ligne (à glisser) ou les flèches **↑/↓**
+  changent l'ordre dans une catégorie. Un bandeau
   propose alors **Enregistrer et publier** (une seule reconstruction pour
   tous les déplacements) ou **Annuler**. Tant qu'il est affiché, les autres
   actions attendent.
@@ -487,7 +500,8 @@ a sa carte sur l'accueil et sur la page Activités, et sa propre page
   **Créer et publier** : elle se place en dernier.
 - **✏️** dans l'en-tête d'une catégorie : changer son nom, son icône ou sa
   description. L'adresse ne change pas.
-- Les flèches **↑/↓** de l'en-tête changent l'**ordre des catégories** (sur
+- La poignée ⠿ ou les flèches **↑/↓** de l'en-tête changent l'**ordre des
+  catégories** (sur
   l'accueil et la page Activités). Comme pour les fiches, un bandeau propose
   **Enregistrer et publier** : déplacements de catégories et de fiches
   partent ensemble, en une seule reconstruction.
@@ -585,7 +599,8 @@ access: animateur        # ou : admin, redacteur, [animateur, admin]
 ```
 
 La page n'apparaît pas dans le menu public et figure dans **Pages réservées**
-pour les personnes autorisées. Comme tout contenu, elle est publiée au
+pour les personnes autorisées (module **Pages** pour le bureau et les
+rédacteur·rice·s). Comme tout contenu, elle est publiée au
 prochain build. Détail : [src/content/README.md](../src/content/README.md).
 
 ---
@@ -595,7 +610,8 @@ access: animateur        # ou : true (toute personne connectée), admin, [animat
 ```
 
 La page disparaît du menu public et apparaît dans **Pages réservées** pour
-les personnes autorisées. Comme tout contenu, elle est publiée au prochain
+les personnes autorisées (module **Pages** pour le bureau et les
+rédacteur·rice·s). Comme tout contenu, elle est publiée au prochain
 déploiement. Détail : [src/content/README.md](../src/content/README.md).
 
 ---

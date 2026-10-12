@@ -81,16 +81,16 @@ Fonctionnement technique :
   `saveSitePage()`), écarts écrits dans `src/content/pages/_pages-site.md`
   (collection `sitePages`) ; lecture au build `getSitePage(id)`
   (`src/lib/site-pages-content.ts`). Nouvelle page de bibliothèque = entrée
-  `SITE_PAGES` + `getSitePage()` dans la page `.astro`. Ordre : flèches ↑/↓ du
-  module → `PUT /api/admin/ordre-menu` (`saveMenuOrder()`) ; une nouvelle
+  `SITE_PAGES` + `getSitePage()` dans la page `.astro`. Ordre : glisser-déposer
+  ou flèches ↑/↓ du module → `PUT /api/admin/ordre-menu` (`saveMenuOrder()`) ; une nouvelle
   page se place en dernier (`menuOrderFor()`).
 - **Module « Activités »** (`redacteur`) : `ActivitiesModule.vue` +
   `modules/activites/ActivityForm.vue`, `src/lib/activity-writer.ts`
   (validation = schéma `activites`, frontmatter modifié en place via `yaml`
   Document — commentaires gardés —, transaction sur tout
   `src/content/activites/` : `src/lib/content-transaction.ts`, partagée avec
-  `page-writer.ts`), routes `/api/admin/activites*` (`ordre` = flèches ↑/↓
-  par catégorie, `order` renuméroté 1, 2, 3…). Adresse (dossier) fixée à la
+  `page-writer.ts`), routes `/api/admin/activites*` (`ordre` = glisser-déposer
+  ou flèches ↑/↓ par catégorie, `order` renuméroté 1, 2, 3…). Adresse (dossier) fixée à la
   création ; changer de catégorie change l'URL et place la fiche en dernier.
   **Catégories** gérées dans le même module (`CategoryForm.vue`,
   `src/lib/category-writer.ts`, routes `/api/admin/activites/categories*`,
@@ -155,6 +155,14 @@ latéral**. Toute nouvelle fonction d'admin = un module (registre
 `src/components/admin/modules.ts`, composant dans `modules/`, routes JSON
 sous `/api/admin/`).
 
+Listes ordonnables (menu, activités et catégories, modules de l'accueil,
+éléments d'un bloc) : glisser-déposer `vue-draggable-plus` (SortableJS ;
+`<VueDraggable v-bind="sortableProps" :model-value @update:model-value>`,
+réglages dans `src/components/admin/context.ts`, saisie par la poignée
+`modules/pages/DragHandle.vue` seulement) **et** flèches
+`modules/pages/OrderArrows.vue` (masquées ≥ `lg`, réapparaissent au focus
+clavier) : les deux modifient le même brouillon d'ordre, enregistré à part.
+
 - `src/components/admin/AdminLoader.astro` (dans les deux layouts) ne
   charge l'îlot Vue (`mount.ts` → `AdminRoot.vue`) que si le cookie
   indicateur `numerik_connecte` existe ou au clic : rien pour un visiteur.
@@ -173,10 +181,13 @@ sous `/api/admin/`).
   vs dernière Release GitHub, cache mémoire 6 h, jamais bloquant). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
-- Modules : Pages réservées, **Actualités**, **Pages**, **Activités**, Comptes, Journal (`exclusive`,
+- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, Comptes, Journal (`exclusive`,
   `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
+  Actualités et Pages sont regroupées sous **Contenu ▾** (`menu: 'contenu'`,
+  `ADMIN_MENUS` / `barEntries()` dans `modules.ts`, sous-liens côte à côte ;
+  un seul module visible du menu = bouton direct).
 
 ### HTML des actualités
 

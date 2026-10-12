@@ -1,14 +1,17 @@
 <script setup lang="ts">
 /**
  * Modules de la page d'accueil (catalogue `src/lib/home-modules.ts`) :
- * ajout, retrait, ordre (↑/↓) et contenu de chaque module, replié en
+ * ajout, retrait, ordre (glisser-déposer ou ↑/↓) et contenu de chaque module, replié en
  * accordéon. Modifie la liste reçue sur place ; l'enregistrement est fait par
  * le formulaire parent (`SitePageForm.vue`).
  */
 import { computed, nextTick, ref } from 'vue';
+import { VueDraggable } from 'vue-draggable-plus';
 import { DEFAULT_HOME, HOME_MODULES, homeModuleDef, newHomeModule, type HomeModule, type HomeModuleDef, type HomeModuleType } from '../../../../lib/home-modules';
-import { iconButtonClass, inputClass } from '../../context';
+import { iconButtonClass, inputClass, sortableProps } from '../../context';
 import BlocFields from './BlocFields.vue';
+import DragHandle from './DragHandle.vue';
+import OrderArrows from './OrderArrows.vue';
 
 const props = defineProps<{ modules: HomeModule[] }>();
 
@@ -42,6 +45,11 @@ function move(index: number, delta: -1 | 1) {
 	props.modules.splice(index + delta, 0, m);
 }
 
+/** Modules glissés-déposés : nouvel ordre complet. */
+function reorder(list: HomeModule[]) {
+	props.modules.splice(0, props.modules.length, ...list);
+}
+
 function remove(index: number) {
 	const [m] = props.modules.splice(index, 1);
 	if (open.value === m) open.value = null;
@@ -66,9 +74,16 @@ const summary = (m: HomeModule) => m.titre || '';
 			<code v-text="VARIABLE_EXEMPLE"></code>… sont acceptées.
 		</p>
 
-		<ol class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200">
+		<VueDraggable
+			v-bind="sortableProps"
+			tag="ol"
+			:model-value="props.modules"
+			class="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200"
+			@update:model-value="reorder"
+		>
 			<li v-for="(m, i) in props.modules" :key="i + m.type">
-				<div :class="['flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100', { 'bg-gray-100': open === m }]">
+				<div :class="['flex items-center gap-2 py-2 pr-3 pl-1.5 text-sm transition-colors hover:bg-gray-100', { 'bg-gray-100': open === m }]">
+					<DragHandle :disabled="false" />
 					<button
 						type="button"
 						class="flex min-w-0 flex-1 items-center gap-2 text-left"
@@ -84,26 +99,14 @@ const summary = (m: HomeModule) => m.titre || '';
 						></i>
 					</button>
 					<span class="flex items-center">
-						<button
-							type="button"
-							:class="[iconButtonClass, 'text-gray-500 hover:text-gray-900']"
-							:disabled="i === 0"
-							:aria-label="`Monter « ${homeModuleDef(m.type).label} »`"
-							title="Monter"
-							@click="move(i, -1)"
-						>
-							<i class="fa-solid fa-arrow-up text-xs" aria-hidden="true"></i>
-						</button>
-						<button
-							type="button"
-							:class="[iconButtonClass, 'text-gray-500 hover:text-gray-900']"
-							:disabled="i === props.modules.length - 1"
-							:aria-label="`Descendre « ${homeModuleDef(m.type).label} »`"
-							title="Descendre"
-							@click="move(i, 1)"
-						>
-							<i class="fa-solid fa-arrow-down text-xs" aria-hidden="true"></i>
-						</button>
+						<OrderArrows
+							:label="homeModuleDef(m.type).label"
+							:first="i === 0"
+							:last="i === props.modules.length - 1"
+							:disabled="false"
+							@up="move(i, -1)"
+							@down="move(i, 1)"
+						/>
 						<button
 							type="button"
 							:class="[iconButtonClass, 'text-red-600']"
@@ -123,7 +126,7 @@ const summary = (m: HomeModule) => m.titre || '';
 			<li v-if="!props.modules.length" class="px-4 py-3 text-sm font-light text-gray-500">
 				Aucun module : la page d'accueil sera vide.
 			</li>
-		</ol>
+		</VueDraggable>
 
 		<div class="flex flex-wrap items-center gap-2">
 			<label for="hm-new" class="sr-only">Module à ajouter</label>

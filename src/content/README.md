@@ -136,7 +136,8 @@ Ranger la page dans le dossier **`pages/espace-benevoles/`** : elle n'est
 visible qu'après connexion (lien « Espace bénévoles » en pied de page), son
 adresse commence par `/espace-benevoles/` et elle n'apparaît jamais dans le
 menu public. Les personnes autorisées la retrouvent dans « Pages réservées »
-de la barre d'administration.
+de la barre d'administration (dans le module « Pages » pour le bureau et
+les rédacteur·rice·s).
 
 ```
 src/content/pages/espace-benevoles/fiches-animateurs/index.md  ->  /espace-benevoles/fiches-animateurs

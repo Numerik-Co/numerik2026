@@ -2,15 +2,26 @@
 /** Ligne d'une page dans la liste du module « Pages » (suppression confirmée dans la ligne). */
 import type { PageSourceView } from '../../client';
 import ConfirmIconButton from '../../ConfirmIconButton.vue';
+import { useSlots } from 'vue';
 import { iconButtonClass } from '../../context';
 
-/** `nested` : page d'un menu déroulant, légèrement en retrait sous son libellé. */
+/**
+ * `nested` : page d'un menu déroulant, légèrement en retrait sous son libellé. Slot `handle` : poignée de
+ * glisser-déposer en début de ligne (menu de navigation) ; slot `order` : flèches ↑/↓.
+ */
 const props = defineProps<{ page: PageSourceView; locked: boolean; confirming: boolean; nested?: boolean }>();
 const emit = defineEmits<{ edit: []; askDelete: []; confirmDelete: []; cancelDelete: [] }>();
+const slots = useSlots();
 </script>
 
 <template>
-	<li :class="['flex flex-wrap items-center gap-2 py-2.5 pr-4 text-sm transition-colors hover:bg-gray-100', props.nested ? 'pl-8' : 'pl-4']">
+	<li
+		:class="[
+			'flex flex-wrap items-center gap-2 py-2.5 pr-4 text-sm transition-colors hover:bg-gray-100',
+			slots.handle ? (props.nested ? 'pl-6' : 'pl-2') : props.nested ? 'pl-8' : 'pl-4',
+		]"
+	>
+		<slot name="handle" />
 		<span class="min-w-0">
 			<a :href="`/${props.page.path}`" class="font-medium text-gray-900 hover:underline">{{ props.page.title || props.page.path }}</a>
 		</span>
