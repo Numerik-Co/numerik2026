@@ -223,6 +223,7 @@ Les modules visibles dépendent de votre groupe :
 | Actualités | ✅ | ✅ | ✅ | — |
 | Pages | ✅ | ✅ | ✅ | — |
 | Activités | ✅ | ✅ | ✅ | — |
+| Association | ✅ | ✅ | — | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
 | Mon mot de passe | ✅ | ✅ | ✅ | ✅ |
@@ -234,7 +235,7 @@ réservées »).
 **Journal** (super admin seulement) : toutes les modifications faites depuis
 l'espace bénévoles — qui, quand, quoi, avec quel résultat (connexions,
 mots de passe, actualités, pages, activités et catégories ajoutées /
-modifiées / supprimées, changements d'ordre, résultat de
+modifiées / supprimées, changements d'ordre, informations de l'association, résultat de
 chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
 
@@ -511,6 +512,34 @@ a sa carte sur l'accueil et sur la page Activités, et sa propre page
 
 Une fiche dont la catégorie a disparu (fichier modifié à la main) est
 signalée en rouge en haut du module : ouvrez-la et choisissez-en une autre.
+
+### Informations de l'association (bureau)
+
+Module **🏛 Association**, réservé au bureau : nom, présentation,
+coordonnées, réseaux sociaux et mentions légales. Ces informations
+apparaissent partout sur le site (en-tête, pied de page, page Contact,
+aperçus de partage) et dans le texte des pages grâce aux variables
+`{{association.nom}}`, `{{association.email}}`… (liste dans le formulaire
+d'une page).
+
+Le formulaire est découpé en blocs : **Identité**, **Coordonnées**,
+**Réseaux sociaux**, **Mentions légales** (avec l'hébergeur du site).
+
+- Nom, présentation, email, téléphone et adresse sont **obligatoires**.
+- Réseaux sociaux : adresse complète (`https://…`) ; un champ vide masque
+  l'icône du pied de page.
+- Mentions légales : facultatives ; un champ vide s'affiche
+  « [À compléter : …] » dans les pages qui l'utilisent (ex. mentions
+  légales). Le responsable de la publication reprend le·la président·e s'il
+  est vide.
+
+Dès qu'un champ change, un bandeau **Modifications pas encore publiées**
+reste en haut du panneau : **Enregistrer et publier** reconstruit le site
+(environ une minute), **Annuler** remet les valeurs enregistrées. En cas
+d'échec de la reconstruction, l'ancienne version est remise en place.
+
+Le fichier modifié est `src/content/association.yaml` : ses commentaires
+sont conservés, il reste modifiable à la main.
 
 ### Changer mon mot de passe
 

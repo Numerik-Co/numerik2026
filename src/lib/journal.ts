@@ -39,6 +39,7 @@ export type JournalAction =
 	| 'lien-menu.modification'
 	| 'page-site.modification'
 	| 'ordre-menu.modification'
+	| 'association.modification'
 	| 'compte.creation'
 	| 'compte.modification'
 	| 'compte.reinitialisation'

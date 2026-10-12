@@ -3,6 +3,7 @@
  * Une erreur porte le message renvoyé par le serveur et son code HTTP
  * (`status === 401` : session expirée).
  */
+import type { Association } from '../../lib/association';
 import type { AuthGroup } from '../../lib/auth/groups';
 import type { Bloc } from '../../lib/blocs';
 import type { HomeModule } from '../../lib/home-modules';
@@ -271,6 +272,15 @@ export const dropdownsApi = {
 	update: (folder: string, input: { label: string }) =>
 		request<{ ok: true }>('PUT', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, input),
 	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, { confirm: folder }),
+};
+
+export const associationApi = {
+	get: () =>
+		request<{ association: Association; status: PublishStatus; availability: { ok: boolean; reason?: string } }>(
+			'GET',
+			'/api/admin/association',
+		),
+	update: (association: Association) => request<{ ok: true }>('PUT', '/api/admin/association', { association }),
 };
 
 export const activitiesApi = {

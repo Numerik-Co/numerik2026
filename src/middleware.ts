@@ -24,6 +24,7 @@ const GUARDS: { prefix: string; groups: AuthGroup[]; message: string; noAdmin?: 
 	{ prefix: '/api/admin/journal', groups: ['superadmin'], message: 'Le journal est réservé au super admin.', noAdmin: true },
 	{ prefix: '/api/admin/comptes', groups: ['admin'], message: 'La gestion des comptes est réservée au bureau.' },
 	{ prefix: '/api/admin/version', groups: ['admin'], message: 'Réservé au bureau.' },
+	{ prefix: '/api/admin/association', groups: ['admin'], message: "Les informations de l'association sont réservées au bureau." },
 	{ prefix: '/api/admin/actualites', groups: ['redacteur'], message: 'La publication des actualités est réservée aux rédacteur·rice·s.' },
 	{ prefix: '/api/admin/publication', groups: ['redacteur'], message: 'Réservé aux rédacteur·rice·s.' },
 	{ prefix: '/api/admin/activites', groups: ['redacteur'], message: 'La gestion des activités est réservée aux rédacteur·rice·s.' },

@@ -1,25 +1,19 @@
 ---
 import { Image } from 'astro:assets';
 import { logo, logoWidth } from '../../lib/site-images';
-import { association, getFullAddress } from '../../lib/association';
+import { SOCIAL_NETWORKS, association, getFullAddress } from '../../lib/association';
 const year = new Date().getFullYear();
-
-const socialIcons: Record<string, string> = {
-	facebook: 'fa-brands fa-facebook',
-	instagram: 'fa-brands fa-instagram',
-	linkedin: 'fa-brands fa-linkedin',
-	twitter: 'fa-brands fa-x-twitter',
-	youtube: 'fa-brands fa-youtube',
-	tiktok: 'fa-brands fa-tiktok',
-};
 
 const socialLinks = Object.entries(association.social)
 	.filter(([, url]) => !!url)
-	.map(([key, url]) => ({
-		url: url as string,
-		icon: socialIcons[key] ?? 'fa-solid fa-link',
-		label: key.charAt(0).toUpperCase() + key.slice(1),
-	}));
+	.map(([key, url]) => {
+		const network = SOCIAL_NETWORKS.find((n) => n.key === key);
+		return {
+			url: url as string,
+			icon: network?.icon ?? 'fa-solid fa-link',
+			label: network?.label ?? key.charAt(0).toUpperCase() + key.slice(1),
+		};
+	});
 ---
 
 <footer class="bg-secondary text-white">
