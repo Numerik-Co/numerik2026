@@ -48,6 +48,9 @@ export function takeModuleToReopen(): string | null {
 export const inputClass =
 	'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
 
+/** Champ court sur la même ligne que d'autres éléments (couleur hexadécimale…) : largeur à ajouter. */
+export const compactInputClass = inputClass.replace('mt-1 ', '').replace('w-full ', '');
+
 /** Bouton icône des listes (modifier, supprimer) ; ajouter la couleur. Libellé en `aria-label` + `title`. */
 export const iconButtonClass =
 	'inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent';

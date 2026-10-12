@@ -3,7 +3,9 @@
  * Une erreur porte le message renvoyé par le serveur et son code HTTP
  * (`status === 401` : session expirée).
  */
+import type { Association } from '../../lib/association';
 import type { AuthGroup } from '../../lib/auth/groups';
+import type { ThemeColors } from '../../config/site';
 import type { Bloc } from '../../lib/blocs';
 import type { HomeModule } from '../../lib/home-modules';
 import type { ModelVersionInfo } from '../../lib/model-version';
@@ -160,6 +162,8 @@ export interface SitePageInput {
 	textes: Record<string, string>;
 	/** Accueil : liste complète des modules (absent = inchangée). */
 	modules?: HomeModule[];
+	/** Accueil : nouvelle photo du bandeau, `'remove'` pour la retirer (absent = inchangée). */
+	photo?: { type: string; data: string } | 'remove';
 }
 
 /** Menu déroulant de la barre de navigation (`_group.md`). */
@@ -244,6 +248,8 @@ export const pagesApi = {
 			sitePages: SitePageView[];
 			dropdowns: DropdownView[];
 			pages: PageSourceView[];
+			/** Aperçu de la photo du bandeau d'accueil, `null` sans photo. */
+			homePhoto: string | null;
 			status: PublishStatus;
 			availability: { ok: boolean; reason?: string };
 		}>('GET', '/api/admin/pages'),
@@ -271,6 +277,33 @@ export const dropdownsApi = {
 	update: (folder: string, input: { label: string }) =>
 		request<{ ok: true }>('PUT', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, input),
 	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, { confirm: folder }),
+};
+
+export const associationApi = {
+	get: () =>
+		request<{ association: Association; status: PublishStatus; availability: { ok: boolean; reason?: string } }>(
+			'GET',
+			'/api/admin/association',
+		),
+	update: (association: Association) => request<{ ok: true }>('PUT', '/api/admin/association', { association }),
+};
+
+export interface BrandImage {
+	file: string;
+	preview: string;
+}
+
+export interface BrandSource {
+	colors: ThemeColors;
+	defaults: ThemeColors;
+	logo: BrandImage | null;
+	favicons: BrandImage[];
+}
+
+export const brandApi = {
+	get: () => request<BrandSource>('GET', '/api/admin/charte'),
+	update: (input: { colors: ThemeColors; logo?: { type: string; data: string }; favicon?: { type: string; data: string } }) =>
+		request<{ ok: true }>('PUT', '/api/admin/charte', input),
 };
 
 export const activitiesApi = {

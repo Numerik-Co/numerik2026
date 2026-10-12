@@ -76,7 +76,9 @@ Fonctionnement technique :
   Actualités, Contact), activables (désactivée = 404, HTML prérendu retiré par
   `src/integrations/site-pages.ts` ; accueil toujours actif, composé de
   **modules** : `src/lib/home-modules.ts`, `HomeModulesEditor.vue`, rendu
-  `src/pages/index.astro`), lien et
+  `src/pages/index.astro` ; photo du bandeau réglée dans le module
+  « Bandeau » : `HomePhotoField.vue` → champ `photo` du PUT de l'accueil,
+  `src/lib/home-photo.ts`, fichier `images/accueil.jpg`), lien et
   **textes** réglables (`SitePageForm.vue`, `PUT /api/admin/pages-du-site/<id>`,
   `saveSitePage()`), écarts écrits dans `src/content/pages/_pages-site.md`
   (collection `sitePages`) ; lecture au build `getSitePage(id)`
@@ -169,7 +171,7 @@ clavier) : les deux modifient le même brouillon d'ordre, enregistré à part.
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
-  (`/api/admin/comptes` et `/api/admin/version` → `admin`, `/api/admin/actualites`,
+  (`/api/admin/comptes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal` → `superadmin` seul).
@@ -181,7 +183,7 @@ clavier) : les deux modifient le même brouillon d'ordre, enregistré à part.
   vs dernière Release GitHub, cache mémoire 6 h, jamais bloquant). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
-- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, Comptes, Journal (`exclusive`,
+- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal (`exclusive`,
   `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
@@ -260,7 +262,20 @@ contenu hors de `src/content/`.**
   à jour du modèle ne remplace pas. Importé en `?raw` et validé (zod) par
   `src/lib/association.ts`, lecture **synchrone** voulue (`association` est
   utilisé partout, jusque dans `content.config.ts` et l'îlot Vue) ; champ
-  invalide = build en échec avec le chemin du champ.
+  invalide = build en échec avec le chemin du champ. Modifiable par le
+  bureau depuis le module **« Association »**, onglet « Généralités »
+  (`AssociationModule.vue` → `association/GeneralForm.vue`,
+  `src/lib/association-writer.ts` : valeurs changées en place via `yaml`
+  Document — commentaires gardés —, fichier revalidé par
+  `parseAssociation()`, restauré si le build échoue ; route
+  `/api/admin/association`). Réseaux sociaux reconnus : `SOCIAL_NETWORKS`
+  (`association.ts`, partagé avec `Footer.astro`). Onglet « Charte
+  graphique » (`association/BrandForm.vue`, `src/lib/brand-writer.ts`,
+  route `/api/admin/charte`) : `colors:` de `reglages.yaml` (en place,
+  revalidé par `parseReglages()`), `logo.*` et `favicon.*` d'`images/`
+  (raster passé par sharp, SVG à contenu actif refusé, SVG d'icône →
+  `favicon.png` en plus), aperçu en direct et contraste du texte blanc
+  (`association/contrast.ts`).
 - `partenaires.yaml` (pas une collection, même principe qu'`association.yaml`)
   — `src/lib/partenaires.ts` : `partenaires` (cartes `PartenairesSection`,
   absente si liste vide), `relaisAdhesion` (`relais: true` : cités sur

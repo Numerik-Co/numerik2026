@@ -34,6 +34,8 @@ const ACTIONS: Record<string, { label: string; icon: string }> = {
 	'page-site.modification': { label: 'Page du site modifiée', icon: 'fa-file-pen' },
 	'lien-menu.modification': { label: 'Lien du menu modifié', icon: 'fa-link' },
 	'ordre-menu.modification': { label: 'Ordre du menu modifié', icon: 'fa-arrows-up-down' },
+	'association.modification': { label: "Informations de l'association modifiées", icon: 'fa-landmark' },
+	'charte.modification': { label: 'Charte graphique modifiée', icon: 'fa-palette' },
 	// Anciens noms (avant le 2026-10-08), pour les entrées déjà écrites.
 	'menu.ajout': { label: 'Menu déroulant ajouté', icon: 'fa-bars' },
 	'menu.modification': { label: 'Menu déroulant modifié', icon: 'fa-bars' },

@@ -70,6 +70,13 @@ export const ADMIN_MODULES: AdminModule[] = [
 		component: defineAsyncComponent(() => import('./modules/ActivitiesModule.vue')),
 	},
 	{
+		id: 'association',
+		label: 'Association',
+		icon: 'fa-landmark',
+		groups: ['admin'],
+		component: defineAsyncComponent(() => import('./modules/AssociationModule.vue')),
+	},
+	{
 		id: 'comptes',
 		label: 'Comptes',
 		icon: 'fa-users',

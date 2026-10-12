@@ -121,6 +121,12 @@ const DEFAULTS = {
 	} satisfies Record<string, FormToggle>,
 };
 
+/** Couleurs du modèle (« rétablir » du module « Association », onglet Charte graphique). */
+export const DEFAULT_COLORS: Readonly<typeof DEFAULTS.colors> = DEFAULTS.colors;
+export type ThemeColors = typeof DEFAULTS.colors;
+/** Format accepté pour une couleur (`'#2f7fc1'` ou `'#28c'`). */
+export const COLOR_PATTERN = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
 type FormKey = keyof typeof DEFAULTS.forms;
 type ShareKey = keyof typeof DEFAULTS.share;
 
@@ -128,7 +134,7 @@ const text = z.string({ error: 'texte attendu' }).trim().min(1, 'texte vide');
 const bool = z.boolean({ error: 'true ou false attendu' });
 const color = z
 	.string({ error: "couleur attendue, entre apostrophes (ex. '#2f7fc1')" })
-	.regex(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i, "couleur au format '#2f7fc1'");
+	.regex(COLOR_PATTERN, "couleur au format '#2f7fc1'");
 
 const linkSchema = z.strictObject({ label: text, href: text, enabled: bool }).partial();
 const formSchema = z.strictObject({ enabled: bool, closedTitle: text, closedMessage: text }).partial();
@@ -153,8 +159,9 @@ const overridesSchema = z
 	.nullish()
 	.transform((v) => v ?? {});
 
-function load() {
-	const result = overridesSchema.safeParse(parseYaml(raw));
+/** Lit et valide le texte de `reglages.yaml` (aussi avant écriture, `brand-writer.ts`) : réglages fusionnés avec `DEFAULTS`. */
+export function parseReglages(text: string) {
+	const result = overridesSchema.safeParse(parseYaml(text));
 	if (!result.success) {
 		const details = result.error.issues
 			.map((i) => {
@@ -177,7 +184,7 @@ function load() {
 	};
 }
 
-export const site = load();
+export const site = parseReglages(raw);
 
 /** Variables CSS des couleurs du thème, injectées dans `<head>` par les layouts. */
 export const themeCss = `:root{--color-primary:${site.colors.primary};--color-secondary:${site.colors.secondary};--color-accent:${site.colors.accent}}`;

@@ -161,7 +161,7 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 Garde : `src/middleware.ts` — `/api/auth/*` et `/api/admin/*` n'acceptent
 que les requêtes du site lui-même (`Sec-Fetch-Site`, à défaut `Origin`),
 `/api/admin/*` exige une connexion (401), et les préfixes de `GUARDS` un
-groupe (403) : `/api/admin/comptes*` et `/api/admin/version` → `admin` ;
+groupe (403) : `/api/admin/comptes*`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin` ;
 `/api/admin/actualites*`, `/api/admin/publication`, `/api/admin/activites*`,
 `/api/admin/pages*`, `/api/admin/menus-deroulants*`,
 `/api/admin/pages-du-site*` et `/api/admin/ordre-menu` → `redacteur`

@@ -223,6 +223,7 @@ Les modules visibles dépendent de votre groupe :
 | Actualités | ✅ | ✅ | ✅ | — |
 | Pages | ✅ | ✅ | ✅ | — |
 | Activités | ✅ | ✅ | ✅ | — |
+| Association | ✅ | ✅ | — | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
 | Mon mot de passe | ✅ | ✅ | ✅ | ✅ |
@@ -234,7 +235,7 @@ réservées »).
 **Journal** (super admin seulement) : toutes les modifications faites depuis
 l'espace bénévoles — qui, quand, quoi, avec quel résultat (connexions,
 mots de passe, actualités, pages, activités et catégories ajoutées /
-modifiées / supprimées, changements d'ordre, résultat de
+modifiées / supprimées, changements d'ordre, informations de l'association, résultat de
 chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
 
@@ -392,7 +393,11 @@ page est fournie par le site, l'association règle le reste.
   libre peuvent figurer plusieurs fois), d'en **retirer** (corbeille), de
   les **ordonner** (poignée ⠿ ou ↑/↓) et de **modifier leur contenu** (clic
   sur le module : titres, textes, boutons et leurs liens, nombre d'actualités…). Un champ
-  facultatif vidé masque l'élément (ex. second bouton du bandeau). « Revenir
+  facultatif vidé masque l'élément (ex. second bouton du bandeau). La
+  **photo de fond** se règle dans le module **Bandeau** : remplacer
+  (JPEG, PNG ou WebP, paysage d'au moins 1 600 px, 10 Mo max ; réduite à
+  2 400 px de large) ou retirer (fond uni) ; elle part avec le reste à
+  l'enregistrement. « Revenir
   à l'accueil d'origine » remet les modules de départ. Rien n'est publié
   avant **Enregistrer et publier**.
 - **Désactiver** (corbeille, après confirmation) : la page disparaît du menu
@@ -511,6 +516,64 @@ a sa carte sur l'accueil et sur la page Activités, et sa propre page
 
 Une fiche dont la catégorie a disparu (fichier modifié à la main) est
 signalée en rouge en haut du module : ouvrez-la et choisissez-en une autre.
+
+### Informations de l'association (bureau)
+
+Module **🏛 Association**, réservé au bureau, en deux onglets :
+**Généralités** et **Charte graphique**. Chaque onglet s'enregistre à part ;
+une pastille orange signale un onglet modifié mais pas encore publié.
+
+#### Généralités
+
+Nom, présentation,
+coordonnées, réseaux sociaux et mentions légales. Ces informations
+apparaissent partout sur le site (en-tête, pied de page, page Contact,
+aperçus de partage) et dans le texte des pages grâce aux variables
+`{{association.nom}}`, `{{association.email}}`… (liste dans le formulaire
+d'une page).
+
+Le formulaire est découpé en blocs : **Identité**, **Coordonnées**,
+**Réseaux sociaux**, **Mentions légales** (avec l'hébergeur du site).
+
+- Nom, présentation, email, téléphone et adresse sont **obligatoires**.
+- Réseaux sociaux : adresse complète (`https://…`) ; un champ vide masque
+  l'icône du pied de page.
+- Mentions légales : facultatives ; un champ vide s'affiche
+  « [À compléter : …] » dans les pages qui l'utilisent (ex. mentions
+  légales). Le responsable de la publication reprend le·la président·e s'il
+  est vide.
+
+Dès qu'un champ change, un bandeau **Modifications pas encore publiées**
+reste en haut du panneau : **Enregistrer et publier** reconstruit le site
+(environ une minute), **Annuler** remet les valeurs enregistrées. En cas
+d'échec de la reconstruction, l'ancienne version est remise en place.
+
+Le fichier modifié est `src/content/association.yaml` : ses commentaires
+sont conservés, il reste modifiable à la main.
+
+#### Charte graphique
+
+- **Aperçu** : en-tête, bande de couleurs, lien, bouton et pied de page
+  avec les couleurs et le logo en cours de saisie, avant publication.
+- **Couleurs** : principale (liens, boutons, titres), secondaire (pied de
+  page, survols), d'accent (bouton « Adhérer »). Nuancier ou code
+  `#2f7fc1`. Le site écrit en blanc sur ces couleurs : une étiquette
+  indique si c'est **lisible**, lisible en **gros caractères seulement**,
+  ou **peu lisible**. « couleur d'origine » remet celle du modèle.
+- **Bande de couleurs** (sous l'en-tête) : 1 à 12 couleurs, à réordonner
+  (glisser-déposer ou flèches), ajouter, retirer ; « bande d'origine ».
+- **Logo** : PNG à fond transparent ou SVG de préférence (JPEG, WebP
+  acceptés, 5 Mo max). Une très grande image est réduite (1 600 px de
+  large).
+- **Icône d'onglet** (favicon) : image carrée, SVG ou PNG (512 × 512
+  conseillé), ICO accepté. Remplace toutes les icônes actuelles ; un SVG
+  donne aussi une version PNG pour les anciens navigateurs.
+
+Un SVG contenant du script ou des liens externes est refusé par sécurité :
+l'exporter en « SVG simple » ou en PNG. Fichiers modifiés : `colors:` de
+`src/content/reglages.yaml` (autres réglages et commentaires gardés),
+`src/content/images/logo.*` et `favicon.*`. Si la reconstruction échoue,
+tout est remis comme avant.
 
 ### Changer mon mot de passe
 

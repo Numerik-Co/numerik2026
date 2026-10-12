@@ -65,14 +65,28 @@ const schema = z.object({
 
 export type Association = z.infer<typeof schema>;
 
-function load(): Association {
-	const result = schema.safeParse(parseYaml(raw));
+/**
+ * Réseaux sociaux reconnus (`social:` du YAML) : icône du pied de page et
+ * champ du module « Association ». Une autre clé reste affichée (icône lien).
+ */
+export const SOCIAL_NETWORKS = [
+	{ key: 'facebook', label: 'Facebook', icon: 'fa-brands fa-facebook' },
+	{ key: 'instagram', label: 'Instagram', icon: 'fa-brands fa-instagram' },
+	{ key: 'linkedin', label: 'LinkedIn', icon: 'fa-brands fa-linkedin' },
+	{ key: 'twitter', label: 'X (Twitter)', icon: 'fa-brands fa-x-twitter' },
+	{ key: 'youtube', label: 'YouTube', icon: 'fa-brands fa-youtube' },
+	{ key: 'tiktok', label: 'TikTok', icon: 'fa-brands fa-tiktok' },
+] as const;
+
+/** Lit et valide le texte d'`association.yaml` (aussi avant écriture, `association-writer.ts`). */
+export function parseAssociation(text: string): Association {
+	const result = schema.safeParse(parseYaml(text));
 	if (result.success) return result.data;
 	const details = result.error.issues.map((i) => `  - ${i.path.join('.') || '(fichier)'} : ${i.message}`).join('\n');
 	throw new Error(`src/content/association.yaml invalide :\n${details}`);
 }
 
-export const association = load();
+export const association = parseAssociation(raw);
 
 export function getFullAddress(): string {
 	return `${association.address.street}, ${association.address.postalCode} ${association.address.city}`;
