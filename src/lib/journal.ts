@@ -40,6 +40,7 @@ export type JournalAction =
 	| 'page-site.modification'
 	| 'ordre-menu.modification'
 	| 'association.modification'
+	| 'charte.modification'
 	| 'compte.creation'
 	| 'compte.modification'
 	| 'compte.reinitialisation'

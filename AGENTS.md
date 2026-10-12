@@ -169,7 +169,7 @@ clavier) : les deux modifient le même brouillon d'ordre, enregistré à part.
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
-  (`/api/admin/comptes`, `/api/admin/version` et `/api/admin/association` → `admin`, `/api/admin/actualites`,
+  (`/api/admin/comptes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal` → `superadmin` seul).
@@ -261,12 +261,19 @@ contenu hors de `src/content/`.**
   `src/lib/association.ts`, lecture **synchrone** voulue (`association` est
   utilisé partout, jusque dans `content.config.ts` et l'îlot Vue) ; champ
   invalide = build en échec avec le chemin du champ. Modifiable par le
-  bureau depuis le module **« Association »** (`AssociationModule.vue`,
+  bureau depuis le module **« Association »**, onglet « Généralités »
+  (`AssociationModule.vue` → `association/GeneralForm.vue`,
   `src/lib/association-writer.ts` : valeurs changées en place via `yaml`
   Document — commentaires gardés —, fichier revalidé par
   `parseAssociation()`, restauré si le build échoue ; route
   `/api/admin/association`). Réseaux sociaux reconnus : `SOCIAL_NETWORKS`
-  (`association.ts`, partagé avec `Footer.astro`).
+  (`association.ts`, partagé avec `Footer.astro`). Onglet « Charte
+  graphique » (`association/BrandForm.vue`, `src/lib/brand-writer.ts`,
+  route `/api/admin/charte`) : `colors:` de `reglages.yaml` (en place,
+  revalidé par `parseReglages()`), `logo.*` et `favicon.*` d'`images/`
+  (raster passé par sharp, SVG à contenu actif refusé, SVG d'icône →
+  `favicon.png` en plus), aperçu en direct et contraste du texte blanc
+  (`association/contrast.ts`).
 - `partenaires.yaml` (pas une collection, même principe qu'`association.yaml`)
   — `src/lib/partenaires.ts` : `partenaires` (cartes `PartenairesSection`,
   absente si liste vide), `relaisAdhesion` (`relais: true` : cités sur

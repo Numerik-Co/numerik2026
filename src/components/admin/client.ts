@@ -5,6 +5,7 @@
  */
 import type { Association } from '../../lib/association';
 import type { AuthGroup } from '../../lib/auth/groups';
+import type { ThemeColors } from '../../config/site';
 import type { Bloc } from '../../lib/blocs';
 import type { HomeModule } from '../../lib/home-modules';
 import type { ModelVersionInfo } from '../../lib/model-version';
@@ -281,6 +282,24 @@ export const associationApi = {
 			'/api/admin/association',
 		),
 	update: (association: Association) => request<{ ok: true }>('PUT', '/api/admin/association', { association }),
+};
+
+export interface BrandImage {
+	file: string;
+	preview: string;
+}
+
+export interface BrandSource {
+	colors: ThemeColors;
+	defaults: ThemeColors;
+	logo: BrandImage | null;
+	favicons: BrandImage[];
+}
+
+export const brandApi = {
+	get: () => request<BrandSource>('GET', '/api/admin/charte'),
+	update: (input: { colors: ThemeColors; logo?: { type: string; data: string }; favicon?: { type: string; data: string } }) =>
+		request<{ ok: true }>('PUT', '/api/admin/charte', input),
 };
 
 export const activitiesApi = {

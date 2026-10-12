@@ -1,50 +1,52 @@
 <script setup lang="ts">
 /**
- * Module « Association » (bureau : groupe `admin`) : nom, présentation,
- * coordonnées, réseaux sociaux et mentions légales de l'association, tels
- * qu'ils sont dans les sources (`src/content/association.yaml`, modifié en
- * place par `association-writer.ts`). Utilisés partout sur le site (en-tête,
- * pied de page, contact, variables `{{association.…}}` des pages) :
- * enregistrer reconstruit le site (suivi par `usePublication`), comme le
- * module « Pages ».
+ * Module « Association » (bureau : groupe `admin`), en onglets :
+ *  - « Généralités » (`association/GeneralForm.vue`) : nom, coordonnées,
+ *    réseaux sociaux, mentions légales (`association.yaml`) ;
+ *  - « Charte graphique » (`association/BrandForm.vue`) : couleurs
+ *    (`reglages.yaml`), logo et icône d'onglet (`images/`).
+ * Chaque onglet s'enregistre à part et reconstruit le site (suivi par
+ * `usePublication`, encadré commun) ; les deux restent montés, une saisie
+ * en cours n'est pas perdue en changeant d'onglet.
  */
 import { computed, inject, onMounted, ref } from 'vue';
 import type { Association } from '../../../lib/association';
-import { SOCIAL_NETWORKS } from '../../../lib/association';
 import PublishStatus from '../PublishStatus.vue';
 import { ApiError, associationApi } from '../client';
-import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
+import { ADMIN_CONTEXT, takeModuleToReopen } from '../context';
 import { usePublication } from '../usePublication';
+import BrandForm from './association/BrandForm.vue';
+import GeneralForm from './association/GeneralForm.vue';
 
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
-/** Valeurs des sources (référence) et formulaire en cours de saisie. */
-const saved = ref<Association | null>(null);
-const form = ref<Association | null>(null);
+const TABS = [
+	{ id: 'general', label: 'Généralités', icon: 'fa-landmark' },
+	{ id: 'charte', label: 'Charte graphique', icon: 'fa-palette' },
+] as const;
+type TabId = (typeof TABS)[number]['id'];
+
+const tab = ref<TabId>('general');
+const association = ref<Association | null>(null);
 const availability = ref<{ ok: boolean; reason?: string }>({ ok: true });
 const loading = ref(true);
-const busy = ref(false);
 const error = ref('');
-
-const copy = (a: Association): Association => ({
-	...a,
-	address: { ...a.address },
-	social: Object.fromEntries(SOCIAL_NETWORKS.map(({ key }) => [key, a.social[key] ?? ''])),
-	legal: { ...a.legal, hosting: { ...a.legal.hosting } },
-});
+/** Onglets avec une saisie pas encore publiée (pastille). */
+const dirty = ref<Record<TabId, boolean>>({ general: false, charte: false });
+/** Remonte un onglet (données relues) après sa publication. */
+const versions = ref<Record<TabId, number>>({ general: 0, charte: 0 });
+let lastPublished: TabId | null = null;
 
 function fail(e: unknown) {
-	takeModuleToReopen(); // l'enregistrement a échoué : pas de réouverture au prochain chargement
+	takeModuleToReopen();
 	if (e instanceof ApiError && e.status === 401) return sessionExpired();
 	error.value = (e as Error).message;
 }
 
 async function load() {
-	loading.value = true;
 	try {
 		const res = await associationApi.get();
-		saved.value = copy(res.association);
-		form.value = copy(res.association);
+		association.value = res.association;
 		availability.value = res.availability;
 		receive(res.status);
 	} catch (e) {
@@ -54,37 +56,30 @@ async function load() {
 	}
 }
 
-const { status, following, receive, started, dismiss: dismissStatus } = usePublication({ onSettled: () => load(), onError: fail });
-const publishLocked = computed(() => !availability.value.ok || following.value || busy.value);
-const changed = computed(() => !!form.value && JSON.stringify(form.value) !== JSON.stringify(saved.value));
+const { status, following, receive, started, dismiss: dismissStatus } = usePublication({
+	onSettled: async () => {
+		await load();
+		if (lastPublished) versions.value[lastPublished]++;
+		lastPublished = null;
+	},
+	onError: fail,
+});
+const locked = computed(() => !availability.value.ok || following.value);
 
-async function submit() {
-	if (!form.value) return;
+function onPublished(from: TabId, label: string) {
 	error.value = '';
-	busy.value = true;
-	try {
-		rememberOpenModule('association');
-		await associationApi.update(form.value);
-		saved.value = copy(form.value);
-		started("Informations de l'association");
-	} catch (e) {
-		fail(e);
-	} finally {
-		busy.value = false;
-	}
+	lastPublished = from;
+	started(label);
 }
 
-function reset() {
-	if (saved.value) form.value = copy(saved.value);
-	error.value = '';
+/** Flèches gauche/droite entre onglets (motif ARIA « tabs »). */
+function onTabKey(event: KeyboardEvent) {
+	if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+	const i = TABS.findIndex((t) => t.id === tab.value);
+	const next = TABS[(i + (event.key === 'ArrowRight' ? 1 : TABS.length - 1)) % TABS.length];
+	tab.value = next.id;
+	(document.getElementById(`asso-tab-${next.id}`) as HTMLElement | null)?.focus();
 }
-
-/** En-tête des sections, comme les listes du module « Pages ». */
-const headerClass = 'flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 px-4 py-2.5';
-const labelClass = 'block text-sm font-medium text-gray-700';
-const helpClass = 'mt-1 text-xs font-light text-gray-500';
-/** Champ sur la même ligne que son libellé (réseaux sociaux). */
-const inlineInputClass = inputClass.replace('mt-1 ', '');
 
 onMounted(load);
 </script>
@@ -94,161 +89,47 @@ onMounted(load);
 	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
-	<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
-	<form v-else-if="form" class="space-y-6" @submit.prevent="submit">
-		<p class="text-sm font-light text-gray-600">
-			Ces informations sont affichées sur tout le site : en-tête, pied de page, page Contact, mentions légales, aperçus de
-			partage… et dans le texte des pages grâce aux variables <code class="text-gray-900" v-text="'{{association.nom}}'"></code>,
-			etc.
-		</p>
-
-		<!-- Modifications en attente : enregistrées en une seule publication -->
-		<div
-			v-if="changed"
-			class="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200"
-			role="status"
+	<div role="tablist" aria-label="Rubriques" class="mb-5 flex gap-1 border-b border-gray-200" @keydown="onTabKey">
+		<button
+			v-for="t in TABS"
+			:id="`asso-tab-${t.id}`"
+			:key="t.id"
+			type="button"
+			role="tab"
+			:aria-selected="tab === t.id"
+			:aria-controls="`asso-panel-${t.id}`"
+			:tabindex="tab === t.id ? 0 : -1"
+			:class="[
+				'-mb-px flex items-center gap-2 border-b-2 px-3 py-2 font-heading text-sm font-semibold transition-colors',
+				tab === t.id ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800',
+			]"
+			@click="tab = t.id"
 		>
-			<i class="fa-solid fa-pen" aria-hidden="true"></i>
-			<span class="min-w-0 flex-1">Modifications pas encore publiées.</span>
-			<button
-				type="submit"
-				class="rounded-full bg-primary px-4 py-1.5 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
-				:disabled="publishLocked"
-			>
-				Enregistrer et publier
-			</button>
-			<button type="button" class="text-xs font-medium text-gray-700 hover:underline" @click="reset">Annuler</button>
+			<i :class="['fa-solid', t.icon]" aria-hidden="true"></i>
+			{{ t.label }}
+			<span v-if="dirty[t.id]" class="h-2 w-2 rounded-full bg-amber-400" title="Modifications pas encore publiées"></span>
+		</button>
+	</div>
+
+	<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
+	<template v-else>
+		<div v-show="tab === 'general'" id="asso-panel-general" role="tabpanel" aria-labelledby="asso-tab-general">
+			<GeneralForm
+				v-if="association"
+				:key="versions.general"
+				:source="association"
+				:locked="locked"
+				@published="(label) => onPublished('general', label)"
+				@dirty="(value) => (dirty.general = value)"
+			/>
 		</div>
-
-		<!-- 1. Identité -->
-		<section class="overflow-hidden rounded-xl border border-gray-200">
-			<header :class="headerClass">
-				<i class="fa-solid fa-landmark text-gray-400" aria-hidden="true"></i>
-				<span class="font-heading font-semibold text-gray-900">Identité</span>
-				<span class="text-xs text-gray-500">en-tête, accueil, moteurs de recherche</span>
-			</header>
-			<div class="space-y-4 p-4">
-				<div>
-					<label for="asso-name" :class="labelClass">Nom de l'association</label>
-					<input id="asso-name" v-model="form.name" type="text" required maxlength="80" :class="inputClass" />
-				</div>
-				<div>
-					<label for="asso-description" :class="labelClass">Présentation</label>
-					<textarea id="asso-description" v-model="form.description" rows="3" required maxlength="300" :class="inputClass"></textarea>
-					<p :class="helpClass">Une phrase : page d'accueil et résultats des moteurs de recherche ({{ form.description.length }}/300).</p>
-				</div>
-			</div>
-		</section>
-
-		<!-- 2. Coordonnées et adresse -->
-		<section class="overflow-hidden rounded-xl border border-gray-200">
-			<header :class="headerClass">
-				<i class="fa-solid fa-address-card text-gray-400" aria-hidden="true"></i>
-				<span class="font-heading font-semibold text-gray-900">Coordonnées</span>
-				<span class="text-xs text-gray-500">pied de page, page Contact</span>
-			</header>
-			<div class="grid gap-4 p-4 sm:grid-cols-2">
-				<div>
-					<label for="asso-email" :class="labelClass">Email de contact</label>
-					<input id="asso-email" v-model="form.email" type="email" required :class="inputClass" />
-				</div>
-				<div>
-					<label for="asso-phone" :class="labelClass">Téléphone</label>
-					<input id="asso-phone" v-model="form.phone" type="tel" required :class="inputClass" />
-				</div>
-				<div class="sm:col-span-2">
-					<label for="asso-street" :class="labelClass">Adresse du siège</label>
-					<input id="asso-street" v-model="form.address.street" type="text" required placeholder="N° et rue" :class="inputClass" />
-				</div>
-				<div>
-					<label for="asso-postal" :class="labelClass">Code postal</label>
-					<input id="asso-postal" v-model="form.address.postalCode" type="text" required inputmode="numeric" :class="inputClass" />
-				</div>
-				<div>
-					<label for="asso-city" :class="labelClass">Ville</label>
-					<input id="asso-city" v-model="form.address.city" type="text" required :class="inputClass" />
-				</div>
-			</div>
-		</section>
-
-		<!-- 3. Réseaux sociaux -->
-		<section class="overflow-hidden rounded-xl border border-gray-200">
-			<header :class="headerClass">
-				<i class="fa-solid fa-share-nodes text-gray-400" aria-hidden="true"></i>
-				<span class="font-heading font-semibold text-gray-900">Réseaux sociaux</span>
-				<span class="text-xs text-gray-500">icônes du pied de page ; vide = masqué</span>
-			</header>
-			<ul class="divide-y divide-gray-100">
-				<li v-for="network in SOCIAL_NETWORKS" :key="network.key" class="flex items-center gap-3 px-4 py-2.5">
-					<i :class="[network.icon, 'fa-fw shrink-0 text-lg', form.social[network.key] ? 'text-primary' : 'text-gray-300']" aria-hidden="true"></i>
-					<label :for="`asso-social-${network.key}`" class="w-24 shrink-0 text-sm font-medium text-gray-700 sm:w-28">{{ network.label }}</label>
-					<input
-						:id="`asso-social-${network.key}`"
-						v-model="form.social[network.key]"
-						type="url"
-						placeholder="https://…"
-						:class="inlineInputClass"
-					/>
-				</li>
-			</ul>
-		</section>
-
-		<!-- 4. Mentions légales -->
-		<section class="overflow-hidden rounded-xl border border-gray-200">
-			<header :class="headerClass">
-				<i class="fa-solid fa-scale-balanced text-gray-400" aria-hidden="true"></i>
-				<span class="font-heading font-semibold text-gray-900">Mentions légales</span>
-				<span class="text-xs text-gray-500">facultatives ; vide = « [À compléter] » dans les pages</span>
-			</header>
-			<div class="grid gap-4 p-4 sm:grid-cols-2">
-				<div>
-					<label for="asso-rna" :class="labelClass">Numéro RNA</label>
-					<input id="asso-rna" v-model="form.legal.registrationNumber" type="text" placeholder="W…" :class="inputClass" />
-				</div>
-				<div>
-					<label for="asso-siret" :class="labelClass">Numéro SIRET</label>
-					<input id="asso-siret" v-model="form.legal.siretNumber" type="text" inputmode="numeric" :class="inputClass" />
-				</div>
-				<div class="sm:col-span-2">
-					<label for="asso-president" :class="labelClass">Président·e</label>
-					<input id="asso-president" v-model="form.legal.president" type="text" :class="inputClass" />
-				</div>
-				<div>
-					<label for="asso-manager" :class="labelClass">Responsable de la publication</label>
-					<input id="asso-manager" v-model="form.legal.publicationManager" type="text" :placeholder="form.legal.president" :class="inputClass" />
-					<p :class="helpClass">Souvent le·la président·e (repris si vide).</p>
-				</div>
-				<div>
-					<label for="asso-role" :class="labelClass">Sa fonction dans l'association</label>
-					<input id="asso-role" v-model="form.legal.publicationManagerRole" type="text" placeholder="Président·e" :class="inputClass" />
-				</div>
-			</div>
-			<fieldset class="mx-4 mb-4 space-y-3 rounded-xl bg-gray-50 p-4">
-				<legend class="float-left mb-1 font-heading text-sm font-semibold text-gray-900">Hébergeur du site</legend>
-				<div class="clear-left">
-					<label for="asso-host-name" :class="labelClass">Nom</label>
-					<input id="asso-host-name" v-model="form.legal.hosting.name" type="text" :class="inputClass" />
-				</div>
-				<div>
-					<label for="asso-host-address" :class="labelClass">Adresse</label>
-					<input id="asso-host-address" v-model="form.legal.hosting.address" type="text" :class="inputClass" />
-				</div>
-				<div>
-					<label for="asso-host-phone" :class="labelClass">Téléphone</label>
-					<input id="asso-host-phone" v-model="form.legal.hosting.phone" type="tel" :class="inputClass" />
-				</div>
-			</fieldset>
-		</section>
-
-		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="publishLocked || !changed"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				Enregistrer et publier
-			</button>
-			<button v-if="changed" type="button" class="text-sm text-gray-600 hover:underline" @click="reset">Annuler les modifications</button>
+		<div v-show="tab === 'charte'" id="asso-panel-charte" role="tabpanel" aria-labelledby="asso-tab-charte">
+			<BrandForm
+				:key="versions.charte"
+				:locked="locked"
+				@published="(label) => onPublished('charte', label)"
+				@dirty="(value) => (dirty.charte = value)"
+			/>
 		</div>
-	</form>
+	</template>
 </template>

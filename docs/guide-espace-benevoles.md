@@ -515,7 +515,13 @@ signalée en rouge en haut du module : ouvrez-la et choisissez-en une autre.
 
 ### Informations de l'association (bureau)
 
-Module **🏛 Association**, réservé au bureau : nom, présentation,
+Module **🏛 Association**, réservé au bureau, en deux onglets :
+**Généralités** et **Charte graphique**. Chaque onglet s'enregistre à part ;
+une pastille orange signale un onglet modifié mais pas encore publié.
+
+#### Généralités
+
+Nom, présentation,
 coordonnées, réseaux sociaux et mentions légales. Ces informations
 apparaissent partout sur le site (en-tête, pied de page, page Contact,
 aperçus de partage) et dans le texte des pages grâce aux variables
@@ -540,6 +546,30 @@ d'échec de la reconstruction, l'ancienne version est remise en place.
 
 Le fichier modifié est `src/content/association.yaml` : ses commentaires
 sont conservés, il reste modifiable à la main.
+
+#### Charte graphique
+
+- **Aperçu** : en-tête, bande de couleurs, lien, bouton et pied de page
+  avec les couleurs et le logo en cours de saisie, avant publication.
+- **Couleurs** : principale (liens, boutons, titres), secondaire (pied de
+  page, survols), d'accent (bouton « Adhérer »). Nuancier ou code
+  `#2f7fc1`. Le site écrit en blanc sur ces couleurs : une étiquette
+  indique si c'est **lisible**, lisible en **gros caractères seulement**,
+  ou **peu lisible**. « couleur d'origine » remet celle du modèle.
+- **Bande de couleurs** (sous l'en-tête) : 1 à 12 couleurs, à réordonner
+  (glisser-déposer ou flèches), ajouter, retirer ; « bande d'origine ».
+- **Logo** : PNG à fond transparent ou SVG de préférence (JPEG, WebP
+  acceptés, 5 Mo max). Une très grande image est réduite (1 600 px de
+  large).
+- **Icône d'onglet** (favicon) : image carrée, SVG ou PNG (512 × 512
+  conseillé), ICO accepté. Remplace toutes les icônes actuelles ; un SVG
+  donne aussi une version PNG pour les anciens navigateurs.
+
+Un SVG contenant du script ou des liens externes est refusé par sécurité :
+l'exporter en « SVG simple » ou en PNG. Fichiers modifiés : `colors:` de
+`src/content/reglages.yaml` (autres réglages et commentaires gardés),
+`src/content/images/logo.*` et `favicon.*`. Si la reconstruction échoue,
+tout est remis comme avant.
 
 ### Changer mon mot de passe
 
