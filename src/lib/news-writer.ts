@@ -35,7 +35,7 @@ export const COVER_MAX_BYTES = 10 * 1024 * 1024;
 export const MARKDOWN_MAX_BYTES = 200 * 1024;
 
 /** Nom de dossier d'une actualité : `AAAA-MM-JJ-slug`. */
-const NEWS_SLUG = /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/;
+export const NEWS_SLUG = /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+$/;
 
 export function siteRoot(): string {
 	return resolve(SITE_ROOT || process.cwd());

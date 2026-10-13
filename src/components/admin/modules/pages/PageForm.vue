@@ -13,6 +13,7 @@ import { blocMarker, type Bloc } from '../../../../lib/blocs';
 import { PAGE_VARIABLES } from '../../../../lib/page-variables';
 import { ApiError, pagesApi, type CoverUpdate, type DropdownView, type PageInput, type PageSourceView } from '../../client';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
+import LinkPicker from '../../LinkPicker.vue';
 import BlocsEditor from './BlocsEditor.vue';
 import { downloadPageTemplate, parsePageMarkdown } from './page-markdown';
 
@@ -414,6 +415,7 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 					</li>
 				</ul>
 			</details>
+			<LinkPicker v-model="form.body" :field="bodyField" />
 		</div>
 
 		<BlocsEditor v-if="form.type === 'enrichie'" :blocs="blocs" :body="form.body" @insert="insertMarker" />
