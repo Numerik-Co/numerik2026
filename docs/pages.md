@@ -108,7 +108,8 @@ reconstruit le site, comme le module « Actualités »
   `menu.show` faux), pages réservées, bibliothèque (pages du site
   désactivées, bouton « Activer ») ; formulaires (`pages/SitePageForm.vue` pour
   une page du site), (`pages/PageForm.vue`,
-  `pages/BlocsEditor.vue`, `pages/BlocFields.vue`) ; création = choix
+  `pages/BlocsEditor.vue`, `pages/BlocFields.vue` — champs `markdown` et
+  `url` suivis du sélecteur de liens `LinkPicker.vue`) ; création = choix
   **page classique** ou **page enrichie**, ou dépôt d'un fichier `.md` qui
   pré-remplit le formulaire (`pages/page-markdown.ts` : `parsePageMarkdown()`,
   modèles `downloadPageTemplate()` ; emplacement, adresse, accès et photo

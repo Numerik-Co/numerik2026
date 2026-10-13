@@ -165,6 +165,16 @@ réglages dans `src/components/admin/context.ts`, saisie par la poignée
 `modules/pages/OrderArrows.vue` (masquées ≥ `lg`, réapparaissent au focus
 clavier) : les deux modifient le même brouillon d'ordre, enregistré à part.
 
+Sous le texte Markdown des actualités, pages et activités : bloc « Insérer
+un lien vers une page du site » (`src/components/admin/LinkPicker.vue`,
+`v-model` = texte + `field` = zone de saisie ; liste `GET /api/admin/liens`
+← `src/lib/site-links.ts`, lue dans les sources : pages du site actives +
+pages applicatives `SERVICE_PAGES`, pages de contenu, catégories et fiches,
+actualités ; brouillons / réservées / à paraître signalés par `note`).
+Aussi sous les champs `markdown` (insertion) et `url` (`mode="url"` :
+remplace l'adresse) des blocs et modules de l'accueil (`BlocFields.vue`) ;
+liste partagée entre instances (cache module, 1 min).
+
 - `src/components/admin/AdminLoader.astro` (dans les deux layouts) ne
   charge l'îlot Vue (`mount.ts` → `AdminRoot.vue`) que si le cookie
   indicateur `numerik_connecte` existe ou au clic : rien pour un visiteur.
@@ -173,7 +183,7 @@ clavier) : les deux modifient le même brouillon d'ordre, enregistré à part.
   connexion ; `GUARDS` réserve des préfixes à des groupes
   (`/api/admin/comptes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
-  `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
+  `/api/admin/liens`, `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route

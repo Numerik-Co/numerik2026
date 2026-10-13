@@ -14,6 +14,7 @@
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
+import LinkPicker from '../LinkPicker.vue';
 import PublishStatus from '../PublishStatus.vue';
 import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem } from '../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
@@ -214,6 +215,8 @@ async function remove(item: NewsItem) {
 
 /** Actualité en cours d'édition (slug = dossier, inchangé). */
 const editing = ref<{ slug: string; coverUrl: string | null; hasCover: boolean } | null>(null);
+/** Zone du texte (curseur, pour `LinkPicker`). */
+const bodyField = ref<HTMLTextAreaElement | null>(null);
 const editForm = reactive<NewsFields & { body: string }>({
 	title: '',
 	publishAt: '',
@@ -503,12 +506,13 @@ onMounted(load);
 		</div>
 		<div>
 			<label for="ed-body" class="block text-sm font-semibold text-gray-700">Texte (Markdown)</label>
-			<textarea id="ed-body" v-model="editForm.body" rows="14" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
+			<textarea id="ed-body" ref="bodyField" v-model="editForm.body" rows="14" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
 			<p class="mt-1 text-xs font-light text-gray-500">
 				<code>## Sous-titre</code>, <code>**gras**</code>, <code>*italique*</code>, <code>- liste</code>,
 				<code>[lien](https://…)</code>. Le HTML est accepté (tableaux, encadrés, vidéos YouTube/Vimeo…) ; le code
 				exécutable (scripts…) est retiré à l'affichage.
 			</p>
+			<LinkPicker v-model="editForm.body" :field="bodyField" />
 		</div>
 
 		<!-- Photo -->

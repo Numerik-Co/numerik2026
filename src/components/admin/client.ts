@@ -10,6 +10,7 @@ import type { Bloc } from '../../lib/blocs';
 import type { HomeModule } from '../../lib/home-modules';
 import type { ModelVersionInfo } from '../../lib/model-version';
 import type { SitePageState } from '../../lib/site-pages';
+import type { SiteLinkGroup } from '../../lib/site-links';
 
 export interface AdminUser {
 	login: string;
@@ -342,4 +343,8 @@ export const journalApi = {
 			'GET',
 			`/api/admin/journal${year ? `?annee=${encodeURIComponent(year)}` : ''}`,
 		),
+};
+
+export const linksApi = {
+	get: () => request<{ groups: SiteLinkGroup[] }>('GET', '/api/admin/liens'),
 };

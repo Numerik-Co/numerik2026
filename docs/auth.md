@@ -155,6 +155,7 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `GET/POST /api/admin/activites`, `GET/PUT/DELETE /api/admin/activites/<slug>`, `PUT /api/admin/activites/ordre`, `POST /api/admin/activites/categories`, `PUT/DELETE /api/admin/activites/categories/<slug>` | Fiches d'activité et catégories (sources), ordre des catégories et des fiches, cf. [activites.md](activites.md#module-activités-espace-bénévoles) — `redacteur` |
 | `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>` | Pages de contenu (sources), cf. [pages.md](pages.md#module-pages-espace-bénévoles) — `redacteur` |
 | `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>` | Menus déroulants (`_group.md`) — `redacteur` |
+| `GET /api/admin/liens` | Pages vers lesquelles pointer depuis un texte (bloc « Insérer un lien », `src/lib/site-links.ts`, lu dans les sources) — `redacteur` |
 | `GET /api/admin/version` | Version du site et dernière version publiée (badge « mise à jour disponible », cache 6 h) — `admin` |
 | `PATCH/POST/DELETE /api/admin/comptes/<login>` | Modification / réinitialisation du mot de passe / suppression (`{ confirm: <login> }`) — `admin` |
 
@@ -163,7 +164,7 @@ que les requêtes du site lui-même (`Sec-Fetch-Site`, à défaut `Origin`),
 `/api/admin/*` exige une connexion (401), et les préfixes de `GUARDS` un
 groupe (403) : `/api/admin/comptes*`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin` ;
 `/api/admin/actualites*`, `/api/admin/publication`, `/api/admin/activites*`,
-`/api/admin/pages*`, `/api/admin/menus-deroulants*`,
+`/api/admin/pages*`, `/api/admin/menus-deroulants*`, `/api/admin/liens`,
 `/api/admin/pages-du-site*` et `/api/admin/ordre-menu` → `redacteur`
 (`admin` passe toujours) ; `/api/admin/journal` → `superadmin` seul. `Astro.locals.user` est renseigné sur chaque requête rendue à
 la demande.

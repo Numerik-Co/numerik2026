@@ -9,6 +9,7 @@ import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue';
 import { TYPES_ACTIVITE_INSCRIPTION } from '../../../../lib/adhesion/choices';
 import { ApiError, activitiesApi, type ActivityCategory, type ActivityInput, type ActivitySourceView, type CoverUpdate } from '../../client';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
+import LinkPicker from '../../LinkPicker.vue';
 
 const props = defineProps<{ categories: ActivityCategory[]; source: ActivitySourceView | null; category: string; disabled: boolean }>();
 const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
@@ -28,6 +29,8 @@ function slugify(text: string): string {
 		.replace(/-+$/g, '');
 }
 
+/** Zone du texte (curseur, pour `LinkPicker`). */
+const bodyField = ref<HTMLTextAreaElement | null>(null);
 const form = reactive({
 	title: editing?.title ?? '',
 	slug: editing?.slug ?? '',
@@ -216,11 +219,12 @@ async function submit() {
 		<!-- Texte -->
 		<div>
 			<label for="act-body" class="block text-sm font-semibold text-gray-700">Texte de la fiche (Markdown)</label>
-			<textarea id="act-body" v-model="form.body" rows="16" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
+			<textarea id="act-body" ref="bodyField" v-model="form.body" rows="16" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
 			<p class="mt-1 text-xs font-light text-gray-500">
 				<code>## Titre de section</code> (alimente le sommaire), <code>**gras**</code>, <code>*italique*</code>,
 				<code>- liste</code>, <code>[lien](/contact)</code>. Le HTML est accepté (tableaux, encadrés…).
 			</p>
+			<LinkPicker v-model="form.body" :field="bodyField" />
 		</div>
 
 		<!-- Inscription en ligne -->

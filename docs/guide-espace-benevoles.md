@@ -319,6 +319,14 @@ Markdown), photo (**Remplacer** / **Retirer**), crédit photo, et la case
 plus tard la republie). **Enregistrer les modifications** reconstruit le site ;
 si la reconstruction échoue, la version précédente est conservée.
 
+**Insérer un lien vers une page du site** (sous le texte des actualités, des
+pages et des activités) : liste des pages du site, des pages de contenu, des
+catégories et fiches d'activité et des actualités, avec une recherche. Placer
+le curseur dans le texte (ou sélectionner les mots à transformer en lien),
+puis cliquer sur la page : `[Titre](/adresse)` est inséré. Brouillons, pages
+réservées et actualités à paraître sont signalés : le lien n'est pas encore
+(ou pas pour tout le monde) consultable.
+
 > L'adresse de la page ne change pas, même si le titre ou la date sont
 > modifiés : les liens déjà partagés continuent de fonctionner.
 
@@ -356,7 +364,9 @@ blocs :
   encadré tarif, bouton, encadré d'information, rendez-vous du Conseiller
   Numérique). « Ajouter un bloc » le crée et insère son marqueur
   `[[bloc:…]]` dans le texte à l'endroit du curseur ; le bloc s'affiche à
-  cet endroit (on peut déplacer la ligne du marqueur).
+  cet endroit (on peut déplacer la ligne du marqueur). Sous les textes des
+  blocs (cartes, encadré), « Insérer un lien vers une page du site » ; sous
+  le lien d'un bouton, « Choisir une page du site » remplit l'adresse.
 
 **Ou à partir d'un fichier `.md`** (même écran) : « Télécharger un modèle »
 (page classique ou page enrichie, avec des exemples de chaque bloc), le
@@ -371,7 +381,9 @@ page réservée avec les groupes autorisés), adresse (déduite du titre),
 libellé dans le menu de navigation. Une nouvelle page (ou une page changée
 d'emplacement) se place en **dernière position** de son menu.
 « Insérer une information de l'association » liste les variables
-(`{{association.nom}}`…) remplacées par les vraies valeurs.
+(`{{association.nom}}`…) remplacées par les vraies valeurs ; « Insérer un
+lien vers une page du site » ajoute un lien vers une autre page (voir
+[Publier une actualité](#publier-une-actualité)).
 
 **Créer et publier** reconstruit le site (environ une minute) ; en cas
 d'échec, rien n'est modifié. Changer l'emplacement ou l'adresse d'une page
@@ -450,7 +462,8 @@ Une catégorie vide indique « Aucune activité » : sa page affiche alors
      position GPS et métadonnées retirées) et son **crédit** (sinon
      « Photo : <nom de l'association> ») ;
    - **Texte de la fiche** — en Markdown, obligatoire ; le HTML est accepté
-     et nettoyé à l'affichage, comme pour les actualités ;
+     et nettoyé à l'affichage, comme pour les actualités ; « Insérer un lien
+     vers une page du site » ajoute un lien vers une autre page ;
    - **Inscription en ligne** — voir plus bas.
 3. **Créer et publier** : le site est reconstruit (encadré « Publication en
    cours », comme pour les actualités). La fiche se place **en dernier** dans
