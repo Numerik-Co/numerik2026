@@ -50,7 +50,7 @@ async function load() {
 	}
 }
 
-/** Recherche sans accents ni casse, sur le titre, la précision et l'adresse. */
+/** Recherche sans accents ni casse, sur le titre et la précision. */
 const fold = (text: string) =>
 	text
 		.normalize('NFD')
@@ -64,7 +64,7 @@ const shown = computed(() => {
 		.map((g) => ({
 			...g,
 			links: g.links.filter((l) => {
-				const text = fold(`${l.title} ${l.note ?? ''} ${l.href}`);
+				const text = fold(`${l.title} ${l.note ?? ''}`);
 				return words.every((w) => text.includes(w));
 			}),
 		}))
@@ -128,7 +128,6 @@ async function insert(link: SiteLink) {
 							>
 								<span class="font-medium text-gray-800">{{ l.title }}</span>
 								<span v-if="l.note" class="font-light text-gray-500">{{ l.note }}</span>
-								<code class="ml-auto text-gray-400">{{ l.href }}</code>
 							</button>
 						</li>
 					</ul>
