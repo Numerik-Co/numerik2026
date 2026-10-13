@@ -1,3 +1,11 @@
+<script lang="ts">
+import type { SiteLinkGroup as Group } from '../../lib/site-links';
+
+/** Liste partagée par tous les blocs ouverts (une page enrichie en compte plusieurs), relue après une minute. */
+let cache: { at: number; groups: Promise<Group[]> } | null = null;
+const CACHE_MS = 60 * 1000;
+</script>
+
 <script setup lang="ts">
 /**
  * Bloc « Insérer un lien vers une page du site », sous le texte Markdown des
@@ -7,13 +15,17 @@
  * sélectionné le texte du lien.
  *
  * `v-model` = texte du formulaire, `field` = sa zone de saisie (curseur).
+ * `mode="url"` (champ « Lien » d'un bloc) : le clic remplace la valeur par
+ * l'adresse de la page.
  */
 import { computed, inject, nextTick, ref } from 'vue';
 import type { SiteLink, SiteLinkGroup } from '../../lib/site-links';
 import { ApiError, linksApi } from './client';
 import { ADMIN_CONTEXT, compactInputClass } from './context';
 
-const props = defineProps<{ field: HTMLTextAreaElement | null }>();
+const props = withDefaults(defineProps<{ field: HTMLTextAreaElement | HTMLInputElement | null; mode?: 'markdown' | 'url' }>(), {
+	mode: 'markdown',
+});
 const body = defineModel<string>({ required: true });
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
@@ -27,8 +39,10 @@ async function load() {
 	loading.value = true;
 	error.value = '';
 	try {
-		groups.value = (await linksApi.get()).groups;
+		if (!cache || Date.now() - cache.at > CACHE_MS) cache = { at: Date.now(), groups: linksApi.get().then((r) => r.groups) };
+		groups.value = await cache.groups;
 	} catch (e) {
+		cache = null;
 		if (e instanceof ApiError && e.status === 401) return sessionExpired();
 		error.value = (e as Error).message;
 	} finally {
@@ -62,6 +76,12 @@ const linkText = (text: string) => text.replace(/[[\]]/g, (c) => `\\${c}`);
 
 async function insert(link: SiteLink) {
 	const field = props.field;
+	if (props.mode === 'url') {
+		body.value = link.href;
+		await nextTick();
+		field?.focus();
+		return;
+	}
 	const start = field ? field.selectionStart : body.value.length;
 	const end = field ? field.selectionEnd : start;
 	const selected = body.value.slice(start, end).trim();
@@ -78,8 +98,10 @@ async function insert(link: SiteLink) {
 
 <template>
 	<details class="mt-2 text-xs text-gray-600" @toggle="($event.target as HTMLDetailsElement).open && load()">
-		<summary class="cursor-pointer font-medium text-primary">Insérer un lien vers une page du site</summary>
-		<p class="mt-1 font-light">
+		<summary class="cursor-pointer font-medium text-primary">
+			{{ props.mode === 'url' ? 'Choisir une page du site' : 'Insérer un lien vers une page du site' }}
+		</summary>
+		<p v-if="props.mode === 'markdown'" class="mt-1 font-light">
 			Placez le curseur dans le texte (ou sélectionnez les mots à transformer en lien), puis choisissez la page.
 		</p>
 		<p v-if="loading" class="mt-2 font-light text-gray-500">Chargement…</p>
@@ -101,7 +123,7 @@ async function insert(link: SiteLink) {
 							<button
 								type="button"
 								class="flex w-full flex-wrap items-baseline gap-x-2 px-3 py-1.5 text-left hover:bg-primary/5 focus:bg-primary/5 focus:outline-none"
-								:title="`Insérer un lien vers ${l.href}`"
+								:title="props.mode === 'url' ? `Choisir ${l.href}` : `Insérer un lien vers ${l.href}`"
 								@click="insert(l)"
 							>
 								<span class="font-medium text-gray-800">{{ l.title }}</span>

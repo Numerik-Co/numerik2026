@@ -1,6 +1,11 @@
 <script setup lang="ts">
-/** Champs d'un bloc (ou d'un élément de bloc), d'après leur description dans `src/lib/blocs.ts`. */
+/**
+ * Champs d'un bloc (ou d'un élément de bloc), d'après leur description dans `src/lib/blocs.ts`.
+ * Champs `markdown` et `url` : bloc « Insérer un lien » / « Choisir une page du site » (`LinkPicker`).
+ */
+import { shallowReactive } from 'vue';
 import type { BlocField } from '../../../../lib/blocs';
+import LinkPicker from '../../LinkPicker.vue';
 import { inputClass } from '../../context';
 
 const props = defineProps<{ fields: BlocField[]; values: Record<string, unknown>; idPrefix: string }>();
@@ -9,6 +14,12 @@ const value = (name: string) => String(props.values[name] ?? '');
 function set(name: string, event: Event) {
 	props.values[name] = (event.target as HTMLInputElement).value;
 }
+
+/** Zones de saisie par champ (curseur, pour `LinkPicker`). */
+const elements = shallowReactive<Record<string, HTMLTextAreaElement | HTMLInputElement | null>>({});
+const keep = (name: string) => (el: unknown) => {
+	elements[name] = el as HTMLTextAreaElement | HTMLInputElement | null;
+};
 </script>
 
 <template>
@@ -30,6 +41,7 @@ function set(name: string, event: Event) {
 			<textarea
 				v-else-if="f.type === 'textarea' || f.type === 'markdown'"
 				:id="`${props.idPrefix}-${f.name}`"
+				:ref="keep(f.name)"
 				:value="value(f.name)"
 				:required="f.required"
 				rows="4"
@@ -44,6 +56,7 @@ function set(name: string, event: Event) {
 				></i>
 				<input
 					:id="`${props.idPrefix}-${f.name}`"
+					:ref="keep(f.name)"
 					:value="value(f.name)"
 					type="text"
 					:required="f.required"
@@ -53,6 +66,13 @@ function set(name: string, event: Event) {
 				/>
 			</div>
 			<p v-if="f.help" class="mt-1 text-xs font-light text-gray-500">{{ f.help }}</p>
+			<LinkPicker
+				v-if="f.type === 'markdown' || f.type === 'url'"
+				:model-value="value(f.name)"
+				:field="elements[f.name] ?? null"
+				:mode="f.type"
+				@update:model-value="(v) => (props.values[f.name] = v)"
+			/>
 		</div>
 	</div>
 </template>

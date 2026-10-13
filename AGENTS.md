@@ -171,6 +171,9 @@ un lien vers une page du site » (`src/components/admin/LinkPicker.vue`,
 ← `src/lib/site-links.ts`, lue dans les sources : pages du site actives +
 pages applicatives `SERVICE_PAGES`, pages de contenu, catégories et fiches,
 actualités ; brouillons / réservées / à paraître signalés par `note`).
+Aussi sous les champs `markdown` (insertion) et `url` (`mode="url"` :
+remplace l'adresse) des blocs et modules de l'accueil (`BlocFields.vue`) ;
+liste partagée entre instances (cache module, 1 min).
 
 - `src/components/admin/AdminLoader.astro` (dans les deux layouts) ne
   charge l'îlot Vue (`mount.ts` → `AdminRoot.vue`) que si le cookie

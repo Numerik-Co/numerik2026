@@ -364,7 +364,9 @@ blocs :
   encadré tarif, bouton, encadré d'information, rendez-vous du Conseiller
   Numérique). « Ajouter un bloc » le crée et insère son marqueur
   `[[bloc:…]]` dans le texte à l'endroit du curseur ; le bloc s'affiche à
-  cet endroit (on peut déplacer la ligne du marqueur).
+  cet endroit (on peut déplacer la ligne du marqueur). Sous les textes des
+  blocs (cartes, encadré), « Insérer un lien vers une page du site » ; sous
+  le lien d'un bouton, « Choisir une page du site » remplit l'adresse.
 
 **Ou à partir d'un fichier `.md`** (même écran) : « Télécharger un modèle »
 (page classique ou page enrichie, avec des exemples de chaque bloc), le
