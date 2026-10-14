@@ -165,7 +165,7 @@ async function submit() {
 </script>
 
 <template>
-	<FormHeader back="Toutes les activités" :title="editing ? editing.title || editing.slug : 'Nouvelle activité'" :editing="Boolean(editing)" @back="emit('cancel')" />
+	<FormHeader back="Toutes les activités" :title="form.title.trim() || (editing ? editing.title || editing.slug : 'Nouvelle activité')" :editing="Boolean(editing)" @back="emit('cancel')" />
 	<form class="space-y-5" @submit.prevent="submit" @invalid.capture="onInvalid">
 		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 

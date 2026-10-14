@@ -230,7 +230,7 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 </script>
 
 <template>
-	<FormHeader back="Toutes les pages" :title="editing ? editing.title || `/${editing.path}` : 'Nouvelle page'" :editing="Boolean(editing)" @back="emit('cancel')" />
+	<FormHeader back="Toutes les pages" :title="form.title.trim() || (editing ? editing.title || `/${editing.path}` : 'Nouvelle page')" :editing="Boolean(editing)" @back="emit('cancel')" />
 
 	<!-- Création : choix du type -->
 	<div v-if="!typeChosen" class="space-y-4">

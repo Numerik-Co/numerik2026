@@ -415,7 +415,7 @@ onMounted(load);
 
 	<!-- Ajout -->
 	<form v-else-if="view === 'add'" class="space-y-5" @submit.prevent="submit">
-		<FormHeader back="Toutes les actualités" title="Nouvelle actualité" :editing="false" @back="backToList" />
+		<FormHeader back="Toutes les actualités" :title="preview?.title || 'Nouvelle actualité'" :editing="false" @back="backToList" />
 
 		<!-- Fichier Markdown -->
 		<div>
@@ -503,7 +503,7 @@ onMounted(load);
 
 	<!-- Édition -->
 	<form v-else-if="view === 'edit' && editing" class="space-y-4" @submit.prevent="saveEdit" @invalid.capture="onInvalid">
-		<FormHeader back="Toutes les actualités" :title="editing.title || editing.slug" editing @back="backToList" />
+		<FormHeader back="Toutes les actualités" :title="editForm.title.trim() || editing.title || editing.slug" editing @back="backToList" />
 		<p class="text-xs font-light text-gray-500">
 			Adresse de la page (inchangée) : <code class="font-mono">/actualites/{{ editing.slug }}</code>
 		</p>
