@@ -1,5 +1,8 @@
 <script setup lang="ts">
-/** Ligne d'une page dans la liste du module « Pages » (suppression confirmée dans la ligne). */
+/**
+ * Ligne d'une page dans la liste du module « Pages » : le titre ouvre l'édition, l'œil la page sur le site,
+ * suppression confirmée dans la ligne.
+ */
 import type { PageSourceView } from '../../client';
 import ConfirmIconButton from '../../ConfirmIconButton.vue';
 import { useSlots } from 'vue';
@@ -23,7 +26,15 @@ const slots = useSlots();
 	>
 		<slot name="handle" />
 		<span class="min-w-0">
-			<a :href="`/${props.page.path}`" class="font-medium text-gray-900 hover:underline">{{ props.page.title || props.page.path }}</a>
+			<button
+				type="button"
+				class="text-left font-medium text-gray-900 hover:text-primary disabled:cursor-default disabled:hover:text-gray-900"
+				:disabled="props.locked || props.page.technique"
+				:title="`Modifier « ${props.page.title || props.page.path} »`"
+				@click="emit('edit')"
+			>
+				{{ props.page.title || props.page.path }}
+			</button>
 		</span>
 		<span v-if="props.page.type === 'enrichie'" class="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">enrichie</span>
 		<slot />
@@ -33,6 +44,14 @@ const slots = useSlots();
 		<span class="ml-auto flex items-center gap-1">
 			<!-- Flèches ↑/↓ quand la ligne fait partie du menu de navigation. -->
 			<slot name="order" />
+			<a
+				:href="`/${props.page.path}`"
+				:class="[iconButtonClass, 'text-gray-400 hover:text-gray-700']"
+				:aria-label="`Voir « ${props.page.title || props.page.path} » sur le site`"
+				title="Voir sur le site"
+			>
+				<i class="fa-solid fa-eye" aria-hidden="true"></i>
+			</a>
 			<button
 				type="button"
 				:class="[iconButtonClass, 'text-primary']"

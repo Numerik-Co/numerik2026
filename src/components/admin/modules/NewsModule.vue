@@ -3,8 +3,10 @@
  * Module « Actualités » (groupes `redacteur` / `admin`) : liste des
  * actualités (brouillons compris), ajout par dépôt d'un fichier `.md`
  * (frontmatter habituel, cf. docs/actualites.md) et d'une photo de
- * couverture, édition dans un formulaire (le dossier, donc l'URL, ne change
- * pas), suppression (confirmée dans la ligne par la pastille de `ConfirmIconButton`, sans boîte de dialogue).
+ * couverture, édition dans un formulaire en onglets Informations / Contenu /
+ * Image, fichier `.md` à télécharger ou à recharger (`EditFileBar`,
+ * ./actualites/news-markdown.ts) ; le dossier, donc l'URL, ne change
+ * pas ; suppression (confirmée dans la ligne par la pastille de `ConfirmIconButton`, sans boîte de dialogue).
  *
  * Le serveur écrit `src/content/news/<AAAA-MM-JJ-slug>/` puis reconstruit le
  * site (≈ 1 min, cf. src/lib/site-build.ts) : le module suit la publication
@@ -14,11 +16,17 @@
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
+import EditFileBar from '../EditFileBar.vue';
+import FormHeader from '../FormHeader.vue';
+import FormTabs from '../FormTabs.vue';
 import LinkPicker from '../LinkPicker.vue';
 import PublishStatus from '../PublishStatus.vue';
 import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem } from '../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
+import { EDIT_TABS, useFormTabs, type EditTab } from '../form-tabs';
+import { downloadMarkdown, readMarkdownFile } from '../markdown-file';
 import { usePublication } from '../usePublication';
+import { newsMarkdownFile, parseNewsMarkdown } from './actualites/news-markdown';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
@@ -61,7 +69,11 @@ async function load() {
 
 // --- Suivi de la publication ---
 
-const { status, following, receive, started, dismiss: dismissStatus } = usePublication({ onSettled: () => load(), onError: fail });
+const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+	module: 'actualites',
+	onSettled: () => load(),
+	onError: fail,
+});
 
 // ✕ / Échap depuis un formulaire : retour à la liste plutôt que fermeture du panneau.
 const stopCloseRequest = onCloseRequest(() => {
@@ -214,7 +226,7 @@ async function remove(item: NewsItem) {
 // --- Édition ---
 
 /** Actualité en cours d'édition (slug = dossier, inchangé). */
-const editing = ref<{ slug: string; coverUrl: string | null; hasCover: boolean } | null>(null);
+const editing = ref<{ slug: string; title: string; coverUrl: string | null; hasCover: boolean } | null>(null);
 /** Zone du texte (curseur, pour `LinkPicker`). */
 const bodyField = ref<HTMLTextAreaElement | null>(null);
 const editForm = reactive<NewsFields & { body: string }>({
@@ -228,6 +240,30 @@ const editForm = reactive<NewsFields & { body: string }>({
 	body: '',
 });
 const coverAction = ref<'keep' | 'replace' | 'remove'>('keep');
+const { tab: editTab, onInvalid } = useFormTabs<EditTab>('ed', 'infos');
+/** Dernier fichier chargé dans le formulaire et remarques de lecture. */
+const imported = ref<{ name: string; warnings: string[] } | null>(null);
+
+function downloadFile() {
+	if (editing.value) downloadMarkdown(`${editing.value.slug}.md`, newsMarkdownFile(editForm));
+}
+
+async function loadFile(file: File) {
+	error.value = '';
+	const read = await readMarkdownFile(file);
+	if (read.error) {
+		error.value = read.error;
+		return;
+	}
+	const { fields, warnings, error: problem } = parseNewsMarkdown(await file.text());
+	if (!fields) {
+		error.value = problem!;
+		return;
+	}
+	Object.assign(editForm, { ...fields, publishAt: fields.publishAt || editForm.publishAt });
+	if (!fields.title) warnings.unshift('Titre absent du fichier : à saisir dans « Informations ».');
+	imported.value = { name: file.name, warnings };
+}
 
 async function openEdit(item: NewsItem) {
 	error.value = '';
@@ -245,8 +281,10 @@ async function openEdit(item: NewsItem) {
 			imageCredit: source.imageCredit,
 			body: source.body,
 		});
-		editing.value = { slug: source.slug, coverUrl: source.coverUrl, hasCover: Boolean(source.cover) };
+		editing.value = { slug: source.slug, title: source.title, coverUrl: source.coverUrl, hasCover: Boolean(source.cover) };
 		coverAction.value = 'keep';
+		editTab.value = 'infos';
+		imported.value = null;
 		reset();
 		view.value = 'edit';
 	} catch (e) {
@@ -306,7 +344,7 @@ onMounted(load);
 
 <template>
 	<!-- Publication en cours / dernier résultat -->
-	<PublishStatus :status="status" :following="following" @dismiss="dismissStatus" />
+	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
 
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -381,9 +419,7 @@ onMounted(load);
 
 	<!-- Ajout -->
 	<form v-else-if="view === 'add'" class="space-y-5" @submit.prevent="submit">
-		<button type="button" class="text-sm font-medium text-primary hover:underline" @click="backToList">
-			← Toutes les actualités
-		</button>
+		<FormHeader back="Toutes les actualités" :title="preview?.title || 'Nouvelle actualité'" :editing="false" @back="backToList" />
 
 		<!-- Fichier Markdown -->
 		<div>
@@ -470,101 +506,110 @@ onMounted(load);
 	</form>
 
 	<!-- Édition -->
-	<form v-else-if="view === 'edit' && editing" class="space-y-4" @submit.prevent="saveEdit">
-		<button type="button" class="text-sm font-medium text-primary hover:underline" @click="backToList">
-			← Toutes les actualités
-		</button>
+	<form v-else-if="view === 'edit' && editing" class="space-y-4" @submit.prevent="saveEdit" @invalid.capture="onInvalid">
+		<FormHeader back="Toutes les actualités" :title="editForm.title.trim() || editing.title || editing.slug" editing @back="backToList" />
 		<p class="text-xs font-light text-gray-500">
 			Adresse de la page (inchangée) : <code class="font-mono">/actualites/{{ editing.slug }}</code>
 		</p>
 
 		<div>
-			<label for="ed-title" class="block text-sm font-semibold text-gray-700">Titre</label>
-			<input id="ed-title" v-model="editForm.title" type="text" required :class="inputClass" />
-		</div>
-		<div class="grid gap-4 sm:grid-cols-2">
-			<div>
-				<label for="ed-date" class="block text-sm font-semibold text-gray-700">Date de publication</label>
-				<input id="ed-date" v-model="editForm.publishAt" type="date" required :class="inputClass" />
-			</div>
-			<div>
-				<label for="ed-tag" class="block text-sm font-semibold text-gray-700">
-					Catégorie <span class="font-light text-gray-500">(facultative)</span>
-				</label>
-				<input id="ed-tag" v-model="editForm.tag" type="text" placeholder="Ateliers" :class="inputClass" />
-			</div>
-		</div>
-		<div>
-			<label for="ed-excerpt" class="block text-sm font-semibold text-gray-700">Résumé</label>
-			<textarea id="ed-excerpt" v-model="editForm.excerpt" rows="2" required :class="inputClass"></textarea>
-		</div>
-		<div>
-			<label for="ed-author" class="block text-sm font-semibold text-gray-700">
-				Auteur·rice <span class="font-light text-gray-500">(facultatif)</span>
-			</label>
-			<input id="ed-author" v-model="editForm.author" type="text" :class="inputClass" />
-		</div>
-		<div>
-			<label for="ed-body" class="block text-sm font-semibold text-gray-700">Texte (Markdown)</label>
-			<textarea id="ed-body" ref="bodyField" v-model="editForm.body" rows="14" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
-			<p class="mt-1 text-xs font-light text-gray-500">
-				<code>## Sous-titre</code>, <code>**gras**</code>, <code>*italique*</code>, <code>- liste</code>,
-				<code>[lien](https://…)</code>. Le HTML est accepté (tableaux, encadrés, vidéos YouTube/Vimeo…) ; le code
-				exécutable (scripts…) est retiré à l'affichage.
-			</p>
-			<LinkPicker v-model="editForm.body" :field="bodyField" />
-		</div>
+			<EditFileBar :imported="imported" @download="downloadFile" @load="loadFile" />
+			<FormTabs v-model="editTab" :tabs="EDIT_TABS" prefix="ed" />
 
-		<!-- Photo -->
-		<fieldset>
-			<legend class="text-sm font-semibold text-gray-700">Photo de couverture</legend>
-			<img
-				v-if="coverAction === 'keep' && editing.coverUrl"
-				:src="editing.coverUrl"
-				alt="Photo actuelle"
-				class="mt-2 aspect-video w-full rounded-xl object-cover"
-			/>
-			<img v-if="coverAction === 'replace' && photoUrl" :src="photoUrl" alt="Nouvelle photo" class="mt-2 aspect-video w-full rounded-xl object-cover" />
-			<p v-if="coverAction === 'remove' || (!editing.hasCover && coverAction === 'keep')" class="mt-2 text-sm font-light text-gray-500">
-				Pas de photo : une vignette de remplacement s'affichera.
-			</p>
-			<div class="mt-2 flex flex-wrap items-center gap-3 text-sm">
-				<label class="cursor-pointer font-medium text-primary hover:underline">
-					{{ editing.hasCover ? 'Remplacer la photo' : 'Ajouter une photo' }}
-					<input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" @change="pickEditPhoto(($event.target as HTMLInputElement).files?.[0])" />
+			<div v-show="editTab === 'infos'" id="ed-panel-infos" role="tabpanel" aria-labelledby="ed-tab-infos" class="space-y-4">
+				<div>
+					<label for="ed-title" class="block text-sm font-semibold text-gray-700">Titre</label>
+					<input id="ed-title" v-model="editForm.title" type="text" required :class="inputClass" />
+				</div>
+				<div class="grid gap-4 sm:grid-cols-2">
+					<div>
+						<label for="ed-date" class="block text-sm font-semibold text-gray-700">Date de publication</label>
+						<input id="ed-date" v-model="editForm.publishAt" type="date" required :class="inputClass" />
+					</div>
+					<div>
+						<label for="ed-tag" class="block text-sm font-semibold text-gray-700">
+							Catégorie <span class="font-light text-gray-500">(facultative)</span>
+						</label>
+						<input id="ed-tag" v-model="editForm.tag" type="text" placeholder="Ateliers" :class="inputClass" />
+					</div>
+				</div>
+				<div>
+					<label for="ed-excerpt" class="block text-sm font-semibold text-gray-700">Résumé</label>
+					<textarea id="ed-excerpt" v-model="editForm.excerpt" rows="2" required :class="inputClass"></textarea>
+				</div>
+				<div>
+					<label for="ed-author" class="block text-sm font-semibold text-gray-700">
+						Auteur·rice <span class="font-light text-gray-500">(facultatif)</span>
+					</label>
+					<input id="ed-author" v-model="editForm.author" type="text" :class="inputClass" />
+				</div>
+				<label class="flex items-start gap-2 text-sm text-gray-700">
+					<input
+						type="checkbox"
+						:checked="!editForm.isPublish"
+						class="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary"
+						@change="editForm.isPublish = !($event.target as HTMLInputElement).checked"
+					/>
+					<span>
+						<span class="font-medium">Brouillon</span>
+						<span class="block text-xs font-light text-gray-500">Retire l'actualité du site sans la supprimer (dépublication).</span>
+					</span>
 				</label>
-				<button
-					v-if="editing.hasCover && coverAction !== 'remove'"
-					type="button"
-					class="font-medium text-red-600 hover:underline"
-					@click="coverAction = 'remove'; reset()"
-				>
-					Retirer la photo
-				</button>
-				<button v-if="coverAction !== 'keep'" type="button" class="text-gray-600 hover:underline" @click="coverAction = 'keep'; reset()">
-					Annuler le changement de photo
-				</button>
 			</div>
-		</fieldset>
-		<div>
-			<label for="ed-credit" class="block text-sm font-semibold text-gray-700">
-				Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
-			</label>
-			<input id="ed-credit" v-model="editForm.imageCredit" type="text" placeholder="Photo : Prénom Nom" :class="inputClass" />
-		</div>
 
-		<label class="flex items-start gap-2 text-sm text-gray-700">
-			<input
-				type="checkbox"
-				:checked="!editForm.isPublish"
-				class="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary"
-				@change="editForm.isPublish = !($event.target as HTMLInputElement).checked"
-			/>
-			<span>
-				<span class="font-medium">Brouillon</span>
-				<span class="block text-xs font-light text-gray-500">Retire l'actualité du site sans la supprimer (dépublication).</span>
-			</span>
-		</label>
+			<div v-show="editTab === 'contenu'" id="ed-panel-contenu" role="tabpanel" aria-labelledby="ed-tab-contenu">
+				<div>
+					<label for="ed-body" class="block text-sm font-semibold text-gray-700">Texte (Markdown)</label>
+					<textarea id="ed-body" ref="bodyField" v-model="editForm.body" rows="14" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
+					<p class="mt-1 text-xs font-light text-gray-500">
+						<code>## Sous-titre</code>, <code>**gras**</code>, <code>*italique*</code>, <code>- liste</code>,
+						<code>[lien](https://…)</code>. Le HTML est accepté (tableaux, encadrés, vidéos YouTube/Vimeo…) ; le code
+						exécutable (scripts…) est retiré à l'affichage.
+					</p>
+					<LinkPicker v-model="editForm.body" :field="bodyField" />
+				</div>
+			</div>
+
+			<div v-show="editTab === 'image'" id="ed-panel-image" role="tabpanel" aria-labelledby="ed-tab-image" class="space-y-4">
+				<!-- Photo -->
+				<fieldset>
+					<legend class="text-sm font-semibold text-gray-700">Photo de couverture</legend>
+					<img
+						v-if="coverAction === 'keep' && editing.coverUrl"
+						:src="editing.coverUrl"
+						alt="Photo actuelle"
+						class="mt-2 aspect-video w-full rounded-xl object-cover"
+					/>
+					<img v-if="coverAction === 'replace' && photoUrl" :src="photoUrl" alt="Nouvelle photo" class="mt-2 aspect-video w-full rounded-xl object-cover" />
+					<p v-if="coverAction === 'remove' || (!editing.hasCover && coverAction === 'keep')" class="mt-2 text-sm font-light text-gray-500">
+						Pas de photo : une vignette de remplacement s'affichera.
+					</p>
+					<div class="mt-2 flex flex-wrap items-center gap-3 text-sm">
+						<label class="cursor-pointer font-medium text-primary hover:underline">
+							{{ editing.hasCover ? 'Remplacer la photo' : 'Ajouter une photo' }}
+							<input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" @change="pickEditPhoto(($event.target as HTMLInputElement).files?.[0])" />
+						</label>
+						<button
+							v-if="editing.hasCover && coverAction !== 'remove'"
+							type="button"
+							class="font-medium text-red-600 hover:underline"
+							@click="coverAction = 'remove'; reset()"
+						>
+							Retirer la photo
+						</button>
+						<button v-if="coverAction !== 'keep'" type="button" class="text-gray-600 hover:underline" @click="coverAction = 'keep'; reset()">
+							Annuler le changement de photo
+						</button>
+					</div>
+				</fieldset>
+				<div>
+					<label for="ed-credit" class="block text-sm font-semibold text-gray-700">
+						Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
+					</label>
+					<input id="ed-credit" v-model="editForm.imageCredit" type="text" placeholder="Photo : Prénom Nom" :class="inputClass" />
+				</div>
+			</div>
+		</div>
 
 		<p class="text-xs font-light text-gray-500">
 			À l'enregistrement, le site est reconstruit (environ une minute) ; si la reconstruction échoue, la version

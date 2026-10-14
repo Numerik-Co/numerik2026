@@ -175,6 +175,19 @@ Aussi sous les champs `markdown` (insertion) et `url` (`mode="url"` :
 remplace l'adresse) des blocs et modules de l'accueil (`BlocFields.vue`) ;
 liste partagée entre instances (cache module, 1 min).
 
+En tête de ces formulaires (et de celui du module Comptes), `FormHeader.vue` : bouton de retour à la liste
+(couleur accent) puis pastille ronde (icône modifier / créer) + titre suivant la saisie (vide :
+titre enregistré ou « Nouvelle … »).
+Formulaires d'actualité, de page et d'activité **en onglets** Informations /
+Contenu / Image (`FormTabs.vue` + `form-tabs.ts` : `EDIT_TABS`,
+`useFormTabs()` dont `onInvalid` en `@invalid.capture` ramène sur l'onglet
+d'un champ requis vide ; aussi utilisé par le module Association). En
+modification, `EditFileBar.vue` au-dessus : télécharger le `.md` construit
+depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
+(sans publier) ; `src/components/admin/markdown-file.ts` +
+`modules/actualites/news-markdown.ts`, `modules/activites/activity-markdown.ts`,
+`modules/pages/page-markdown.ts` (`pageMarkdownFile`, `parsePageMarkdown`).
+
 - `src/components/admin/AdminLoader.astro` (dans les deux layouts) ne
   charge l'îlot Vue (`mount.ts` → `AdminRoot.vue`) que si le cookie
   indicateur `numerik_connecte` existe ou au clic : rien pour un visiteur.
@@ -193,6 +206,11 @@ liste partagée entre instances (cache module, 1 min).
   vs dernière Release GitHub, cache mémoire 6 h, jamais bloquant). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
+- **Fin de publication** (`usePublication`, option `module`) : publication
+  suivie réussie → compte à rebours 3 s dans `PublishStatus` (« Ne pas
+  actualiser ») puis rechargement de la page, module rouvert
+  (`reopenAfterReload` → `takeModuleToReopen` dans `AdminRoot`) ; page en
+  404 (supprimée, déplacée) → `status.href` ou l'accueil.
 - Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal (`exclusive`,
   `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant

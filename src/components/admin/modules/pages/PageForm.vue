@@ -2,7 +2,9 @@
 /**
  * Formulaire de page du module « Pages » : création (choix page classique /
  * enrichie, ou fichier `.md` déposé qui pré-remplit le formulaire, modèles
- * téléchargeables : ./page-markdown.ts) ou modification d'une page des sources. Emplacement : hors menu
+ * téléchargeables : ./page-markdown.ts) ou modification d'une page des sources
+ * (onglets Informations / Contenu / Image ; fichier `.md` à télécharger ou à
+ * recharger, `EditFileBar`). Emplacement : hors menu
  * déroulant (racine), dans un menu déroulant, ou réservée (espace bénévoles).
  * « Menu » = menu de navigation (frontmatter `menu:`). Le serveur valide
  * tout (src/lib/page-writer.ts) et reconstruit le site.
@@ -14,8 +16,13 @@ import { PAGE_VARIABLES } from '../../../../lib/page-variables';
 import { ApiError, pagesApi, type CoverUpdate, type DropdownView, type PageInput, type PageSourceView } from '../../client';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
 import LinkPicker from '../../LinkPicker.vue';
+import EditFileBar from '../../EditFileBar.vue';
+import FormHeader from '../../FormHeader.vue';
+import FormTabs from '../../FormTabs.vue';
+import { EDIT_TABS, useFormTabs, type EditTab } from '../../form-tabs';
+import { downloadMarkdown } from '../../markdown-file';
 import BlocsEditor from './BlocsEditor.vue';
-import { downloadPageTemplate, parsePageMarkdown } from './page-markdown';
+import { downloadPageTemplate, pageMarkdownFile, parsePageMarkdown } from './page-markdown';
 
 const props = defineProps<{ dropdowns: DropdownView[]; source: PageSourceView | null; disabled: boolean }>();
 const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
@@ -60,10 +67,11 @@ const slugTouched = ref(Boolean(editing));
 const error = ref('');
 const busy = ref(false);
 const bodyField = ref<HTMLTextAreaElement | null>(null);
+const { tab, onInvalid } = useFormTabs<EditTab>('pg', 'infos');
 
-// --- Création depuis un fichier .md ---
+// --- Fichier .md : création, ou rechargement en modification ---
 
-/** Fichier déposé et remarques de lecture (affichées en tête du formulaire). */
+/** Fichier déposé ou chargé et remarques de lecture (affichées en tête du formulaire). */
 const imported = ref<{ name: string; warnings: string[] } | null>(null);
 const mdDragOver = ref(false);
 
@@ -94,9 +102,23 @@ async function pickMarkdown(file: File | undefined) {
 	if (page.menuShow !== undefined) form.menuShow = page.menuShow;
 	for (const id of Object.keys(blocs)) delete blocs[id];
 	Object.assign(blocs, page.blocs);
-	if (!page.title) warnings.unshift('Titre absent du fichier : à saisir ci-dessous.');
+	if (!page.title) warnings.unshift('Titre absent du fichier : à saisir dans « Informations ».');
 	imported.value = { name: file.name, warnings };
 	typeChosen.value = true;
+}
+
+/** Fichier de la page d'après le formulaire (modification). */
+function downloadFile() {
+	const text = pageMarkdownFile({
+		type: form.type,
+		title: form.title,
+		description: form.description,
+		menu: form.placement === 'reservee' ? null : { show: form.menuShow, label: form.menuLabel },
+		imageCredit: form.imageCredit,
+		blocs,
+		body: form.body,
+	});
+	downloadMarkdown(`${slug.value || 'page'}.md`, text);
 }
 
 const coverAction = ref<'keep' | 'replace' | 'remove'>('keep');
@@ -208,6 +230,8 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 </script>
 
 <template>
+	<FormHeader back="Toutes les pages" :title="form.title.trim() || (editing ? editing.title || `/${editing.path}` : 'Nouvelle page')" :editing="Boolean(editing)" @back="emit('cancel')" />
+
 	<!-- Création : choix du type -->
 	<div v-if="!typeChosen" class="space-y-4">
 		<p class="text-sm font-light text-gray-600">Quel type de page voulez-vous créer ?</p>
@@ -265,8 +289,8 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 		<button type="button" class="text-sm text-gray-600 hover:underline" @click="emit('cancel')">Annuler</button>
 	</div>
 
-	<form v-else class="space-y-5" @submit.prevent="submit">
-		<div v-if="imported" class="rounded-lg bg-primary/5 px-3 py-2 text-sm text-gray-700" role="status">
+	<form v-else class="space-y-5" @submit.prevent="submit" @invalid.capture="onInvalid">
+		<div v-if="imported && !editing" class="rounded-lg bg-primary/5 px-3 py-2 text-sm text-gray-700" role="status">
 			<p>
 				<i class="fa-solid fa-file-circle-check mr-1 text-primary" aria-hidden="true"></i>
 				Formulaire rempli depuis <strong>{{ imported.name }}</strong> : vérifiez, choisissez l'emplacement puis publiez.
@@ -280,145 +304,156 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 		</p>
 		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
-		<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-			<span class="font-semibold text-gray-700">Type :</span>
-			<label class="flex items-center gap-1.5"><input v-model="form.type" type="radio" value="classique" /> Page classique</label>
-			<label class="flex items-center gap-1.5"><input v-model="form.type" type="radio" value="enrichie" /> Page enrichie (blocs)</label>
-		</div>
-
 		<div>
-			<label for="pg-title" class="block text-sm font-semibold text-gray-700">Titre</label>
-			<input id="pg-title" v-model="form.title" type="text" required :class="inputClass" />
-		</div>
-		<div>
-			<label for="pg-description" class="block text-sm font-semibold text-gray-700">
-				Description <span class="font-light text-gray-500">(facultative)</span>
-			</label>
-			<textarea id="pg-description" v-model="form.description" rows="2" :class="inputClass"></textarea>
-			<p class="mt-1 text-xs font-light text-gray-500">Affichée sous le titre et dans les moteurs de recherche.</p>
-		</div>
+			<EditFileBar v-if="editing && !editing.technique" :imported="imported" @download="downloadFile" @load="pickMarkdown" />
+			<FormTabs v-model="tab" :tabs="EDIT_TABS" prefix="pg" />
 
-		<!-- Emplacement -->
-		<fieldset class="space-y-3 rounded-xl bg-gray-50 p-4">
-			<legend class="sr-only">Emplacement</legend>
-			<div>
-				<label for="pg-placement" class="block text-sm font-semibold text-gray-700">Emplacement</label>
-				<select id="pg-placement" v-model="form.placement" :class="inputClass">
-					<option value="racine">Hors menu déroulant (lien direct du menu de navigation, ou aucun lien)</option>
-					<option v-for="d in props.dropdowns" :key="d.folder" :value="`dropdown:${d.folder}`">Dans le menu déroulant « {{ d.label }} »</option>
-					<option value="reservee">Page réservée (espace bénévoles, connexion requise)</option>
-				</select>
-			</div>
-			<div>
-				<label for="pg-slug" class="block text-sm font-semibold text-gray-700">Adresse</label>
-				<div class="mt-1 flex items-center rounded-lg border border-gray-300 bg-white text-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
-					<span class="whitespace-nowrap pl-3 text-gray-500">/{{ prefix }}</span>
-					<input
-						id="pg-slug"
-						:value="slug"
-						type="text"
-						pattern="[a-z0-9]+(-[a-z0-9]+)*"
-						class="min-w-0 flex-1 rounded-r-lg border-0 py-2 pr-3 text-gray-900 focus:outline-none focus:ring-0"
-						@input="onSlugInput"
-					/>
+			<div v-show="tab === 'infos'" id="pg-panel-infos" role="tabpanel" aria-labelledby="pg-tab-infos" class="space-y-5">
+				<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+					<span class="font-semibold text-gray-700">Type :</span>
+					<label class="flex items-center gap-1.5"><input v-model="form.type" type="radio" value="classique" /> Page classique</label>
+					<label class="flex items-center gap-1.5"><input v-model="form.type" type="radio" value="enrichie" /> Page enrichie (blocs)</label>
 				</div>
-				<p v-if="pathChanged" class="mt-1 text-xs text-amber-800">
-					L'adresse change (/{{ editing!.path }} → /{{ path }}) : les liens existants vers l'ancienne adresse ne
-					fonctionneront plus.
-				</p>
-			</div>
 
-			<template v-if="form.placement !== 'reservee'">
-				<label class="flex items-center gap-2 text-sm text-gray-700">
-					<input v-model="form.menuShow" type="checkbox" class="rounded border-gray-300" />
-					<template v-if="dropdownLabel">Visible dans le menu déroulant « {{ dropdownLabel }} »</template>
-					<template v-else>Lien direct dans le menu de navigation</template>
-				</label>
-				<div v-if="form.menuShow">
-					<label for="pg-menu-label" class="block text-sm font-semibold text-gray-700">
-						Libellé dans le menu de navigation <span class="font-light text-gray-500">(facultatif)</span>
+				<div>
+					<label for="pg-title" class="block text-sm font-semibold text-gray-700">Titre</label>
+					<input id="pg-title" v-model="form.title" type="text" required :class="inputClass" />
+				</div>
+				<div>
+					<label for="pg-description" class="block text-sm font-semibold text-gray-700">
+						Description <span class="font-light text-gray-500">(facultative)</span>
 					</label>
-					<input id="pg-menu-label" v-model="form.menuLabel" type="text" :placeholder="form.title" :class="inputClass" />
-					<p v-if="!editing || placementKey(editing.placement) !== form.placement" class="mt-1 text-xs font-light text-gray-500">
-						La page se place en dernière position {{ dropdownLabel ? `du menu déroulant « ${dropdownLabel} »` : 'du menu de navigation' }}.
-					</p>
+					<textarea id="pg-description" v-model="form.description" rows="2" :class="inputClass"></textarea>
+					<p class="mt-1 text-xs font-light text-gray-500">Affichée sous le titre et dans les moteurs de recherche.</p>
 				</div>
-			</template>
-			<fieldset v-else>
-				<legend class="text-sm font-semibold text-gray-700">Accès</legend>
-				<p class="text-xs font-light text-gray-500">Aucune case cochée : toute personne connectée.</p>
-				<label v-for="g in groupChoices" :key="g.value" class="mt-1 flex items-center gap-2 text-sm text-gray-700">
-					<input v-model="form.access" type="checkbox" :value="g.value" class="rounded border-gray-300" />
-					{{ g.label }}
-				</label>
-			</fieldset>
-		</fieldset>
 
-		<!-- Photo -->
-		<fieldset>
-			<legend class="text-sm font-semibold text-gray-700">
-				Photo de couverture <span class="font-light text-gray-500">(facultative)</span>
-			</legend>
-			<img
-				v-if="coverAction === 'keep' && editing?.coverUrl"
-				:src="editing.coverUrl"
-				alt="Photo actuelle"
-				class="mt-2 aspect-video w-full rounded-xl object-cover"
-			/>
-			<img v-if="coverAction === 'replace' && photoUrl" :src="photoUrl" alt="Nouvelle photo" class="mt-2 aspect-video w-full rounded-xl object-cover" />
-			<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-				<label class="cursor-pointer text-primary hover:underline">
-					{{ editing?.cover || photo ? 'Remplacer la photo' : 'Ajouter une photo' }}
-					<input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" @change="pickPhoto(($event.target as HTMLInputElement).files?.[0])" />
-				</label>
-				<button
-					v-if="editing?.cover && coverAction !== 'remove'"
-					type="button"
-					class="text-red-600 hover:underline"
-					@click="coverAction = 'remove'; resetPhoto()"
-				>
-					Retirer la photo
-				</button>
-				<button v-if="coverAction !== 'keep'" type="button" class="text-gray-600 hover:underline" @click="coverAction = 'keep'; resetPhoto()">
-					Annuler le changement de photo
-				</button>
-			</div>
-			<div v-if="editing?.cover || photo" class="mt-3">
-				<label for="pg-credit" class="block text-sm font-semibold text-gray-700">
-					Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
-				</label>
-				<input id="pg-credit" v-model="form.imageCredit" type="text" placeholder="Photo : Prénom Nom" :class="inputClass" />
-			</div>
-		</fieldset>
+				<!-- Emplacement -->
+				<fieldset class="space-y-3 rounded-xl bg-gray-50 p-4">
+					<legend class="sr-only">Emplacement</legend>
+					<div>
+						<label for="pg-placement" class="block text-sm font-semibold text-gray-700">Emplacement</label>
+						<select id="pg-placement" v-model="form.placement" :class="inputClass">
+							<option value="racine">Hors menu déroulant (lien direct du menu de navigation, ou aucun lien)</option>
+							<option v-for="d in props.dropdowns" :key="d.folder" :value="`dropdown:${d.folder}`">Dans le menu déroulant « {{ d.label }} »</option>
+							<option value="reservee">Page réservée (espace bénévoles, connexion requise)</option>
+						</select>
+					</div>
+					<div>
+						<label for="pg-slug" class="block text-sm font-semibold text-gray-700">Adresse</label>
+						<div class="mt-1 flex items-center rounded-lg border border-gray-300 bg-white text-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+							<span class="whitespace-nowrap pl-3 text-gray-500">/{{ prefix }}</span>
+							<input
+								id="pg-slug"
+								:value="slug"
+								type="text"
+								pattern="[a-z0-9]+(-[a-z0-9]+)*"
+								class="min-w-0 flex-1 rounded-r-lg border-0 py-2 pr-3 text-gray-900 focus:outline-none focus:ring-0"
+								@input="onSlugInput"
+							/>
+						</div>
+						<p v-if="pathChanged" class="mt-1 text-xs text-amber-800">
+							L'adresse change (/{{ editing!.path }} → /{{ path }}) : les liens existants vers l'ancienne adresse ne
+							fonctionneront plus.
+						</p>
+					</div>
 
-		<!-- Texte -->
-		<div>
-			<label for="pg-body" class="block text-sm font-semibold text-gray-700">Texte (Markdown)</label>
-			<textarea
-				id="pg-body"
-				ref="bodyField"
-				v-model="form.body"
-				rows="16"
-				required
-				:class="[inputClass, 'font-mono text-xs leading-relaxed']"
-			></textarea>
-			<p class="mt-1 text-xs font-light text-gray-500">
-				<code>## Titre de section</code> (alimente le sommaire), <code>**gras**</code>, <code>*italique*</code>,
-				<code>- liste</code>, <code>[lien](/contact)</code>. Le HTML est accepté (tableaux, encadrés…).
-			</p>
-			<details class="mt-2 text-xs text-gray-600">
-				<summary class="cursor-pointer font-medium text-primary">Insérer une information de l'association</summary>
-				<p class="mt-1 font-light">Recopiez la variable dans le texte : elle est remplacée par la valeur configurée pour le site.</p>
-				<ul class="mt-1 space-y-0.5">
-					<li v-for="[name, v] in variables" :key="name">
-						<code>{{ token(name) }}</code> — {{ v.label }}
-					</li>
-				</ul>
-			</details>
-			<LinkPicker v-model="form.body" :field="bodyField" />
+					<template v-if="form.placement !== 'reservee'">
+						<label class="flex items-center gap-2 text-sm text-gray-700">
+							<input v-model="form.menuShow" type="checkbox" class="rounded border-gray-300" />
+							<template v-if="dropdownLabel">Visible dans le menu déroulant « {{ dropdownLabel }} »</template>
+							<template v-else>Lien direct dans le menu de navigation</template>
+						</label>
+						<div v-if="form.menuShow">
+							<label for="pg-menu-label" class="block text-sm font-semibold text-gray-700">
+								Libellé dans le menu de navigation <span class="font-light text-gray-500">(facultatif)</span>
+							</label>
+							<input id="pg-menu-label" v-model="form.menuLabel" type="text" :placeholder="form.title" :class="inputClass" />
+							<p v-if="!editing || placementKey(editing.placement) !== form.placement" class="mt-1 text-xs font-light text-gray-500">
+								La page se place en dernière position {{ dropdownLabel ? `du menu déroulant « ${dropdownLabel} »` : 'du menu de navigation' }}.
+							</p>
+						</div>
+					</template>
+					<fieldset v-else>
+						<legend class="text-sm font-semibold text-gray-700">Accès</legend>
+						<p class="text-xs font-light text-gray-500">Aucune case cochée : toute personne connectée.</p>
+						<label v-for="g in groupChoices" :key="g.value" class="mt-1 flex items-center gap-2 text-sm text-gray-700">
+							<input v-model="form.access" type="checkbox" :value="g.value" class="rounded border-gray-300" />
+							{{ g.label }}
+						</label>
+					</fieldset>
+				</fieldset>
+			</div>
+
+			<div v-show="tab === 'contenu'" id="pg-panel-contenu" role="tabpanel" aria-labelledby="pg-tab-contenu" class="space-y-5">
+				<!-- Texte -->
+				<div>
+					<label for="pg-body" class="block text-sm font-semibold text-gray-700">Texte (Markdown)</label>
+					<textarea
+						id="pg-body"
+						ref="bodyField"
+						v-model="form.body"
+						rows="16"
+						required
+						:class="[inputClass, 'font-mono text-xs leading-relaxed']"
+					></textarea>
+					<p class="mt-1 text-xs font-light text-gray-500">
+						<code>## Titre de section</code> (alimente le sommaire), <code>**gras**</code>, <code>*italique*</code>,
+						<code>- liste</code>, <code>[lien](/contact)</code>. Le HTML est accepté (tableaux, encadrés…).
+					</p>
+					<details class="mt-2 text-xs text-gray-600">
+						<summary class="cursor-pointer font-medium text-primary">Insérer une information de l'association</summary>
+						<p class="mt-1 font-light">Recopiez la variable dans le texte : elle est remplacée par la valeur configurée pour le site.</p>
+						<ul class="mt-1 space-y-0.5">
+							<li v-for="[name, v] in variables" :key="name">
+								<code>{{ token(name) }}</code> — {{ v.label }}
+							</li>
+						</ul>
+					</details>
+					<LinkPicker v-model="form.body" :field="bodyField" />
+				</div>
+
+				<BlocsEditor v-if="form.type === 'enrichie'" :blocs="blocs" :body="form.body" @insert="insertMarker" />
+			</div>
+
+			<div v-show="tab === 'image'" id="pg-panel-image" role="tabpanel" aria-labelledby="pg-tab-image">
+				<!-- Photo -->
+				<fieldset>
+					<legend class="text-sm font-semibold text-gray-700">
+						Photo de couverture <span class="font-light text-gray-500">(facultative)</span>
+					</legend>
+					<img
+						v-if="coverAction === 'keep' && editing?.coverUrl"
+						:src="editing.coverUrl"
+						alt="Photo actuelle"
+						class="mt-2 aspect-video w-full rounded-xl object-cover"
+					/>
+					<img v-if="coverAction === 'replace' && photoUrl" :src="photoUrl" alt="Nouvelle photo" class="mt-2 aspect-video w-full rounded-xl object-cover" />
+					<div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+						<label class="cursor-pointer text-primary hover:underline">
+							{{ editing?.cover || photo ? 'Remplacer la photo' : 'Ajouter une photo' }}
+							<input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" @change="pickPhoto(($event.target as HTMLInputElement).files?.[0])" />
+						</label>
+						<button
+							v-if="editing?.cover && coverAction !== 'remove'"
+							type="button"
+							class="text-red-600 hover:underline"
+							@click="coverAction = 'remove'; resetPhoto()"
+						>
+							Retirer la photo
+						</button>
+						<button v-if="coverAction !== 'keep'" type="button" class="text-gray-600 hover:underline" @click="coverAction = 'keep'; resetPhoto()">
+							Annuler le changement de photo
+						</button>
+					</div>
+					<div v-if="editing?.cover || photo" class="mt-3">
+						<label for="pg-credit" class="block text-sm font-semibold text-gray-700">
+							Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
+						</label>
+						<input id="pg-credit" v-model="form.imageCredit" type="text" placeholder="Photo : Prénom Nom" :class="inputClass" />
+					</div>
+				</fieldset>
+			</div>
 		</div>
-
-		<BlocsEditor v-if="form.type === 'enrichie'" :blocs="blocs" :body="form.body" @insert="insertMarker" />
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
 			<button

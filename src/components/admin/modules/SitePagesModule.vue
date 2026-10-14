@@ -67,7 +67,11 @@ async function load() {
 	}
 }
 
-const { status, following, receive, started, dismiss: dismissStatus } = usePublication({ onSettled: () => load(), onError: fail });
+const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+	module: 'pages-site',
+	onSettled: () => load(),
+	onError: fail,
+});
 /** Publication impossible ou en cours. */
 const publishLocked = computed(() => !availability.value.ok || following.value || busy.value);
 
@@ -265,7 +269,7 @@ onMounted(load);
 </script>
 
 <template>
-	<PublishStatus :status="status" :following="following" @dismiss="dismissStatus" />
+	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
 	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -329,7 +333,15 @@ onMounted(load);
 						<li v-if="item.kind === 'site'" class="flex flex-wrap items-center gap-2 py-2.5 pr-4 pl-2 text-sm transition-colors hover:bg-gray-100">
 							<DragHandle :disabled="publishLocked" />
 							<span :class="['min-w-0', { 'opacity-60': !item.site.show }]">
-								<a :href="item.site.href" class="font-medium text-gray-900 hover:underline">{{ item.site.label }}</a>
+								<button
+									type="button"
+									class="text-left font-medium text-gray-900 hover:text-primary disabled:cursor-default disabled:hover:text-gray-900"
+									:disabled="locked"
+									:title="`Modifier « ${item.site.label} »`"
+									@click="go({ name: 'site', page: item.site })"
+								>
+									{{ item.site.label }}
+								</button>
 							</span>
 							<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600" title="Page fournie par le site : vous réglez son lien et ses textes">
 								page du site
@@ -344,6 +356,14 @@ onMounted(load);
 									@up="move('racine', navItems.map(navKey), i, -1)"
 									@down="move('racine', navItems.map(navKey), i, 1)"
 								/>
+								<a
+									:href="item.site.href"
+									:class="[iconButtonClass, 'text-gray-400 hover:text-gray-700']"
+									:aria-label="`Voir « ${item.site.label} » sur le site`"
+									title="Voir sur le site"
+								>
+									<i class="fa-solid fa-eye" aria-hidden="true"></i>
+								</a>
 								<button
 									type="button"
 									:class="[iconButtonClass, 'text-primary']"

@@ -59,7 +59,11 @@ async function load() {
 	}
 }
 
-const { status, following, receive, started, dismiss: dismissStatus } = usePublication({ onSettled: () => load(), onError: fail });
+const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+	module: 'activites',
+	onSettled: () => load(),
+	onError: fail,
+});
 /** Publication impossible ou en cours. */
 const publishLocked = computed(() => !availability.value.ok || following.value || busy.value);
 
@@ -196,7 +200,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 </script>
 
 <template>
-	<PublishStatus :status="status" :following="following" @dismiss="dismissStatus" />
+	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
 	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -258,7 +262,15 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 					<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 py-2.5 pr-4 pl-2">
 						<DragHandle :disabled="publishLocked" />
 						<i :class="['fa-solid', cat.icon, 'text-gray-400']" aria-hidden="true"></i>
-						<a :href="`/activites/${cat.slug}`" class="font-heading font-semibold text-gray-900 hover:underline">{{ cat.label }}</a>
+						<button
+							type="button"
+							class="text-left font-heading font-semibold text-gray-900 hover:text-primary disabled:cursor-default disabled:hover:text-gray-900"
+							:disabled="locked"
+							:title="`Modifier la catégorie « ${cat.label} »`"
+							@click="go({ name: 'category', source: cat })"
+						>
+							{{ cat.label }}
+						</button>
 						<span class="text-xs text-gray-500">dans l'ordre d'affichage</span>
 						<span class="ml-auto flex items-center gap-1">
 							<OrderArrows
@@ -269,6 +281,14 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 								@up="moveCategory(ci, -1)"
 								@down="moveCategory(ci, 1)"
 							/>
+							<a
+								:href="`/activites/${cat.slug}`"
+								:class="[iconButtonClass, 'text-gray-400 hover:text-gray-700']"
+								:aria-label="`Voir « ${cat.label} » sur le site`"
+								title="Voir sur le site"
+							>
+								<i class="fa-solid fa-eye" aria-hidden="true"></i>
+							</a>
 							<button
 								type="button"
 								:class="[iconButtonClass, 'text-primary']"
@@ -319,11 +339,16 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 							<span v-else class="flex h-8 w-12 shrink-0 items-center justify-center rounded bg-gray-100 text-gray-300" aria-hidden="true">
 								<i class="fa-solid fa-image text-xs"></i>
 							</span>
-							<!-- Titre sur une seule ligne, « … » si trop long (complet au survol). -->
-							<span :class="['min-w-0 truncate', { 'opacity-60': !a.isPublish }]" :title="a.title || a.slug">
-								<a v-if="a.isPublish" :href="a.href" class="font-medium text-gray-900 hover:underline">{{ a.title || a.slug }}</a>
-								<span v-else class="font-medium text-gray-900">{{ a.title || a.slug }}</span>
-							</span>
+							<!-- Titre (ouvre la modification) sur une seule ligne, « … » si trop long. -->
+							<button
+								type="button"
+								:class="['min-w-0 truncate text-left font-medium text-gray-900 hover:text-primary disabled:cursor-default disabled:hover:text-gray-900', { 'opacity-60': !a.isPublish }]"
+								:disabled="locked"
+								:title="`Modifier « ${a.title || a.slug} »`"
+								@click="openForm(a)"
+							>
+								{{ a.title || a.slug }}
+							</button>
 							<span v-if="!a.isPublish" :class="[badge, 'shrink-0 bg-amber-50 text-amber-800']">brouillon</span>
 							<span v-if="a.level" :class="[greyBadge, 'shrink-0 whitespace-nowrap']">{{ a.level }}</span>
 							<span v-if="!a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
@@ -336,6 +361,16 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 									@up="move(cat.slug, i, -1)"
 									@down="move(cat.slug, i, 1)"
 								/>
+								<a
+									v-if="a.isPublish"
+									:href="a.href"
+									:class="[iconButtonClass, 'text-gray-400 hover:text-gray-700']"
+									:aria-label="`Voir « ${a.title || a.slug} » sur le site`"
+									title="Voir sur le site"
+								>
+									<i class="fa-solid fa-eye" aria-hidden="true"></i>
+								</a>
+								<span v-else class="w-7" aria-hidden="true" title="Brouillon : pas encore sur le site"></span>
 								<button
 									type="button"
 									:class="[iconButtonClass, 'text-primary']"

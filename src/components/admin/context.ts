@@ -34,6 +34,18 @@ export function rememberOpenModule(id: string): void {
 	}
 }
 
+/**
+ * Module à rouvrir après le rechargement que fait `usePublication` en fin de
+ * publication réussie (production comme dev) : noté juste avant de recharger.
+ */
+export function reopenAfterReload(id: string): void {
+	try {
+		sessionStorage.setItem(REOPEN_KEY, id);
+	} catch {
+		// sessionStorage indisponible : la page se recharge sans rouvrir le module.
+	}
+}
+
 export function takeModuleToReopen(): string | null {
 	try {
 		const id = sessionStorage.getItem(REOPEN_KEY);

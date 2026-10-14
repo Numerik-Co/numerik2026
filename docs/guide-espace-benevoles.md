@@ -287,6 +287,12 @@ page publique.
    cet encadré par sa croix ✕ le fait disparaître **définitivement, pour
    tout le monde** ; le résultat reste consultable dans le journal du super
    admin. On peut fermer le panneau pendant la publication.
+   Une fois en ligne, la **page s'actualise** d'elle-même après 3 secondes
+   (« Ne pas actualiser » pour rester sur la version affichée) et le module
+   se rouvre : le site visible est à jour. Si la page affichée n'existe plus
+   (actualité supprimée, adresse changée), on arrive sur la page publiée ou
+   sur l'accueil. Vaut pour tous les modules qui publient (Actualités, Pages,
+   Activités, Association).
 
 Le texte accepte le **HTML** en plus du Markdown : tableaux, encadrés
 (`<div>`), mise en forme, détails dépliables, vidéos et cartes intégrées
@@ -318,6 +324,20 @@ Markdown), photo (**Remplacer** / **Retirer**), crédit photo, et la case
 **Brouillon** pour retirer l'actualité du site sans la supprimer (la décocher
 plus tard la republie). **Enregistrer les modifications** reconstruit le site ;
 si la reconstruction échoue, la version précédente est conservée.
+
+**Formulaires en onglets** (actualités, pages, activités) : **Informations**
+(titre, résumé, date, emplacement, brouillon…), **Contenu** (texte en
+Markdown, et blocs d'une page enrichie) et **Image** (photo de couverture et
+crédit). En cas de champ obligatoire vide, l'enregistrement ramène sur son
+onglet.
+
+**Travailler dans un fichier** (modification seulement) : au-dessus des
+onglets, **Télécharger le fichier** donne le contenu du formulaire en `.md`
+(en-tête + texte, sans la photo) ; après l'avoir modifié dans un éditeur de
+texte, **Charger un fichier modifié** (ou le glisser sur le bouton) remplit
+le formulaire. Rien n'est publié avant **Enregistrer** ; les champs ignorés
+(photo, champ inconnu, catégorie inexistante, date illisible…) sont signalés.
+L'adresse et l'emplacement restent ceux du formulaire.
 
 **Insérer un lien vers une page du site** (sous le texte des actualités, des
 pages et des activités) : liste des pages du site, des pages de contenu, des
@@ -390,6 +410,9 @@ d'échec, rien n'est modifié. Changer l'emplacement ou l'adresse d'une page
 **change son adresse** : les liens déjà partagés vers l'ancienne ne
 fonctionnent plus.
 
+Dans la liste, un clic sur le **titre** d'une page (ou le crayon) ouvre sa
+modification ; l'icône 👁 l'ouvre sur le site.
+
 **Pages du site** (Accueil, Activités, Actualités, Contact) : leur mise en
 page est fournie par le site, l'association règle le reste.
 
@@ -445,6 +468,10 @@ le titre (lien vers la fiche en ligne) et des pastilles :
 
 Une catégorie vide indique « Aucune activité » : sa page affiche alors
 « bientôt ».
+
+Dans la liste, un clic sur le **titre** d'une fiche ou d'une catégorie (ou
+le crayon) ouvre sa modification ; l'icône 👁 l'ouvre sur le site (pas
+d'icône pour un brouillon, absent du site).
 
 #### Créer une activité
 

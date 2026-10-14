@@ -4,14 +4,23 @@
  * interrogation de `/api/admin/publication` jusqu'à la mise en ligne (y
  * compris pendant le bref redémarrage du serveur), fermeture définitive de
  * l'encadré du dernier résultat.
+ *
+ * Publication suivie réussie : compte à rebours (`reloadIn`, annulable par
+ * `cancelReload`) puis rechargement de la page pour voir le site à jour, le
+ * module étant rouvert ensuite (`reopenAfterReload`). Page disparue (404 :
+ * actualité supprimée, adresse changée) : page publiée, sinon l'accueil.
  */
 import { onBeforeUnmount, ref } from 'vue';
 import { ApiError, newsApi, type PublishStatus } from './client';
+import { reopenAfterReload } from './context';
 
 const POLL_MS = 3000;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+const RELOAD_DELAY_S = 3;
 
 export function usePublication(options: {
+	/** Identifiant du module (`ADMIN_MODULES`), rouvert après le rechargement de la page. */
+	module: string;
 	/** Publication terminée (ou abandon du suivi) : recharger la liste du module. */
 	onSettled: () => void | Promise<void>;
 	onError: (e: unknown) => void;
@@ -20,6 +29,9 @@ export function usePublication(options: {
 	/** Vrai pendant qu'on suit une publication lancée depuis ce module (ou trouvée en cours). */
 	const following = ref(false);
 	let pollTimer: ReturnType<typeof setTimeout> | undefined;
+	/** Secondes avant le rechargement de la page (0 = en cours), `null` = pas de rechargement prévu. */
+	const reloadIn = ref<number | null>(null);
+	let reloadTimer: ReturnType<typeof setTimeout> | undefined;
 
 	/** Nouvel état reçu du serveur (liste du module) : suit la publication si elle est en cours. */
 	function receive(next: PublishStatus) {
@@ -52,9 +64,39 @@ export function usePublication(options: {
 				options.onError(new Error('La publication prend plus de temps que prévu. Rouvrez ce module dans quelques minutes pour voir le résultat.'));
 			}
 			await options.onSettled();
+			if (status.value.state === 'succeeded') scheduleReload();
 		};
 		// Premier point d'étape presque immédiat (en dev, la publication est déjà finie).
 		pollTimer = setTimeout(tick, 400);
+	}
+
+	function scheduleReload() {
+		reloadIn.value = RELOAD_DELAY_S;
+		const step = () => {
+			if (reloadIn.value === null) return;
+			reloadIn.value--;
+			if (reloadIn.value > 0) reloadTimer = setTimeout(step, 1000);
+			else void reloadPage();
+		};
+		reloadTimer = setTimeout(step, 1000);
+	}
+
+	function cancelReload() {
+		clearTimeout(reloadTimer);
+		reloadIn.value = null;
+	}
+
+	async function reloadPage() {
+		reopenAfterReload(options.module);
+		let target: string | null = null;
+		try {
+			const res = await fetch(location.pathname + location.search, { method: 'HEAD', cache: 'no-store' });
+			if (res.status === 404) target = status.value.href ?? '/';
+		} catch {
+			// Vérification impossible : simple rechargement.
+		}
+		if (target && target !== location.pathname) location.assign(target);
+		else location.reload();
 	}
 
 	/**
@@ -62,6 +104,7 @@ export function usePublication(options: {
 	 * cf. `dismissStatus` côté serveur) ; il reste consultable dans le journal.
 	 */
 	async function dismiss() {
+		cancelReload();
 		const previous = status.value;
 		status.value = { state: 'idle' };
 		try {
@@ -72,7 +115,10 @@ export function usePublication(options: {
 		}
 	}
 
-	onBeforeUnmount(() => clearTimeout(pollTimer));
+	onBeforeUnmount(() => {
+		clearTimeout(pollTimer);
+		clearTimeout(reloadTimer);
+	});
 
-	return { status, following, receive, started, dismiss };
+	return { status, following, receive, started, dismiss, reloadIn, cancelReload };
 }

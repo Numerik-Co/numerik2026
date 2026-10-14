@@ -9,6 +9,7 @@
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { ASSIGNABLE_GROUPS, AUTH_GROUPS, type AuthGroup } from '../../../lib/auth/groups';
 import { ApiError, accountsApi, type AccountView } from '../client';
+import FormHeader from '../FormHeader.vue';
 import { ADMIN_CONTEXT, inputClass } from '../context';
 
 const { user, sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
@@ -194,14 +195,14 @@ onBeforeUnmount(stopCloseRequest);
 
 	<!-- Création / modification -->
 	<template v-else>
-		<button type="button" class="mb-4 text-sm font-medium text-primary hover:underline" @click="go({ name: 'list' })">
-			← Tous les comptes
-		</button>
+		<FormHeader
+			back="Tous les comptes"
+			:title="view.name === 'create' ? 'Nouveau compte' : current ? `${current.fullname} (${current.login})` : form.login"
+			:editing="view.name === 'edit'"
+			@back="go({ name: 'list' })"
+		/>
 
 		<form class="space-y-4" @submit.prevent="view.name === 'create' ? create() : save()">
-			<h3 class="font-heading text-base font-semibold text-gray-900">
-				{{ view.name === 'create' ? 'Nouveau compte' : `Compte « ${form.login} »` }}
-			</h3>
 			<div v-if="view.name === 'create'">
 				<label for="acc-login" class="block text-sm font-medium text-gray-700">Identifiant</label>
 				<input
