@@ -2,7 +2,7 @@
 /**
  * En-tête d'un formulaire de module : bouton de retour à la liste (couleur
  * accent, même style que les boutons du site) puis l'élément en cours
- * (« Modification » / « Création » + son titre, qui suit la saisie du champ
+ * (pastille ronde bleu clair, icône « modifier » ou « + », puis son titre, qui suit la saisie du champ
  * Titre — titre enregistré ou « Nouvelle … » s'il est vide) pour savoir où
  * l'on se trouve. Actualités, Pages, Activités, Comptes.
  */
@@ -20,7 +20,15 @@ const emit = defineEmits<{ back: [] }>();
 			<i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>
 			{{ props.back }}
 		</button>
-		<p class="mt-4 text-xs font-medium uppercase tracking-wide text-gray-500">{{ props.editing ? 'Modification' : 'Création' }}</p>
-		<h3 class="font-heading text-lg font-semibold leading-snug text-gray-900">{{ props.title }}</h3>
+		<div class="mt-4 flex items-center gap-3">
+			<span
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary"
+				:title="props.editing ? 'Modification' : 'Création'"
+			>
+				<i :class="['fa-solid text-sm', props.editing ? 'fa-pen-to-square' : 'fa-plus']" aria-hidden="true"></i>
+				<span class="sr-only">{{ props.editing ? 'Modification :' : 'Création :' }}</span>
+			</span>
+			<h3 class="min-w-0 font-heading text-lg font-semibold leading-snug text-gray-900">{{ props.title }}</h3>
+		</div>
 	</div>
 </template>
