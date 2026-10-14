@@ -319,6 +319,20 @@ Markdown), photo (**Remplacer** / **Retirer**), crédit photo, et la case
 plus tard la republie). **Enregistrer les modifications** reconstruit le site ;
 si la reconstruction échoue, la version précédente est conservée.
 
+**Formulaires en onglets** (actualités, pages, activités) : **Informations**
+(titre, résumé, date, emplacement, brouillon…), **Contenu** (texte en
+Markdown, et blocs d'une page enrichie) et **Image** (photo de couverture et
+crédit). En cas de champ obligatoire vide, l'enregistrement ramène sur son
+onglet.
+
+**Travailler dans un fichier** (modification seulement) : au-dessus des
+onglets, **Télécharger le fichier** donne le contenu du formulaire en `.md`
+(en-tête + texte, sans la photo) ; après l'avoir modifié dans un éditeur de
+texte, **Charger un fichier modifié** (ou le glisser sur le bouton) remplit
+le formulaire. Rien n'est publié avant **Enregistrer** ; les champs ignorés
+(photo, champ inconnu, catégorie inexistante, date illisible…) sont signalés.
+L'adresse et l'emplacement restent ceux du formulaire.
+
 **Insérer un lien vers une page du site** (sous le texte des actualités, des
 pages et des activités) : liste des pages du site, des pages de contenu, des
 catégories et fiches d'activité et des actualités, avec une recherche. Placer

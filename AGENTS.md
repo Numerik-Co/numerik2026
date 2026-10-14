@@ -175,6 +175,16 @@ Aussi sous les champs `markdown` (insertion) et `url` (`mode="url"` :
 remplace l'adresse) des blocs et modules de l'accueil (`BlocFields.vue`) ;
 liste partagée entre instances (cache module, 1 min).
 
+Formulaires d'actualité, de page et d'activité **en onglets** Informations /
+Contenu / Image (`FormTabs.vue` + `form-tabs.ts` : `EDIT_TABS`,
+`useFormTabs()` dont `onInvalid` en `@invalid.capture` ramène sur l'onglet
+d'un champ requis vide ; aussi utilisé par le module Association). En
+modification, `EditFileBar.vue` au-dessus : télécharger le `.md` construit
+depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
+(sans publier) ; `src/components/admin/markdown-file.ts` +
+`modules/actualites/news-markdown.ts`, `modules/activites/activity-markdown.ts`,
+`modules/pages/page-markdown.ts` (`pageMarkdownFile`, `parsePageMarkdown`).
+
 - `src/components/admin/AdminLoader.astro` (dans les deux layouts) ne
   charge l'îlot Vue (`mount.ts` → `AdminRoot.vue`) que si le cookie
   indicateur `numerik_connecte` existe ou au clic : rien pour un visiteur.

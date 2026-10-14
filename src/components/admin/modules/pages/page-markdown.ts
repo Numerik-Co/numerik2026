@@ -1,12 +1,13 @@
 /**
- * Fichiers `.md` du module « Pages » (navigateur) : modèles à télécharger
- * et lecture d'un fichier déposé pour pré-remplir le formulaire de création.
+ * Fichiers `.md` du module « Pages » (navigateur) : modèles à télécharger,
+ * fichier de la page en cours d'édition (`pageMarkdownFile`), lecture d'un
+ * fichier déposé ou chargé pour pré-remplir le formulaire.
  * Même format que les pages des sources (`src/content/pages/…/index.md`,
  * cf. src/content/README.md) ; le serveur revalide tout à l'envoi
  * (src/lib/page-writer.ts).
  */
-import { parse as parseYaml } from 'yaml';
 import { validateBloc, type Bloc } from '../../../../lib/blocs';
+import { buildMarkdownFile, downloadMarkdown, keyWarnings, parseMarkdownFile, textField } from '../../markdown-file';
 
 export type PageKind = 'classique' | 'enrichie';
 
@@ -24,37 +25,46 @@ export interface ImportedPage {
 }
 
 /** Clés du frontmatter reprises ; les autres sont signalées puis ignorées. */
-const KNOWN = new Set(['title', 'description', 'type', 'menu', 'imageCredit', 'blocs']);
+const KNOWN = ['title', 'description', 'type', 'menu', 'imageCredit', 'blocs'];
 /** Clés connues du site mais réglées dans le formulaire (emplacement, photo…). */
 const SET_IN_FORM: Record<string, string> = {
 	access: "l'accès se règle avec l'emplacement « Page réservée »",
-	cover: 'la photo se dépose dans le formulaire',
+	cover: "la photo se change dans l'onglet « Image »",
 };
 
-const text = (v: unknown) => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '');
+const text = textField;
+
+/** Fichier d'une page d'après le formulaire (emplacement, adresse et accès restent dans le formulaire). */
+export function pageMarkdownFile(page: {
+	type: PageKind;
+	title: string;
+	description: string;
+	menu: { show: boolean; label: string } | null;
+	imageCredit: string;
+	blocs: Record<string, Bloc>;
+	body: string;
+}): string {
+	return buildMarkdownFile(
+		{
+			title: page.title,
+			description: page.description,
+			type: page.type === 'enrichie' ? 'enrichie' : undefined,
+			menu: page.menu ? { show: page.menu.show, ...(page.menu.label ? { label: page.menu.label } : {}) } : undefined,
+			imageCredit: page.imageCredit,
+			blocs: page.type === 'enrichie' && Object.keys(page.blocs).length ? page.blocs : undefined,
+		},
+		page.body,
+	);
+}
 
 /**
  * Lit un fichier de page. `error` = fichier inutilisable ; `warnings` =
  * éléments ignorés ou à corriger (le formulaire est quand même rempli).
  */
 export function parsePageMarkdown(source: string): { page?: ImportedPage; warnings: string[]; error?: string } {
-	const clean = source.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
-	const match = clean.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
-	if (!match) return { warnings: [], error: 'En-tête introuvable : le fichier doit commencer par un bloc --- … ---.' };
-	let data: Record<string, unknown>;
-	try {
-		const parsed = parseYaml(match[1]);
-		if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
-		data = parsed as Record<string, unknown>;
-	} catch {
-		return { warnings: [], error: "En-tête illisible : vérifiez l'indentation et les guillemets entre les deux lignes ---." };
-	}
-
-	const warnings: string[] = [];
-	for (const key of Object.keys(data)) {
-		if (KNOWN.has(key)) continue;
-		warnings.push(SET_IN_FORM[key] ? `« ${key} » ignoré : ${SET_IN_FORM[key]}.` : `« ${key} » ignoré (champ inconnu).`);
-	}
+	const { data, body, error } = parseMarkdownFile(source);
+	if (!data) return { warnings: [], error };
+	const warnings = keyWarnings(data, KNOWN, SET_IN_FORM);
 
 	const blocs: Record<string, Bloc> = {};
 	const rawBlocs = data.blocs && typeof data.blocs === 'object' && !Array.isArray(data.blocs) ? (data.blocs as Record<string, unknown>) : {};
@@ -75,7 +85,7 @@ export function parsePageMarkdown(source: string): { page?: ImportedPage; warnin
 			menuLabel: text(menu?.label),
 			imageCredit: text(data.imageCredit),
 			blocs,
-			body: clean.slice(match[0].length).trim(),
+			body,
 		},
 		warnings,
 	};
@@ -179,10 +189,5 @@ Premier paragraphe : l'essentiel en quelques phrases.
 
 /** Télécharge le modèle de page (généré dans le navigateur). */
 export function downloadPageTemplate(kind: PageKind): void {
-	const url = URL.createObjectURL(new Blob([kind === 'enrichie' ? ENRICHIE : CLASSIQUE], { type: 'text/markdown;charset=utf-8' }));
-	const link = document.createElement('a');
-	link.href = url;
-	link.download = kind === 'enrichie' ? 'modele-page-enrichie.md' : 'modele-page.md';
-	link.click();
-	URL.revokeObjectURL(url);
+	downloadMarkdown(kind === 'enrichie' ? 'modele-page-enrichie.md' : 'modele-page.md', kind === 'enrichie' ? ENRICHIE : CLASSIQUE);
 }
