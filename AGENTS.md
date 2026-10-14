@@ -175,7 +175,7 @@ Aussi sous les champs `markdown` (insertion) et `url` (`mode="url"` :
 remplace l'adresse) des blocs et modules de l'accueil (`BlocFields.vue`) ;
 liste partagée entre instances (cache module, 1 min).
 
-En tête de ces formulaires, `FormHeader.vue` : bouton de retour à la liste
+En tête de ces formulaires (et de celui du module Comptes), `FormHeader.vue` : bouton de retour à la liste
 (couleur accent) puis « Modification » + titre enregistré (ou « Nouvelle … »).
 Formulaires d'actualité, de page et d'activité **en onglets** Informations /
 Contenu / Image (`FormTabs.vue` + `form-tabs.ts` : `EDIT_TABS`,

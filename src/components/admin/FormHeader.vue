@@ -3,7 +3,7 @@
  * En-tête d'un formulaire de module : bouton de retour à la liste (couleur
  * accent, même style que les boutons du site) puis l'élément en cours
  * (« Modification » + son titre enregistré, ou « Nouvelle … ») pour savoir
- * où l'on se trouve. Actualités, Pages, Activités.
+ * où l'on se trouve. Actualités, Pages, Activités, Comptes.
  */
 const props = defineProps<{ back: string; title: string; editing: boolean }>();
 const emit = defineEmits<{ back: [] }>();
