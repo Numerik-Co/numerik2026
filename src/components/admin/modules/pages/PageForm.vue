@@ -17,6 +17,7 @@ import { ApiError, pagesApi, type CoverUpdate, type DropdownView, type PageInput
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
 import LinkPicker from '../../LinkPicker.vue';
 import EditFileBar from '../../EditFileBar.vue';
+import FormHeader from '../../FormHeader.vue';
 import FormTabs from '../../FormTabs.vue';
 import { EDIT_TABS, useFormTabs, type EditTab } from '../../form-tabs';
 import { downloadMarkdown } from '../../markdown-file';
@@ -229,6 +230,8 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 </script>
 
 <template>
+	<FormHeader back="Toutes les pages" :title="editing ? editing.title || `/${editing.path}` : 'Nouvelle page'" :editing="Boolean(editing)" @back="emit('cancel')" />
+
 	<!-- Création : choix du type -->
 	<div v-if="!typeChosen" class="space-y-4">
 		<p class="text-sm font-light text-gray-600">Quel type de page voulez-vous créer ?</p>

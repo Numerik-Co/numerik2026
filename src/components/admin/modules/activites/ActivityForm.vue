@@ -12,6 +12,7 @@ import { TYPES_ACTIVITE_INSCRIPTION } from '../../../../lib/adhesion/choices';
 import { ApiError, activitiesApi, type ActivityCategory, type ActivityInput, type ActivitySourceView, type CoverUpdate } from '../../client';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
 import EditFileBar from '../../EditFileBar.vue';
+import FormHeader from '../../FormHeader.vue';
 import FormTabs from '../../FormTabs.vue';
 import LinkPicker from '../../LinkPicker.vue';
 import { EDIT_TABS, useFormTabs, type EditTab } from '../../form-tabs';
@@ -164,6 +165,7 @@ async function submit() {
 </script>
 
 <template>
+	<FormHeader back="Toutes les activités" :title="editing ? editing.title || editing.slug : 'Nouvelle activité'" :editing="Boolean(editing)" @back="emit('cancel')" />
 	<form class="space-y-5" @submit.prevent="submit" @invalid.capture="onInvalid">
 		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 

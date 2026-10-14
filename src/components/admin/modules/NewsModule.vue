@@ -17,6 +17,7 @@
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
 import EditFileBar from '../EditFileBar.vue';
+import FormHeader from '../FormHeader.vue';
 import FormTabs from '../FormTabs.vue';
 import LinkPicker from '../LinkPicker.vue';
 import PublishStatus from '../PublishStatus.vue';
@@ -221,7 +222,7 @@ async function remove(item: NewsItem) {
 // --- Édition ---
 
 /** Actualité en cours d'édition (slug = dossier, inchangé). */
-const editing = ref<{ slug: string; coverUrl: string | null; hasCover: boolean } | null>(null);
+const editing = ref<{ slug: string; title: string; coverUrl: string | null; hasCover: boolean } | null>(null);
 /** Zone du texte (curseur, pour `LinkPicker`). */
 const bodyField = ref<HTMLTextAreaElement | null>(null);
 const editForm = reactive<NewsFields & { body: string }>({
@@ -276,7 +277,7 @@ async function openEdit(item: NewsItem) {
 			imageCredit: source.imageCredit,
 			body: source.body,
 		});
-		editing.value = { slug: source.slug, coverUrl: source.coverUrl, hasCover: Boolean(source.cover) };
+		editing.value = { slug: source.slug, title: source.title, coverUrl: source.coverUrl, hasCover: Boolean(source.cover) };
 		coverAction.value = 'keep';
 		editTab.value = 'infos';
 		imported.value = null;
@@ -414,9 +415,7 @@ onMounted(load);
 
 	<!-- Ajout -->
 	<form v-else-if="view === 'add'" class="space-y-5" @submit.prevent="submit">
-		<button type="button" class="text-sm font-medium text-primary hover:underline" @click="backToList">
-			← Toutes les actualités
-		</button>
+		<FormHeader back="Toutes les actualités" title="Nouvelle actualité" :editing="false" @back="backToList" />
 
 		<!-- Fichier Markdown -->
 		<div>
@@ -504,9 +503,7 @@ onMounted(load);
 
 	<!-- Édition -->
 	<form v-else-if="view === 'edit' && editing" class="space-y-4" @submit.prevent="saveEdit" @invalid.capture="onInvalid">
-		<button type="button" class="text-sm font-medium text-primary hover:underline" @click="backToList">
-			← Toutes les actualités
-		</button>
+		<FormHeader back="Toutes les actualités" :title="editing.title || editing.slug" editing @back="backToList" />
 		<p class="text-xs font-light text-gray-500">
 			Adresse de la page (inchangée) : <code class="font-mono">/actualites/{{ editing.slug }}</code>
 		</p>
