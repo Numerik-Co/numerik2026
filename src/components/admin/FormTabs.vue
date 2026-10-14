@@ -22,7 +22,7 @@ function onKey(event: KeyboardEvent) {
 </script>
 
 <template>
-	<div role="tablist" aria-label="Rubriques" class="mb-5 flex gap-1 overflow-x-auto border-b border-gray-200" @keydown="onKey">
+	<div role="tablist" aria-label="Rubriques" class="mb-5 flex gap-1 border-b border-gray-200" @keydown="onKey">
 		<button
 			v-for="t in props.tabs"
 			:id="`${props.prefix}-tab-${t.id}`"
@@ -33,7 +33,7 @@ function onKey(event: KeyboardEvent) {
 			:aria-controls="`${props.prefix}-panel-${t.id}`"
 			:tabindex="active === t.id ? 0 : -1"
 			:class="[
-				'-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2 font-heading text-sm font-semibold transition-colors',
+				'-mb-px flex items-center gap-2 border-b-2 px-3 py-2 font-heading text-sm font-semibold transition-colors',
 				active === t.id ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-800',
 			]"
 			@click="active = t.id"
