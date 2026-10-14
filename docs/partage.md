@@ -9,7 +9,8 @@ Chaque actualité (`/actualites/<slug>`) et chaque page de contenu
 
 L'encart a une bordure complète et des coins arrondis. Il ne contient que des
 icônes : l'icône « partage » (couleur du texte, `text-gray-700`) à gauche, puis à
-droite une icône cliquable par réseau. Premier outil disponible : **Facebook**.
+droite une icône cliquable par réseau. Outils disponibles : **Facebook** et
+**Copier le lien** (icône 🔗).
 
 Aucune action n'est nécessaire côté éditeur : l'encart apparaît
 automatiquement sur toute nouvelle actualité ou page.
@@ -25,6 +26,21 @@ nouvel onglet, avec l'adresse de la page déjà renseignée. Facebook affiche un
 | Texte | `excerpt` (actualité) ou `description` (page) du frontmatter |
 | Image | image de couverture (`cover.jpg/png/webp`), recadrée au format paysage 1,91:1 (1200×630 au plus) |
 | Adresse | URL publique de la page |
+
+### Publier au nom d'une Page Facebook : « Copier le lien »
+
+La fenêtre de partage de Facebook (`sharer.php`) **tourne sans fin** quand on
+choisit de publier au nom d'une Page (bug connu de Facebook depuis la
+« nouvelle expérience des Pages », sans message d'erreur ; le site n'y est
+pour rien : Facebook lit bien la page). Contournement :
+
+1. cliquer sur l'icône 🔗 **Copier le lien** de l'encart (une coche verte
+   confirme la copie) ;
+2. dans Facebook, basculer sur la Page (ou ouvrir Meta Business Suite),
+   créer une publication et **coller** le lien : l'aperçu (image, titre,
+   résumé) se construit tout seul.
+
+Le même lien sert pour un groupe, Messenger, un e-mail…
 
 Pour un bel aperçu, il suffit donc de soigner le résumé et de fournir une
 image de couverture (voir [actualites.md](actualites.md) et
@@ -47,6 +63,7 @@ publie le lien sans image.
 ```yaml
 share:
   facebook: true
+  copy: true # « Copier le lien »
 ```
 
 `false` masque l'icône correspondante. Si tous les outils sont à `false`,
@@ -78,6 +95,10 @@ SITE_URL=https://www.mon-asso.fr
   une popup (`window.open`) bloquait la publication au nom de certaines
   Pages Facebook (attente sans fin, sans message d'erreur), alors que le
   même lien fonctionne dans un onglet.
+- **Copier le lien** : bouton `data-share-copy` (adresse publique de la
+  page) ; petit script du composant : `navigator.clipboard`, repli
+  `execCommand('copy')` hors HTTPS ; l'icône 🔗 devient une coche verte
+  2 s et « Lien copié » est annoncé aux lecteurs d'écran (`role="status"`).
 - **Accessibilité** : les icônes n'ont pas de texte visible ; chaque lien
   porte un `aria-label` (« Partager « … » sur Facebook (nouvel onglet) »)
   et un `title` (bulle au survol). L'icône « partage » de gauche est

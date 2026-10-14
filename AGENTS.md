@@ -380,7 +380,9 @@ lecture) et de `src/pages/[...slug].astro` (au-dessus du sommaire) ; la
 colonne étant masquée sous `lg`, une seconde instance `lg:hidden` est
 rendue sous le contenu. La colonne de droite est donc toujours présente
 sur ces pages. `<ShareTools title={…} />`, prop `url` facultative (défaut =
-URL publique de la page). Premier outil : partage Facebook (simple lien `sharer.php`,
+URL publique de la page). Outils : « Copier le lien » (`site.share.copy`, bouton + script du composant :
+contournement de `sharer.php` qui tourne sans fin quand on publie au nom d'une
+Page Facebook) et partage Facebook (simple lien `sharer.php`,
 aucun SDK ni cookie, ouvert dans un onglet normal — jamais en popup, qui bloquait la publication sur certaines Pages). Activation par outil dans
 `site.share` (`src/config/site.ts`) ; nouvel outil = une entrée dans
 `tools` du composant + une clé dans `site.share`. L'aperçu Facebook vient
