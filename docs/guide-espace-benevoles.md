@@ -287,6 +287,12 @@ page publique.
    cet encadré par sa croix ✕ le fait disparaître **définitivement, pour
    tout le monde** ; le résultat reste consultable dans le journal du super
    admin. On peut fermer le panneau pendant la publication.
+   Une fois en ligne, la **page s'actualise** d'elle-même après 3 secondes
+   (« Ne pas actualiser » pour rester sur la version affichée) et le module
+   se rouvre : le site visible est à jour. Si la page affichée n'existe plus
+   (actualité supprimée, adresse changée), on arrive sur la page publiée ou
+   sur l'accueil. Vaut pour tous les modules qui publient (Actualités, Pages,
+   Activités, Association).
 
 Le texte accepte le **HTML** en plus du Markdown : tableaux, encadrés
 (`<div>`), mise en forme, détails dépliables, vidéos et cartes intégrées

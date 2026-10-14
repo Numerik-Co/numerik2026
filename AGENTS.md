@@ -206,6 +206,11 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   vs dernière Release GitHub, cache mémoire 6 h, jamais bloquant). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
+- **Fin de publication** (`usePublication`, option `module`) : publication
+  suivie réussie → compte à rebours 3 s dans `PublishStatus` (« Ne pas
+  actualiser ») puis rechargement de la page, module rouvert
+  (`reopenAfterReload` → `takeModuleToReopen` dans `AdminRoot`) ; page en
+  404 (supprimée, déplacée) → `status.href` ou l'accueil.
 - Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal (`exclusive`,
   `superadmin` seul) ; Mon mot de passe
   (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant

@@ -59,7 +59,11 @@ async function load() {
 	}
 }
 
-const { status, following, receive, started, dismiss: dismissStatus } = usePublication({ onSettled: () => load(), onError: fail });
+const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+	module: 'activites',
+	onSettled: () => load(),
+	onError: fail,
+});
 /** Publication impossible ou en cours. */
 const publishLocked = computed(() => !availability.value.ok || following.value || busy.value);
 
@@ -196,7 +200,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 </script>
 
 <template>
-	<PublishStatus :status="status" :following="following" @dismiss="dismissStatus" />
+	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
 	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 

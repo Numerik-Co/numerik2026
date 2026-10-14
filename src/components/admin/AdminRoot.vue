@@ -136,7 +136,7 @@ onMounted(async () => {
 	document.documentElement.classList.toggle('has-admin-bar', Boolean(user.value));
 	void loadVersion();
 	if (props.openOnMount) open();
-	// Rechargement automatique en dev après une publication : on rouvre le module.
+	// Rechargement après une publication (fin de publication réussie, ou Vite en dev) : on rouvre le module.
 	const reopen = takeModuleToReopen();
 	if (reopen && modules.value.some((m) => m.id === reopen)) activeId.value = reopen;
 });

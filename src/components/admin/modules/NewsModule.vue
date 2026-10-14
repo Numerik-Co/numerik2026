@@ -69,7 +69,11 @@ async function load() {
 
 // --- Suivi de la publication ---
 
-const { status, following, receive, started, dismiss: dismissStatus } = usePublication({ onSettled: () => load(), onError: fail });
+const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+	module: 'actualites',
+	onSettled: () => load(),
+	onError: fail,
+});
 
 // ✕ / Échap depuis un formulaire : retour à la liste plutôt que fermeture du panneau.
 const stopCloseRequest = onCloseRequest(() => {
@@ -340,7 +344,7 @@ onMounted(load);
 
 <template>
 	<!-- Publication en cours / dernier résultat -->
-	<PublishStatus :status="status" :following="following" @dismiss="dismissStatus" />
+	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
 
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
