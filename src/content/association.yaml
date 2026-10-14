@@ -45,6 +45,6 @@ legal:
   publicationManager: 'M. BURKE Xavier' # Responsable de la publication (souvent le·la président·e)
   publicationManagerRole: 'Président' # Fonction de ce·tte responsable dans l'association
   hosting: # Hébergeur du site
-    name: ''
+    name: 'OVH'
     address: ''
     phone: ''
