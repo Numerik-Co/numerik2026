@@ -3,9 +3,12 @@ import { site } from '../../config/site';
 
 /**
  * Boîte à outils de partage affichée en bas des actualités et des pages
- * de contenu. Chaque outil est un simple lien (aucun SDK tiers chargé,
+ * de contenu. Chaque réseau est un simple lien (aucun SDK tiers chargé,
  * aucun cookie déposé) ; l'aperçu affiché par le réseau social est
  * construit à partir des balises Open Graph de `ArticleLayout.astro`.
+ * « Copier le lien » (`copy`) copie l'adresse dans le presse-papiers, à
+ * coller dans une publication : contournement de la fenêtre de partage
+ * Facebook qui tourne sans fin quand on publie au nom d'une Page.
  *
  * Activer/désactiver un outil : `share` dans `src/content/reglages.yaml`.
  * Ajouter un outil : une entrée dans `tools` ci-dessous + une clé dans
@@ -31,9 +34,10 @@ const tools = [
 		classes: 'text-[#1877F2] hover:text-[#166FE5]',
 	},
 ].filter((tool) => site.share[tool.key as keyof typeof site.share]);
+const copy = site.share.copy;
 ---
 
-{tools.length > 0 && (
+{(tools.length > 0 || copy) && (
 	<aside
 		class:list={['flex items-center justify-between gap-3 rounded-2xl border border-gray-200 p-3', className]}
 		aria-label="Partager ce contenu"
@@ -62,6 +66,62 @@ const tools = [
 					</a>
 				</li>
 			))}
+			{copy && (
+				<li class="flex">
+					<button
+						type="button"
+						data-share-copy={url}
+						aria-label={`Copier le lien de « ${title} »`}
+						title="Copier le lien"
+						class="flex h-6 w-6 items-center justify-center text-xl leading-none text-gray-600 transition-colors hover:text-gray-900"
+					>
+						<i class="fa-solid fa-link" data-copy-icon aria-hidden="true"></i>
+					</button>
+					<span class="sr-only" role="status" data-copy-status></span>
+				</li>
+			)}
 		</ul>
 	</aside>
 )}
+
+<script>
+	/** « Copier le lien » : presse-papiers (repli `execCommand` hors HTTPS), coche verte 2 s + annonce aux lecteurs d'écran. */
+	async function copyText(text: string): Promise<boolean> {
+		try {
+			await navigator.clipboard.writeText(text);
+			return true;
+		} catch {
+			const area = document.createElement('textarea');
+			area.value = text;
+			area.setAttribute('readonly', '');
+			area.style.position = 'fixed';
+			area.style.opacity = '0';
+			document.body.append(area);
+			area.select();
+			const ok = document.execCommand('copy');
+			area.remove();
+			return ok;
+		}
+	}
+
+	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-share-copy]')) {
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		button.addEventListener('click', async () => {
+			const ok = await copyText(button.dataset.shareCopy ?? location.href);
+			const icon = button.querySelector('[data-copy-icon]');
+			const status = button.parentElement?.querySelector('[data-copy-status]');
+			icon?.classList.replace('fa-link', ok ? 'fa-check' : 'fa-xmark');
+			button.classList.toggle('text-green-600', ok);
+			button.title = ok ? 'Lien copié' : 'Copie impossible : sélectionnez l’adresse dans la barre du navigateur';
+			if (status) status.textContent = ok ? 'Lien copié' : 'Copie impossible';
+			clearTimeout(timer);
+			timer = setTimeout(() => {
+				icon?.classList.remove('fa-check', 'fa-xmark');
+				icon?.classList.add('fa-link');
+				button.classList.remove('text-green-600');
+				button.title = 'Copier le lien';
+				if (status) status.textContent = '';
+			}, 2000);
+		});
+	}
+</script>

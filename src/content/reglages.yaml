@@ -43,6 +43,7 @@ presence:
 # Outils de partage en bas des actualités et des pages (true / false).
 share:
   facebook: true
+  copy: true # « Copier le lien »
 
 # Formulaires en ligne. enabled: false ferme le formulaire : à sa place
 # s'affiche un encart avec closedTitle et closedMessage.

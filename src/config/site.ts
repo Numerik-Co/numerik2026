@@ -77,6 +77,8 @@ const DEFAULTS = {
 	 */
 	share: {
 		facebook: true,
+		/** « Copier le lien » : à coller dans une publication (ex. au nom d'une Page Facebook, que la fenêtre de partage bloque). */
+		copy: true,
 	},
 
 	/**
