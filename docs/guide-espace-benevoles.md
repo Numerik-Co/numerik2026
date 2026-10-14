@@ -463,6 +463,10 @@ le titre (lien vers la fiche en ligne) et des pastilles :
 Une catégorie vide indique « Aucune activité » : sa page affiche alors
 « bientôt ».
 
+Dans la liste, un clic sur le **titre** d'une fiche ou d'une catégorie (ou
+le crayon) ouvre sa modification ; l'icône 👁 l'ouvre sur le site (pas
+d'icône pour un brouillon, absent du site).
+
 #### Créer une activité
 
 1. **+ Nouvelle activité** (ou le **+** dans l'en-tête d'une catégorie, qui
