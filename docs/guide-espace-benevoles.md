@@ -404,6 +404,9 @@ d'échec, rien n'est modifié. Changer l'emplacement ou l'adresse d'une page
 **change son adresse** : les liens déjà partagés vers l'ancienne ne
 fonctionnent plus.
 
+Dans la liste, un clic sur le **titre** d'une page (ou le crayon) ouvre sa
+modification ; l'icône 👁 l'ouvre sur le site.
+
 **Pages du site** (Accueil, Activités, Actualités, Contact) : leur mise en
 page est fournie par le site, l'association règle le reste.
 
