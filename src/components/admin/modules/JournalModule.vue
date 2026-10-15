@@ -13,6 +13,7 @@ const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 const ACTIONS: Record<string, { label: string; icon: string }> = {
 	connexion: { label: 'Connexion', icon: 'fa-right-to-bracket' },
 	'mot-de-passe': { label: 'Mot de passe changé', icon: 'fa-key' },
+	'mon-compte': { label: 'Compte personnel modifié', icon: 'fa-user-pen' },
 	'actualite.ajout': { label: 'Actualité ajoutée', icon: 'fa-newspaper' },
 	'actualite.modification': { label: 'Actualité modifiée', icon: 'fa-pen' },
 	'actualite.suppression': { label: 'Actualité supprimée', icon: 'fa-trash' },

@@ -212,6 +212,9 @@ export const authApi = {
 	logout: () => request<{ ok: true }>('POST', '/api/auth/logout'),
 	changePassword: (current: string, next: string) =>
 		request<{ ok: true }>('POST', '/api/admin/mot-de-passe', { current, next }),
+	myAccount: () => request<{ account: AccountView }>('GET', '/api/admin/mon-compte'),
+	updateMyAccount: (input: { fullname: string; email: string }) =>
+		request<{ account: AccountView; user: AdminUser }>('PUT', '/api/admin/mon-compte', input),
 };
 
 export const accountsApi = {

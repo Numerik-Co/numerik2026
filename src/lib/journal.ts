@@ -18,6 +18,7 @@ import { dataDir } from './data-dir';
 export type JournalAction =
 	| 'connexion'
 	| 'mot-de-passe'
+	| 'mon-compte'
 	| 'actualite.ajout'
 	| 'actualite.modification'
 	| 'actualite.suppression'

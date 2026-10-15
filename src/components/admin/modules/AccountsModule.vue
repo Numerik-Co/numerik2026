@@ -5,20 +5,25 @@
  * suppression). Un mot de passe provisoire n'est affiché qu'une fois.
  * Les garde-fous (soi-même, dernier admin) sont appliqués par le serveur ;
  * l'interface masque seulement les actions impossibles sur son propre compte.
+ *
+ * `self` (« Mon compte », menu du nom, toute personne connectée) : la fiche de
+ * son propre compte seule, nom et email modifiables (`/api/admin/mon-compte`),
+ * groupes affichés sans pouvoir les changer, changement de mot de passe
+ * (`PasswordModule`, aussi utilisé seul pour un mot de passe provisoire).
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { ASSIGNABLE_GROUPS, AUTH_GROUPS, type AuthGroup } from '../../../lib/auth/groups';
-import { ApiError, accountsApi, type AccountView } from '../client';
+import { ApiError, accountsApi, authApi, type AccountView } from '../client';
 import FormHeader from '../FormHeader.vue';
+import PasswordModule from './PasswordModule.vue';
 import { ADMIN_CONTEXT, inputClass } from '../context';
 
+const props = defineProps<{ self?: boolean }>();
 const { user, sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
-// `superadmin` ne s'attribue pas ici (CLI seulement) ; ses comptes ne sont pas listés.
-const groupEntries = ASSIGNABLE_GROUPS.map((g) => [g, AUTH_GROUPS[g]] as const);
 
 type View = { name: 'list' } | { name: 'create' } | { name: 'edit'; login: string };
 
-const view = ref<View>({ name: 'list' });
+const view = ref<View>(props.self ? { name: 'edit', login: user.value?.login ?? '' } : { name: 'list' });
 const accounts = ref<AccountView[]>([]);
 const loading = ref(true);
 const busy = ref(false);
@@ -37,10 +42,18 @@ const form = reactive({
 });
 const confirmDelete = ref('');
 
+// `superadmin` ne s'attribue pas ici (CLI seulement) ; ses comptes ne sont pas listés,
+// sauf le sien dans « Mon compte » (groupe affiché, non modifiable).
+const groupEntries = computed(() =>
+	(props.self && form.groups.includes('superadmin') ? (['superadmin', ...ASSIGNABLE_GROUPS] as AuthGroup[]) : ASSIGNABLE_GROUPS).map(
+		(g) => [g, AUTH_GROUPS[g]] as const,
+	),
+);
+
 const current = computed(() =>
 	view.value.name === 'edit' ? accounts.value.find((a) => a.login === (view.value as { login: string }).login) : undefined,
 );
-const isSelf = computed(() => current.value?.login === user.value?.login);
+const isSelf = computed(() => props.self || current.value?.login === user.value?.login);
 
 function fail(e: unknown) {
 	if (e instanceof ApiError && e.status === 401) return sessionExpired();
@@ -50,7 +63,13 @@ function fail(e: unknown) {
 async function load() {
 	loading.value = true;
 	try {
-		accounts.value = (await accountsApi.list()).accounts;
+		if (props.self) {
+			const { account } = await authApi.myAccount();
+			accounts.value = [account];
+			go({ name: 'edit', login: account.login });
+		} else {
+			accounts.value = (await accountsApi.list()).accounts;
+		}
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -105,6 +124,13 @@ const create = () =>
 
 const save = () =>
 	run(async () => {
+		if (props.self) {
+			const res = await authApi.updateMyAccount({ fullname: form.fullname, email: form.email });
+			accounts.value = [res.account];
+			user.value = res.user;
+			notice.value = 'Compte enregistré.';
+			return;
+		}
 		const res = await accountsApi.update(form.login, {
 			fullname: form.fullname,
 			email: form.email,
@@ -135,7 +161,7 @@ const formatDate = (iso: string) =>
 
 // ✕ / Échap depuis une fiche ou la création : retour à la liste plutôt que fermeture du panneau.
 const stopCloseRequest = onCloseRequest(() => {
-	if (view.value.name === 'list') return false;
+	if (props.self || view.value.name === 'list') return false;
 	go({ name: 'list' });
 	return true;
 });
@@ -156,7 +182,7 @@ onBeforeUnmount(stopCloseRequest);
 			À transmettre à la personne, il ne sera plus affiché :
 			<code class="ml-1 select-all rounded bg-white px-2 py-1 font-mono text-base tracking-wide">{{ shownPassword.password }}</code>
 		</p>
-		<p class="mt-2 font-light">Elle pourra le changer dans « Mon mot de passe ».</p>
+		<p class="mt-2 font-light">Elle pourra le changer dans « Mon compte ».</p>
 	</div>
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -193,9 +219,12 @@ onBeforeUnmount(stopCloseRequest);
 		</button>
 	</template>
 
+	<p v-else-if="props.self && !current" class="text-sm font-light text-gray-500">Chargement…</p>
+
 	<!-- Création / modification -->
 	<template v-else>
 		<FormHeader
+			v-if="!props.self"
 			back="Tous les comptes"
 			:title="view.name === 'create' ? 'Nouveau compte' : current ? `${current.fullname} (${current.login})` : form.login"
 			:editing="view.name === 'edit'"
@@ -236,7 +265,7 @@ onBeforeUnmount(stopCloseRequest);
 							v-model="form.groups"
 							type="checkbox"
 							:value="key"
-							:disabled="isSelf && key === 'admin'"
+							:disabled="props.self || (isSelf && key === 'admin')"
 							class="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary"
 						/>
 						<span>
@@ -245,6 +274,7 @@ onBeforeUnmount(stopCloseRequest);
 						</span>
 					</label>
 				</div>
+				<p v-if="props.self" class="mt-2 text-xs font-light text-gray-500">Les groupes se changent par le bureau, dans le module « Comptes ».</p>
 			</fieldset>
 			<div v-if="view.name === 'create'">
 				<label for="acc-password" class="block text-sm font-medium text-gray-700">
@@ -253,7 +283,7 @@ onBeforeUnmount(stopCloseRequest);
 				<input id="acc-password" v-model="form.password" type="text" autocomplete="off" :class="inputClass" />
 				<p class="mt-1 text-xs font-light text-gray-500">Laissez vide pour en générer un automatiquement.</p>
 			</div>
-			<label v-else class="flex items-center gap-2 text-sm text-gray-700">
+			<label v-else-if="!props.self" class="flex items-center gap-2 text-sm text-gray-700">
 				<input
 					v-model="form.disabled"
 					type="checkbox"
@@ -276,7 +306,11 @@ onBeforeUnmount(stopCloseRequest);
 				Créé le {{ formatDate(current.created) }} · modifié le {{ formatDate(current.updated) }}
 			</p>
 
-			<section class="mt-8 space-y-3 border-t border-gray-100 pt-6">
+			<section v-if="props.self" class="mt-8 space-y-3 border-t border-gray-100 pt-6">
+				<h3 class="font-heading text-base font-semibold text-gray-900">Mot de passe</h3>
+				<PasswordModule />
+			</section>
+			<section v-else class="mt-8 space-y-3 border-t border-gray-100 pt-6">
 				<h3 class="font-heading text-base font-semibold text-gray-900">Mot de passe</h3>
 				<p class="text-sm font-light text-gray-600">
 					Génère un nouveau mot de passe provisoire et ferme les sessions ouvertes de ce compte.

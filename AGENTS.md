@@ -212,8 +212,11 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   (`reopenAfterReload` → `takeModuleToReopen` dans `AdminRoot`) ; page en
   404 (supprimée, déplacée) → `status.href` ou l'accueil.
 - Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal (`exclusive`,
-  `superadmin` seul) ; Mon mot de passe
-  (`placement: 'user'`) est rangé avec Déconnexion dans le menu déroulant
+  `superadmin` seul) ; Mon compte (module Comptes ouvert sur sa
+  propre fiche : `AccountsModule.vue` prop `self`, via `props` du registre ;
+  nom + email seuls, `GET`/`PUT /api/admin/mon-compte`, `readProfileFields()`,
+  plus le changement de mot de passe : `PasswordModule.vue` intégré, aussi
+  modale du mot de passe provisoire) est rangé (`placement: 'user'`) avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
   Actualités et Pages sont regroupées sous **Contenu ▾** (`menu: 'contenu'`,
   `ADMIN_MENUS` / `barEntries()` dans `modules.ts`, sous-liens côte à côte ;
