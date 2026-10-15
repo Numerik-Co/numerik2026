@@ -120,7 +120,7 @@ access: [animateur, admin]   # l'un de ces groupes
 | `src/components/admin/AdminOverlay.vue` | Calque générique : `variant="drawer"` (panneau à droite, plein écran sur mobile) ou `"modal"`. Échap / clic sur le fond ferment, focus piégé puis rendu, défilement de la page bloqué. |
 | `src/components/admin/LoginForm.vue` | Formulaire de la modale de connexion. |
 | `src/components/admin/modules.ts` | **Registre des modules** (`id`, `label`, icône, `groups`, composant chargé à la demande). |
-| `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `NewsModule` (actualités, `redacteur`), `SitePagesModule` (pages et menus déroulants, `redacteur`), `ActivitiesModule` (fiches d'activité, `redacteur`), `JournalModule` (`superadmin`), `AccountsModule` (comptes, `admin`), `PasswordModule` (mon mot de passe). |
+| `src/components/admin/modules/*.vue` | `PagesModule` (pages réservées), `NewsModule` (actualités, `redacteur`), `SitePagesModule` (pages et menus déroulants, `redacteur`), `ActivitiesModule` (fiches d'activité, `redacteur`), `JournalModule` (`superadmin`), `AccountsModule` (comptes, `admin`), `PasswordModule` (mot de passe : intégré à « Mon compte » = `AccountsModule` prop `self`, et modale du mot de passe provisoire). |
 | `src/components/admin/client.ts` | Appels typés aux routes ; `ApiError.status === 401` = session expirée (`sessionExpired()` du contexte rouvre la connexion). |
 | `src/components/admin/context.ts` | `provide/inject` (`user`, `pages`, `sessionExpired`, `onCloseRequest` : un module peut intercepter ✕/Échap, ex. retour à sa liste depuis un formulaire) + classes des champs. |
 

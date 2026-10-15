@@ -185,13 +185,13 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ ⚙ Espace d'administration   🔒 Pages réservées              🖥 Production  👤 Marie ▾ │
-└───────────────────────────────────────┬──────────────────────────────────┤
-                                        │ 🔑 Mon mot de passe │ ⏻ Déconnexion │
-                                        └──────────────────────────────────┘
+└────────────────────────────────────────────────┬─────────────────────────┤
+                                                 │ 👤 Mon compte │ ⏻ Déconnexion │
+                                                 └─────────────────────────┘
 ```
 
 - La barre occupe toute la largeur de l'écran.
-- Le **nom** à droite ouvre un menu personnel : **Mon mot de passe** et
+- Le **nom** à droite ouvre un menu personnel : **Mon compte** et
   **Déconnexion** (fermé par un clic ailleurs ou **Échap**).
 - Un badge, juste avant le nom, indique le **mode du serveur** : **Production** (vert, icône serveur) —
   chaque publication reconstruit le site — ou **Développement** (ambre) —
@@ -226,7 +226,7 @@ Les modules visibles dépendent de votre groupe :
 | Association | ✅ | ✅ | — | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
-| Mon mot de passe | ✅ | ✅ | ✅ | ✅ |
+| Mon compte | ✅ | ✅ | ✅ | ✅ |
 
 Le bouton **Pages réservées** n'apparaît que pour qui n'a pas le module
 **Pages** : celui-ci liste déjà les pages réservées (bloc « Pages
@@ -616,9 +616,19 @@ l'exporter en « SVG simple » ou en PNG. Fichiers modifiés : `colors:` de
 `src/content/images/logo.*` et `favicon.*`. Si la reconstruction échoue,
 tout est remis comme avant.
 
+### Modifier mes informations
+
+Menu du **nom** (à droite de la barre) → **👤 Mon compte** : la fiche de
+votre compte, la même que dans le module **Comptes**. Prénom et nom
+(affichés dans la barre et dans le journal) et email facultatif, puis
+**Enregistrer**. Vos groupes sont affichés mais ne se changent pas ici :
+c'est le bureau qui les règle dans le module **Comptes**. Le mot de passe se
+change en bas de la même fiche (voir ci-dessous).
+
 ### Changer mon mot de passe
 
-Menu du **nom** (à droite de la barre) → **🔑 Mon mot de passe** :
+Menu du **nom** (à droite de la barre) → **👤 Mon compte**, section
+**Mot de passe** :
 
 1. Saisir le mot de passe actuel.
 2. Saisir deux fois le nouveau — **10 caractères minimum**. Une courte phrase

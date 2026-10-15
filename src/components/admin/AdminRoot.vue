@@ -282,7 +282,7 @@ onBeforeUnmount(() => {
 	</div>
 
 	<AdminOverlay v-if="activeModule" :key="activeModule.id" :title="activeModule.label" @close="closeModule">
-		<component :is="activeModule.component" />
+		<component :is="activeModule.component" v-bind="activeModule.props" />
 	</AdminOverlay>
 
 	<AdminOverlay v-if="mustChangePassword" title="Choisissez votre mot de passe" variant="modal" :closable="false">

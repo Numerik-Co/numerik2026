@@ -35,6 +35,8 @@ export interface AdminModule {
 	menu?: AdminMenuId;
 	/** Masqué pour qui voit aussi ce module-là, qui le contient déjà (ex. pages réservées → module « Pages »). */
 	replacedBy?: string;
+	/** Props passées au composant (ex. module « Comptes » ouvert sur son propre compte). */
+	props?: Record<string, unknown>;
 }
 
 export const ADMIN_MODULES: AdminModule[] = [
@@ -92,12 +94,13 @@ export const ADMIN_MODULES: AdminModule[] = [
 		component: defineAsyncComponent(() => import('./modules/JournalModule.vue')),
 	},
 	{
-		id: 'mot-de-passe',
-		label: 'Mon mot de passe',
-		icon: 'fa-key',
+		id: 'mon-compte',
+		label: 'Mon compte',
+		icon: 'fa-user-pen',
 		groups: [],
 		placement: 'user',
-		component: defineAsyncComponent(() => import('./modules/PasswordModule.vue')),
+		props: { self: true },
+		component: defineAsyncComponent(() => import('./modules/AccountsModule.vue')),
 	},
 ];
 

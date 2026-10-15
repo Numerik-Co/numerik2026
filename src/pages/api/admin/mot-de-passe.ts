@@ -8,7 +8,7 @@ import { logEvent } from '../../../lib/journal';
 export const prerender = false;
 
 /**
- * Module « Mon mot de passe » (et changement imposé d'un mot de passe
+ * « Mon compte », section Mot de passe (et changement imposé d'un mot de passe
  * provisoire) : `{ current, next }`. Ferme les autres sessions, garde celle-ci.
  */
 export const POST: APIRoute = async ({ request, cookies, locals }) => {

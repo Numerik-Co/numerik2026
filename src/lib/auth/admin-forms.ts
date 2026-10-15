@@ -27,6 +27,16 @@ export function readAccountFields(body: Record<string, unknown>): { fields: Acco
 	return { fields: { fullname, email: email || undefined, groups }, errors };
 }
 
+/** Champs qu'une personne modifie sur son propre compte (module « Mon compte ») : nom et email. */
+export function readProfileFields(body: Record<string, unknown>): { fields: Pick<AccountFields, 'fullname' | 'email'>; errors: string[] } {
+	const fullname = String(body.fullname ?? '').trim();
+	const email = String(body.email ?? '').trim();
+	const errors: string[] = [];
+	if (!fullname) errors.push('Le nom est obligatoire.');
+	if (email && !EMAIL_PATTERN.test(email)) errors.push("L'adresse email n'est pas valide.");
+	return { fields: { fullname, email: email || undefined }, errors };
+}
+
 /**
  * Vrai si appliquer `next` au compte `login` laisserait le site sans aucun
  * admin actif (on refuse alors la modification ou la suppression).
