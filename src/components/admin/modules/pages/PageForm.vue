@@ -4,9 +4,9 @@
  * enrichie, ou fichier `.md` déposé qui pré-remplit le formulaire, modèles
  * téléchargeables : ./page-markdown.ts) ou modification d'une page des sources
  * (onglets Informations / Contenu / Image ; fichier `.md` à télécharger ou à
- * recharger, `EditFileBar`). Emplacement : hors menu
- * déroulant (racine), dans un menu déroulant, ou réservée (espace bénévoles).
- * « Menu » = menu de navigation (frontmatter `menu:`). Le serveur valide
+ * recharger, `EditFileBar`). Emplacement : menu de navigation (lien direct
+ * ou dans un menu déroulant), page libre (racine, hors menu) ou réservée
+ * (espace bénévoles). « Menu » = menu de navigation (frontmatter `menu:`). Le serveur valide
  * tout (src/lib/page-writer.ts) et reconstruit le site.
  */
 import { computed, inject, nextTick, onBeforeUnmount, reactive, ref, toRaw } from 'vue';
@@ -43,17 +43,27 @@ function slugify(text: string): string {
 		.replace(/-+$/g, '');
 }
 
+/** Emplacement proposé à la saisie (un seul menu de navigation pour l'instant). */
+type Emplacement = 'menu' | 'libre' | 'reservee';
+
 function placementKey(p: PageInput['placement']): string {
 	return p.kind === 'dropdown' ? `dropdown:${p.dropdown}` : p.kind;
+}
+
+function emplacementOf(source: PageSourceView): Emplacement {
+	if (source.placement.kind === 'reservee') return 'reservee';
+	// Une page rangée dans un menu déroulant reste dans le menu de navigation.
+	return source.placement.kind === 'dropdown' || source.menu.show ? 'menu' : 'libre';
 }
 
 const form = reactive({
 	type: editing?.type ?? ('classique' as PageInput['type']),
 	title: editing?.title ?? '',
 	description: editing?.description ?? '',
-	placement: editing ? placementKey(editing.placement) : 'racine',
+	placement: (editing ? emplacementOf(editing) : 'menu') as Emplacement,
+	/** Position dans le menu de navigation : `racine` (lien direct) ou `dropdown:<dossier>`. */
+	menuPosition: editing && editing.placement.kind === 'dropdown' ? placementKey(editing.placement) : 'racine',
 	slug: editing?.slug ?? '',
-	menuShow: editing ? editing.menu.show : true,
 	menuLabel: editing?.menu.label ?? '',
 	access: [...(editing?.access ?? [])],
 	body: editing?.body ?? '',
@@ -99,7 +109,8 @@ async function pickMarkdown(file: File | undefined) {
 		imageCredit: page.imageCredit,
 		body: page.body,
 	});
-	if (page.menuShow !== undefined) form.menuShow = page.menuShow;
+	if (page.menuShow === false && form.placement === 'menu') form.placement = 'libre';
+	else if (page.menuShow === true && form.placement === 'libre') form.placement = 'menu';
 	for (const id of Object.keys(blocs)) delete blocs[id];
 	Object.assign(blocs, page.blocs);
 	if (!page.title) warnings.unshift('Titre absent du fichier : à saisir dans « Informations ».');
@@ -113,7 +124,7 @@ function downloadFile() {
 		type: form.type,
 		title: form.title,
 		description: form.description,
-		menu: form.placement === 'reservee' ? null : { show: form.menuShow, label: form.menuLabel },
+		menu: form.placement === 'reservee' ? null : { show: form.placement === 'menu', label: form.menuLabel },
 		imageCredit: form.imageCredit,
 		blocs,
 		body: form.body,
@@ -129,8 +140,8 @@ const slug = computed(() => (slugTouched.value ? form.slug : slugify(form.title)
 const placement = computed<PageInput['placement']>(() =>
 	form.placement === 'reservee'
 		? { kind: 'reservee' }
-		: form.placement.startsWith('dropdown:')
-			? { kind: 'dropdown', dropdown: form.placement.slice('dropdown:'.length) }
+		: form.placement === 'menu' && form.menuPosition.startsWith('dropdown:')
+			? { kind: 'dropdown', dropdown: form.menuPosition.slice('dropdown:'.length) }
 			: { kind: 'racine' },
 );
 /** Début de l'adresse imposé par l'emplacement (`association/`, `espace-benevoles/`). */
@@ -140,7 +151,11 @@ const prefix = computed(() => {
 });
 const path = computed(() => `${prefix.value}${slug.value || '…'}`);
 const pathChanged = computed(() => Boolean(editing && path.value !== editing.path));
-const dropdownLabel = computed(() => props.dropdowns.find((d) => `dropdown:${d.folder}` === form.placement)?.label);
+const dropdownLabel = computed(() =>
+	placement.value.kind === 'dropdown' ? props.dropdowns.find((d) => `dropdown:${d.folder}` === form.menuPosition)?.label : undefined,
+);
+/** Création ou changement de niveau (racine / menu déroulant) : le serveur place la page en dernier. */
+const placedLast = computed(() => !editing || placementKey(editing.placement) !== placementKey(placement.value));
 
 function chooseType(type: PageInput['type']) {
 	form.type = type;
@@ -200,7 +215,7 @@ async function submit() {
 			description: form.description,
 			type: form.type,
 			// Position décidée par le serveur (dernière à la création ou en changeant d'emplacement).
-			menu: { show: form.menuShow, order: editing?.menu.order ?? 0, label: form.menuLabel },
+			menu: { show: form.placement === 'menu', order: editing?.menu.order ?? 0, label: form.menuLabel },
 			access: form.placement === 'reservee' ? form.access : [],
 			body: form.body,
 			blocs: form.type === 'enrichie' ? blocs : {},
@@ -333,9 +348,16 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 					<div>
 						<label for="pg-placement" class="block text-sm font-semibold text-gray-700">Emplacement</label>
 						<select id="pg-placement" v-model="form.placement" :class="inputClass">
-							<option value="racine">Hors menu déroulant (lien direct du menu de navigation, ou aucun lien)</option>
-							<option v-for="d in props.dropdowns" :key="d.folder" :value="`dropdown:${d.folder}`">Dans le menu déroulant « {{ d.label }} »</option>
+							<option value="menu">Menu de navigation</option>
+							<option value="libre">Page libre (hors menu, accessible par son adresse ou un lien)</option>
 							<option value="reservee">Page réservée (espace bénévoles, connexion requise)</option>
+						</select>
+					</div>
+					<div v-if="form.placement === 'menu' && props.dropdowns.length">
+						<label for="pg-menu-position" class="block text-sm font-semibold text-gray-700">Position dans le menu</label>
+						<select id="pg-menu-position" v-model="form.menuPosition" :class="inputClass">
+							<option value="racine">Lien direct</option>
+							<option v-for="d in props.dropdowns" :key="d.folder" :value="`dropdown:${d.folder}`">Dans le menu déroulant « {{ d.label }} »</option>
 						</select>
 					</div>
 					<div>
@@ -357,23 +379,16 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 						</p>
 					</div>
 
-					<template v-if="form.placement !== 'reservee'">
-						<label class="flex items-center gap-2 text-sm text-gray-700">
-							<input v-model="form.menuShow" type="checkbox" class="rounded border-gray-300" />
-							<template v-if="dropdownLabel">Visible dans le menu déroulant « {{ dropdownLabel }} »</template>
-							<template v-else>Lien direct dans le menu de navigation</template>
+					<div v-if="form.placement === 'menu'">
+						<label for="pg-menu-label" class="block text-sm font-semibold text-gray-700">
+							Libellé dans le menu de navigation <span class="font-light text-gray-500">(facultatif)</span>
 						</label>
-						<div v-if="form.menuShow">
-							<label for="pg-menu-label" class="block text-sm font-semibold text-gray-700">
-								Libellé dans le menu de navigation <span class="font-light text-gray-500">(facultatif)</span>
-							</label>
-							<input id="pg-menu-label" v-model="form.menuLabel" type="text" :placeholder="form.title" :class="inputClass" />
-							<p v-if="!editing || placementKey(editing.placement) !== form.placement" class="mt-1 text-xs font-light text-gray-500">
-								La page se place en dernière position {{ dropdownLabel ? `du menu déroulant « ${dropdownLabel} »` : 'du menu de navigation' }}.
-							</p>
-						</div>
-					</template>
-					<fieldset v-else>
+						<input id="pg-menu-label" v-model="form.menuLabel" type="text" :placeholder="form.title" :class="inputClass" />
+						<p v-if="placedLast" class="mt-1 text-xs font-light text-gray-500">
+							La page se place en dernière position {{ dropdownLabel ? `du menu déroulant « ${dropdownLabel} »` : 'du menu de navigation' }}.
+						</p>
+					</div>
+					<fieldset v-else-if="form.placement === 'reservee'">
 						<legend class="text-sm font-semibold text-gray-700">Accès</legend>
 						<p class="text-xs font-light text-gray-500">Aucune case cochée : toute personne connectée.</p>
 						<label v-for="g in groupChoices" :key="g.value" class="mt-1 flex items-center gap-2 text-sm text-gray-700">

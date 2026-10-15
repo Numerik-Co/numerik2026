@@ -395,9 +395,10 @@ pré-rempli (titre, description, texte, blocs, libellé du menu) ; il reste à
 vérifier, choisir l'emplacement et publier. Les champs non repris
 (`access`, `cover`…) sont signalés en tête du formulaire.
 
-Puis : titre, description, **emplacement** (hors menu déroulant — avec ou
-sans lien direct dans le menu de navigation —, dans un menu déroulant, ou
-page réservée avec les groupes autorisés), adresse (déduite du titre),
+Puis : titre, description, **emplacement** — **menu de navigation** (lien
+direct ou dans un menu déroulant, au choix sous « Position dans le menu »),
+**page libre** (hors menu, accessible par son adresse ou un lien) ou **page
+réservée** (avec les groupes autorisés) —, adresse (déduite du titre),
 libellé dans le menu de navigation. Une nouvelle page (ou une page changée
 d'emplacement) se place en **dernière position** de son menu.
 « Insérer une information de l'association » liste les variables
