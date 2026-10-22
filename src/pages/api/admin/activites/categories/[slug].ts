@@ -13,12 +13,13 @@ export const prerender = false;
 
 export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const slug = String(params.slug ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const result = await saveCategory(readCategoryInput(body.category), slug);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'categorie.modification',
 		subject: result.label!,
@@ -30,7 +31,7 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 
 export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const slug = String(params.slug ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = await readJson(request);
 	if (body?.confirm !== slug) return jsonError('Confirmation manquante.');
@@ -38,6 +39,7 @@ export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) =
 	const result = await deleteCategory(slug);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'categorie.suppression',
 		subject: result.label!,

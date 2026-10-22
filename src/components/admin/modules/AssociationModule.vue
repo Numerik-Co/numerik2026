@@ -6,14 +6,14 @@
  *  - « Charte graphique » (`association/BrandForm.vue`) : couleurs
  *    (`reglages.yaml`), logo et icône d'onglet (`images/`).
  * Chaque onglet s'enregistre à part et reconstruit le site (suivi par
- * `usePublication`, encadré commun) ; les deux restent montés, une saisie
+ * `usePublication`, encadré commun), ou rejoint les modifications en attente ; les deux restent montés, une saisie
  * en cours n'est pas perdue en changeant d'onglet.
  */
 import { computed, inject, onMounted, ref } from 'vue';
 import type { Association } from '../../../lib/association';
 import FormTabs from '../FormTabs.vue';
 import PublishStatus from '../PublishStatus.vue';
-import { ApiError, associationApi } from '../client';
+import { ApiError, associationApi, type SaveResult } from '../client';
 import { ADMIN_CONTEXT, takeModuleToReopen } from '../context';
 import type { FormTab } from '../form-tabs';
 import { usePublication } from '../usePublication';
@@ -58,7 +58,7 @@ async function load() {
 	}
 }
 
-const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+const { status, following, receive, afterSave, publishLot, savedLabel, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
 	module: 'association',
 	onSettled: async () => {
 		await load();
@@ -69,17 +69,26 @@ const { status, following, receive, started, dismiss: dismissStatus, reloadIn, c
 });
 const locked = computed(() => !availability.value.ok || following.value);
 
-function onPublished(from: TabId, label: string) {
+function onPublished(from: TabId, label: string, result: SaveResult) {
 	error.value = '';
 	lastPublished = from;
-	started(label);
+	afterSave(label, result);
 }
 
 onMounted(load);
 </script>
 
 <template>
-	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
+	<PublishStatus
+		:status="status"
+		:following="following"
+		:reload-in="reloadIn"
+		:saved-label="savedLabel"
+		:locked="locked"
+		@dismiss="dismissStatus"
+		@cancel-reload="cancelReload"
+		@publish-lot="publishLot"
+	/>
 	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -93,7 +102,7 @@ onMounted(load);
 				:key="versions.general"
 				:source="association"
 				:locked="locked"
-				@published="(label) => onPublished('general', label)"
+				@published="(label, result) => onPublished('general', label, result)"
 				@dirty="(value) => (dirty.general = value)"
 			/>
 		</div>
@@ -101,7 +110,7 @@ onMounted(load);
 			<BrandForm
 				:key="versions.charte"
 				:locked="locked"
-				@published="(label) => onPublished('charte', label)"
+				@published="(label, result) => onPublished('charte', label, result)"
 				@dirty="(value) => (dirty.charte = value)"
 			/>
 		</div>

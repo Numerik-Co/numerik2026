@@ -11,9 +11,19 @@
 import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
+import PublishButtons from '../PublishButtons.vue';
 import PublishStatus from '../PublishStatus.vue';
-import { activitiesApi, activityCategoriesApi, ApiError, type ActivityCategory, type ActivityItem, type ActivitySourceView } from '../client';
+import {
+	activitiesApi,
+	activityCategoriesApi,
+	ApiError,
+	type ActivityCategory,
+	type ActivityItem,
+	type ActivitySourceView,
+	type SaveResult,
+} from '../client';
 import { ADMIN_CONTEXT, iconButtonClass, rememberOpenModule, sortableProps, takeModuleToReopen } from '../context';
+import { isDeferredSubmit, isPendingHref } from '../lot';
 import { usePublication } from '../usePublication';
 import ActivityForm from './activites/ActivityForm.vue';
 import CategoryForm from './activites/CategoryForm.vue';
@@ -59,7 +69,7 @@ async function load() {
 	}
 }
 
-const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+const { status, following, receive, afterSave, publishLot, savedLabel, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
 	module: 'activites',
 	onSettled: () => load(),
 	onError: fail,
@@ -117,13 +127,13 @@ function reorder(category: string, list: ActivityItem[]) {
 	orderDraft.value = { ...orderDraft.value, [category]: list.map((a) => a.slug) };
 }
 
-async function saveOrder() {
+async function saveOrder(event: Event) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('activites');
-		await activitiesApi.saveOrder(orderDraft.value, categoryDraft.value);
-		started(categoryDraft.value ? 'Nouvel ordre des catégories et des activités' : 'Nouvel ordre des activités');
+		const result = await activitiesApi.saveOrder(orderDraft.value, categoryDraft.value, { deferred: isDeferredSubmit(event) });
+		afterSave(categoryDraft.value ? 'Nouvel ordre des catégories et des activités' : 'Nouvel ordre des activités', result);
 		cancelOrder();
 	} catch (e) {
 		fail(e);
@@ -150,19 +160,19 @@ async function openForm(item: ActivityItem | null, category = '') {
 	}
 }
 
-function onPublished(label: string) {
+function onPublished(label: string, result: SaveResult) {
 	go({ name: 'list' });
-	started(label);
+	afterSave(label, result);
 }
 
-async function remove(item: ActivityItem) {
+async function remove(item: ActivityItem, deferred: boolean) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('activites');
-		await activitiesApi.remove(item.slug);
+		const result = await activitiesApi.remove(item.slug, { deferred });
 		confirming.value = null;
-		started(`Suppression : ${item.title}`);
+		afterSave(`Suppression : ${item.title}`, result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -170,14 +180,14 @@ async function remove(item: ActivityItem) {
 	}
 }
 
-async function removeCategory(category: ActivityCategory) {
+async function removeCategory(category: ActivityCategory, deferred: boolean) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('activites');
-		await activityCategoriesApi.remove(category.slug);
+		const result = await activityCategoriesApi.remove(category.slug, { deferred });
 		confirming.value = null;
-		started(`Suppression de la catégorie : ${category.label}`);
+		afterSave(`Suppression de la catégorie : ${category.label}`, result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -200,7 +210,16 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 </script>
 
 <template>
-	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
+	<PublishStatus
+		:status="status"
+		:following="following"
+		:reload-in="reloadIn"
+		:saved-label="savedLabel"
+		:locked="locked"
+		@dismiss="dismissStatus"
+		@cancel-reload="cancelReload"
+		@publish-lot="publishLot"
+	/>
 	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -228,23 +247,17 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 		<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 		<div v-else class="space-y-6">
 			<!-- Ordre changé (glisser-déposer, flèches) : enregistré en une seule publication -->
-			<div
+			<form
 				v-if="orderPending"
 				class="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200"
 				role="status"
+				@submit.prevent="saveOrder"
 			>
 				<i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i>
-				<span class="min-w-0 flex-1">Nouvel ordre {{ categoryDraft ? 'des catégories et des activités' : 'des activités' }}, pas encore publié.</span>
-				<button
-					type="button"
-					class="rounded-full bg-primary px-4 py-1.5 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
-					:disabled="publishLocked"
-					@click="saveOrder"
-				>
-					Enregistrer et publier
-				</button>
+				<span class="min-w-0 flex-1">Nouvel ordre {{ categoryDraft ? 'des catégories et des activités' : 'des activités' }}, pas encore enregistré.</span>
+				<PublishButtons compact :disabled="publishLocked" />
 				<button type="button" class="text-xs font-medium text-gray-700 hover:underline" @click="cancelOrder">Annuler</button>
-			</div>
+			</form>
 
 			<p v-if="orphans.length" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
 				Catégorie inconnue pour : {{ orphans.map((a) => a.title || a.slug).join(', ') }}. Ouvrez la fiche et choisissez une
@@ -305,8 +318,9 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 								title="Supprimer la catégorie (vide)"
 								:confirming="confirming === `cat:${cat.slug}`"
 								:disabled="locked"
+								deferrable
 								@ask="confirming = `cat:${cat.slug}`"
-								@confirm="removeCategory(cat)"
+								@confirm="removeCategory(cat, $event)"
 								@cancel="confirming = null"
 							/>
 							<span v-else class="w-7" aria-hidden="true"></span>
@@ -350,6 +364,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 								{{ a.title || a.slug }}
 							</button>
 							<span v-if="!a.isPublish" :class="[badge, 'shrink-0 bg-amber-50 text-amber-800']">brouillon</span>
+							<span v-if="isPendingHref(a.href)" :class="[badge, 'shrink-0 bg-amber-100 text-amber-800']" title="Modification enregistrée, pas encore publiée">À publier</span>
 							<span v-if="a.level" :class="[greyBadge, 'shrink-0 whitespace-nowrap']">{{ a.level }}</span>
 							<span v-if="!a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
 							<span class="ml-auto flex shrink-0 items-center gap-1">
@@ -386,8 +401,9 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 									title="Supprimer l'activité"
 									:confirming="confirming === a.slug"
 									:disabled="locked"
+									deferrable
 									@ask="confirming = a.slug"
-									@confirm="remove(a)"
+									@confirm="remove(a, $event)"
 									@cancel="confirming = null"
 								/>
 							</span>

@@ -214,6 +214,11 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
   activité à ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
   d'abord à la liste.
 - Vous naviguez normalement sur le site : la barre vous suit sur toutes les pages.
+- **À publier (N)** (ambre, rédaction et bureau) : apparaît dès qu'une
+  modification a été enregistrée **sans publier**. Un clic montre la liste
+  (quoi, qui, quand), **Publier les modifications** (une seule
+  reconstruction pour tout) et **Tout annuler…** (défait toutes les
+  modifications en attente, définitif).
 
 Les modules visibles dépendent de votre groupe :
 
@@ -294,6 +299,15 @@ page publique.
    sur l'accueil. Vaut pour tous les modules qui publient (Actualités, Pages,
    Activités, Association).
 
+**Enregistrer sans publier** : chaque formulaire (et la pastille de
+suppression, choix **Sans publier**) permet d'enregistrer sans reconstruire le
+site. La modification est gardée mais **pas encore visible** sur le site
+(badge **À publier** dans les listes) ; on enchaîne les retouches sans
+attendre, puis **Publier les modifications (N)** — en tête du module ou dans
+la barre — les met toutes en ligne en une fois. Idéal au lancement du site.
+Attention : les modifications en attente sont communes à tout le monde, et
+**Enregistrer et publier** publie aussi celles qui attendaient.
+
 Le texte accepte le **HTML** en plus du Markdown : tableaux, encadrés
 (`<div>`), mise en forme, détails dépliables, vidéos et cartes intégrées
 (`<iframe>` YouTube, Vimeo, PeerTube, OpenStreetMap). Par sécurité, tout code
@@ -315,15 +329,18 @@ dépose ; une image en ligne `https://…` est acceptée). Si la reconstruction
 **Supprimer** dans l'encadré rouge qui apparaît (ou **Annuler**). Le site est
 reconstruit comme pour un ajout ; l'actualité disparaît de la page
 Actualités, de l'accueil et du flux RSS. Si la reconstruction échoue, rien
-n'est supprimé.
+n'est supprimé. **Sans publier** (même encadré) : la suppression attend les
+autres modifications. Même encadré pour toutes les suppressions (pages,
+menus déroulants, activités, catégories) et la désactivation d'une page du site.
 
 **Modifier une actualité** : clic sur son **titre** dans la liste (l'icône 👁
 au bout de la ligne ouvre la page sur le site). Un formulaire
 s'ouvre, prérempli : titre, date, catégorie, résumé, auteur·rice, texte (en
 Markdown), photo (**Remplacer** / **Retirer**), crédit photo, et la case
 **Brouillon** pour retirer l'actualité du site sans la supprimer (la décocher
-plus tard la republie). **Enregistrer les modifications** reconstruit le site ;
+plus tard la republie). **Enregistrer et publier** reconstruit le site ;
 si la reconstruction échoue, la version précédente est conservée.
+**Enregistrer sans publier** garde la modification en attente (voir plus haut).
 
 **Formulaires en onglets** (actualités, pages, activités) : **Informations**
 (titre, résumé, date, emplacement, brouillon…), **Contenu** (texte en
@@ -370,7 +387,7 @@ blocs :
    **glissez la ligne par sa poignée ⠿** (souris ou doigt), ou utilisez les
    flèches **↑/↓** (affichées sur téléphone et tablette ; sur grand écran,
    elles réapparaissent au clavier avec Tab) ; un bandeau propose alors **Enregistrer et publier** (une
-   seule reconstruction pour tous les déplacements) ou **Annuler** ;
+   seule reconstruction pour tous les déplacements), **Enregistrer sans publier** ou **Annuler** ;
 2. **Pages libres** : hors du menu, accessibles par leur adresse seulement ;
 3. **Pages réservées** (espace bénévoles) ;
 4. **Bibliothèque de pages du site** : les pages fournies par le site
@@ -407,7 +424,8 @@ lien vers une page du site » ajoute un lien vers une autre page (voir
 [Publier une actualité](#publier-une-actualité)).
 
 **Créer et publier** reconstruit le site (environ une minute) ; en cas
-d'échec, rien n'est modifié. Changer l'emplacement ou l'adresse d'une page
+d'échec, rien n'est modifié. **Enregistrer sans publier** la garde en
+attente, avec les autres modifications (badge **À publier** dans la liste). Changer l'emplacement ou l'adresse d'une page
 **change son adresse** : les liens déjà partagés vers l'ancienne ne
 fonctionnent plus.
 
@@ -525,7 +543,7 @@ Détail : [inscription.md](inscription.md#présélection).
 - La **poignée ⠿** en début de ligne (à glisser) ou les flèches **↑/↓**
   changent l'ordre dans une catégorie. Un bandeau
   propose alors **Enregistrer et publier** (une seule reconstruction pour
-  tous les déplacements) ou **Annuler**. Tant qu'il est affiché, les autres
+  tous les déplacements), **Enregistrer sans publier** ou **Annuler**. Tant qu'il est affiché, les autres
   actions attendent.
 - **🗑** supprime la fiche (photo comprise) après confirmation dans
   l'encadré rouge. Pour la retirer du site sans la perdre, préférez la case
@@ -584,9 +602,10 @@ Le formulaire est découpé en blocs : **Identité**, **Coordonnées**,
   légales). Le responsable de la publication reprend le·la président·e s'il
   est vide.
 
-Dès qu'un champ change, un bandeau **Modifications pas encore publiées**
+Dès qu'un champ change, un bandeau **Modifications pas encore enregistrées**
 reste en haut du panneau : **Enregistrer et publier** reconstruit le site
-(environ une minute), **Annuler** remet les valeurs enregistrées. En cas
+(environ une minute), **Enregistrer sans publier** la garde en attente,
+**Annuler** remet les valeurs enregistrées. En cas
 d'échec de la reconstruction, l'ancienne version est remise en place.
 
 Le fichier modifié est `src/content/association.yaml` : ses commentaires
@@ -744,3 +763,5 @@ déploiement. Détail : [src/content/README.md](../src/content/README.md).
 | `Cannot find package 'yaml'` en lançant `auth-user.mjs` | `node dist/cli/auth-user.mjs` lancé **sur le VPS, hors du conteneur** (chemin `/opt/…`) | Utiliser `./auth-user.sh …` |
 | `docker` : erreur de permission / config en lecture seule | `DOCKER_CONFIG` non posé (`/root` en lecture seule) | Passer par `./auth-user.sh` ou `./deploy.sh`, ou préfixer par `DOCKER_CONFIG=$PWD/.dockercfg` |
 | Plus aucun admin ne peut se connecter | — | Sur le VPS : `./auth-user.sh reset <login>` |
+| Modification enregistrée mais absente du site | Enregistrée **sans publier** (bouton ambre **À publier (N)** dans la barre) | **Publier les modifications** depuis ce bouton ou l'encadré en tête du module |
+| Le bouton **À publier** a disparu sans qu'on ait publié | Le site a été reconstruit entre-temps (autre publication, redémarrage, `./update.sh`) : le lot est en ligne | Rien à faire |

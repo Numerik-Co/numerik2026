@@ -9,11 +9,13 @@
 import { computed, inject, ref, watch } from 'vue';
 import type { Association } from '../../../../lib/association';
 import { SOCIAL_NETWORKS } from '../../../../lib/association';
-import { ApiError, associationApi } from '../../client';
+import { ApiError, associationApi, type SaveResult } from '../../client';
+import { isDeferredSubmit } from '../../lot';
+import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../../context';
 
 const props = defineProps<{ source: Association; locked: boolean }>();
-const emit = defineEmits<{ published: [label: string]; dirty: [value: boolean] }>();
+const emit = defineEmits<{ published: [label: string, result: SaveResult]; dirty: [value: boolean] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
 const copy = (a: Association): Association => ({
@@ -32,14 +34,14 @@ const error = ref('');
 const changed = computed(() => JSON.stringify(form.value) !== JSON.stringify(saved.value));
 watch(changed, (value) => emit('dirty', value), { immediate: true });
 
-async function submit() {
+async function submit(event: Event) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('association');
-		await associationApi.update(form.value);
+		const result = await associationApi.update(form.value, { deferred: isDeferredSubmit(event) });
 		saved.value = copy(form.value);
-		emit('published', "Informations de l'association");
+		emit('published', "Informations de l'association", result);
 	} catch (e) {
 		takeModuleToReopen(); // l'enregistrement a échoué : pas de réouverture au prochain chargement
 		if (e instanceof ApiError && e.status === 401) return sessionExpired();
@@ -78,14 +80,8 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 			role="status"
 		>
 			<i class="fa-solid fa-pen" aria-hidden="true"></i>
-			<span class="min-w-0 flex-1">Modifications pas encore publiées.</span>
-			<button
-				type="submit"
-				class="rounded-full bg-primary px-4 py-1.5 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
-				:disabled="props.locked || busy"
-			>
-				Enregistrer et publier
-			</button>
+			<span class="min-w-0 flex-1">Modifications pas encore enregistrées.</span>
+			<PublishButtons compact :busy="busy" :disabled="props.locked" />
 			<button type="button" class="text-xs font-medium text-gray-700 hover:underline" @click="reset">Annuler</button>
 		</div>
 
@@ -210,13 +206,7 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 		</section>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="props.locked || busy || !changed"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				Enregistrer et publier
-			</button>
+			<PublishButtons :busy="busy" :disabled="props.locked || !changed" />
 			<button v-if="changed" type="button" class="text-sm text-gray-600 hover:underline" @click="reset">Annuler les modifications</button>
 		</div>
 	</form>

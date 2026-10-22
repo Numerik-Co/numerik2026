@@ -206,6 +206,18 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   vs dernière Release GitHub, cache mémoire 6 h, jamais bloquant). Fermer
   l'encadré de publication = `dismissStatus()` (définitif, pour tous, journalisé).
   Nouvelle action d'admin = un `logEvent()` + son libellé dans `JournalModule.vue`.
+- **Enregistrer sans publier** (lot) : `PublishButtons.vue` (2 boutons
+  d'envoi, `isDeferredSubmit(event)`), `ConfirmIconButton` `deferrable`
+  (`confirm(deferred)`) → `?publier=non` (`SaveOptions` de `client.ts`) ;
+  serveur : `publishBlocked(request)` ouvre le lot (copie de `src/content/`
+  dans `<DATA_DIR>/publication/lot/`) avant écriture, `publishChange({ request, … })`
+  l'y ajoute au lieu de reconstruire (`src/lib/publication-lot.ts`, route
+  `/api/admin/publication/lot`). Toute reconstruction réussie referme le lot
+  (`clearLot()` dans `site-build.ts` ; redémarrage : empreinte comparée dans
+  `readLot()`). Client : `lot.ts` (store, badge `isPendingHref`), bouton
+  « À publier (N) » de `AdminRoot`, encadré de `PublishStatus`,
+  `usePublication().afterSave(label, result)`. Nouvelle route qui modifie le
+  contenu = `publishBlocked(request)` + `publishChange`.
 - **Fin de publication** (`usePublication`, option `module`) : publication
   suivie réussie → compte à rebours 3 s dans `PublishStatus` (« Ne pas
   actualiser ») puis rechargement de la page, module rouvert

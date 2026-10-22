@@ -11,9 +11,21 @@
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
+import PublishButtons from '../PublishButtons.vue';
 import PublishStatus from '../PublishStatus.vue';
-import { ApiError, dropdownsApi, menuOrderApi, pagesApi, sitePagesApi, type DropdownView, type PageSourceView, type SitePageView } from '../client';
+import {
+	ApiError,
+	dropdownsApi,
+	menuOrderApi,
+	pagesApi,
+	sitePagesApi,
+	type DropdownView,
+	type PageSourceView,
+	type SaveResult,
+	type SitePageView,
+} from '../client';
 import { ADMIN_CONTEXT, iconButtonClass, inputClass, rememberOpenModule, sortableProps, takeModuleToReopen } from '../context';
+import { isDeferredSubmit } from '../lot';
 import { usePublication } from '../usePublication';
 import DragHandle from './pages/DragHandle.vue';
 import OrderArrows from './pages/OrderArrows.vue';
@@ -67,7 +79,7 @@ async function load() {
 	}
 }
 
-const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+const { status, following, receive, afterSave, publishLot, savedLabel, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
 	module: 'pages-site',
 	onSettled: () => load(),
 	onError: fail,
@@ -99,14 +111,14 @@ function reorder(level: string, keys: string[]) {
 	orderDraft.value = { ...orderDraft.value, [level]: keys };
 }
 
-async function saveOrder() {
+async function saveOrder(event: Event) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		await menuOrderApi.save(orderDraft.value);
+		const result = await menuOrderApi.save(orderDraft.value, { deferred: isDeferredSubmit(event) });
 		orderDraft.value = {};
-		started('Nouvel ordre du menu');
+		afterSave('Nouvel ordre du menu', result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -176,19 +188,19 @@ async function openPage(page: PageSourceView | null) {
 	}
 }
 
-function onPublished(label: string) {
+function onPublished(label: string, result: SaveResult) {
 	go({ name: 'list' });
-	started(label);
+	afterSave(label, result);
 }
 
-async function removePage(page: PageSourceView) {
+async function removePage(page: PageSourceView, deferred: boolean) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		await pagesApi.remove(page.path);
+		const result = await pagesApi.remove(page.path, { deferred });
 		confirming.value = null;
-		started(`Suppression : ${page.title}`);
+		afterSave(`Suppression : ${page.title}`, result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -204,16 +216,18 @@ function openDropdown(dropdown: DropdownView | null) {
 	go({ name: 'dropdown', dropdown });
 }
 
-async function saveDropdown() {
+async function saveDropdown(event: Event) {
 	if (view.value.name !== 'dropdown') return;
 	const current = view.value.dropdown;
+	const options = { deferred: isDeferredSubmit(event) };
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		if (current) await dropdownsApi.update(current.folder, { label: dropdownForm.label });
-		else await dropdownsApi.create({ label: dropdownForm.label, folder: dropdownForm.folder });
-		onPublished(`Menu déroulant : ${dropdownForm.label}`);
+		const result = current
+			? await dropdownsApi.update(current.folder, { label: dropdownForm.label }, options)
+			: await dropdownsApi.create({ label: dropdownForm.label, folder: dropdownForm.folder }, options);
+		onPublished(`Menu déroulant : ${dropdownForm.label}`, result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -221,14 +235,14 @@ async function saveDropdown() {
 	}
 }
 
-async function removeDropdown(dropdown: DropdownView) {
+async function removeDropdown(dropdown: DropdownView, deferred: boolean) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		await dropdownsApi.remove(dropdown.folder);
+		const result = await dropdownsApi.remove(dropdown.folder, { deferred });
 		confirming.value = null;
-		started(`Suppression du menu déroulant : ${dropdown.label}`);
+		afterSave(`Suppression du menu déroulant : ${dropdown.label}`, result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -242,14 +256,18 @@ async function removeDropdown(dropdown: DropdownView) {
 const inactiveSitePages = computed(() => sitePages.value.filter((p) => !p.active));
 
 /** Changement rapide depuis la liste (menu, activation), réglages actuels gardés pour le reste. */
-async function updateSitePage(page: SitePageView, change: { show?: boolean; active?: boolean }, label: string) {
+async function updateSitePage(page: SitePageView, change: { show?: boolean; active?: boolean }, label: string, deferred = false) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		await sitePagesApi.update(page.id, { label: page.label, show: page.show, active: page.active, textes: page.textes, ...change });
+		const result = await sitePagesApi.update(
+			page.id,
+			{ label: page.label, show: page.show, active: page.active, textes: page.textes, ...change },
+			{ deferred },
+		);
 		confirming.value = null;
-		started(`${label} : ${page.label}`);
+		afterSave(`${label} : ${page.label}`, result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -269,7 +287,16 @@ onMounted(load);
 </script>
 
 <template>
-	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
+	<PublishStatus
+		:status="status"
+		:following="following"
+		:reload-in="reloadIn"
+		:saved-label="savedLabel"
+		:locked="locked"
+		@dismiss="dismissStatus"
+		@cancel-reload="cancelReload"
+		@publish-lot="publishLot"
+	/>
 	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -297,23 +324,17 @@ onMounted(load);
 		<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 		<div v-else class="space-y-6">
 			<!-- Ordre changé (glisser-déposer, flèches) : enregistré en une seule publication -->
-			<div
+			<form
 				v-if="orderPending"
 				class="sticky top-0 z-20 flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200"
 				role="status"
+				@submit.prevent="saveOrder"
 			>
 				<i class="fa-solid fa-arrows-up-down" aria-hidden="true"></i>
-				<span class="min-w-0 flex-1">Nouvel ordre du menu, pas encore publié.</span>
-				<button
-					type="button"
-					class="rounded-full bg-primary px-4 py-1.5 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
-					:disabled="publishLocked"
-					@click="saveOrder"
-				>
-					Enregistrer et publier
-				</button>
+				<span class="min-w-0 flex-1">Nouvel ordre du menu, pas encore enregistré.</span>
+				<PublishButtons compact :disabled="publishLocked" />
 				<button type="button" class="text-xs font-medium text-gray-700 hover:underline" @click="orderDraft = {}">Annuler</button>
-			</div>
+			</form>
 
 			<!-- 1. Menu de navigation : pages du site, liens directs, menus déroulants -->
 			<section class="overflow-hidden rounded-xl border border-gray-200">
@@ -380,8 +401,9 @@ onMounted(load);
 									title="Désactiver la page (retirée du site, réactivable depuis la bibliothèque)"
 									:confirming="confirming === `site:${item.site.id}`"
 									:disabled="locked"
+									deferrable
 									@ask="confirming = `site:${item.site.id}`"
-									@confirm="updateSitePage(item.site, { active: false }, 'Page désactivée')"
+									@confirm="updateSitePage(item.site, { active: false }, 'Page désactivée', $event)"
 									@cancel="confirming = null"
 								/>
 								<span v-else class="w-7" aria-hidden="true" title="Toujours active"></span>
@@ -394,7 +416,7 @@ onMounted(load);
 							:confirming="confirming === `page:${item.page.path}`"
 							@edit="openPage(item.page)"
 							@ask-delete="confirming = `page:${item.page.path}`"
-							@confirm-delete="removePage(item.page)"
+							@confirm-delete="removePage(item.page, $event)"
 							@cancel-delete="confirming = null"
 						>
 							<span class="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">lien direct</span>
@@ -460,8 +482,9 @@ onMounted(load);
 											title="Supprimer le menu déroulant"
 											:confirming="confirming === `dropdown:${item.dropdown.folder}`"
 											:disabled="locked"
+											deferrable
 											@ask="confirming = `dropdown:${item.dropdown.folder}`"
-											@confirm="removeDropdown(item.dropdown)"
+											@confirm="removeDropdown(item.dropdown, $event)"
 											@cancel="confirming = null"
 										/>
 									</template>
@@ -492,7 +515,7 @@ onMounted(load);
 											:confirming="confirming === `page:${p.path}`"
 											@edit="openPage(p)"
 											@ask-delete="confirming = `page:${p.path}`"
-											@confirm-delete="removePage(p)"
+											@confirm-delete="removePage(p, $event)"
 											@cancel-delete="confirming = null"
 										>
 											<span v-if="!p.menu.show" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600">masquée du menu</span>
@@ -553,7 +576,7 @@ onMounted(load);
 						:confirming="confirming === `page:${p.path}`"
 						@edit="openPage(p)"
 						@ask-delete="confirming = `page:${p.path}`"
-						@confirm-delete="removePage(p)"
+						@confirm-delete="removePage(p, $event)"
 						@cancel-delete="confirming = null"
 					>
 						<span v-if="group.key === 'reservee'" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs ring-1 ring-inset ring-gray-200 text-gray-600">
@@ -584,6 +607,15 @@ onMounted(load);
 							@click="updateSitePage(p, { active: true }, 'Page activée')"
 						>
 							<i class="fa-solid fa-power-off mr-1" aria-hidden="true"></i>Activer
+						</button>
+						<button
+							type="button"
+							class="text-xs font-medium text-primary hover:underline disabled:opacity-50"
+							:disabled="locked"
+							title="Activer sans reconstruire le site : l'activation rejoint les modifications en attente de publication."
+							@click="updateSitePage(p, { active: true }, 'Page activée', true)"
+						>
+							sans publier
 						</button>
 					</li>
 					<li v-if="!inactiveSitePages.length" class="px-4 py-2.5 text-sm font-light text-gray-500">
@@ -636,13 +668,7 @@ onMounted(load);
 			Le menu déroulant se place en dernière position du menu de navigation ; les flèches ↑/↓ de la liste changent l'ordre.
 		</p>
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="locked"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				{{ view.dropdown ? 'Enregistrer et publier' : 'Créer le menu déroulant' }}
-			</button>
+			<PublishButtons :label="view.dropdown ? 'Enregistrer et publier' : 'Créer et publier'" :disabled="locked" />
 			<button type="button" class="text-sm text-gray-600 hover:underline" @click="go({ name: 'list' })">Annuler</button>
 		</div>
 	</form>

@@ -100,7 +100,8 @@ Markdown des blocs passe par le même nettoyage (`markdown-fragment.ts`).
 
 Groupes `redacteur` / `admin` / `superadmin`. Écrit dans les sources puis
 reconstruit le site, comme le module « Actualités »
-([publication.md](publication.md)) :
+([publication.md](publication.md)) — ou, avec « Enregistrer sans publier »,
+ajoute la modification au lot en attente, publié plus tard en une fois :
 
 - `src/components/admin/modules/SitePagesModule.vue` — liste en quatre blocs :
   menu de navigation tel qu'affiché (pages du site actives, liens directs,

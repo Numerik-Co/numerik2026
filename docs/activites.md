@@ -135,7 +135,9 @@ main reste modifiable depuis le module, et inversement.
 
 Toutes passent par `publishChange()` (`src/lib/admin-publish.ts`) : écriture,
 reconstruction du site (`site-build.ts`), puis `purge` de la sauvegarde si
-elle réussit, `restore` sinon. Garde : `GUARDS` de `src/middleware.ts`
+elle réussit, `restore` sinon ; avec `?publier=non`, la modification
+rejoint le lot en attente sans reconstruction
+([publication.md](publication.md#enregistrer-sans-publier-lot-de-modifications)). Garde : `GUARDS` de `src/middleware.ts`
 (`/api/admin/activites` → `redacteur`). Journal : `activite.ajout`,
 `activite.modification`, `activite.suppression`, `activite.ordre`,
 `categorie.ajout`, `categorie.modification`, `categorie.suppression`.

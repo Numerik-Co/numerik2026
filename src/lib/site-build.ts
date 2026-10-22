@@ -16,6 +16,8 @@
  * En cas d'échec du build, `onFailure` défait la modification de contenu et
  * le site reste tel quel ; en cas de succès, `onSuccess` la rend définitive
  * (ex. effacer le dossier d'une actualité supprimée, gardé de côté jusque-là).
+ * Toute reconstruction réussie publie aussi les modifications enregistrées
+ * sans publier (lot refermé, cf. `publication-lot.ts`).
  *
  * En développement (`astro dev`), rien à construire : le contenu est relu à chaud.
  * Une seule publication à la fois ; l'état est gardé dans
@@ -34,6 +36,7 @@ import { join, resolve } from 'node:path';
 import { RELEASES_DIR, pruneReleases, releaseStamp, swapDist } from '../../scripts/releases.mjs';
 import { dataDir } from './data-dir';
 import { logEvent, type JournalActor } from './journal';
+import { clearLot } from './publication-lot';
 
 export interface BuildStatus {
 	state: 'idle' | 'running' | 'succeeded' | 'failed';
@@ -200,6 +203,7 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 
 	if (import.meta.env.DEV) {
 		await request.onSuccess?.().catch(() => {});
+		await clearLot().catch(() => {});
 		// Pas de build en dev (contenu relu à chaud) : le mode est affiché dans la barre d'admin.
 		await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: startedAt, by });
 		await logEvent({ by, action: 'publication', label: request.label, href: request.href, outcome: 'ok', message: 'Serveur de développement : aucune reconstruction.' });
@@ -216,6 +220,8 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 			await run('npm', ['run', '-s', 'build'], { ASTRO_OUT_DIR: outDir }, log);
 			await swapDist(root(), release);
 			await request.onSuccess?.().catch(() => {});
+			// Les sources entières sont en ligne : lot en attente compris.
+			await clearLot().catch(() => {});
 			let message: string | undefined;
 			if (PUBLISH_HOOK) {
 				try {

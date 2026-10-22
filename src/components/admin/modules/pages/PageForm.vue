@@ -13,7 +13,9 @@ import { computed, inject, nextTick, onBeforeUnmount, reactive, ref, toRaw } fro
 import { ASSIGNABLE_GROUPS, AUTH_GROUPS } from '../../../../lib/auth/groups';
 import { blocMarker, type Bloc } from '../../../../lib/blocs';
 import { PAGE_VARIABLES } from '../../../../lib/page-variables';
-import { ApiError, pagesApi, type CoverUpdate, type DropdownView, type PageInput, type PageSourceView } from '../../client';
+import { ApiError, pagesApi, type CoverUpdate, type DropdownView, type PageInput, type PageSourceView, type SaveResult } from '../../client';
+import { isDeferredSubmit } from '../../lot';
+import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
 import LinkPicker from '../../LinkPicker.vue';
 import EditFileBar from '../../EditFileBar.vue';
@@ -25,7 +27,7 @@ import BlocsEditor from './BlocsEditor.vue';
 import { downloadPageTemplate, pageMarkdownFile, parsePageMarkdown } from './page-markdown';
 
 const props = defineProps<{ dropdowns: DropdownView[]; source: PageSourceView | null; disabled: boolean }>();
-const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
+const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
 const RESERVED_PREFIX = 'espace-benevoles';
@@ -204,7 +206,7 @@ function resetPhoto() {
 }
 onBeforeUnmount(resetPhoto);
 
-async function submit() {
+async function submit(event: Event) {
 	error.value = '';
 	busy.value = true;
 	try {
@@ -223,13 +225,12 @@ async function submit() {
 		};
 		const newPhoto = coverAction.value === 'replace' && photo.value ? { type: photo.value.type, data: await fileToBase64(photo.value) } : null;
 		rememberOpenModule('pages-site');
+		const options = { deferred: isDeferredSubmit(event) };
 		if (editing) {
 			const cover: CoverUpdate = newPhoto ? { action: 'replace', ...newPhoto } : coverAction.value === 'remove' ? { action: 'remove' } : { action: 'keep' };
-			await pagesApi.update(editing.path, input, cover);
-			emit('published', `Modification : ${form.title}`);
+			emit('published', `Modification : ${form.title}`, await pagesApi.update(editing.path, input, cover, options));
 		} else {
-			await pagesApi.create(input, newPhoto);
-			emit('published', `Page : ${form.title}`);
+			emit('published', `Page : ${form.title}`, await pagesApi.create(input, newPhoto, options));
 		}
 	} catch (e) {
 		if (e instanceof ApiError && e.status === 401) return sessionExpired();
@@ -471,13 +472,7 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 		</div>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="busy || props.disabled || editing?.technique"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				{{ busy ? 'Envoi…' : editing ? 'Enregistrer et publier' : 'Créer et publier' }}
-			</button>
+			<PublishButtons :label="editing ? 'Enregistrer et publier' : 'Créer et publier'" :busy="busy" :disabled="props.disabled || editing?.technique" />
 			<button type="button" class="text-sm text-gray-600 hover:underline" @click="emit('cancel')">Annuler</button>
 		</div>
 	</form>

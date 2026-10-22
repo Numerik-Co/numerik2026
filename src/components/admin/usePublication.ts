@@ -9,18 +9,23 @@
  * `cancelReload`) puis rechargement de la page pour voir le site à jour, le
  * module étant rouvert ensuite (`reopenAfterReload`). Page disparue (404 :
  * actualité supprimée, adresse changée) : page publiée, sinon l'accueil.
+ *
+ * Enregistrement sans publier (`saved`) : rien à suivre, la liste du module
+ * et le lot en attente (`lot.ts`) sont relus, l'encadré le rappelle ;
+ * `publishLot` publie tout le lot en une reconstruction, suivie de même.
  */
 import { onBeforeUnmount, ref } from 'vue';
-import { ApiError, newsApi, type PublishStatus } from './client';
+import { ApiError, lotApi, newsApi, type PublishStatus } from './client';
 import { reopenAfterReload } from './context';
+import { loadLot, publishing } from './lot';
 
 const POLL_MS = 3000;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 const RELOAD_DELAY_S = 3;
 
 export function usePublication(options: {
-	/** Identifiant du module (`ADMIN_MODULES`), rouvert après le rechargement de la page. */
-	module: string;
+	/** Identifiant du module (`ADMIN_MODULES`), rouvert après le rechargement de la page (barre : module ouvert, s'il y en a un). */
+	module: string | (() => string | null);
 	/** Publication terminée (ou abandon du suivi) : recharger la liste du module. */
 	onSettled: () => void | Promise<void>;
 	onError: (e: unknown) => void;
@@ -32,6 +37,8 @@ export function usePublication(options: {
 	/** Secondes avant le rechargement de la page (0 = en cours), `null` = pas de rechargement prévu. */
 	const reloadIn = ref<number | null>(null);
 	let reloadTimer: ReturnType<typeof setTimeout> | undefined;
+	/** Dernière modification enregistrée sans publier depuis ce module (rappel dans l'encadré). */
+	const savedLabel = ref<string | null>(null);
 
 	/** Nouvel état reçu du serveur (liste du module) : suit la publication si elle est en cours. */
 	function receive(next: PublishStatus) {
@@ -41,12 +48,37 @@ export function usePublication(options: {
 
 	/** Publication lancée depuis le module : encadré « en cours » puis suivi. */
 	function started(label: string | undefined) {
+		savedLabel.value = null;
 		status.value = { state: 'running', label };
 		follow();
 	}
 
+	/** Modification enregistrée sans publier : rien à suivre, liste et lot relus. */
+	async function saved(label: string) {
+		savedLabel.value = label;
+		await Promise.all([loadLot(), options.onSettled()]);
+	}
+
+	/** Réponse d'un enregistrement : suivi de la publication, ou simple rappel si elle attend dans le lot. */
+	function afterSave(label: string, result: { deferred?: true }) {
+		if (result.deferred) void saved(label);
+		else started(label);
+	}
+
+	/** Publie en une fois toutes les modifications en attente. */
+	async function publishLot() {
+		try {
+			const { label } = await lotApi.publish();
+			started(label);
+		} catch (e) {
+			options.onError(e);
+			void loadLot();
+		}
+	}
+
 	function follow() {
 		following.value = true;
+		publishing.value = true;
 		const startedAt = Date.now();
 		const tick = async () => {
 			try {
@@ -60,10 +92,11 @@ export function usePublication(options: {
 				return;
 			}
 			following.value = false;
+			publishing.value = false;
 			if (status.value.state === 'running') {
 				options.onError(new Error('La publication prend plus de temps que prévu. Rouvrez ce module dans quelques minutes pour voir le résultat.'));
 			}
-			await options.onSettled();
+			await Promise.all([options.onSettled(), loadLot()]);
 			if (status.value.state === 'succeeded') scheduleReload();
 		};
 		// Premier point d'étape presque immédiat (en dev, la publication est déjà finie).
@@ -87,7 +120,8 @@ export function usePublication(options: {
 	}
 
 	async function reloadPage() {
-		reopenAfterReload(options.module);
+		const module = typeof options.module === 'function' ? options.module() : options.module;
+		if (module) reopenAfterReload(module);
 		let target: string | null = null;
 		try {
 			const res = await fetch(location.pathname + location.search, { method: 'HEAD', cache: 'no-store' });
@@ -116,9 +150,10 @@ export function usePublication(options: {
 	}
 
 	onBeforeUnmount(() => {
+		if (following.value) publishing.value = false;
 		clearTimeout(pollTimer);
 		clearTimeout(reloadTimer);
 	});
 
-	return { status, following, receive, started, dismiss, reloadIn, cancelReload };
+	return { status, following, receive, started, saved, afterSave, publishLot, savedLabel, dismiss, reloadIn, cancelReload };
 }

@@ -82,6 +82,11 @@ L'encadré du dernier résultat de publication (module « Actualités ») se fer
 `dismissStatus()` remet `status.json` à `idle`) ; le résultat reste dans le
 journal.
 
+Toutes les routes qui modifient le contenu acceptent `?publier=non` :
+la modification est écrite dans les sources sans reconstruire le site et
+rejoint le lot en attente (réponse `200 { ok, href, deferred: true }` au
+lieu de `202`), voir [publication.md](publication.md#enregistrer-sans-publier-lot-de-modifications).
+
 ## Réserver une page de contenu
 
 Les pages réservées se rangent dans **`src/content/pages/espace-benevoles/`**
@@ -144,13 +149,14 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | :--- | :--- |
 | `POST /api/auth/login` | `{ login, password }` → `{ user }` + cookies |
 | `POST /api/auth/logout` | Ferme la session |
-| `GET /api/auth/me` | `{ user, pages }` (pages réservées ouvertes) ou 401 |
+| `GET /api/auth/me` | `{ user, pages, lot }` (pages réservées ouvertes ; modifications en attente de publication pour `redacteur` / `admin`, sinon `[]`) ou 401 |
 | `POST /api/admin/mot-de-passe` | `{ current, next }` — ferme les autres sessions |
 | `GET/POST /api/admin/comptes` | Liste / création (`password` provisoire renvoyé une fois) — `admin` |
-| `GET/POST /api/admin/actualites` | Liste (brouillons compris) + état de publication / dépôt `{ markdown, cover?: { type, data } }` → écrit `src/content/news/…` et reconstruit le site — `redacteur` |
+| `GET/POST /api/admin/actualites` | Liste lue dans les sources (brouillons et actualités en attente compris) + état de publication / dépôt `{ markdown, cover?: { type, data } }` → écrit `src/content/news/…` et reconstruit le site — `redacteur` |
 | `GET/PUT /api/admin/actualites/<slug>` | Lecture des sources (formulaire) / modification `{ fields, body, cover: { action: keep\|remove\|replace } }` : même dossier (URL inchangée), sauvegarde restaurée si le build échoue — `redacteur` |
 | `DELETE /api/admin/actualites/<slug>` | Suppression `{ confirm: <slug> }` : dossier mis de côté, site reconstruit, dossier effacé (ou remis en place si échec) — `redacteur` |
 | `GET/DELETE /api/admin/publication` | État de la dernière publication / fermeture définitive de son encadré (journalisée) — `redacteur` |
+| `GET/POST/DELETE /api/admin/publication/lot` | Modifications enregistrées sans publier : liste / publication de tout le lot en une reconstruction / annulation `{ confirm: true }` (sources remises en l'état, journalisée), cf. [publication.md](publication.md#enregistrer-sans-publier-lot-de-modifications) — `redacteur` |
 | `GET /api/admin/journal` | Journal des modifications, `?annee=AAAA` — `superadmin` seul |
 | `GET/POST /api/admin/activites`, `GET/PUT/DELETE /api/admin/activites/<slug>`, `PUT /api/admin/activites/ordre`, `POST /api/admin/activites/categories`, `PUT/DELETE /api/admin/activites/categories/<slug>` | Fiches d'activité et catégories (sources), ordre des catégories et des fiches, cf. [activites.md](activites.md#module-activités-espace-bénévoles) — `redacteur` |
 | `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>` | Pages de contenu (sources), cf. [pages.md](pages.md#module-pages-espace-bénévoles) — `redacteur` |

@@ -1,11 +1,13 @@
 /**
  * Module « Actualités » (groupes `redacteur` / `admin`, garde dans
  * `src/middleware.ts`) :
- *  - GET  : actualités (brouillons compris), état de la dernière publication,
+ *  - GET  : actualités des sources (brouillons et actualités enregistrées
+ *           sans publier compris), état de la dernière publication,
  *           disponibilité de la publication sur ce serveur ;
  *  - POST : `{ markdown, cover?: { type, data (base64) } }` → écrit
  *           `src/content/news/<AAAA-MM-JJ-slug>/` puis lance la reconstruction
  *           du site (`src/lib/site-build.ts`) ; annulée si le build échoue.
+ *           `?publier=non` : rejoint le lot en attente (`src/lib/admin-publish.ts`).
  * Envoi en JSON (photo en base64) : la protection d'origine du middleware
  * (Sec-Fetch-Site) ne dépend pas de la configuration du proxy.
  */
@@ -13,9 +15,9 @@ import type { APIRoute } from 'astro';
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { json, jsonError, readJson, withErrors } from '../../../../lib/auth/api';
-import { COVER_MAX_BYTES, MARKDOWN_MAX_BYTES, removeNews, writeNews } from '../../../../lib/news-writer';
-import { logEvent } from '../../../../lib/journal';
-import { canPublish, isPublishing, publish, readStatus, type BuildStatus } from '../../../../lib/site-build';
+import { COVER_MAX_BYTES, MARKDOWN_MAX_BYTES, listNewsSources, removeNews, writeNews } from '../../../../lib/news-writer';
+import { publishBlocked, publishChange } from '../../../../lib/admin-publish';
+import { canPublish, readStatus, type BuildStatus } from '../../../../lib/site-build';
 
 export const prerender = false;
 
@@ -39,17 +41,21 @@ function statusToShow(status: BuildStatus, hrefs: Set<string>): BuildStatus {
 }
 
 export const GET: APIRoute = withErrors(async () => {
-	const entries = await getCollection('news');
+	// Liste lue dans les sources (actualités enregistrées sans publier comprises) ; vignette du site construit.
+	const built = new Map((await getCollection('news')).map((e) => [e.id, e.data.cover]));
 	const news = await Promise.all(
-		entries.map(async ({ id, data }) => ({
-			slug: id,
-			href: `/actualites/${id}`,
-			title: data.title,
-			publishAt: data.publishAt.toISOString().slice(0, 10),
-			isPublish: data.isPublish,
-			tag: data.tag ?? null,
-			thumbnail: data.cover ? (await getImage({ src: data.cover, width: 128, height: 80, fit: 'cover' })).src : null,
-		})),
+		(await listNewsSources()).map(async (source) => {
+			const cover = built.get(source.slug);
+			return {
+				slug: source.slug,
+				href: `/actualites/${source.slug}`,
+				title: source.title || source.slug,
+				publishAt: source.publishAt,
+				isPublish: source.isPublish,
+				tag: source.tag || null,
+				thumbnail: cover ? (await getImage({ src: cover, width: 128, height: 80, fit: 'cover' })).src : null,
+			};
+		}),
 	);
 	news.sort((a, b) => b.publishAt.localeCompare(a.publishAt) || a.slug.localeCompare(b.slug));
 	const status = statusToShow(await readStatus(), new Set(news.map((n) => n.href)));
@@ -57,9 +63,8 @@ export const GET: APIRoute = withErrors(async () => {
 });
 
 export const POST: APIRoute = withErrors(async ({ request, locals }) => {
-	const availability = await canPublish();
-	if (!availability.ok) return jsonError(availability.reason!, 503);
-	if (isPublishing()) return jsonError('Une publication est déjà en cours, réessayez dans une minute.', 409);
+	const blocked = await publishBlocked(request);
+	if (blocked) return blocked;
 
 	const body = await readJson(request);
 	const markdown = typeof body?.markdown === 'string' ? body.markdown : '';
@@ -78,14 +83,13 @@ export const POST: APIRoute = withErrors(async ({ request, locals }) => {
 	const { slug, title, errors } = await writeNews(markdown, cover);
 	if (!slug) return jsonError(errors.join(' '), 422);
 
-	const href = `/actualites/${slug}`;
-	// Journalisé avant la publication, dont le résultat suit dans le journal.
-	await logEvent({ by: locals.user, action: 'actualite.ajout', label: title!, href });
-	const started = await publish({ label: title!, href, by: locals.user!, onFailure: () => removeNews(slug) });
-	if (!started.started) {
-		await removeNews(slug);
-		await logEvent({ by: locals.user, action: 'publication', label: title!, outcome: 'echec', message: started.reason });
-		return jsonError(started.reason!, 409);
-	}
-	return json({ slug, href }, 202);
+	return publishChange({
+		request,
+		user: locals.user!,
+		action: 'actualite.ajout',
+		subject: title!,
+		label: title!,
+		href: `/actualites/${slug}`,
+		applied: { restore: () => removeNews(slug), purge: async () => {} },
+	});
 });

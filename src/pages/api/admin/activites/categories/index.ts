@@ -15,12 +15,13 @@ import { readCategoryInput, saveCategory } from '../../../../../lib/category-wri
 export const prerender = false;
 
 export const POST: APIRoute = withErrors(async ({ request, locals }) => {
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const result = await saveCategory(readCategoryInput(body.category), null);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'categorie.ajout',
 		subject: result.label!,

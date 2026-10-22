@@ -9,7 +9,9 @@ import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import { association } from '../../../../lib/association';
 import { COLOR_PATTERN, type ThemeColors } from '../../../../config/site';
-import { ApiError, brandApi, type BrandSource } from '../../client';
+import { ApiError, brandApi, type BrandSource, type SaveResult } from '../../client';
+import { isDeferredSubmit } from '../../lot';
+import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, compactInputClass, fileToBase64, iconButtonClass, rememberOpenModule, sortableProps, takeModuleToReopen } from '../../context';
 import DragHandle from '../pages/DragHandle.vue';
 import OrderArrows from '../pages/OrderArrows.vue';
@@ -17,7 +19,7 @@ import ColorField from './ColorField.vue';
 import { fullHex } from './contrast';
 
 const props = defineProps<{ locked: boolean }>();
-const emit = defineEmits<{ published: [label: string]; dirty: [value: boolean] }>();
+const emit = defineEmits<{ published: [label: string, result: SaveResult]; dirty: [value: boolean] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
@@ -129,20 +131,23 @@ async function upload(picked: Picked | null) {
 	return picked ? { type: picked.file.type, data: await fileToBase64(picked.file) } : undefined;
 }
 
-async function submit() {
+async function submit(event: Event) {
 	if (!allValid.value) return void (error.value = 'Une couleur est mal saisie (format #2f7fc1).');
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('association');
-		await brandApi.update({
-			colors: { ...colors.value, stripe: stripeValues.value },
-			logo: await upload(logo.value),
-			favicon: await upload(favicon.value),
-		});
+		const result = await brandApi.update(
+			{
+				colors: { ...colors.value, stripe: stripeValues.value },
+				logo: await upload(logo.value),
+				favicon: await upload(favicon.value),
+			},
+			{ deferred: isDeferredSubmit(event) },
+		);
 		clear('logo');
 		clear('favicon');
-		emit('published', 'Charte graphique');
+		emit('published', 'Charte graphique', result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -181,14 +186,8 @@ onBeforeUnmount(() => {
 			role="status"
 		>
 			<i class="fa-solid fa-palette" aria-hidden="true"></i>
-			<span class="min-w-0 flex-1">Modifications pas encore publiées.</span>
-			<button
-				type="submit"
-				class="rounded-full bg-primary px-4 py-1.5 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
-				:disabled="props.locked || busy"
-			>
-				Enregistrer et publier
-			</button>
+			<span class="min-w-0 flex-1">Modifications pas encore enregistrées.</span>
+			<PublishButtons compact :busy="busy" :disabled="props.locked" />
 			<button type="button" class="text-xs font-medium text-gray-700 hover:underline" @click="reset">Annuler</button>
 		</div>
 
@@ -378,13 +377,7 @@ onBeforeUnmount(() => {
 		</section>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="props.locked || busy || !changed"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				Enregistrer et publier
-			</button>
+			<PublishButtons :busy="busy" :disabled="props.locked || !changed" />
 			<button v-if="changed" type="button" class="text-sm text-gray-600 hover:underline" @click="reset">Annuler les modifications</button>
 		</div>
 	</form>

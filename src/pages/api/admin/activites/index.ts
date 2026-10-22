@@ -47,7 +47,7 @@ export const GET: APIRoute = withErrors(async () => {
 });
 
 export const POST: APIRoute = withErrors(async ({ request, locals }) => {
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const cover = readCover(body.cover);
@@ -57,6 +57,7 @@ export const POST: APIRoute = withErrors(async ({ request, locals }) => {
 	const result = await saveActivity(input, null, cover.data ? { action: 'replace', data: cover.data } : { action: 'keep' });
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'activite.ajout',
 		subject: result.title!,

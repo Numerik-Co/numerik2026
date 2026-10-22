@@ -11,8 +11,9 @@
  * Le serveur écrit `src/content/news/<AAAA-MM-JJ-slug>/` puis reconstruit le
  * site (≈ 1 min, cf. src/lib/site-build.ts) : le module suit la publication
  * (`/api/admin/publication`) jusqu'à sa mise en ligne, y compris pendant le
- * bref redémarrage du serveur. L'aperçu du frontmatter est indicatif ; le
- * serveur fait la vraie validation.
+ * bref redémarrage du serveur. « Enregistrer sans publier » : rien n'est
+ * reconstruit, la modification rejoint le lot en attente (`../lot.ts`).
+ * L'aperçu du frontmatter est indicatif ; le serveur fait la vraie validation.
  */
 import { computed, inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import ConfirmIconButton from '../ConfirmIconButton.vue';
@@ -20,10 +21,12 @@ import EditFileBar from '../EditFileBar.vue';
 import FormHeader from '../FormHeader.vue';
 import FormTabs from '../FormTabs.vue';
 import LinkPicker from '../LinkPicker.vue';
+import PublishButtons from '../PublishButtons.vue';
 import PublishStatus from '../PublishStatus.vue';
 import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem } from '../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 import { EDIT_TABS, useFormTabs, type EditTab } from '../form-tabs';
+import { isDeferredSubmit, isPendingHref } from '../lot';
 import { downloadMarkdown, readMarkdownFile } from '../markdown-file';
 import { usePublication } from '../usePublication';
 import { newsMarkdownFile, parseNewsMarkdown } from './actualites/news-markdown';
@@ -69,7 +72,7 @@ async function load() {
 
 // --- Suivi de la publication ---
 
-const { status, following, receive, started, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
+const { status, following, receive, afterSave, publishLot, savedLabel, dismiss: dismissStatus, reloadIn, cancelReload } = usePublication({
 	module: 'actualites',
 	onSettled: () => load(),
 	onError: fail,
@@ -152,14 +155,14 @@ function toBase64(file: File): Promise<string> {
 	});
 }
 
-async function submit() {
+async function submit(event: Event) {
 	error.value = '';
 	busy.value = true;
 	try {
 		const cover = photo.value ? { type: photo.value.type, data: await toBase64(photo.value) } : null;
 		rememberOpenModule('actualites');
-		await newsApi.create(mdText.value, cover);
-		started(preview.value?.title);
+		const result = await newsApi.create(mdText.value, cover, { deferred: isDeferredSubmit(event) });
+		afterSave(preview.value?.title || 'Nouvelle actualité', result);
 		reset();
 		view.value = 'list';
 	} catch (e) {
@@ -208,14 +211,14 @@ Du texte en **gras** ou en *italique*, et un [lien](https://exemple.org).
 	URL.revokeObjectURL(url);
 }
 
-async function remove(item: NewsItem) {
+async function remove(item: NewsItem, deferred: boolean) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('actualites');
-		await newsApi.remove(item.slug);
+		const result = await newsApi.remove(item.slug, { deferred });
 		confirmingDelete.value = null;
-		started(`Suppression : ${item.title}`);
+		afterSave(`Suppression : ${item.title}`, result);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -299,7 +302,7 @@ function pickEditPhoto(file: File | undefined) {
 	if (photo.value) coverAction.value = 'replace';
 }
 
-async function saveEdit() {
+async function saveEdit(event: Event) {
 	if (!editing.value) return;
 	error.value = '';
 	busy.value = true;
@@ -311,8 +314,8 @@ async function saveEdit() {
 			cover = { action: 'replace', type: photo.value.type, data: await toBase64(photo.value) };
 		}
 		rememberOpenModule('actualites');
-		await newsApi.update(editing.value.slug, fields, body, cover);
-		started(`Modification : ${editForm.title}`);
+		const result = await newsApi.update(editing.value.slug, fields, body, cover, { deferred: isDeferredSubmit(event) });
+		afterSave(`Modification : ${editForm.title}`, result);
 		reset();
 		editing.value = null;
 		view.value = 'list';
@@ -344,7 +347,16 @@ onMounted(load);
 
 <template>
 	<!-- Publication en cours / dernier résultat -->
-	<PublishStatus :status="status" :following="following" :reload-in="reloadIn" @dismiss="dismissStatus" @cancel-reload="cancelReload" />
+	<PublishStatus
+		:status="status"
+		:following="following"
+		:reload-in="reloadIn"
+		:saved-label="savedLabel"
+		:locked="!availability.ok || following || busy"
+		@dismiss="dismissStatus"
+		@cancel-reload="cancelReload"
+		@publish-lot="publishLot"
+	/>
 
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
@@ -392,6 +404,7 @@ onMounted(load);
 							{{ formatDate(a.publishAt) }}<template v-if="a.tag"> · {{ a.tag }}</template>
 						</span>
 					</span>
+					<span v-if="isPendingHref(a.href)" class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800" title="Modification enregistrée, pas encore publiée">À publier</span>
 					<span v-if="!a.isPublish" class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Brouillon</span>
 					<a
 						v-if="a.isPublish"
@@ -405,11 +418,12 @@ onMounted(load);
 					<ConfirmIconButton
 						class="shrink-0"
 						label="Supprimer"
-						:title="`Supprimer « ${a.title} » (définitif, le site sera reconstruit)`"
+						:title="`Supprimer « ${a.title} » (définitif)`"
 						:confirming="confirmingDelete === a.slug"
 						:disabled="!availability.ok || following || busy"
+						deferrable
 						@ask="confirmingDelete = a.slug"
-						@confirm="remove(a)"
+						@confirm="remove(a, $event)"
 						@cancel="confirmingDelete = null"
 					/>
 				</div>
@@ -494,15 +508,12 @@ onMounted(load);
 
 		<p class="text-xs font-light text-gray-500">
 			À l'envoi, le site est reconstruit (environ une minute) : l'actualité apparaît ensuite sur la page Actualités,
-			l'accueil et le flux RSS.
+			l'accueil et le flux RSS. « Enregistrer sans publier » : elle attend les autres modifications pour être publiée
+			avec elles, en une fois.
 		</p>
-		<button
-			type="submit"
-			:disabled="busy || !mdFile || !preview || missing.length > 0"
-			class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-		>
-			<i v-if="busy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ busy ? 'Envoi…' : 'Publier l’actualité' }}
-		</button>
+		<div class="flex flex-wrap items-center gap-3">
+			<PublishButtons label="Publier l’actualité" :busy="busy" :disabled="!mdFile || !preview || missing.length > 0" />
+		</div>
 	</form>
 
 	<!-- Édition -->
@@ -612,15 +623,12 @@ onMounted(load);
 		</div>
 
 		<p class="text-xs font-light text-gray-500">
-			À l'enregistrement, le site est reconstruit (environ une minute) ; si la reconstruction échoue, la version
-			actuelle est conservée.
+			« Enregistrer et publier » reconstruit le site (environ une minute) ; si la reconstruction échoue, la version
+			actuelle est conservée. « Enregistrer sans publier » : la modification attend les autres pour être publiée avec
+			elles, en une fois.
 		</p>
-		<button
-			type="submit"
-			:disabled="busy || !editForm.title || !editForm.publishAt || !editForm.excerpt || !editForm.body"
-			class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-		>
-			<i v-if="busy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ busy ? 'Enregistrement…' : 'Enregistrer les modifications' }}
-		</button>
+		<div class="flex flex-wrap items-center gap-3">
+			<PublishButtons :busy="busy" :disabled="!editForm.title || !editForm.publishAt || !editForm.excerpt || !editForm.body" />
+		</div>
 	</form>
 </template>

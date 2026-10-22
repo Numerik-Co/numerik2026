@@ -30,12 +30,13 @@ export const GET: APIRoute = withErrors(async () => {
 });
 
 export const PUT: APIRoute = withErrors(async ({ request, locals }) => {
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const result = await saveAssociation(readAssociationInput(body.association));
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'association.modification',
 		subject: result.name!,

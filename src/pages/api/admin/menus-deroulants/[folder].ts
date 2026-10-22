@@ -12,13 +12,14 @@ export const prerender = false;
 
 export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const folder = String(params.folder ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const label = String(body.label ?? '');
 	const result = await saveDropdown({ label, folder }, folder);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'menu-deroulant.modification',
 		subject: label.trim(),
@@ -30,13 +31,14 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 
 export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const folder = String(params.folder ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = await readJson(request);
 	if (body?.confirm !== folder) return jsonError('Confirmation manquante.');
 	const result = await deleteDropdown(folder);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'menu-deroulant.suppression',
 		subject: result.label!,

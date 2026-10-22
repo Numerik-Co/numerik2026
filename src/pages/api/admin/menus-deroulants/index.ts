@@ -11,13 +11,14 @@ import { saveDropdown } from '../../../../lib/page-writer';
 export const prerender = false;
 
 export const POST: APIRoute = withErrors(async ({ request, locals }) => {
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const label = String(body.label ?? '');
 	const result = await saveDropdown({ label, folder: String(body.folder ?? '') }, null);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'menu-deroulant.ajout',
 		subject: label.trim(),

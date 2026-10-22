@@ -6,15 +6,19 @@
  *  - sinon → modale de connexion à la demande (`numerik:auth-open`).
  * Connexion et déconnexion rechargent la page : les pages réservées et le
  * contenu rendu côté serveur reflètent ainsi le nouvel état.
+ * Bouton « À publier (N) » de la barre (rédaction, bureau) : modifications
+ * enregistrées sans publier (`lot.ts`), à publier en une fois ou à annuler.
  */
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
 import { hasAdminRights } from '../../lib/auth/groups';
 import type { ModelVersionInfo } from '../../lib/model-version';
-import { ApiError, authApi, versionApi, type AdminUser, type ReservedPage } from './client';
+import { ApiError, authApi, lotApi, versionApi, type AdminUser, type ReservedPage } from './client';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
+import { loadLot, lot, publishing } from './lot';
 import { barEntries, modulesFor } from './modules';
+import { usePublication } from './usePublication';
 
 // Chargé à la demande (seulement pour un mot de passe provisoire), comme dans le registre des modules.
 const PasswordModule = defineAsyncComponent(() => import('./modules/PasswordModule.vue'));
@@ -78,6 +82,59 @@ function onDocumentKeydown(e: KeyboardEvent) {
 	if (e.key === 'Escape') openMenu.value = null;
 }
 
+/**
+ * Modifications en attente (rédaction et bureau, comme `/api/admin/publication`) :
+ * publiées depuis la barre, la page se recharge ensuite sur le module ouvert.
+ */
+const canPublishLot = computed(
+	() => Boolean(user.value) && !mustChangePassword.value && (hasAdminRights(user.value!.groups) || user.value!.groups.includes('redacteur')),
+);
+const lotError = ref('');
+const confirmingCancel = ref(false);
+const lotBusy = ref(false);
+const barPublication = usePublication({
+	module: () => activeId.value,
+	onSettled: () => {},
+	onError: (e) => {
+		if (e instanceof ApiError && e.status === 401) return sessionExpired();
+		lotError.value = (e as Error).message;
+		openMenu.value = 'lot';
+	},
+});
+watch(barPublication.status, (s) => {
+	if (s.state === 'failed' && !barPublication.following.value) {
+		lotError.value = s.message ?? 'La publication a échoué.';
+		openMenu.value = 'lot';
+	}
+});
+function toggleLotMenu() {
+	lotError.value = '';
+	confirmingCancel.value = false;
+	openMenu.value = openMenu.value === 'lot' ? null : 'lot';
+	if (openMenu.value === 'lot') void loadLot();
+}
+async function publishLotFromBar() {
+	lotError.value = '';
+	openMenu.value = null;
+	await barPublication.publishLot();
+}
+async function cancelLot() {
+	lotError.value = '';
+	lotBusy.value = true;
+	try {
+		await lotApi.cancel();
+		// Sources remises en l'état : on recharge pour retrouver modules et page à jour.
+		reload();
+	} catch (e) {
+		if (e instanceof ApiError && e.status === 401) return sessionExpired();
+		lotError.value = (e as Error).message;
+	} finally {
+		lotBusy.value = false;
+	}
+}
+const formatTime = (iso: string) =>
+	new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
 function sessionExpired() {
 	user.value = null;
 	activeId.value = null;
@@ -127,6 +184,7 @@ onMounted(async () => {
 			const me = await authApi.me();
 			user.value = me.user;
 			pages.value = me.pages;
+			lot.value = me.lot;
 		} catch (e) {
 			if (!(e instanceof ApiError && e.status === 401)) console.error(e);
 			user.value = null;
@@ -209,6 +267,87 @@ onBeforeUnmount(() => {
 					<i :class="['fa-solid', m.icon, 'w-4 text-center text-gray-300']" aria-hidden="true"></i>
 					{{ m.label }}
 				</button>
+			</div>
+			<div v-if="canPublishLot && (lot.length || publishing)" data-bar-menu class="relative ml-1 shrink-0">
+				<button
+					type="button"
+					class="flex items-center gap-1.5 rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-semibold text-amber-950 hover:bg-amber-300 disabled:opacity-80"
+					:disabled="publishing"
+					aria-haspopup="dialog"
+					:aria-expanded="openMenu === 'lot'"
+					:title="publishing ? 'Publication en cours' : `${lot.length} modification(s) enregistrée(s), pas encore publiée(s)`"
+					@click="toggleLotMenu"
+				>
+					<template v-if="publishing">
+						<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+						<span v-if="barPublication.reloadIn.value != null" class="hidden sm:inline">Publié, actualisation…</span>
+						<span v-else class="hidden sm:inline">Publication…</span>
+					</template>
+					<template v-else>
+						<i class="fa-solid fa-clock" aria-hidden="true"></i>
+						<span class="hidden sm:inline">À publier</span>
+						<span>({{ lot.length }})</span>
+					</template>
+				</button>
+				<div
+					v-if="openMenu === 'lot'"
+					class="fixed right-2 top-[3.125rem] w-[min(24rem,calc(100vw-1rem))] rounded-lg bg-white p-4 text-sm text-gray-800 shadow-lg ring-1 ring-black/10"
+					role="dialog"
+					aria-label="Modifications en attente de publication"
+				>
+					<p class="font-heading font-semibold text-gray-900">Modifications en attente de publication</p>
+					<p class="mt-1 text-xs font-light text-gray-600">
+						Enregistrées mais pas encore visibles sur le site. Une seule reconstruction (environ une minute) les publie
+						toutes.
+					</p>
+					<p v-if="lotError" class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{{ lotError }}</p>
+					<ul v-if="lot.length" class="mt-3 max-h-60 divide-y divide-gray-100 overflow-y-auto rounded-lg border border-gray-100">
+						<li v-for="change in lot" :key="change.at + change.label" class="px-3 py-2">
+							<a v-if="change.href" :href="change.href" class="block truncate font-medium text-gray-900 hover:text-primary">{{ change.label }}</a>
+							<span v-else class="block truncate font-medium text-gray-900">{{ change.label }}</span>
+							<span class="block text-xs font-light text-gray-500">
+								{{ formatTime(change.at) }}<template v-if="change.by"> · {{ change.by.fullname }}</template>
+							</span>
+						</li>
+					</ul>
+					<p v-else class="mt-3 text-xs font-light text-gray-500">Plus rien en attente.</p>
+					<div v-if="lot.length" class="mt-4 flex flex-wrap items-center gap-3">
+						<button
+							type="button"
+							class="rounded-full bg-primary px-4 py-2 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
+							:disabled="lotBusy || publishing"
+							@click="publishLotFromBar"
+						>
+							<i class="fa-solid fa-rocket mr-1.5" aria-hidden="true"></i>Publier les modifications ({{ lot.length }})
+						</button>
+						<button
+							v-if="!confirmingCancel"
+							type="button"
+							class="text-xs font-medium text-red-700 hover:underline"
+							:disabled="lotBusy || publishing"
+							@click="confirmingCancel = true"
+						>
+							Tout annuler…
+						</button>
+					</div>
+					<div v-if="confirmingCancel && lot.length" class="mt-3 rounded-lg bg-red-50 p-3 text-xs text-red-800" role="alert">
+						<p>
+							Les {{ lot.length }} modification{{ lot.length > 1 ? 's' : '' }} ci-dessus seront défaite{{ lot.length > 1 ? 's' : '' }}
+							(contenu remis dans l'état du site en ligne). Action définitive.
+						</p>
+						<div class="mt-2 flex items-center gap-3">
+							<button
+								type="button"
+								class="rounded bg-red-600 px-3 py-1 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+								:disabled="lotBusy"
+								@click="cancelLot"
+							>
+								Oui, tout annuler
+							</button>
+							<button type="button" class="text-gray-700 hover:underline" @click="confirmingCancel = false">Non</button>
+						</div>
+					</div>
+				</div>
 			</div>
 			<a
 				v-if="version?.updateAvailable"

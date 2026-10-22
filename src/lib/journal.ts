@@ -24,6 +24,7 @@ export type JournalAction =
 	| 'actualite.suppression'
 	| 'publication'
 	| 'publication.message-ferme'
+	| 'publication.lot-annule'
 	| 'activite.ajout'
 	| 'activite.modification'
 	| 'activite.suppression'

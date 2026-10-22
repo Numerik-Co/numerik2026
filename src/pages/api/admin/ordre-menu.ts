@@ -13,7 +13,7 @@ import { saveMenuOrder } from '../../../lib/page-writer';
 export const prerender = false;
 
 export const PUT: APIRoute = withErrors(async ({ request, locals }) => {
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const raw = body.levels && typeof body.levels === 'object' ? (body.levels as Record<string, unknown>) : {};
@@ -24,6 +24,7 @@ export const PUT: APIRoute = withErrors(async ({ request, locals }) => {
 	const result = await saveMenuOrder(levels);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'ordre-menu.modification',
 		subject: 'Ordre du menu de navigation',
