@@ -152,7 +152,20 @@ Puis `nginx -t && systemctl reload nginx`. Vérifier aussi que `SITE_URL`
 (`.env`) est bien l'adresse publique du site (ex. `https://www.mon-asso.fr`) :
 c'est le seul domaine accepté pour la connexion. Si le site répond aussi sur
 un autre domaine (sans `www`, autre nom…), le rediriger vers celui-ci dans
-nginx.
+nginx — indispensable aussi pour le référencement (sinon contenu dupliqué,
+voir [referencement.md](referencement.md)) :
+
+```nginx
+# Bloc server du domaine SANS www (certificat HTTPS compris) :
+server {
+    listen 443 ssl;
+    server_name mon-asso.fr;
+    # ssl_certificate … (mêmes lignes que le bloc principal, ou certbot)
+    return 301 https://www.mon-asso.fr$request_uri;
+}
+```
+
+Vérifier : `curl -I https://mon-asso.fr/` doit répondre `301` vers `https://www.…`.
 
 ### En local (développement)
 

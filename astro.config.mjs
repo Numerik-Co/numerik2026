@@ -52,6 +52,11 @@ export default defineConfig({
   // Nom de domaine public (URLs absolues du flux RSS, sitemap…) : SITE_URL.
   site: site.origin,
 
+  // Une seule adresse par page, sans « / » final (référencement : pas de
+  // contenu dupliqué) : `/actualites/` redirige vers `/actualites` (301),
+  // comme les liens du site, l'adresse canonique, le sitemap et le flux RSS.
+  trailingSlash: 'never',
+
   // Derrière le reverse proxy HTTPS (cf. docker-compose.yml) : fait confiance à
   // X-Forwarded-Host/Proto pour ce domaine seulement. Sans cela, Astro voit
   // http://… alors que le navigateur envoie Origin: https://…, et refuse les

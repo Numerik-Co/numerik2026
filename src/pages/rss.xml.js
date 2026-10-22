@@ -9,6 +9,8 @@ export async function GET(context) {
 		title: `Actualités · ${association.name}`,
 		description: `Les dernières actualités de l'association ${association.name}.`,
 		site: context.site,
+		// Liens sans « / » final, comme l'adresse canonique des pages (trailingSlash: 'never').
+		trailingSlash: false,
 		items: articles.map((article) => ({
 			title: article.title,
 			description: article.excerpt,

@@ -8,6 +8,7 @@ import PageHeader from '../../components/sections/PageHeader.astro';
 import ShareTools from '../../components/article/ShareTools.astro';
 import { getAllNews, renderNews, type NewsArticle } from '../../lib/news';
 import { association } from '../../lib/association';
+import { newsArticleJsonLd } from '../../lib/seo';
 
 export async function getStaticPaths() {
 	function toNavItem(article?: NewsArticle) {
@@ -41,6 +42,7 @@ const { html, headings } = await renderNews(article);
 	description={article.excerpt}
 	image={article.image}
 	ogType="article"
+	jsonLd={[newsArticleJsonLd(article, Astro.site)]}
 	breadcrumbs={[
 		{ label: 'Accueil', href: '/' },
 		{ label: 'Actualités', href: '/actualites' },
