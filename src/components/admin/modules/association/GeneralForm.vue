@@ -57,7 +57,7 @@ function reset() {
 }
 
 /** En-tête des sections, comme les listes du module « Pages ». */
-const headerClass = 'flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 px-4 py-2.5';
+const headerClass = 'flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-100 px-4 py-2.5';
 const labelClass = 'block text-sm font-medium text-gray-700';
 const helpClass = 'mt-1 text-xs font-light text-gray-500';
 /** Champ sur la même ligne que son libellé (réseaux sociaux). */
@@ -188,7 +188,7 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 					<input id="asso-role" v-model="form.legal.publicationManagerRole" type="text" placeholder="Président·e" :class="inputClass" />
 				</div>
 			</div>
-			<fieldset class="mx-4 mb-4 space-y-3 rounded-xl bg-gray-50 p-4">
+			<fieldset class="mx-4 mb-4 space-y-3 rounded-xl bg-gray-100 p-4">
 				<legend class="float-left mb-1 font-heading text-sm font-semibold text-gray-900">Hébergeur du site</legend>
 				<div class="clear-left">
 					<label for="asso-host-name" :class="labelClass">Nom</label>

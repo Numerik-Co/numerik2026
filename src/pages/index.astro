@@ -16,7 +16,8 @@ import { accueilImage } from '../lib/site-images';
 import { applyPageVariablesText } from '../lib/page-variables';
 import { getSitePage, inactiveSiteHrefs } from '../lib/site-pages-content';
 
-const { modules = [] } = await getSitePage('accueil');
+// Titre et description pour les moteurs de recherche : section « Référencement ».
+const { modules = [], t } = await getSitePage('accueil');
 // Liens vers une page du site désactivée : masqués ('' et non undefined, qui
 // rendrait au composant son lien par défaut).
 const off = await inactiveSiteHrefs();
@@ -26,7 +27,7 @@ const txt = (value: string | undefined) => applyPageVariablesText(value ?? '');
 type Overlay = 'white' | 'black' | 'none';
 ---
 
-<Layout>
+<Layout title={t.titre} description={t.description}>
 	{modules.map((m) => (
 		<>
 			{m.type === 'bandeau' && (

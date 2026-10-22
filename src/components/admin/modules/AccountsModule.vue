@@ -193,7 +193,7 @@ onBeforeUnmount(stopCloseRequest);
 			<li v-for="a in accounts" :key="a.login">
 				<button
 					type="button"
-					class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-50"
+					class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-gray-100"
 					@click="go({ name: 'edit', login: a.login })"
 				>
 					<span class="min-w-0 flex-1">

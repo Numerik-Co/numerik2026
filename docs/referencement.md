@@ -16,6 +16,8 @@ régler par association. Code : `src/lib/seo.ts`,
 | Flux RSS signalé | `SeoHead.astro` | `<link rel="alternate" type="application/rss+xml">` vers `/rss.xml` |
 | Données structurées (JSON-LD) | `src/lib/seo.ts` | Accueil : `Organization` (nom, adresse, téléphone, email, logo, réseaux sociaux) + `WebSite` ; fil d'Ariane : `BreadcrumbList` ; actualité : `NewsArticle` |
 | Pages exclues | prop `noindex` des layouts | Pages réservées, `/je-participe` |
+| Titre et description de l'accueil | `index.astro` ← `getSitePage('accueil')` | Section « Référencement » de l'Accueil (module « Pages ») ; défaut `{{association.nom}}` / `{{association.description}}` |
+| Longueur conseillée | `src/components/admin/SeoLength.vue` | Sous les titres et descriptions des formulaires (pages, pages du site, actualités, activités) : titre 15–60, description 120–160 caractères, « · nom de l'asso » compté ; repère, jamais bloquant |
 | Photo d'accueil | `Hero.astro` | Plusieurs tailles (640 → 1920 px, `srcset`), `fetchpriority="high"` (élément principal du chargement) |
 
 Nouvelle page `.astro` : passer `title`, `description` (et `breadcrumbs`) au
@@ -37,7 +39,9 @@ référencer : l'ajouter dans `sitemap.xml.ts`.
   numériques, partenaires.
 - **Titres et descriptions** : mots que cherchent les gens + ville
   (« atelier informatique », « aide aux démarches en ligne »…), dans les
-  pages et les actualités ; description de 120 à 160 caractères.
+  pages et les actualités ; description de 120 à 160 caractères. Titre de
+  l'accueil (aujourd'hui le seul nom) : Pages → Accueil → « Référencement »,
+  ex. « NUMERIK&Co · Médiation numérique à Saint-Pierre-en-Auge ».
 
 ## Vérifier
 

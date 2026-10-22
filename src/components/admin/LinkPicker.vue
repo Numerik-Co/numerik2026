@@ -117,7 +117,7 @@ async function insert(link: SiteLink) {
 			<div class="mt-2 max-h-64 overflow-y-auto rounded-lg border border-gray-200">
 				<p v-if="!shown.length" class="px-3 py-2 font-light text-gray-500">Aucune page ne correspond.</p>
 				<section v-for="g in shown" :key="g.id">
-					<h4 class="sticky top-0 bg-gray-50 px-3 py-1 font-semibold text-gray-700">{{ g.label }}</h4>
+					<h4 class="sticky top-0 bg-gray-100 px-3 py-1 font-semibold text-gray-700">{{ g.label }}</h4>
 					<ul>
 						<li v-for="l in g.links" :key="l.href">
 							<button

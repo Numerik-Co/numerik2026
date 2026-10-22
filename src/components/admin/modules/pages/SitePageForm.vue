@@ -16,6 +16,7 @@ import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, rememberOpenModule } from '../../context';
 import type { HomePhotoDraft } from './home-photo-draft';
 import HomeModulesEditor from './HomeModulesEditor.vue';
+import SeoLength from '../../SeoLength.vue';
 
 /** `homePhoto` : aperçu de la photo du bandeau (accueil). */
 const props = defineProps<{ page: SitePageView; disabled: boolean; homePhoto?: string | null }>();
@@ -92,7 +93,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
 		<!-- Lien dans le menu -->
-		<fieldset class="space-y-3 rounded-xl bg-gray-50 p-4">
+		<fieldset class="space-y-3 rounded-xl bg-gray-100 p-4">
 			<legend class="sr-only">Lien dans le menu de navigation</legend>
 			<div>
 				<label for="sp-label" class="block text-sm font-semibold text-gray-700">Libellé dans le menu de navigation</label>
@@ -124,6 +125,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 					:class="inputClass"
 				></textarea>
 				<input v-else :id="`sp-${t.name}`" v-model="form.textes[t.name]" type="text" :placeholder="t.default" :class="inputClass" />
+				<SeoLength v-if="t.seo" :text="form.textes[t.name] || t.default" :kind="t.seo.kind" :suffix="t.seo.suffix" />
 				<p v-if="t.help" class="mt-1 text-xs font-light text-gray-500">{{ t.help }}</p>
 			</div>
 		</fieldset>
@@ -135,7 +137,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 			</ul>
 		</details>
 
-		<p v-if="!def.modules" class="text-xs font-light text-gray-500">
+		<p v-if="def.sections.length" class="text-xs font-light text-gray-500">
 			Un texte vidé reprend sa valeur d'origine.
 			<template v-if="changed">
 				{{ changed }} texte{{ changed > 1 ? 's' : '' }} modifié{{ changed > 1 ? 's' : '' }} —

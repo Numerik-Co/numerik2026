@@ -23,6 +23,7 @@ import FormTabs from '../FormTabs.vue';
 import LinkPicker from '../LinkPicker.vue';
 import PublishButtons from '../PublishButtons.vue';
 import PublishStatus from '../PublishStatus.vue';
+import SeoLength from '../SeoLength.vue';
 import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem } from '../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 import { EDIT_TABS, useFormTabs, type EditTab } from '../form-tabs';
@@ -460,7 +461,7 @@ onMounted(load);
 				<input type="file" accept=".md,.markdown,text/markdown" class="sr-only" @change="pickMarkdown(($event.target as HTMLInputElement).files?.[0])" />
 			</label>
 
-			<div v-if="mdFile" class="mt-3 rounded-xl bg-gray-50 p-4 text-sm">
+			<div v-if="mdFile" class="mt-3 rounded-xl bg-gray-100 p-4 text-sm">
 				<p v-if="!preview" class="text-red-700">
 					En-tête (frontmatter) introuvable : le fichier doit commencer par un bloc <code>---</code> … <code>---</code>.
 				</p>
@@ -531,6 +532,7 @@ onMounted(load);
 				<div>
 					<label for="ed-title" class="block text-sm font-semibold text-gray-700">Titre</label>
 					<input id="ed-title" v-model="editForm.title" type="text" required :class="inputClass" />
+					<SeoLength :text="editForm.title" kind="titre" suffix />
 				</div>
 				<div class="grid gap-4 sm:grid-cols-2">
 					<div>
@@ -547,6 +549,7 @@ onMounted(load);
 				<div>
 					<label for="ed-excerpt" class="block text-sm font-semibold text-gray-700">Résumé</label>
 					<textarea id="ed-excerpt" v-model="editForm.excerpt" rows="2" required :class="inputClass"></textarea>
+					<SeoLength :text="editForm.excerpt" kind="description" />
 				</div>
 				<div>
 					<label for="ed-author" class="block text-sm font-semibold text-gray-700">

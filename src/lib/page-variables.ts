@@ -16,6 +16,7 @@ const missing = (what: string) => `[À compléter : ${what}]`;
 
 export const PAGE_VARIABLES: Record<string, { label: string; value: () => string }> = {
 	'association.nom': { label: "Nom de l'association", value: () => association.name },
+	'association.description': { label: "Présentation courte de l'association", value: () => association.description },
 	'association.email': { label: 'Email de contact', value: () => association.email },
 	'association.telephone': { label: 'Téléphone', value: () => association.phone },
 	'association.adresse': { label: 'Adresse du siège', value: () => getFullAddress() },
