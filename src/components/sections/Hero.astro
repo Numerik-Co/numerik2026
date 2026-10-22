@@ -46,12 +46,16 @@ const overlayClass = {
 >
 	{hasImage && (
 		<>
+			{/* Plus grande image visible au chargement (LCP) : prioritaire, taille adaptée à l'écran. */}
 			<Image
 				src={backgroundImage}
 				alt=""
 				width={1920}
 				height={1080}
+				widths={[640, 960, 1280, 1920]}
+				sizes="100vw"
 				loading="eager"
+				fetchpriority="high"
 				class="absolute inset-0 h-full w-full object-cover"
 			/>
 			{overlay !== 'none' && <div class={`absolute inset-0 ${overlayClass}`}></div>}

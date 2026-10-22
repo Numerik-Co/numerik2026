@@ -334,6 +334,16 @@ contenu hors de `src/content/`.**
   fichier. `src/lib/annonces.ts` : `getAnnonces()` (async). Détail :
   [docs/annonces.md](docs/annonces.md).
 
+## Référencement (SEO)
+
+`src/components/layout/SeoHead.astro` (dans les deux layouts) : canonique
+sans « / » final (`trailingSlash: 'never'`, `cleanPath()`), Open Graph +
+`twitter:card` (image de la page, sinon photo d'accueil, sinon logo), lien
+RSS, JSON-LD (`src/lib/seo.ts` : `Organization` + `WebSite` sur l'accueil,
+`BreadcrumbList`, `NewsArticle` via la prop `jsonLd`). `src/pages/robots.txt.ts`,
+`src/pages/sitemap.xml.ts` (pages publiques seulement ; nouvelle page de
+service = l'y ajouter). Détail : [docs/referencement.md](docs/referencement.md).
+
 ## Composants réutilisables
 
 ### Agenda hebdomadaire

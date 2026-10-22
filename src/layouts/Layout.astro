@@ -4,8 +4,10 @@ import Header from '../components/layout/Header.astro';
 import Footer from '../components/layout/Footer.astro';
 import AdminLoader from '../components/admin/AdminLoader.astro';
 import Breadcrumb from '../components/layout/Breadcrumb.astro';
+import SeoHead from '../components/layout/SeoHead.astro';
 import '../styles/global.css';
 import { association } from '../lib/association';
+import type { JsonLd } from '../lib/seo';
 import { favicons } from '../lib/site-images';
 import { themeCss } from '../config/site';
 
@@ -15,6 +17,10 @@ interface Props {
 	breadcrumbs?: { label: string; href?: string }[];
 	/** Page réservée (espace connecté) : exclue des moteurs de recherche. */
 	noindex?: boolean;
+	/** Image d'aperçu (partage), à défaut photo d'accueil ou logo (cf. `SeoHead.astro`). */
+	image?: any;
+	/** Données structurées propres à la page (schema.org). */
+	jsonLd?: JsonLd[];
 }
 
 const {
@@ -22,6 +28,8 @@ const {
 	description = association.description,
 	breadcrumbs,
 	noindex = false,
+	image,
+	jsonLd,
 } = Astro.props;
 ---
 
@@ -34,9 +42,7 @@ const {
 		{/* Couleurs du thème (src/content/reglages.yaml) : remplacent celles de global.css. */}
 		<style is:inline set:html={themeCss} />
 		<meta name="generator" content={Astro.generator} />
-		<meta name="description" content={description} />
-		<title>{title}</title>
-		{noindex && <meta name="robots" content="noindex, nofollow" />}
+		<SeoHead {title} {description} {image} {noindex} {breadcrumbs} {jsonLd} />
 	</head>
 	<body class="flex min-h-screen flex-col bg-white">
 		<AnnonceBanner />
