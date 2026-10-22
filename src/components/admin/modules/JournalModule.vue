@@ -19,6 +19,7 @@ const ACTIONS: Record<string, { label: string; icon: string }> = {
 	'actualite.suppression': { label: 'Actualité supprimée', icon: 'fa-trash' },
 	publication: { label: 'Publication', icon: 'fa-rocket' },
 	'publication.message-ferme': { label: 'Message de publication fermé', icon: 'fa-xmark' },
+	'publication.lot-annule': { label: 'Modifications en attente annulées', icon: 'fa-rotate-left' },
 	'activite.ajout': { label: 'Activité ajoutée', icon: 'fa-person-chalkboard' },
 	'activite.modification': { label: 'Activité modifiée', icon: 'fa-pen' },
 	'activite.suppression': { label: 'Activité supprimée', icon: 'fa-trash' },

@@ -16,13 +16,14 @@ export const prerender = false;
 export const GET: APIRoute = withErrors(async () => json(await readBrandSource()));
 
 export const PUT: APIRoute = withErrors(async ({ request, locals }) => {
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const input = readBrandInput(await readJson(request));
 	if ('error' in input) return jsonError(input.error, 422);
 	const result = await saveBrand(input);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'charte.modification',
 		subject: result.changes.join(', '),

@@ -27,7 +27,7 @@ export const GET: APIRoute = withErrors(async ({ params }) => {
 
 export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const slug = String(params.slug ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const rawCover = body.cover as { action?: unknown } | undefined;
@@ -43,6 +43,7 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const result = await saveActivity(input, slug, coverChange);
 	if (!result.applied) return jsonError(result.errors.join(' '), result.errors[0]?.includes('introuvable') ? 404 : 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'activite.modification',
 		subject: result.title!,
@@ -58,7 +59,7 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 
 export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const slug = String(params.slug ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = await readJson(request);
 	if (body?.confirm !== slug) return jsonError('Confirmation manquante.');
@@ -66,6 +67,7 @@ export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) =
 	const result = await deleteActivity(slug);
 	if (!result.applied) return jsonError(result.errors.join(' '), 404);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'activite.suppression',
 		subject: result.title!,

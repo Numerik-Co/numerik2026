@@ -20,7 +20,7 @@
 
 import type { Nodes } from 'mdast';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { cp, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { SITE_ROOT } from 'astro:env/server';
 import sharp from 'sharp';
@@ -257,6 +257,16 @@ export async function readNewsSource(slug: string): Promise<NewsSource | null> {
 }
 
 /** Photo lors d'une édition : garder l'actuelle, la remplacer, ou la retirer. */
+/**
+ * Toutes les actualités des sources (liste du module) : y compris celles
+ * enregistrées sans publier, que le site construit ne connaît pas encore.
+ */
+export async function listNewsSources(): Promise<NewsSource[]> {
+	const names = await readdir(newsSourceDir()).catch(() => [] as string[]);
+	const sources = await Promise.all(names.filter((name) => NEWS_SLUG.test(name)).map(readNewsSource));
+	return sources.filter((source): source is NewsSource => source !== null);
+}
+
 export type CoverChange = { action: 'keep' } | { action: 'replace'; data: Buffer } | { action: 'remove' };
 
 /**

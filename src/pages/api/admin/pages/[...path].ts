@@ -27,7 +27,7 @@ export const GET: APIRoute = withErrors(async ({ params }) => {
 
 export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const path = String(params.path ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const rawCover = (body.cover ?? {}) as { action?: unknown };
@@ -42,6 +42,7 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const result = await savePage(readPageInput(body.page), path, coverChange);
 	if (!result.applied) return jsonError(result.errors.join(' '), result.errors[0]?.includes('introuvable') ? 404 : 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'page.modification',
 		subject: result.title!,
@@ -54,7 +55,7 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 
 export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const path = String(params.path ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = await readJson(request);
 	if (body?.confirm !== path) return jsonError('Confirmation manquante.');
@@ -62,6 +63,7 @@ export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) =
 	const result = await deletePage(path);
 	if (!result.applied) return jsonError(result.errors.join(' '), 404);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'page.suppression',
 		subject: result.title!,

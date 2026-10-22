@@ -15,7 +15,7 @@ import { saveCatalogOrder } from '../../../../lib/category-writer';
 export const prerender = false;
 
 export const PUT: APIRoute = withErrors(async ({ request, locals }) => {
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const raw = body.levels && typeof body.levels === 'object' ? (body.levels as Record<string, unknown>) : {};
@@ -27,6 +27,7 @@ export const PUT: APIRoute = withErrors(async ({ request, locals }) => {
 	const result = await saveCatalogOrder(levels, categoryOrder);
 	if (!result.applied) return jsonError(result.errors.join(' '), 422);
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'activite.ordre',
 		subject: result.categoriesMoved ? 'Ordre des catégories et des activités' : 'Ordre des activités',

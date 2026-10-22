@@ -9,7 +9,17 @@
  */
 import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue';
 import { TYPES_ACTIVITE_INSCRIPTION } from '../../../../lib/adhesion/choices';
-import { ApiError, activitiesApi, type ActivityCategory, type ActivityInput, type ActivitySourceView, type CoverUpdate } from '../../client';
+import {
+	ApiError,
+	activitiesApi,
+	type ActivityCategory,
+	type ActivityInput,
+	type ActivitySourceView,
+	type CoverUpdate,
+	type SaveResult,
+} from '../../client';
+import { isDeferredSubmit } from '../../lot';
+import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
 import EditFileBar from '../../EditFileBar.vue';
 import FormHeader from '../../FormHeader.vue';
@@ -20,7 +30,7 @@ import { downloadMarkdown, readMarkdownFile } from '../../markdown-file';
 import { activityMarkdownFile, parseActivityMarkdown } from './activity-markdown';
 
 const props = defineProps<{ categories: ActivityCategory[]; source: ActivitySourceView | null; category: string; disabled: boolean }>();
-const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
+const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
 const editing = props.source;
@@ -128,7 +138,7 @@ function resetPhoto() {
 }
 onBeforeUnmount(resetPhoto);
 
-async function submit() {
+async function submit(event: Event) {
 	error.value = '';
 	busy.value = true;
 	try {
@@ -147,13 +157,12 @@ async function submit() {
 		};
 		const newPhoto = coverAction.value === 'replace' && photo.value ? { type: photo.value.type, data: await fileToBase64(photo.value) } : null;
 		rememberOpenModule('activites');
+		const options = { deferred: isDeferredSubmit(event) };
 		if (editing) {
 			const cover: CoverUpdate = newPhoto ? { action: 'replace', ...newPhoto } : coverAction.value === 'remove' ? { action: 'remove' } : { action: 'keep' };
-			await activitiesApi.update(editing.slug, input, cover);
-			emit('published', `Modification : ${form.title}`);
+			emit('published', `Modification : ${form.title}`, await activitiesApi.update(editing.slug, input, cover, options));
 		} else {
-			await activitiesApi.create(input, newPhoto);
-			emit('published', `Activité : ${form.title}`);
+			emit('published', `Activité : ${form.title}`, await activitiesApi.create(input, newPhoto, options));
 		}
 	} catch (e) {
 		if (e instanceof ApiError && e.status === 401) return sessionExpired();
@@ -314,13 +323,7 @@ async function submit() {
 		</div>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="busy || props.disabled"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				{{ busy ? 'Envoi…' : editing ? 'Enregistrer et publier' : 'Créer et publier' }}
-			</button>
+			<PublishButtons :label="editing ? 'Enregistrer et publier' : 'Créer et publier'" :busy="busy" :disabled="props.disabled" />
 			<button type="button" class="text-sm text-gray-600 hover:underline" @click="emit('cancel')">Annuler</button>
 		</div>
 	</form>

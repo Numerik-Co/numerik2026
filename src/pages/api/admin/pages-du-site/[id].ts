@@ -16,7 +16,7 @@ export const prerender = false;
 
 export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const id = String(params.id ?? '');
-	const blocked = await publishBlocked();
+	const blocked = await publishBlocked(request);
 	if (blocked) return blocked;
 	const body = (await readJson(request)) ?? {};
 	const raw = body.textes && typeof body.textes === 'object' ? (body.textes as Record<string, unknown>) : {};
@@ -52,6 +52,7 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	if (photo.action === 'replace') notes.push("nouvelle photo d'accueil");
 	if (photo.action === 'remove') notes.push("photo d'accueil retirée");
 	return publishChange({
+		request,
 		user: locals.user!,
 		action: 'page-site.modification',
 		subject: result.label!,

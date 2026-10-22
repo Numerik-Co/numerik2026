@@ -181,6 +181,31 @@ export interface AccountInput {
 	groups: AuthGroup[];
 }
 
+/** Modification enregistrée sans publier, en attente dans le lot (cf. src/lib/publication-lot.ts). */
+export interface LotChange {
+	at: string;
+	by?: { login: string; fullname: string };
+	label: string;
+	href?: string;
+}
+
+/** `deferred` : enregistrer sans publier (la modification rejoint le lot en attente). */
+export interface SaveOptions {
+	deferred?: boolean;
+}
+
+/** Réponse d'un enregistrement : `deferred` si la modification attend dans le lot (rien n'est reconstruit). */
+export interface SaveResult {
+	ok: true;
+	href?: string | null;
+	deferred?: true;
+}
+
+/** Adresse de la route d'enregistrement, avec `?publier=non` pour enregistrer sans publier. */
+function saveUrl(url: string, options?: SaveOptions): string {
+	return options?.deferred ? `${url}?publier=non` : url;
+}
+
 export class ApiError extends Error {
 	status: number;
 	constructor(message: string, status: number) {
@@ -207,7 +232,7 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
 }
 
 export const authApi = {
-	me: () => request<{ user: AdminUser; pages: ReservedPage[] }>('GET', '/api/auth/me'),
+	me: () => request<{ user: AdminUser; pages: ReservedPage[]; lot: LotChange[] }>('GET', '/api/auth/me'),
 	login: (login: string, password: string) => request<{ user: AdminUser }>('POST', '/api/auth/login', { login, password }),
 	logout: () => request<{ ok: true }>('POST', '/api/auth/logout'),
 	changePassword: (current: string, next: string) =>
@@ -235,15 +260,15 @@ export const newsApi = {
 			'GET',
 			'/api/admin/actualites',
 		),
-	create: (markdown: string, cover: { type: string; data: string } | null) =>
-		request<{ slug: string; href: string }>('POST', '/api/admin/actualites', { markdown, cover: cover ?? undefined }),
+	create: (markdown: string, cover: { type: string; data: string } | null, options?: SaveOptions) =>
+		request<SaveResult>('POST', saveUrl('/api/admin/actualites', options), { markdown, cover: cover ?? undefined }),
 	status: () => request<PublishStatus>('GET', '/api/admin/publication'),
 	dismissStatus: () => request<{ ok: true }>('DELETE', '/api/admin/publication'),
 	get: (slug: string) => request<NewsSource>('GET', `/api/admin/actualites/${encodeURIComponent(slug)}`),
-	update: (slug: string, fields: NewsFields, body: string, cover: CoverUpdate) =>
-		request<{ ok: true; href: string }>('PUT', `/api/admin/actualites/${encodeURIComponent(slug)}`, { fields, body, cover }),
-	remove: (slug: string) =>
-		request<{ ok: true }>('DELETE', `/api/admin/actualites/${encodeURIComponent(slug)}`, { confirm: slug }),
+	update: (slug: string, fields: NewsFields, body: string, cover: CoverUpdate, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl(`/api/admin/actualites/${encodeURIComponent(slug)}`, options), { fields, body, cover }),
+	remove: (slug: string, options?: SaveOptions) =>
+		request<SaveResult>('DELETE', saveUrl(`/api/admin/actualites/${encodeURIComponent(slug)}`, options), { confirm: slug }),
 };
 
 export const pagesApi = {
@@ -258,29 +283,32 @@ export const pagesApi = {
 			availability: { ok: boolean; reason?: string };
 		}>('GET', '/api/admin/pages'),
 	get: (path: string) => request<PageSourceView>('GET', `/api/admin/pages/${path}`),
-	create: (page: PageInput, cover: { type: string; data: string } | null) =>
-		request<{ ok: true; href: string | null }>('POST', '/api/admin/pages', { page, cover: cover ?? undefined }),
-	update: (path: string, page: PageInput, cover: CoverUpdate) =>
-		request<{ ok: true; href: string | null }>('PUT', `/api/admin/pages/${path}`, { page, cover }),
-	remove: (path: string) => request<{ ok: true }>('DELETE', `/api/admin/pages/${path}`, { confirm: path }),
+	create: (page: PageInput, cover: { type: string; data: string } | null, options?: SaveOptions) =>
+		request<SaveResult>('POST', saveUrl('/api/admin/pages', options), { page, cover: cover ?? undefined }),
+	update: (path: string, page: PageInput, cover: CoverUpdate, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl(`/api/admin/pages/${path}`, options), { page, cover }),
+	remove: (path: string, options?: SaveOptions) =>
+		request<SaveResult>('DELETE', saveUrl(`/api/admin/pages/${path}`, options), { confirm: path }),
 };
 
 /** Nouvel ordre d'un ou plusieurs niveaux du menu (`racine`, `dropdown:<dossier>`), cf. saveMenuOrder(). */
 export const menuOrderApi = {
-	save: (levels: Record<string, string[]>) => request<{ ok: true }>('PUT', '/api/admin/ordre-menu', { levels }),
+	save: (levels: Record<string, string[]>, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl('/api/admin/ordre-menu', options), { levels }),
 };
 
 export const sitePagesApi = {
-	update: (id: string, input: SitePageInput) =>
-		request<{ ok: true }>('PUT', `/api/admin/pages-du-site/${encodeURIComponent(id)}`, input),
+	update: (id: string, input: SitePageInput, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl(`/api/admin/pages-du-site/${encodeURIComponent(id)}`, options), input),
 };
 
 export const dropdownsApi = {
-	create: (input: { label: string; folder: string }) =>
-		request<{ ok: true }>('POST', '/api/admin/menus-deroulants', input),
-	update: (folder: string, input: { label: string }) =>
-		request<{ ok: true }>('PUT', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, input),
-	remove: (folder: string) => request<{ ok: true }>('DELETE', `/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, { confirm: folder }),
+	create: (input: { label: string; folder: string }, options?: SaveOptions) =>
+		request<SaveResult>('POST', saveUrl('/api/admin/menus-deroulants', options), input),
+	update: (folder: string, input: { label: string }, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl(`/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, options), input),
+	remove: (folder: string, options?: SaveOptions) =>
+		request<SaveResult>('DELETE', saveUrl(`/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, options), { confirm: folder }),
 };
 
 export const associationApi = {
@@ -289,7 +317,8 @@ export const associationApi = {
 			'GET',
 			'/api/admin/association',
 		),
-	update: (association: Association) => request<{ ok: true }>('PUT', '/api/admin/association', { association }),
+	update: (association: Association, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl('/api/admin/association', options), { association }),
 };
 
 export interface BrandImage {
@@ -306,8 +335,10 @@ export interface BrandSource {
 
 export const brandApi = {
 	get: () => request<BrandSource>('GET', '/api/admin/charte'),
-	update: (input: { colors: ThemeColors; logo?: { type: string; data: string }; favicon?: { type: string; data: string } }) =>
-		request<{ ok: true }>('PUT', '/api/admin/charte', input),
+	update: (
+		input: { colors: ThemeColors; logo?: { type: string; data: string }; favicon?: { type: string; data: string } },
+		options?: SaveOptions,
+	) => request<SaveResult>('PUT', saveUrl('/api/admin/charte', options), input),
 };
 
 export const activitiesApi = {
@@ -319,21 +350,31 @@ export const activitiesApi = {
 			availability: { ok: boolean; reason?: string };
 		}>('GET', '/api/admin/activites'),
 	get: (slug: string) => request<ActivitySourceView>('GET', `/api/admin/activites/${slug}`),
-	create: (activity: ActivityInput, cover: { type: string; data: string } | null) =>
-		request<{ ok: true; href: string | null }>('POST', '/api/admin/activites', { activity, cover: cover ?? undefined }),
-	update: (slug: string, activity: ActivityInput, cover: CoverUpdate) =>
-		request<{ ok: true; href: string | null }>('PUT', `/api/admin/activites/${slug}`, { activity, cover }),
-	remove: (slug: string) => request<{ ok: true }>('DELETE', `/api/admin/activites/${slug}`, { confirm: slug }),
+	create: (activity: ActivityInput, cover: { type: string; data: string } | null, options?: SaveOptions) =>
+		request<SaveResult>('POST', saveUrl('/api/admin/activites', options), { activity, cover: cover ?? undefined }),
+	update: (slug: string, activity: ActivityInput, cover: CoverUpdate, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl(`/api/admin/activites/${slug}`, options), { activity, cover }),
+	remove: (slug: string, options?: SaveOptions) =>
+		request<SaveResult>('DELETE', saveUrl(`/api/admin/activites/${slug}`, options), { confirm: slug }),
 	/** Nouvel ordre des fiches (par catégorie) et/ou des catégories, en une publication. */
-	saveOrder: (levels: Record<string, string[]>, categories: string[] | null) =>
-		request<{ ok: true }>('PUT', '/api/admin/activites/ordre', { levels, categories: categories ?? undefined }),
+	saveOrder: (levels: Record<string, string[]>, categories: string[] | null, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl('/api/admin/activites/ordre', options), { levels, categories: categories ?? undefined }),
 };
 
 export const activityCategoriesApi = {
-	create: (category: ActivityCategory) => request<{ ok: true }>('POST', '/api/admin/activites/categories', { category }),
-	update: (slug: string, category: ActivityCategory) =>
-		request<{ ok: true }>('PUT', `/api/admin/activites/categories/${slug}`, { category }),
-	remove: (slug: string) => request<{ ok: true }>('DELETE', `/api/admin/activites/categories/${slug}`, { confirm: slug }),
+	create: (category: ActivityCategory, options?: SaveOptions) =>
+		request<SaveResult>('POST', saveUrl('/api/admin/activites/categories', options), { category }),
+	update: (slug: string, category: ActivityCategory, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl(`/api/admin/activites/categories/${slug}`, options), { category }),
+	remove: (slug: string, options?: SaveOptions) =>
+		request<SaveResult>('DELETE', saveUrl(`/api/admin/activites/categories/${slug}`, options), { confirm: slug }),
+};
+
+/** Modifications enregistrées sans publier (lot en attente). */
+export const lotApi = {
+	list: () => request<{ changes: LotChange[] }>('GET', '/api/admin/publication/lot'),
+	publish: () => request<{ ok: true; label: string }>('POST', '/api/admin/publication/lot'),
+	cancel: () => request<{ ok: true }>('DELETE', '/api/admin/publication/lot', { confirm: true }),
 };
 
 export const versionApi = {

@@ -1,19 +1,20 @@
 <script setup lang="ts">
 /**
  * Ligne d'une page dans la liste du module « Pages » : le titre ouvre l'édition, l'œil la page sur le site,
- * suppression confirmée dans la ligne.
+ * suppression confirmée dans la ligne (avec ou sans publication), badge « À publier ».
  */
 import type { PageSourceView } from '../../client';
 import ConfirmIconButton from '../../ConfirmIconButton.vue';
 import { useSlots } from 'vue';
 import { iconButtonClass } from '../../context';
+import { isPendingHref } from '../../lot';
 
 /**
  * `nested` : page d'un menu déroulant, légèrement en retrait sous son libellé. Slot `handle` : poignée de
  * glisser-déposer en début de ligne (menu de navigation) ; slot `order` : flèches ↑/↓.
  */
 const props = defineProps<{ page: PageSourceView; locked: boolean; confirming: boolean; nested?: boolean }>();
-const emit = defineEmits<{ edit: []; askDelete: []; confirmDelete: []; cancelDelete: [] }>();
+const emit = defineEmits<{ edit: []; askDelete: []; confirmDelete: [deferred: boolean]; cancelDelete: [] }>();
 const slots = useSlots();
 </script>
 
@@ -37,6 +38,9 @@ const slots = useSlots();
 			</button>
 		</span>
 		<span v-if="props.page.type === 'enrichie'" class="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">enrichie</span>
+		<span v-if="isPendingHref(`/${props.page.path}`)" class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800" title="Modification enregistrée, pas encore publiée">
+			À publier
+		</span>
 		<slot />
 		<span v-if="props.page.technique" class="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-800" title="Page .mdx : se modifie dans le code">
 			technique
@@ -67,8 +71,9 @@ const slots = useSlots();
 				title="Supprimer la page"
 				:confirming="props.confirming"
 				:disabled="props.locked || props.page.technique"
+				deferrable
 				@ask="emit('askDelete')"
-				@confirm="emit('confirmDelete')"
+				@confirm="emit('confirmDelete', $event)"
 				@cancel="emit('cancelDelete')"
 			/>
 		</span>

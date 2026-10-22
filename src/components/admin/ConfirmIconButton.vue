@@ -4,6 +4,8 @@
  * s'étire vers la gauche en une pastille (par-dessus les boutons voisins)
  * qui porte l'action et « Annuler ». Échap ou « Annuler » referme. L'état
  * ouvert est piloté par le parent (`confirming`), une seule confirmation à la fois.
+ * `deferrable` : bouton « Sans publier » en plus (`confirm` reçoit alors
+ * `true` : la suppression rejoint les modifications en attente, cf. `lot.ts`).
  */
 import { nextTick, ref, watch } from 'vue';
 import { iconButtonClass } from './context';
@@ -15,8 +17,9 @@ const props = defineProps<{
 	title?: string;
 	confirming: boolean;
 	disabled?: boolean;
+	deferrable?: boolean;
 }>();
-const emit = defineEmits<{ ask: []; confirm: []; cancel: [] }>();
+const emit = defineEmits<{ ask: []; confirm: [deferred: boolean]; cancel: [] }>();
 
 const confirmButton = ref<HTMLButtonElement | null>(null);
 watch(
@@ -58,11 +61,21 @@ watch(
 			>
 				<button type="button" class="rounded px-2 py-1 text-gray-600 hover:bg-white" @click="emit('cancel')">Annuler</button>
 				<button
+					v-if="props.deferrable"
+					type="button"
+					class="rounded px-2 py-1 font-medium text-red-700 ring-1 ring-red-200 hover:bg-white disabled:opacity-50"
+					:disabled="props.disabled"
+					title="Supprimer sans reconstruire le site : la suppression rejoint les modifications en attente de publication."
+					@click="emit('confirm', true)"
+				>
+					Sans publier
+				</button>
+				<button
 					ref="confirmButton"
 					type="button"
 					class="rounded bg-red-600 px-2 py-1 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
 					:disabled="props.disabled"
-					@click="emit('confirm')"
+					@click="emit('confirm', false)"
 				>
 					{{ props.label }}
 				</button>

@@ -10,14 +10,16 @@
 import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue';
 import { PAGE_VARIABLES } from '../../../../lib/page-variables';
 import { SITE_PAGES } from '../../../../lib/site-pages';
-import { ApiError, sitePagesApi, type SitePageView } from '../../client';
+import { ApiError, sitePagesApi, type SaveResult, type SitePageView } from '../../client';
+import { isDeferredSubmit } from '../../lot';
+import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, rememberOpenModule } from '../../context';
 import type { HomePhotoDraft } from './home-photo-draft';
 import HomeModulesEditor from './HomeModulesEditor.vue';
 
 /** `homePhoto` : aperçu de la photo du bandeau (accueil). */
 const props = defineProps<{ page: SitePageView; disabled: boolean; homePhoto?: string | null }>();
-const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
+const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
 const def = SITE_PAGES.find((p) => p.id === props.page.id)!;
@@ -49,12 +51,14 @@ function resetTexts() {
 	Object.assign(form.textes, defaults);
 }
 
-async function submit() {
+async function submit(event: Event) {
 	error.value = '';
 	busy.value = true;
 	try {
 		rememberOpenModule('pages-site');
-		await sitePagesApi.update(props.page.id, {
+		const result = await sitePagesApi.update(
+			props.page.id,
+			{
 			label: form.label,
 			show: form.show,
 			active: props.page.active,
@@ -64,8 +68,10 @@ async function submit() {
 			...(photo.change.action === 'replace'
 				? { photo: { type: photo.change.file.type, data: await fileToBase64(photo.change.file) } }
 				: {}),
-		});
-		emit('published', `Page du site : ${form.label}`);
+			},
+			{ deferred: isDeferredSubmit(event) },
+		);
+		emit('published', `Page du site : ${form.label}`, result);
 	} catch (e) {
 		if (e instanceof ApiError && e.status === 401) return sessionExpired();
 		error.value = (e as Error).message;
@@ -138,13 +144,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 		</p>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="props.disabled || busy"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				Enregistrer et publier
-			</button>
+			<PublishButtons :busy="busy" :disabled="props.disabled" />
 			<button type="button" class="text-sm text-gray-600 hover:underline" @click="emit('cancel')">Annuler</button>
 		</div>
 	</form>

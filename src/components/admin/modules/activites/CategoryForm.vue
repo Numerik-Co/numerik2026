@@ -7,11 +7,13 @@
  */
 import { computed, inject, reactive, ref } from 'vue';
 import { CATEGORY_ICONS } from '../../../../lib/category-icons';
-import { ApiError, activityCategoriesApi, type ActivityCategory } from '../../client';
+import { ApiError, activityCategoriesApi, type ActivityCategory, type SaveResult } from '../../client';
+import { isDeferredSubmit } from '../../lot';
+import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule } from '../../context';
 
 const props = defineProps<{ source: ActivityCategory | null; disabled: boolean }>();
-const emit = defineEmits<{ published: [label: string]; cancel: [] }>();
+const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
 const editing = props.source;
@@ -49,7 +51,7 @@ function onSlugInput(event: Event) {
 	form.slug = (event.target as HTMLInputElement).value;
 }
 
-async function submit() {
+async function submit(event: Event) {
 	error.value = '';
 	if (!form.icon) {
 		error.value = 'Choisissez une icône.';
@@ -59,9 +61,11 @@ async function submit() {
 	try {
 		const category: ActivityCategory = { slug: slug.value, label: form.label, icon: form.icon, description: form.description };
 		rememberOpenModule('activites');
-		if (editing) await activityCategoriesApi.update(editing.slug, category);
-		else await activityCategoriesApi.create(category);
-		emit('published', `Catégorie : ${form.label}`);
+		const options = { deferred: isDeferredSubmit(event) };
+		const result = editing
+			? await activityCategoriesApi.update(editing.slug, category, options)
+			: await activityCategoriesApi.create(category, options);
+		emit('published', `Catégorie : ${form.label}`, result);
 	} catch (e) {
 		if (e instanceof ApiError && e.status === 401) return sessionExpired();
 		error.value = (e as Error).message;
@@ -132,13 +136,7 @@ async function submit() {
 		</div>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<button
-				type="submit"
-				:disabled="busy || props.disabled"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
-			>
-				{{ busy ? 'Envoi…' : editing ? 'Enregistrer et publier' : 'Créer et publier' }}
-			</button>
+			<PublishButtons :label="editing ? 'Enregistrer et publier' : 'Créer et publier'" :busy="busy" :disabled="props.disabled" />
 			<button type="button" class="text-sm text-gray-600 hover:underline" @click="emit('cancel')">Annuler</button>
 		</div>
 	</form>

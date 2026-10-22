@@ -7,7 +7,8 @@
  *  - DELETE : `{ confirm: <slug> }` → dossier mis de côté, site reconstruit,
  *             dossier effacé une fois la nouvelle version en ligne (remis en
  *             place si échec).
- * Toute modification passe par `src/lib/site-build.ts` (une à la fois).
+ * Toute modification passe par `src/lib/site-build.ts` (une à la fois), ou
+ * rejoint le lot en attente (`?publier=non`, cf. `src/lib/admin-publish.ts`).
  */
 import type { APIRoute } from 'astro';
 import { getImage } from 'astro:assets';
@@ -22,8 +23,7 @@ import {
 	updateNews,
 	type CoverChange,
 } from '../../../../lib/news-writer';
-import { logEvent } from '../../../../lib/journal';
-import { canPublish, isPublishing, publish } from '../../../../lib/site-build';
+import { publishBlocked, publishChange } from '../../../../lib/admin-publish';
 
 export const prerender = false;
 
@@ -51,9 +51,8 @@ function toMarkdown(fields: Record<string, unknown>, body: string): string {
 
 export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const slug = String(params.slug ?? '');
-	const availability = await canPublish();
-	if (!availability.ok) return jsonError(availability.reason!, 503);
-	if (isPublishing()) return jsonError('Une publication est déjà en cours, réessayez dans une minute.', 409);
+	const blocked = await publishBlocked(request);
+	if (blocked) return blocked;
 
 	const payload = (await readJson(request)) ?? {};
 	const fields = (payload.fields && typeof payload.fields === 'object' ? payload.fields : {}) as Record<string, unknown>;
@@ -75,36 +74,24 @@ export const PUT: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const { title, restore, purge, errors } = await updateNews(slug, markdown, coverChange);
 	if (!restore || !purge) return jsonError(errors.join(' '), errors[0]?.includes('introuvable') ? 404 : 422);
 
-	// Journalisé avant la publication, dont le résultat suit dans le journal.
-	await logEvent({
-		by: locals.user,
+	return publishChange({
+		request,
+		user: locals.user!,
 		action: 'actualite.modification',
-		label: title,
-		href: `/actualites/${slug}`,
+		subject: title!,
+		label: `Modification : ${title}`,
+		href: fields.isPublish === false ? undefined : `/actualites/${slug}`,
 		message: [coverChange.action !== 'keep' ? `photo : ${coverChange.action === 'remove' ? 'retirée' : 'remplacée'}` : '', fields.isPublish === false ? 'brouillon' : '']
 			.filter(Boolean)
 			.join(' · ') || undefined,
+		applied: { restore, purge },
 	});
-	const started = await publish({
-		label: `Modification : ${title}`,
-		href: fields.isPublish === false ? undefined : `/actualites/${slug}`,
-		by: locals.user!,
-		onFailure: restore,
-		onSuccess: purge,
-	});
-	if (!started.started) {
-		await restore();
-		await logEvent({ by: locals.user, action: 'publication', label: `Modification : ${title}`, outcome: 'echec', message: started.reason });
-		return jsonError(started.reason!, 409);
-	}
-	return json({ ok: true, href: `/actualites/${slug}` }, 202);
 });
 
 export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) => {
 	const slug = String(params.slug ?? '');
-	const availability = await canPublish();
-	if (!availability.ok) return jsonError(availability.reason!, 503);
-	if (isPublishing()) return jsonError('Une publication est déjà en cours, réessayez dans une minute.', 409);
+	const blocked = await publishBlocked(request);
+	if (blocked) return blocked;
 
 	const body = await readJson(request);
 	if (body?.confirm !== slug) return jsonError('Confirmation manquante.');
@@ -113,18 +100,13 @@ export const DELETE: APIRoute = withErrors(async ({ params, request, locals }) =
 	const aside = await setAsideNews(slug);
 	if (!aside) return jsonError('Actualité introuvable dans les sources (déjà supprimée ?).', 404);
 
-	// Journalisé avant la publication, dont le résultat suit dans le journal.
-	await logEvent({ by: locals.user, action: 'actualite.suppression', label: title, message: slug });
-	const started = await publish({
+	return publishChange({
+		request,
+		user: locals.user!,
+		action: 'actualite.suppression',
+		subject: title,
 		label: `Suppression : ${title}`,
-		by: locals.user!,
-		onFailure: aside.restore,
-		onSuccess: aside.purge,
+		message: slug,
+		applied: aside,
 	});
-	if (!started.started) {
-		await aside.restore();
-		await logEvent({ by: locals.user, action: 'publication', label: `Suppression : ${title}`, outcome: 'echec', message: started.reason });
-		return jsonError(started.reason!, 409);
-	}
-	return json({ ok: true }, 202);
 });

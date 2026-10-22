@@ -26,6 +26,36 @@ l'erreur (journal complet : `<DATA_DIR>/publication/build.log`).
 Une seule publication à la fois. En développement (`astro dev`), rien n'est
 reconstruit : le contenu écrit est relu à chaud.
 
+## Enregistrer sans publier (lot de modifications)
+
+Chaque formulaire propose aussi **Enregistrer sans publier** (et la
+pastille de suppression **Sans publier**) : la modification est écrite dans
+les sources comme d'habitude, mais le site n'est pas reconstruit. Les
+modifications s'accumulent dans un **lot** ; une seule reconstruction les
+publie toutes (bouton **À publier (N)** de la barre, ou **Publier les
+modifications** en tête des modules). Pratique au lancement d'un site, où
+l'on enchaîne des dizaines de retouches.
+
+- `src/lib/publication-lot.ts` : à la première modification du lot, copie de
+  secours de tout `src/content/` dans `<DATA_DIR>/publication/lot/contenu/`,
+  liste dans `<DATA_DIR>/publication/lot/modifications.json` (qui, quoi, quand).
+  Route : `/api/admin/publication/lot` (GET liste, POST publie, DELETE annule).
+  Côté routes : `?publier=non` sur la requête d'enregistrement
+  (`publishBlocked()` / `publishChange()`, `src/lib/admin-publish.ts`).
+- **Tout annuler** remet `src/content/` dans l'état de la copie de secours
+  (définitif, journalisé).
+- **Toute reconstruction réussie publie le lot** : celle du lot, celle d'une
+  modification publiée aussitôt (« Enregistrer et publier » publie donc aussi
+  ce qui attendait), mais aussi un redémarrage ou `./update.sh` (le site est
+  reconstruit avec les sources du moment) : le lot se referme alors tout seul.
+- Reconstruction du lot en échec : le site en ligne ne change pas, **le lot
+  reste en attente** (rien n'est défait) ; corriger puis republier, ou tout
+  annuler.
+- Le lot est **commun** à toutes les personnes connectées : publier publie
+  les modifications de tout le monde (la liste indique qui a fait quoi).
+- Pas d'aperçu : une modification en attente n'est visible sur le site
+  qu'après publication (badge **À publier** dans les listes des modules).
+
 ## Prérequis
 
 La publication n'est possible que si le serveur Node dispose :
