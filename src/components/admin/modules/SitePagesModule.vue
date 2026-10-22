@@ -338,7 +338,7 @@ onMounted(load);
 
 			<!-- 1. Menu de navigation : pages du site, liens directs, menus déroulants -->
 			<section class="overflow-hidden rounded-xl border border-gray-200">
-				<header class="flex items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+				<header class="flex items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-100 px-4 py-2.5">
 					<i class="fa-solid fa-compass text-gray-400" aria-hidden="true"></i>
 					<span class="font-heading font-semibold text-gray-900">Menu de navigation</span>
 					<span class="text-xs text-gray-500">dans l'ordre d'affichage</span>
@@ -562,7 +562,7 @@ onMounted(load);
 				:key="group.key"
 				class="overflow-hidden rounded-xl border border-gray-200"
 			>
-				<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+				<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-100 px-4 py-2.5">
 					<i :class="['fa-solid', group.icon, 'text-gray-400']" aria-hidden="true"></i>
 					<span class="font-heading font-semibold text-gray-900">{{ group.title }}</span>
 					<span class="text-xs text-gray-500">{{ group.hint }}</span>

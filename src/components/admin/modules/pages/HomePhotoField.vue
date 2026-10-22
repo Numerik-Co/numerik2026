@@ -37,7 +37,7 @@ const fileButtonClass =
 </script>
 
 <template>
-	<div class="mb-4 space-y-2 rounded-xl bg-gray-50 p-3">
+	<div class="mb-4 space-y-2 rounded-xl bg-gray-100 p-3">
 		<p class="text-sm font-medium text-gray-700">Photo de fond</p>
 		<div class="flex flex-wrap items-center gap-3">
 			<div class="flex aspect-[16/7] w-48 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white">

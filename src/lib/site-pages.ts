@@ -29,6 +29,8 @@ export interface SitePageText {
 	/** Zone de texte sur plusieurs lignes. */
 	multiline?: boolean;
 	help?: string;
+	/** Texte repris dans la balise `<title>` ou la description : longueur indiquée (`SeoLength.vue`) ; `suffix` = « · nom de l'asso » ajouté. */
+	seo?: { kind: 'titre' | 'description'; suffix?: boolean };
 }
 
 export interface SitePageDef {
@@ -58,7 +60,28 @@ export const SITE_PAGES: SitePageDef[] = [
 		summary: "Page d'entrée du site, composée de modules (bandeau, actualités, appel à l'action…).",
 		// Contenu : modules (src/lib/home-modules.ts), pas de textes fixes.
 		modules: true,
-		sections: [],
+		sections: [
+			{
+				title: 'Référencement',
+				texts: [
+					{
+						name: 'titre',
+						label: 'Titre pour les moteurs de recherche',
+						help: "Titre de l'onglet du navigateur et des résultats de recherche ; pas affiché sur la page. Ex. : « Nom de l'asso · Médiation numérique à Ville ».",
+						seo: { kind: 'titre' },
+						default: '{{association.nom}}',
+					},
+					{
+						name: 'description',
+						label: 'Description pour les moteurs de recherche',
+						multiline: true,
+						help: SEO_HELP,
+						seo: { kind: 'description' },
+						default: '{{association.description}}',
+					},
+				],
+			},
+		],
 	},
 	{
 		id: 'activites',
@@ -71,7 +94,7 @@ export const SITE_PAGES: SitePageDef[] = [
 			{
 				title: 'En-tête',
 				texts: [
-					{ name: 'titre', label: 'Titre', default: 'Activités' },
+					{ name: 'titre', label: 'Titre', default: 'Activités', seo: { kind: 'titre', suffix: true } },
 					{
 						name: 'accroche',
 						label: 'Accroche',
@@ -83,6 +106,7 @@ export const SITE_PAGES: SitePageDef[] = [
 						label: 'Description pour les moteurs de recherche',
 						multiline: true,
 						help: SEO_HELP,
+						seo: { kind: 'description' },
 						default: 'Découvrez les parcours, ateliers et actions de médiation numérique proposés par {{association.nom}}.',
 					},
 				],
@@ -112,7 +136,7 @@ export const SITE_PAGES: SitePageDef[] = [
 			{
 				title: 'En-tête',
 				texts: [
-					{ name: 'titre', label: 'Titre', default: 'Actualités' },
+					{ name: 'titre', label: 'Titre', default: 'Actualités', seo: { kind: 'titre', suffix: true } },
 					{
 						name: 'accroche',
 						label: 'Accroche',
@@ -124,6 +148,7 @@ export const SITE_PAGES: SitePageDef[] = [
 						label: 'Description pour les moteurs de recherche',
 						multiline: true,
 						help: SEO_HELP,
+						seo: { kind: 'description' },
 						default: "Les dernières actualités de l'association {{association.nom}} : ateliers, partenariats et temps forts.",
 					},
 				],
@@ -153,6 +178,7 @@ export const SITE_PAGES: SitePageDef[] = [
 						label: 'Description pour les moteurs de recherche',
 						multiline: true,
 						help: SEO_HELP,
+						seo: { kind: 'description' },
 						default: "Contactez l'association {{association.nom}} pour toute question, demande de partenariat ou d'accompagnement.",
 					},
 				],

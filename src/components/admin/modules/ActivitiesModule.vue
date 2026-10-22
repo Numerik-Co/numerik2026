@@ -272,7 +272,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 				@update:model-value="reorderCategories"
 			>
 				<section v-for="(cat, ci) in shownCategories" :key="cat.slug" class="overflow-hidden rounded-xl border border-gray-200">
-					<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 py-2.5 pr-4 pl-2">
+					<header class="flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-100 py-2.5 pr-4 pl-2">
 						<DragHandle :disabled="publishLocked" />
 						<i :class="['fa-solid', cat.icon, 'text-gray-400']" aria-hidden="true"></i>
 						<button

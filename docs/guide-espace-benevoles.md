@@ -467,6 +467,14 @@ page est fournie par le site, l'association règle le reste.
   l'enregistrement. « Revenir
   à l'accueil d'origine » remet les modules de départ. Rien n'est publié
   avant **Enregistrer et publier**.
+- **Référencement de l'accueil** (sous ses modules) : titre de l'onglet et
+  des résultats de recherche, et description, jamais affichés sur la page.
+  Par défaut le nom et la présentation courte de l'association ; viser le
+  nom + l'activité + la ville. Sous ces champs, et sous le titre et le
+  résumé des pages, actualités et activités, un compteur indique la
+  longueur (titre : 15 à 60 caractères, description : 120 à 160) ; en
+  orange, le texte risque d'être coupé ou est trop court, sans empêcher
+  d'enregistrer.
 - **Désactiver** (corbeille, après confirmation) : la page disparaît du menu
   **et** du site (son adresse affiche « page introuvable ») ; les liens de
   l'accueil vers elle sont masqués. Elle passe dans la **Bibliothèque**, d'où

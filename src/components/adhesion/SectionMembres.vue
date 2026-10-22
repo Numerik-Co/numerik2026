@@ -81,7 +81,7 @@ defineExpose({ reset });
 			<li
 				v-for="(m, i) in groupe"
 				:key="m.membreId"
-				class="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2"
+				class="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2"
 			>
 				<i class="fa-solid fa-user text-gray-400" aria-hidden="true"></i>
 				<span class="text-gray-900">{{ m.label }}</span>

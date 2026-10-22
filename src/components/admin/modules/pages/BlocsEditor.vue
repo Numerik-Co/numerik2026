@@ -83,7 +83,7 @@ function reorderItems(bloc: Bloc, list: NonNullable<Bloc['items']>) {
 					class="space-y-3"
 					@update:model-value="(list: NonNullable<Bloc['items']>) => reorderItems(bloc, list)"
 				>
-					<div v-for="(item, i) in bloc.items" :key="i" class="rounded-lg bg-gray-50 p-3">
+					<div v-for="(item, i) in bloc.items" :key="i" class="rounded-lg bg-gray-100 p-3">
 						<div class="mb-2 flex items-center gap-2 text-sm">
 							<DragHandle :disabled="false" />
 							<span class="font-semibold text-gray-700">{{ def(bloc.type).items!.label }} {{ i + 1 }}</span>

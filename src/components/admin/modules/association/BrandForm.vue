@@ -161,7 +161,7 @@ const COLOR_FIELDS = [
 	{ key: 'accent', label: "Couleur d'accent", help: 'bouton « Adhérer », touches de couleur' },
 ] as const;
 
-const headerClass = 'flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-50 px-4 py-2.5';
+const headerClass = 'flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-100 px-4 py-2.5';
 const fileButtonClass =
 	'inline-flex cursor-pointer items-center rounded-full border-2 border-primary px-4 py-1.5 font-heading text-xs font-semibold text-primary hover:bg-primary hover:text-white focus-within:ring-2 focus-within:ring-primary/40';
 /** Damier : fond des aperçus d'images (transparence visible). */

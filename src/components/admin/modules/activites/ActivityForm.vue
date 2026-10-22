@@ -25,6 +25,7 @@ import EditFileBar from '../../EditFileBar.vue';
 import FormHeader from '../../FormHeader.vue';
 import FormTabs from '../../FormTabs.vue';
 import LinkPicker from '../../LinkPicker.vue';
+import SeoLength from '../../SeoLength.vue';
 import { EDIT_TABS, useFormTabs, type EditTab } from '../../form-tabs';
 import { downloadMarkdown, readMarkdownFile } from '../../markdown-file';
 import { activityMarkdownFile, parseActivityMarkdown } from './activity-markdown';
@@ -186,15 +187,17 @@ async function submit(event: Event) {
 				<div>
 					<label for="act-title" class="block text-sm font-semibold text-gray-700">Titre</label>
 					<input id="act-title" v-model="form.title" type="text" required :class="inputClass" />
+					<SeoLength :text="form.title" kind="titre" suffix />
 				</div>
 				<div>
 					<label for="act-excerpt" class="block text-sm font-semibold text-gray-700">Résumé</label>
 					<textarea id="act-excerpt" v-model="form.excerpt" rows="2" required :class="inputClass"></textarea>
+					<SeoLength :text="form.excerpt" kind="description" />
 					<p class="mt-1 text-xs font-light text-gray-500">Une ou deux phrases : affiché sur la carte de l'activité et dans les moteurs de recherche.</p>
 				</div>
 
 				<!-- Emplacement -->
-				<fieldset class="space-y-3 rounded-xl bg-gray-50 p-4">
+				<fieldset class="space-y-3 rounded-xl bg-gray-100 p-4">
 					<legend class="sr-only">Emplacement</legend>
 					<div>
 						<label for="act-category" class="block text-sm font-semibold text-gray-700">Catégorie</label>
@@ -242,7 +245,7 @@ async function submit(event: Event) {
 				</fieldset>
 
 				<!-- Inscription en ligne -->
-				<fieldset class="space-y-3 rounded-xl bg-gray-50 p-4">
+				<fieldset class="space-y-3 rounded-xl bg-gray-100 p-4">
 					<legend class="sr-only">Inscription en ligne</legend>
 					<label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
 						<input v-model="form.inscription" type="checkbox" class="rounded border-gray-300" />

@@ -18,6 +18,7 @@ import { isDeferredSubmit } from '../../lot';
 import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, fileToBase64, inputClass, photoProblem, rememberOpenModule } from '../../context';
 import LinkPicker from '../../LinkPicker.vue';
+import SeoLength from '../../SeoLength.vue';
 import EditFileBar from '../../EditFileBar.vue';
 import FormHeader from '../../FormHeader.vue';
 import FormTabs from '../../FormTabs.vue';
@@ -334,17 +335,19 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 				<div>
 					<label for="pg-title" class="block text-sm font-semibold text-gray-700">Titre</label>
 					<input id="pg-title" v-model="form.title" type="text" required :class="inputClass" />
+					<SeoLength :text="form.title" kind="titre" suffix />
 				</div>
 				<div>
 					<label for="pg-description" class="block text-sm font-semibold text-gray-700">
 						Description <span class="font-light text-gray-500">(facultative)</span>
 					</label>
 					<textarea id="pg-description" v-model="form.description" rows="2" :class="inputClass"></textarea>
+					<SeoLength :text="form.description" kind="description" />
 					<p class="mt-1 text-xs font-light text-gray-500">Affichée sous le titre et dans les moteurs de recherche.</p>
 				</div>
 
 				<!-- Emplacement -->
-				<fieldset class="space-y-3 rounded-xl bg-gray-50 p-4">
+				<fieldset class="space-y-3 rounded-xl bg-gray-100 p-4">
 					<legend class="sr-only">Emplacement</legend>
 					<div>
 						<label for="pg-placement" class="block text-sm font-semibold text-gray-700">Emplacement</label>
