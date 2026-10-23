@@ -4,7 +4,7 @@ import PageHeader from '../components/sections/PageHeader.astro';
 import ActivitesSection from '../components/sections/ActivitesSection.astro';
 import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro';
 import { association } from '../lib/association';
-import { conseillerNumerique } from '../lib/agenda';
+import { permanencesAffichees } from '../plugins/rdv';
 import { fetchPlanningAgenda } from '../lib/adhesion/planning';
 
 import { getSitePage } from '../lib/site-pages-content';
@@ -18,11 +18,12 @@ if (!page.active) return new Response(null, { status: 404 });
 const { t } = page;
 
 // Grist injoignable : pas de planning figé (il deviendrait vite faux), les
-// seules permanences du Conseiller Numérique et un avertissement.
-let sessions = conseillerNumerique;
+// seules permanences du Conseiller Numérique (plugin RDV) et un avertissement.
+const permanences = permanencesAffichees();
+let sessions = permanences;
 let notice: string | undefined;
 try {
-	sessions = [...conseillerNumerique, ...(await fetchPlanningAgenda())];
+	sessions = [...permanences, ...(await fetchPlanningAgenda())];
 } catch (err) {
 	console.error('[activites] Grist injoignable pour le planning : permanences seules.', err);
 	notice =

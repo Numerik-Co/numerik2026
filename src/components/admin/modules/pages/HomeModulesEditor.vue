@@ -7,6 +7,7 @@
  */
 import { computed, nextTick, ref } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
+import { disponible } from '../../../../plugins';
 import { DEFAULT_HOME, HOME_MODULES, homeModuleDef, newHomeModule, type HomeModule, type HomeModuleDef, type HomeModuleType } from '../../../../lib/home-modules';
 import { iconButtonClass, inputClass, sortableProps } from '../../context';
 import BlocFields from './BlocFields.vue';
@@ -30,7 +31,8 @@ function toggle(m: HomeModule, event: MouseEvent) {
 	nextTick(() => header.scrollIntoView({ block: 'nearest' }));
 }
 
-const types = Object.entries(HOME_MODULES) as [HomeModuleType, HomeModuleDef][];
+// Types d'un plugin inactif : non proposés (rendu ignoré par index.astro).
+const types = (Object.entries(HOME_MODULES) as [HomeModuleType, HomeModuleDef][]).filter(([, d]) => disponible(d));
 /** Types encore ajoutables (un module unique déjà présent ne se rajoute pas). */
 const available = computed(() => types.filter(([type, def]) => def.multiple || !props.modules.some((m) => m.type === type)));
 const newType = ref<HomeModuleType | ''>('');

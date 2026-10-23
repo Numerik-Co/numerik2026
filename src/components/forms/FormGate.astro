@@ -1,13 +1,19 @@
 ---
+import type { FormToggle } from '../../config/site';
 import { getFormToggle, type FormName } from '../../lib/forms';
 
-interface Props {
-	/** Clé du formulaire dans `site.forms` (défauts `src/config/site.ts`, réglages `src/content/reglages.yaml`). */
-	form: FormName;
-}
+type Props =
+	| {
+			/** Clé du formulaire dans `site.forms` (défauts `src/config/site.ts`, réglages `src/content/reglages.yaml`). */
+			form: FormName;
+	  }
+	| {
+			/** État fourni directement (formulaire d'un plugin, réglé dans son propre fichier). */
+			toggle: FormToggle;
+	  };
 
-const { form } = Astro.props;
-const toggle = getFormToggle(form);
+const props = Astro.props;
+const toggle = 'toggle' in props ? props.toggle : getFormToggle(props.form);
 const hasFallback = Astro.slots.has('fallback');
 ---
 

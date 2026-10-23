@@ -1,0 +1,192 @@
+# =============================================================================
+#  Prise de rendez-vous en ligne (plugin « rdv »)
+# =============================================================================
+#
+#  Réglages de la prise de RDV propres à l'association : adresse de la page,
+#  textes, encart de la page d'accueil, permanences, zones géographiques.
+#  Le plugin s'active dans reglages.yaml (plugins: rdv: true).
+#
+#  Ce fichier appartient à l'association : une mise à jour du site ne le
+#  remplace jamais. Tout est facultatif (une valeur absente garde le texte
+#  générique du modèle) ; une erreur fait échouer la construction du site
+#  avec un message indiquant le champ en cause. Changer ce fichier demande de
+#  reconstruire le site (redémarrer suffit, cf. docs/mise-a-jour.md).
+#
+#  Les listes de choix (thématiques, genre, tranche d'âge, statut) ne sont
+#  pas ici : elles sont lues dans le document Grist des RDV.
+#
+#  Dans les textes : {duree} = durée d'un créneau, {heure} = heure du
+#  créneau d'urgence, {intervenant} = textes.intervenant.
+# =============================================================================
+
+# Adresse de la page de prise de RDV (minuscules, chiffres, tirets).
+adresse: /rdv-conseiller-numerique
+
+# false : la page affiche textes.fermeTitre / fermeMessage à la place du
+# formulaire (l'encart d'accueil reste, son bouton mène à la page).
+ouvert: true
+
+textes:
+  # Nom court : fil d'Ariane, onglet du navigateur, agenda (.ics), liens.
+  nom: 'RDV Conseiller·ère Numérique'
+  # Titre et texte du bandeau de la page.
+  titre: 'RDV avec le·la Conseiller·ère Numérique'
+  description: 'Réservez un créneau de {duree} minutes pour un accompagnement individuel — navigation, démarches administratives, e-mail, sécurité numérique…'
+  # Qui reçoit les RDV : « Permanences de 30 minutes avec … », « … rendez-vous avec … ».
+  intervenant: 'le·la conseiller·ère numérique'
+  # Bouton du parcours « déjà venu·e » (étape « Vous »).
+  dejaVenu: 'J’ai déjà rencontré le·la conseiller·ère'
+  # Mention au-dessus des horaires d'un jour qui a un créneau d'urgence.
+  urgence: 'Le premier créneau de {heure} est réservé aux demandes urgentes : seule notre conseillère numérique ou la mairie peuvent évaluer votre besoin d’urgence.'
+  # Case à cocher de la dernière étape.
+  consentement: 'J’accepte que mes informations soient conservées par l’association pour l’organisation de ce rendez-vous et les statistiques du dispositif Conseiller Numérique.'
+  # Prise de RDV fermée (ouvert: false).
+  fermeTitre: 'Prise de RDV en ligne momentanément fermée'
+  fermeMessage: 'La prise de rendez-vous en ligne avec le·la Conseiller·ère Numérique n’est pas ouverte actuellement. Vous pouvez vous présenter directement à ses permanences ou nous contacter.'
+
+# Encart de la page d'accueil (et bloc « Prise de rendez-vous » des pages).
+# Textes modifiables aussi depuis l'espace bénévoles, module « Pages ».
+encart:
+  surtitre: 'Conseiller·ère Numérique'
+  titre: 'Besoin d’aide pour une démarche en ligne ?'
+  texte: 'Carte d’identité, CAF, impôts, messagerie, smartphone… Le·la conseiller·ère numérique vous accompagne pas à pas, sur rendez-vous.'
+  bouton: 'Prendre rendez-vous'
+  mention: 'Gratuit · {duree} minutes'
+  # Logo facultatif, fichier rangé dans src/content/images/.
+  # Logo officiel du label (kit de communication ANCT) — ne pas modifier.
+  logo: logo-conseiller-numerique.svg
+  logoAlt: 'Label Conseiller numérique'
+
+# Permanences dans le planning de la page Activités.
+planning:
+  titre: 'RDV du·de la Conseiller·ère Numérique'
+  legende: 'Conseiller·ère Numérique'
+
+creneaux:
+  # Durée d'un RDV, en minutes : 15, 20, 30, 45 ou 60.
+  duree: 30
+  # Jusqu'à combien de semaines à l'avance on peut réserver (1 à 8).
+  semaines: 3
+  # true : le premier créneau de chaque permanence est réservé aux urgences,
+  # réservable seulement par une personne connectée à l'espace bénévoles.
+  urgence: true
+
+# Questions facultatives posées au premier RDV (retirer celles qu'on ne
+# demande pas ; liste vide = l'étape « Votre profil » disparaît) :
+#   genre (civilité), commune, zone (origine géographique, voir zones:),
+#   trancheAge, statut
+profil: [genre, commune, zone, trancheAge, statut]
+
+# Libellé de la civilité pour chaque choix de la colonne Grist « Genre »
+# (les choix absents d'ici ne sont pas proposés ; vide = tous, tels quels).
+civilite:
+  Masculin: 'M.'
+  Féminin: 'Mme'
+
+# Icône Font Awesome de chaque thématique (choix de la colonne Grist
+# « Thematique » de la table Demarches) ; absente = icône dossier.
+icones:
+  'Diagnostic numérique': fa-stethoscope
+  'Prendre en main du matériel': fa-laptop
+  'Maintenance de matériel': fa-screwdriver-wrench
+  'Gérer ses contenus numériques': fa-folder-open
+  'Navigation sur internet': fa-globe
+  'E-mail': fa-envelope
+  'Bureautique': fa-file-lines
+  'Réseaux sociaux communication': fa-comments
+  'Santé': fa-heart-pulse
+  'Banque et achats en ligne': fa-credit-card
+  'Accompagner un professionnel': fa-briefcase
+  'Insertion professionnelle': fa-user-tie
+  'Prévention en sécurité numérique': fa-shield-halved
+  'Parentalité': fa-children
+  'Scolarité et numérique': fa-graduation-cap
+  'Créer avec le numérique': fa-palette
+  'Culture numérique': fa-book-open
+  'Intelligence artificielle': fa-robot
+  'Aide aux démarches administratives': fa-landmark
+
+# -----------------------------------------------------------------------------
+#  Permanences : jours, horaires et lieux où l'on peut prendre RDV.
+#
+#    day       (obligatoire) Lundi, Mardi, Mercredi, Jeudi, Vendredi, Samedi
+#              ou Dimanche. Une seule permanence par jour.
+#    start     (obligatoire) heure de début, au format 09h00.
+#    end       (obligatoire) heure de fin, au format 12h00.
+#              Heures piles ou demies (09h00, 09h30…), entre 09h00 et 20h00.
+#    location  (facultatif) lieu de la permanence.
+#
+#  Aucune permanence (permanences: []) : aucun créneau, l'encart d'accueil
+#  disparaît.
+# -----------------------------------------------------------------------------
+permanences:
+  - day: Lundi
+    start: '09h00'
+    end: '12h00'
+    location: 'Ancienne mairie'
+  - day: Mardi
+    start: '09h00'
+    end: '12h00'
+    location: 'Ancienne mairie'
+  - day: Mercredi
+    start: '09h00'
+    end: '12h00'
+    location: 'Quartier de la Moustey'
+  - day: Jeudi
+    start: '09h00'
+    end: '12h00'
+    location: 'Ancienne mairie'
+  - day: Vendredi
+    start: '09h00'
+    end: '12h00'
+    location: 'Ancienne mairie'
+
+# -----------------------------------------------------------------------------
+#  Zones géographiques des bénéficiaires (question « zone » du profil).
+#
+#  Au premier RDV, le·la bénéficiaire indique sa commune ; le formulaire
+#  propose alors une « origine géographique » parmi ces zones, qu'il·elle peut
+#  corriger. Chaque label doit être EXACTEMENT un des choix de la colonne
+#  Grist Zone_geographique (table Beneficiaires).
+#
+#    label       (obligatoire) libellé, identique au choix Grist.
+#    communes    (facultatif) communes qui proposent cette zone
+#                automatiquement (accents, majuscules et tirets ignorés).
+#    codePostal  (facultatif) début de code postal qui la propose, si la
+#                commune ne figure dans aucune liste (ex. '40' = Landes).
+#
+#  La première zone qui correspond est proposée : communes d'abord (dans
+#  l'ordre du fichier), puis codePostal. Une zone sans communes ni codePostal
+#  se choisit seulement à la main. Liste vide : la question n'est pas posée.
+# -----------------------------------------------------------------------------
+zones:
+  - label: 'Saint-Pierre-du-Mont'
+    communes:
+      - 'Saint-Pierre-du-Mont'
+
+  # Mont-de-Marsan Agglomération au 2026-01-01 (hors Saint-Pierre-du-Mont,
+  # zone à part ; source : data.gouv.fr / Banatic).
+  - label: 'Agglo du Marsan'
+    communes:
+      - 'Benquet'
+      - 'Bostens'
+      - 'Bougue'
+      - 'Bretagne-de-Marsan'
+      - 'Campagne'
+      - 'Campet-et-Lamolère'
+      - 'Gaillères'
+      - 'Geloux'
+      - 'Laglorieuse'
+      - 'Lucbardez-et-Bargues'
+      - 'Mazerolles'
+      - 'Mont-de-Marsan'
+      - 'Pouydesseaux'
+      - 'Saint-Avit'
+      - "Saint-Martin-d'Oney"
+      - 'Saint-Perdon'
+      - 'Uchacq-et-Parentis'
+
+  - label: "Commune proche de l'agglo"
+
+  - label: 'Département'
+    codePostal: '40'

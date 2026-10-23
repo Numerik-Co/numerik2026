@@ -1,7 +1,7 @@
 /**
  * Plan du site pour les moteurs de recherche, produit à chaque construction
  * (donc à chaque publication) : pages du site actives, pages de service
- * (adhésion, inscription, RDV), pages de contenu publiques, catégories et
+ * (adhésion, inscription, RDV si le plugin est actif), pages de contenu publiques, catégories et
  * fiches d'activité publiées, actualités publiées (avec leur date).
  * Jamais : pages réservées, brouillons, pages désactivées. Adresses sans
  * « / » final, comme l'adresse canonique des pages (`src/lib/seo.ts`).
@@ -14,6 +14,8 @@ import { getContentPages } from '../lib/content-pages';
 import { getAllNews } from '../lib/news';
 import { absoluteUrl } from '../lib/seo';
 import { getSitePagesState } from '../lib/site-pages-content';
+import { pluginActif } from '../plugins';
+import { RDV_HREF } from '../plugins/rdv';
 
 const escapeXml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -24,7 +26,7 @@ export const GET: APIRoute = async ({ site }) => {
 		...sitePages.map((p) => ({ path: p.href })),
 		{ path: '/adherer' },
 		...(settings.forms.inscription.enabled ? [{ path: '/inscription' }] : []),
-		{ path: '/rdv-conseiller-numerique' },
+		...(pluginActif('rdv') ? [{ path: RDV_HREF }] : []),
 		...(await getContentPages()).filter((p) => p.access === null).map((p) => ({ path: p.url })),
 		...(activitiesActive
 			? [

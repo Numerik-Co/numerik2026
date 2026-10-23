@@ -69,7 +69,7 @@ configurée »), le reste du site fonctionne.
 | `GRIST_TABLE_ACTIVITES` | Table des activités (défaut `Activite`) — optionnel |
 | `GRIST_TABLE_SAISONS` | Table des saisons (défaut `Saisons`) — optionnel |
 | `GRIST_TABLE_PRESENCE` | Table de présence aux ateliers (défaut `Presence`) — optionnel |
-| `GRIST_DOC_ID_RDV` | Document Grist des RDV du Conseiller Numérique — optionnel, voir [rdv-conseiller-numerique.md](rdv-conseiller-numerique.md) |
+| `GRIST_DOC_ID_RDV` | Document Grist des RDV (plugin `rdv`) — optionnel, voir [le plugin](../src/plugins/rdv/README.md) |
 | `GRIST_TABLE_BENEFICIAIRES` / `GRIST_TABLE_RDV` / `GRIST_TABLE_DEMARCHES` | Tables du document RDV (défauts `Beneficiaires`, `RDV`, `Demarches`) — optionnel |
 | `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
 | `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |
@@ -151,11 +151,11 @@ Le process alimente **deux** tables, pas une :
 
 `Saison` est une **colonne formule** dans les deux ; de même `Tarif` / `Regle` (`Adhesions`) et `Eligible` / `Regle` (`Inscription`), ainsi que `Places_restantes` (`Activite`, décrément automatique). Ces colonnes ne sont **jamais écrites** par le code — Grist les calcule.
 
-## Prise de RDV avec le·la Conseiller·ère Numérique
+## Prise de RDV (plugin `rdv`)
 
 Document Grist distinct (`GRIST_DOC_ID_RDV`), tables `Beneficiaires`, `RDV`,
 `Demarches`. Parcours, routes `/api/rdv/*` et mapping :
-[rdv-conseiller-numerique.md](rdv-conseiller-numerique.md).
+[src/plugins/rdv/README.md](../src/plugins/rdv/README.md) (schéma Grist attendu compris).
 
 ## Planning hebdomadaire (Activite)
 
@@ -167,14 +167,14 @@ encadrant·e·s) — pas de table séparée : seules les lignes `Publiee = true`
 de la **saison en cours** sont retenues, et celles sans `Categorie_agenda`
 valide (colonne pas encore renseignée) sont ignorées.
 
-Les permanences du·de la **Conseiller·ère Numérique** viennent de
-`src/content/conseiller-numerique.yaml` (`conseillerNumerique`,
-`src/lib/agenda.ts`) — dispositif géré à part de la
+Les **permanences de prise de RDV** (plugin `rdv`) viennent de
+`permanences:` de `src/content/rdv.yaml` (plugin RDV : `permanencesAffichees()`,
+`src/plugins/rdv/index.ts`, vide si le plugin est inactif) — dispositif géré à part de la
 programmation de l'association, jamais dans `Activite`. La page les
-recombine : `[...conseillerNumerique, ...(await fetchPlanningAgenda())]`.
+recombine : `[...permanencesAffichees(), ...(await fetchPlanningAgenda())]`.
 
 Si Grist est injoignable (ou non configuré), la page n'affiche que les
-permanences du Conseiller Numérique, avec un avertissement « planning
+permanences de prise de RDV, avec un avertissement « planning
 momentanément indisponible » (prop `notice` de `WeeklyAgenda`). Plus de
 planning figé de secours : il devenait faux sans que personne le voie.
 

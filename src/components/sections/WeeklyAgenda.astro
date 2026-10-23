@@ -40,6 +40,8 @@ const {
 
 const days = groupByDay(sessions, alwaysShowDays);
 const usedKinds = [...new Set(sessions.map((s) => s.kind))];
+/** Libellé de légende d'un `kind` : celui d'une séance (`legend`) s'il y en a un, sinon celui du catalogue. */
+const legendLabel = (kind: (typeof usedKinds)[number]) => sessions.find((s) => s.kind === kind && s.legend)?.legend ?? AGENDA_KIND_META[kind].label;
 
 const startMin = startHour * 60;
 const slotCount = ((endHour - startHour) * 60) / 30; // lignes de 30 min
@@ -94,7 +96,7 @@ const gridStyle = [
 			{usedKinds.map((kind) => (
 				<li class="flex items-center gap-2 text-sm text-gray-600">
 					<span class={`h-2.5 w-2.5 rounded-full ${AGENDA_KIND_META[kind].dot}`} aria-hidden="true"></span>
-					{AGENDA_KIND_META[kind].label}
+					{legendLabel(kind)}
 				</li>
 			))}
 		</ul>

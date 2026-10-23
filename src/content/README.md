@@ -11,10 +11,9 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | `news/` | Articles d'actualité (un dossier par article ; photo citée par `cover: ./cover.jpg` dans le frontmatter) — voir `docs/actualites.md` |
 | `activites/` | Fiches d'activité (un dossier par fiche) et leurs catégories (`_categories.yaml`) ; aussi gérables depuis le module « Activités » de l'espace bénévoles — voir `docs/activites.md` |
 | `annonces.yaml` | Annonces de la bannière en haut du site (liste, ordre = ordre de défilement) — voir `docs/annonces.md` |
-| `reglages.yaml` | Couleurs du site, bouton « Adhérer », lien « Je participe », partage, ouverture/fermeture des formulaires (commentaires dans le fichier) — couleurs modifiables aussi depuis l'espace bénévoles, module « Association » (onglet Charte graphique) |
+| `reglages.yaml` | Couleurs du site, bouton « Adhérer », lien « Je participe », partage, ouverture/fermeture des formulaires, plugins activés (`plugins:`, ex. prise de RDV) (commentaires dans le fichier) — couleurs modifiables aussi depuis l'espace bénévoles, module « Association » (onglet Charte graphique) |
 | `partenaires.yaml` | Partenaires (cartes de la page Adhérer et de l'accueil), relais d'adhésion, avantages adhérent·e·s (commentaires dans le fichier) |
-| `conseiller-numerique.yaml` | Permanences du·de la Conseiller·ère Numérique : jours, horaires, lieux (planning, prise de RDV, encart d'accueil) |
-| `zones-geographiques.yaml` | Zones proposées à la prise de RDV Conseiller Numérique selon la commune (libellés = choix Grist) |
+| `rdv.yaml` | Prise de rendez-vous en ligne (plugin `rdv`, à activer dans `reglages.yaml`) : adresse de la page, textes, encart d'accueil, permanences (jours, horaires, lieux), zones géographiques (commentaires dans le fichier) — voir `src/plugins/rdv/README.md` |
 | `images/` | Logo (`logo.png`, obligatoire), photo d'accueil (`accueil.jpg`), icône d'onglet (`favicon.svg` / `.ico`) — remplacer le fichier en gardant le nom, ou logo et icône depuis l'espace bénévoles (module « Association », onglet Charte graphique) ; voir `docs/theme.md` |
 | `association.yaml` | Nom, coordonnées, réseaux sociaux et mentions légales de l'association (commentaires dans le fichier) — modifiable aussi par le bureau depuis l'espace bénévoles, module « Association » (onglet Généralités) |
 

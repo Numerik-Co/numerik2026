@@ -171,7 +171,7 @@ blocs:
     titre: "À savoir"
     texte: "Texte **Markdown**."
   rdv:
-    type: rdv-conseiller     # titre / texte facultatifs
+    type: rdv                # plugin rdv actif ; titre / texte facultatifs
 ---
 
 ## Ce que l'adhésion vous apporte
@@ -239,18 +239,20 @@ import { association } from '../lib/association';
 />
 ```
 
-`RdvCtaSection` accepte aussi `eyebrow`, `title`, `description`,
-`buttonLabel`, `buttonHref`. Détail : [composants.md](composants.md).
+`RdvCtaSection` (plugin `rdv`, `src/plugins/rdv/sections/`, à n'afficher
+que si `pluginActif('rdv')`) accepte aussi `eyebrow`, `title`, `description`,
+`buttonLabel`, `buttonHref` ; sans valeur : `encart:` de `src/content/rdv.yaml`.
+Détail : [composants.md](composants.md).
 
 ### Planning de la semaine
 
 ```astro
 ---
 import WeeklyAgenda from '../components/sections/WeeklyAgenda.astro';
-import { conseillerNumerique } from '../lib/agenda';
+import { permanencesAffichees } from '../plugins/rdv';
 ---
 
-<WeeklyAgenda sessions={conseillerNumerique} showHeading={false} />
+<WeeklyAgenda sessions={permanencesAffichees()} showHeading={false} />
 ```
 
 `sessions` est obligatoire (plus de planning figé) ; `/activites` passe les

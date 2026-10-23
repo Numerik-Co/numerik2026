@@ -411,8 +411,8 @@ blocs :
 - **Page classique** : du texte mis en forme (titres `##`, listes, liens,
   tableaux) et une photo de couverture facultative ;
 - **Page enrichie** : la même chose, plus des **blocs** (grille de cartes,
-  encadré tarif, bouton, encadré d'information, rendez-vous du Conseiller
-  Numérique). « Ajouter un bloc » le crée et insère son marqueur
+  encadré tarif, bouton, encadré d'information, prise de rendez-vous si le
+  plugin `rdv` est actif). « Ajouter un bloc » le crée et insère son marqueur
   `[[bloc:…]]` dans le texte à l'endroit du curseur ; le bloc s'affiche à
   cet endroit (on peut déplacer la ligne du marqueur). Sous les textes des
   blocs (cartes, encadré), « Insérer un lien vers une page du site » ; sous
@@ -454,7 +454,7 @@ page est fournie par le site, l'association règle le reste.
   `{{association.nom}}`… sont acceptées. Un texte vidé reprend sa valeur
   d'origine ; « rétablir les textes d'origine » les remet tous.
 - **L'accueil** est composé de **modules**, dans l'ordre d'affichage :
-  bandeau, dernières actualités, activités, RDV Conseiller Numérique, appel à
+  bandeau, dernières actualités, activités, prise de rendez-vous (plugin `rdv`), appel à
   l'action, partenaires, texte libre. Le crayon de l'Accueil permet d'en
   **ajouter** (liste « Ajouter un module… » ; l'appel à l'action et le texte
   libre peuvent figurer plusieurs fois), d'en **retirer** (corbeille), de

@@ -1,6 +1,6 @@
 /**
  * Réglages du site : couleurs, bouton « Adhérer », lien « Je participe »,
- * outils de partage, ouverture/fermeture des formulaires.
+ * outils de partage, ouverture/fermeture des formulaires, plugins actifs.
  *
  * Les valeurs ci-dessous (`DEFAULTS`) sont celles du modèle. Chaque
  * association les remplace dans `src/content/reglages.yaml`, fichier qui lui
@@ -16,6 +16,7 @@
 import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import raw from '../content/reglages.yaml?raw';
+import { PLUGIN_IDS, type PluginId } from '../plugins/catalogue';
 
 export interface FormToggle {
 	/** `false` masque le formulaire et affiche `closedTitle` + `closedMessage` à la place. */
@@ -113,14 +114,14 @@ const DEFAULTS = {
 				"Le formulaire d'inscription en ligne n'est pas ouvert actuellement. " +
 				'Vous pouvez nous contacter directement pour vous inscrire à une activité.',
 		},
-		rdvConseillerNumerique: {
-			enabled: true,
-			closedTitle: 'Prise de RDV en ligne momentanément fermée',
-			closedMessage:
-				"La prise de rendez-vous en ligne avec le·la Conseiller·ère Numérique n'est pas ouverte actuellement. " +
-				'Vous pouvez vous présenter directement à ses permanences ou nous contacter.',
-		},
 	} satisfies Record<string, FormToggle>,
+
+	/**
+	 * Plugins actifs (`src/plugins/`, catalogue `src/plugins/catalogue.ts`) :
+	 * tous inactifs par défaut, l'association active ceux qu'elle veut
+	 * (`plugins: { rdv: true }`). Changer ce réglage demande une reconstruction.
+	 */
+	plugins: Object.fromEntries(PLUGIN_IDS.map((id) => [id, false])) as Record<PluginId, boolean>,
 };
 
 /** Couleurs du modèle (« rétablir » du module « Association », onglet Charte graphique). */
@@ -156,6 +157,7 @@ const overridesSchema = z
 		presence: linkSchema,
 		share: z.strictObject(Object.fromEntries(Object.keys(DEFAULTS.share).map((k) => [k, bool])) as Record<ShareKey, z.ZodBoolean>).partial(),
 		forms: z.strictObject(Object.fromEntries(Object.keys(DEFAULTS.forms).map((k) => [k, formSchema])) as Record<FormKey, typeof formSchema>).partial(),
+		plugins: z.strictObject(Object.fromEntries(PLUGIN_IDS.map((id) => [id, bool])) as Record<PluginId, z.ZodBoolean>).partial(),
 	})
 	.partial()
 	.nullish()
@@ -183,6 +185,7 @@ export function parseReglages(text: string) {
 		forms: Object.fromEntries(
 			Object.entries(DEFAULTS.forms).map(([k, d]) => [k, { ...d, ...o.forms?.[k as FormKey] }]),
 		) as Record<FormKey, FormToggle>,
+		plugins: { ...DEFAULTS.plugins, ...o.plugins },
 	};
 }
 
