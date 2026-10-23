@@ -214,7 +214,8 @@ export class ApiError extends Error {
 	}
 }
 
-async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
+/** Appel JSON d'une route `/api/admin/*` (exporté pour les modules des plugins). */
+export async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
 	const res = await fetch(url, {
 		method,
 		headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -309,6 +310,42 @@ export const dropdownsApi = {
 		request<SaveResult>('PUT', saveUrl(`/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, options), input),
 	remove: (folder: string, options?: SaveOptions) =>
 		request<SaveResult>('DELETE', saveUrl(`/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, options), { confirm: folder }),
+};
+
+/** Plugin du catalogue tel que le montre le module « Plugins » (cf. src/lib/plugin-writer.ts). */
+export interface PluginItem {
+	id: string;
+	label: string;
+	description: string;
+	icon: string;
+	doc: string;
+	actif: boolean;
+	enLigne: boolean;
+	manquants: { fichier: string; aide: string }[];
+	avertissements: { nom: string; aide: string }[];
+	secrets: { nom: string; utilise: string | null }[];
+	fichierReglages: string | null;
+	champs: PluginChamp[];
+}
+
+/** Réglage d'un plugin (cf. `ChampState`, src/lib/plugin-writer.ts) : `valeur` du fichier, `repli` si vide. */
+export interface PluginChamp {
+	cle: string;
+	label: string;
+	groupe: string;
+	type: string;
+	aide?: string;
+	env?: string;
+	valeur: string;
+	repli: string;
+	source: 'env' | 'defaut' | 'aucune';
+}
+
+export const pluginsApi = {
+	list: () =>
+		request<{ plugins: PluginItem[]; status: PublishStatus; availability: { ok: boolean; reason?: string } }>('GET', '/api/admin/plugins'),
+	update: (id: string, actif: boolean, valeurs: Record<string, string>, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl('/api/admin/plugins', options), { id, actif, valeurs }),
 };
 
 export const associationApi = {

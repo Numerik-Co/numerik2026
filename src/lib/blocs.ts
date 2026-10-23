@@ -21,12 +21,16 @@
  * du module « Pages », validation au build par `src/content.config.ts` et
  * avant écriture par `src/lib/page-writer.ts`) et un composant Astro
  * (`src/components/blocs/BlocView.astro`). Ajouter un type de bloc = une
- * entrée dans `BLOC_TYPES` + son composant dans `BlocView.astro`.
+ * entrée dans `BLOC_TYPES` + son composant dans `BlocView.astro`. Types
+ * apportés par un plugin : `src/plugins/<id>/sections/definitions.ts`
+ * (champ `plugin`).
  *
  * Module sans dépendance à Astro ni à Node : aussi utilisé par l'îlot Vue.
  */
 
 import { isSafeUrl } from './safe-url.ts';
+import type { PluginId } from '../plugins/catalogue.ts';
+import { RDV_BLOCS, RDV_TYPES_RENOMMES } from '../plugins/rdv/sections/definitions.ts';
 
 export type BlocFieldType = 'text' | 'textarea' | 'markdown' | 'url' | 'icon' | 'select';
 
@@ -45,6 +49,8 @@ export interface BlocTypeDef {
 	description: string;
 	/** Icône Font Awesome (solid) du type, dans le module. */
 	icon: string;
+	/** Apporté par un plugin : absent de l'éditeur et du rendu si celui-ci est inactif. */
+	plugin?: PluginId;
 	fields: BlocField[];
 	/** Liste d'éléments répétés (ex. cartes). */
 	items?: { label: string; fields: BlocField[]; min: number; max: number };
@@ -121,15 +127,7 @@ export const BLOC_TYPES = {
 			{ name: 'texte', label: 'Texte', type: 'markdown', required: true },
 		],
 	},
-	'rdv-conseiller': {
-		label: 'RDV Conseiller Numérique',
-		description: 'Encart des permanences du Conseiller Numérique avec bouton de prise de rendez-vous.',
-		icon: 'fa-calendar-check',
-		fields: [
-			{ name: 'titre', label: 'Titre', type: 'text', help: 'Facultatif : titre par défaut sinon.' },
-			{ name: 'texte', label: 'Texte', type: 'textarea', help: 'Facultatif : texte par défaut sinon.' },
-		],
-	},
+	...RDV_BLOCS,
 } satisfies Record<string, BlocTypeDef>;
 
 export type BlocType = keyof typeof BLOC_TYPES;
@@ -198,7 +196,9 @@ export function validateBloc(id: string, raw: unknown): { bloc?: Bloc; errors: s
 	const where = `Bloc « ${id} »`;
 	if (!BLOC_ID.test(id)) errors.push(`${where} : identifiant invalide (minuscules, chiffres et tirets).`);
 	if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { errors: [...errors, `${where} : description invalide.`] };
-	const data = raw as Record<string, unknown>;
+	const data = { ...(raw as Record<string, unknown>) };
+	// Type renommé depuis (contenu enregistré avec l'ancien nom).
+	if (typeof data.type === 'string' && Object.hasOwn(RDV_TYPES_RENOMMES, data.type)) data.type = RDV_TYPES_RENOMMES[data.type];
 	if (!isBlocType(data.type)) {
 		return { errors: [...errors, `${where} : type inconnu « ${String(data.type)} » (connus : ${Object.keys(BLOC_TYPES).join(', ')}).`] };
 	}

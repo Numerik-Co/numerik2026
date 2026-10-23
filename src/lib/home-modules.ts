@@ -11,12 +11,15 @@
  * l'élément, ex. second bouton). Absent = `DEFAULT_HOME`.
  *
  * Ajouter un type = une entrée dans `HOME_MODULES` + sa branche dans
- * `src/pages/index.astro`.
+ * `src/pages/index.astro`. Types apportés par un plugin : définis dans
+ * `src/plugins/<id>/sections/definitions.ts` (champ `plugin`).
  *
  * Module sans dépendance à Astro ni à Node : aussi utilisé par l'îlot Vue.
  */
 
 import { checkBlocField, type BlocField } from './blocs.ts';
+import { disponible, type PluginId } from '../plugins/index.ts';
+import { RDV_HOME_MODULES, RDV_TYPES_RENOMMES } from '../plugins/rdv/sections/definitions.ts';
 
 export interface HomeField extends BlocField {
 	default: string;
@@ -29,6 +32,8 @@ export interface HomeModuleDef {
 	icon: string;
 	/** Peut figurer plusieurs fois sur la page. */
 	multiple?: boolean;
+	/** Apporté par un plugin : absent de l'éditeur et du rendu si celui-ci est inactif. */
+	plugin?: PluginId;
 	fields: HomeField[];
 }
 
@@ -101,22 +106,7 @@ export const HOME_MODULES = {
 			{ name: 'lien-texte', label: 'Lien vers la page Activités', type: 'text', default: 'Accéder à la page', help: 'Vide = pas de lien.' },
 		],
 	},
-	'rdv-conseiller': {
-		label: 'RDV Conseiller Numérique',
-		description: 'Permanences du Conseiller Numérique et bouton de prise de rendez-vous.',
-		icon: 'fa-headset',
-		fields: [
-			{ name: 'surtitre', label: 'Surtitre', type: 'text', default: 'Conseiller·ère Numérique' },
-			{ name: 'titre', label: 'Titre', type: 'text', required: true, default: 'Besoin d’aide pour une démarche en ligne ?' },
-			{
-				name: 'texte',
-				label: 'Texte',
-				type: 'textarea',
-				default: 'Carte d’identité, CAF, impôts, messagerie, smartphone… Le·la conseiller·ère numérique vous accompagne pas à pas, sur rendez-vous.',
-			},
-			{ name: 'bouton-texte', label: 'Bouton', type: 'text', required: true, default: 'Prendre rendez-vous' },
-		],
-	},
+	...RDV_HOME_MODULES,
 	appel: {
 		label: "Appel à l'action",
 		description: 'Bandeau coloré avec un titre, un texte et un bouton (ex. « Envie de nous rejoindre ? »).',
@@ -184,8 +174,10 @@ export function newHomeModule(type: HomeModuleType): HomeModule {
 	return module;
 }
 
-/** Accueil d'origine (sans réglage enregistré). */
-export const DEFAULT_HOME: HomeModule[] = (['bandeau', 'actualites', 'rdv-conseiller', 'activites', 'appel'] as const).map(newHomeModule);
+/** Accueil d'origine (sans réglage enregistré) ; module d'un plugin inactif omis. */
+export const DEFAULT_HOME: HomeModule[] = (['bandeau', 'actualites', 'rdv', 'activites', 'appel'] as const)
+	.filter((type) => disponible(homeModuleDef(type)))
+	.map(newHomeModule);
 
 /**
  * Vérifie un module enregistré et le normalise : champs connus seulement,
@@ -196,7 +188,9 @@ export const DEFAULT_HOME: HomeModule[] = (['bandeau', 'actualites', 'rdv-consei
 export function validateHomeModule(raw: unknown, position: number): { module?: HomeModule; errors: string[] } {
 	const where = `Accueil, module ${position}`;
 	if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { errors: [`${where} : description invalide.`] };
-	const data = raw as Record<string, unknown>;
+	const data = { ...(raw as Record<string, unknown>) };
+	// Type renommé depuis (contenu enregistré avec l'ancien nom).
+	if (typeof data.type === 'string' && Object.hasOwn(RDV_TYPES_RENOMMES, data.type)) data.type = RDV_TYPES_RENOMMES[data.type];
 	if (!isHomeModuleType(data.type)) {
 		return { errors: [`${where} : type inconnu « ${String(data.type)} » (connus : ${Object.keys(HOME_MODULES).join(', ')}).`] };
 	}

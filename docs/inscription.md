@@ -128,7 +128,7 @@ Il est **masqué** :
   ```
 
   Actuellement le seul cas de `rdv-conseiller-numerique` (les permanences
-  se réservent via la [prise de RDV](rdv-conseiller-numerique.md)). Sans ce
+  se réservent via la [prise de RDV](../src/plugins/rdv/README.md)). Sans ce
   champ, le bouton est affiché.
 
 - **partout** : quand le formulaire est fermé dans `site.forms.inscription`

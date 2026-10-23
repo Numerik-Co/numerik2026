@@ -96,7 +96,12 @@ export async function readLot(): Promise<LotChange[]> {
 export async function openLot(): Promise<void> {
 	// Lot déjà en ligne (site reconstruit au redémarrage) : refermé avant que cette modification ne change les sources.
 	await readLot();
-	if (existsSync(snapshotDir())) return;
+	if (existsSync(snapshotDir())) {
+		if ((await readChanges()).length > 0) return;
+		// Copie laissée par un enregistrement refusé (aucune modification en attente) :
+		// périmée si les sources ont changé depuis, refaite.
+		await rm(snapshotDir(), { recursive: true, force: true });
+	}
 	await mkdir(lotDir(), { recursive: true });
 	const tmp = join(lotDir(), `copie-${process.pid}-${Date.now()}`);
 	await cp(contentDir(), tmp, { recursive: true, filter: (source) => basename(source) !== WORK_DIR });

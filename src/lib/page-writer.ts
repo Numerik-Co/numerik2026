@@ -29,6 +29,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { isAuthGroup, type AuthGroup } from './auth/groups';
 import { blocMarkdownTexts, blocMarkersIn, validateBloc, type Bloc } from './blocs';
 import { RESERVED_FOLDER } from './content-pages';
+import { adressesPluginsActifs } from './plugin-adresses';
 import { contentTransaction, type Applied } from './content-transaction';
 import { checkBody, COVER_ERROR, siteRoot, slugify, writeCover, type CoverChange } from './news-writer';
 import { unknownPageVariables } from './page-variables';
@@ -96,8 +97,8 @@ function readFrontmatter(text: string): { data: Record<string, unknown>; body: s
 
 const exists = (path: string) => stat(path).then(() => true, () => false);
 
-/** Noms pris par les pages applicatives (`src/pages/`) et les fichiers publics (`public/`) : interdits à la racine. */
-async function takenRootNames(): Promise<Set<string>> {
+/** Noms pris par les pages applicatives (`src/pages/`) et les fichiers publics (`public/`). */
+async function baseRootNames(): Promise<Set<string>> {
 	const names = new Set<string>([RESERVED_FOLDER, 'api', '_astro', '_image']);
 	for (const dir of ['src/pages', 'public']) {
 		try {
@@ -109,6 +110,26 @@ async function takenRootNames(): Promise<Set<string>> {
 		}
 	}
 	return names;
+}
+
+/** Noms interdits à la racine : ceux de `baseRootNames()` et le premier segment de l'adresse des plugins actifs. */
+async function takenRootNames(): Promise<Set<string>> {
+	const names = await baseRootNames();
+	for (const { adresse } of await adressesPluginsActifs()) names.add(adresse.split('/')[1]);
+	return names;
+}
+
+/**
+ * Adresse (`/segment/…`) déjà prise par le site : page applicative, fichier
+ * public, page de contenu, menu déroulant. Pour l'adresse d'une page de
+ * plugin (module « Plugins ») ; les autres plugins actifs sont contrôlés par
+ * l'appelant.
+ */
+export async function adresseOccupee(adresse: string): Promise<boolean> {
+	const [premier] = adresse.slice(1).split('/');
+	if ((await baseRootNames()).has(premier)) return true;
+	const { dropdowns, pages } = await listPagesSource();
+	return dropdowns.some((d) => d.folder === premier) || pages.some((p) => p.path === premier || `/${p.path}` === adresse);
 }
 
 // --- Lecture ---------------------------------------------------------------

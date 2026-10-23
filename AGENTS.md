@@ -197,7 +197,7 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   (`/api/admin/comptes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/liens`, `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
-  `redacteur`, `/api/admin/journal` → `superadmin` seul).
+  `redacteur`, `/api/admin/journal` et `/api/admin/plugins` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
   d'admin et par `site-build.ts` (résultat des publications).
@@ -223,14 +223,28 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   actualiser ») puis rechargement de la page, module rouvert
   (`reopenAfterReload` → `takeModuleToReopen` dans `AdminRoot`) ; page en
   404 (supprimée, déplacée) → `status.href` ou l'accueil.
-- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal (`exclusive`,
-  `superadmin` seul) ; Mon compte (module Comptes ouvert sur sa
+- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal et **Plugins** (`exclusive`,
+  `superadmin` seul ; Plugins : `PluginsModule.vue`, `src/lib/plugin-writer.ts`
+  écrit `plugins.<id>` de `reglages.yaml` en place puis publie, activation
+  refusée si un fichier `requis` du catalogue manque, `env` absentes
+  signalées ; liste → page de configuration (roue dentée), **un seul
+  formulaire** : case « Plugin actif » + réglages `reglages.champs` du
+  catalogue (types et formats `src/plugins/champs.ts`, écrits dans le
+  fichier du plugin, vide = clé retirée → `.env` ou défaut, repli affiché en
+  gris) ; `savePlugin(id, actif, valeurs)` ; champ `type: 'adresse'` refusé
+  si pris (`adresseOccupee()` de `page-writer.ts`, qui refuse aussi une page
+  à l'adresse d'un plugin actif : `src/lib/plugin-adresses.ts`) ; plugin RDV :
+  adresse + `grist:` (url, document, tables) de `rdv.yaml`, avant le `.env`
+  dans `lib/grist.ts`, clé d'API toujours dans le `.env` (`GRIST_API_KEY_RDV`
+  propre au plugin, sinon `GRIST_API_KEY` ; `env[].repli` du catalogue, la
+  page dit laquelle est utilisée) ; route
+  `/api/admin/plugins`) ; Mon compte (module Comptes ouvert sur sa
   propre fiche : `AccountsModule.vue` prop `self`, via `props` du registre ;
   nom + email seuls, `GET`/`PUT /api/admin/mon-compte`, `readProfileFields()`,
   plus le changement de mot de passe : `PasswordModule.vue` intégré, aussi
   modale du mot de passe provisoire) est rangé (`placement: 'user'`) avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
-  Actualités et Pages sont regroupées sous **Contenu ▾** (`menu: 'contenu'`,
+  Actualités, Pages et Activités sont regroupées sous **Contenus ▾** (`menu: 'contenu'`,
   `ADMIN_MENUS` / `barEntries()` dans `modules.ts`, sous-liens côte à côte ;
   un seul module visible du menu = bouton direct).
 
@@ -354,13 +368,16 @@ couleur par famille d'activité.
 - `src/lib/agenda.ts` — types et données de repli. `AgendaSession` (jour,
   horaires, intitulé, `animators` et `location` facultatifs, `kind`, `note`
   facultative). `AGENDA_KIND_META` associe à chaque `kind` (`parcours`,
-  `fablab`, `espace-jeune`, `bidouille-repair`, `conseiller-numerique`) un
+  `fablab`, `espace-jeune`, `bidouille-repair`, `ateliers`, `rdv`) un
   libellé, une icône Font Awesome et des classes / hex de couleur ; ajouter
-  un `kind` = ajouter une entrée ici. Les permanences du Conseiller
-  Numérique (`conseillerNumerique`, exporté) sont lues dans
-  `src/content/conseiller-numerique.yaml` (fichier de l'asso, validé : jours
-  d'`AGENDA_DAYS`, une par jour, heures « 09h00 » piles/demies dans
-  09h–20h ; liste vide = encart `RdvCtaSection` absent) — dispositif géré à
+  un `kind` = ajouter une entrée ici (`kind: 'rdv'` = permanences du plugin
+  RDV ; `legend` d'une séance remplace le libellé de la légende). Les
+  permanences de prise de RDV (`permanences` de
+  `src/plugins/rdv/lib/permanences.ts`, `permanencesAffichees()` pour le
+  planning, vide si le plugin est inactif) sont lues dans `permanences:` de
+  `src/content/rdv.yaml` (validé : jours d'`AGENDA_DAYS`, une par jour,
+  heures « 09h00 » piles/demies dans 09h–20h ; liste vide = encart
+  `RdvCtaSection` absent) — dispositif géré à
   part de la programmation de l'association, jamais dans Grist. `groupByDay()`
   regroupe et trie les séances selon `AGENDA_DAYS`. Plus de planning figé
   (`weeklyAgenda` supprimé le 2026-10-09) : Grist injoignable = permanences
@@ -457,75 +474,118 @@ l'appareil. La page détecte la (les) séance(s) en cours parmi les lignes
 Grist `Presence` (une ligne par séance, `Presents` / `Absents` en
 RefList:Membres). Détail : [docs/api.md](docs/api.md).
 
-### RDV avec le Conseiller Numérique
+### Plugins (volets activables)
 
-Page `/rdv-conseiller-numerique` (lien de menu, `src/config/site.ts`, entre
-Activités et Actualités), formulaire public `src/components/rdv/RdvForm.vue`
-(`client:load`), gardé par `<FormGate form="rdvConseillerNumerique">`.
-Parcours en 5 étapes (même motif que `AdhesionForm.vue`) : démarche →
-créneau → vous (premier RDV ou déjà venu) → profil facultatif (premier RDV
-seulement) → consentement/envoi.
+`src/plugins/` — un dossier par plugin, `src/plugins/<id>/` (sous-dossiers
+`pages/`, `api/`, `formulaire/`, `sections/`, `admin/`, `lib/`, `images/`
+selon les besoins ; `plugin.ts` = manifeste, `index.ts` = ce que le reste
+du site en utilise). Catalogue `src/plugins/catalogue.ts` (`PLUGINS`, sans
+dépendance), réglage `plugins: { <id>: true }` de `reglages.yaml`
+(`site.plugins`, **inactif par défaut**, changer = reconstruire),
+`pluginActif(id)` / `disponible(def)` (`src/plugins/index.ts`, aussi dans
+le navigateur). Routes d'un plugin **jamais dans `src/pages/`** : ajoutées
+par `src/integrations/plugins.ts` (`injectRoute`, d'après
+`PLUGIN_MANIFESTS` de `src/plugins/manifests.ts`) pour les seuls plugins
+actifs (inactif = 404, rien construit ; `reglages.yaml` surveillé en dev).
+Variables d'environnement d'un plugin : `env` de son manifeste, toujours
+déclarées dans `astro.config.mjs`. Modules d'accueil / blocs d'un plugin :
+`sections/definitions.ts` étalés dans `HOME_MODULES` / `BLOC_TYPES` avec
+`plugin: '<id>'`, filtrés par `disponible()` (éditeurs, `index.astro`,
+`DEFAULT_HOME`, `BlocView`). Mise à jour d'un site existant vers une
+version qui introduit un plugin : ajouter `plugins: <id>: true` à son
+`reglages.yaml` **avant**. Détail : [src/plugins/README.md](src/plugins/README.md).
+L'adhésion deviendra un plugin plus tard.
 
-- `src/lib/rdv/demarches.ts` — catalogue de démarches (table Grist
-  `Demarches` : Nom, Thematique, Icone, Description, Documents), alimenté et
-  tenu à jour **directement dans Grist** par l'association, aucune admin
-  côté site. `Documents` (facultatif, une ligne par document à apporter) est
-  affiché en rappel sur l'écran de confirmation de `RdvForm.vue` (après
-  envoi uniquement). Étape 1 en deux temps : thématique (`Thematique`,
-  celles qui ont au moins une démarche, icônes `THEMATIQUE_ICONES` de
-  `choices.ts`, aussi en repli d'une `Icone` vide) puis démarches de cette
-  thématique ; une seule thématique = liste directe.
-- `src/components/sections/RdvCtaSection.astro` — encart d'accueil
-  (`src/pages/index.astro`, juste avant « Envie de nous rejoindre ? ») :
-  jours, horaires et lieux déduits de `conseillerNumerique`, bouton vers
-  `/rdv-conseiller-numerique` (« Voir les permanences » si le formulaire est
-  fermé dans `site.forms`). Props facultatives : `eyebrow`, `title`,
-  `description`, `buttonLabel`, `buttonHref`.
-- `src/lib/rdv/creneaux.ts` — créneaux de 30 min dérivés de
-  `conseillerNumerique` (`src/lib/agenda.ts`) Premier créneau de chaque
-  permanence = **urgence** (`urgence`, `estCreneauUrgence()`) : affiché avec
-  une mention encadrée au-dessus des horaires, réservable
-  (`reservable`) seulement avec une session de l'espace bénévoles
-  (`locals.user`, revérifié par `/api/rdv/prendre`, 403 sinon).
-- Étape 3 « Vous » : choix **« C'est mon premier rendez-vous »** (saisie
-  civilité/nom/coordonnées puis profil, étape 4) ou **« J'ai déjà rencontré le·la
-  conseiller·ère »** (un seul champ « Prénom et nom », fiche existante réutilisée telle
-  quelle, étape 4 profil sautée — la dernière étape s'affiche alors « 4 »).
-  Objectif : pas de doublons dans `Beneficiaires`. Les pièces à apporter ne
-  sont rappelées qu'après l'envoi (écran de confirmation).
-- Zones géographiques (étape 4) : `src/content/zones-geographiques.yaml`
-  (fichier de l'asso ; `label` = choix Grist `Zone_geographique`, `communes`,
-  `codePostal` de repli), lu par `src/lib/rdv/zones.ts` côté serveur et passé
-  en prop `zones` à `RdvForm.vue` (pas de YAML côté visiteur) ;
-  `deduireZone(zones, …)` (`geographie.ts`) ; `/api/rdv/prendre` revalide
-  par `estZoneConnue()`.
-- `src/lib/rdv/beneficiaires.ts` — premier RDV : rapproche un bénéficiaire
-  par **email OU téléphone** (un seul des deux est obligatoire à la saisie,
-  jamais aucun — voir `validation.ts` — et le rapprochement ne compare que
-  le champ effectivement renseigné, filet anti-doublon) ou en crée un
-  nouveau. Déjà venu : `rechercherParNomComplet()` = « prénom nom » ou « nom
-  prénom » **exacts** (hors accents/casse/tirets, jamais de recherche
-  partielle, un mot seul ne suffit pas), ne renvoie que prénom/nom de la
-  fiche (déjà saisis) et un indice masqué (`j•••@gmail.com · 06 •• •• •• 78 · commune`) ;
-  `beneficiaireCorrespond()` revérifie à l'envoi que l'id choisi porte bien
-  ce nom (un id seul ne suffit pas).
-- `src/lib/rdv/reservation.ts` — revérifie la disponibilité puis écrit la
-  ligne `RDV` (même doc Grist que `Beneficiaires`/`Demarches`).
-- Routes : `GET /api/rdv/creneaux`, `GET /api/rdv/demarches`,
-  `GET /api/rdv/commune`, `GET /api/rdv/beneficiaires` (`?q=<prénom nom>`),
-  `POST /api/rdv/prendre`, `GET /api/rdv/ics`
-  (`?date=&heure=&demarche=<id>` → fichier `.ics` ; lieu et documents
-  recalculés côté serveur).
-- `src/lib/rdv/ics.ts` — événement d'agenda partagé par la route `.ics` et
-  le QR code de l'écran de confirmation (heure Europe/Paris convertie en UTC).
+### Prise de RDV (plugin `rdv`)
+
+Plugin **générique** `src/plugins/rdv/` (doc : [src/plugins/rdv/README.md](src/plugins/rdv/README.md),
+schéma Grist attendu compris) ; **aucune référence à un dispositif dans le
+plugin** : tout le propre à l'asso est dans `src/content/rdv.yaml`
+(`lib/config.ts` : `rdvConfig`, zod, défauts génériques, modèle commenté
+`rdv.exemple.yaml` ; plugin actif sans ce fichier = build en échec) —
+`adresse` de la page (lue aussi par `plugin.ts` via fs pour `injectRoute`,
+format `lib/adresse.ts`), `ouvert` (+ `textes.fermeTitre/fermeMessage`,
+`rdvToggle()` → `<FormGate toggle>` ; plus de `site.forms` pour le RDV),
+`textes` (`nom`, `titre`, `description`, `intervenant`, `dejaVenu`,
+`urgence`, `consentement` ; `{duree}`/`{heure}`/`{intervenant}` remplis par
+`remplir()`), `encart` (textes par défaut de `RdvCtaSection`, `logo`
+facultatif dans `src/content/images/`), `planning` (titre + `legend`),
+`creneaux` (`duree` 15–60, `semaines`, `urgence`), `profil` (questions :
+`genre`, `commune`, `zone`, `trancheAge`, `statut` ; sans question de
+profil = étape 4 absente), `civilite`, `icones` (thématiques),
+`permanences`, `zones`. L'îlot reçoit ces réglages en props
+(`rdvFormProps()`, type `RdvFormReglages`), jamais le YAML. **Listes de
+choix lues dans le document Grist** (`lib/listes.ts`, `listChoices()`,
+cache 5 min, `GET /api/rdv/listes`) : thématiques (`Demarches.Thematique`,
+ordre de la colonne), genre, tranche d'âge, statut (`Beneficiaires`) ;
+revérifiées par `/api/rdv/prendre` (champs hors `profil` ignorés). Chemins
+ci-dessous relatifs au plugin. Page `pages/rendez-vous.astro`, formulaire
+`formulaire/RdvForm.vue` (`client:load`). Parcours en 5 étapes (même motif
+que `AdhesionForm.vue`) : démarche → créneau → vous (premier RDV ou déjà
+venu) → profil facultatif → consentement/envoi. Module d'accueil et bloc
+de type `rdv` (`sections/definitions.ts` ; ancien nom `rdv-conseiller`
+accepté à la lecture : `RDV_TYPES_RENOMMES`), champs vides = `encart:`.
+
+- `lib/demarches.ts` — catalogue `Demarches` (Nom, Thematique, Icone,
+  Description, Documents) tenu **dans Grist** par l'asso. `Documents`
+  (une ligne par pièce) rappelé sur l'écran de confirmation seulement.
+  Étape 1 en deux temps : thématique (celles qui ont une démarche, ordre
+  Grist, icône `icones:`, aussi en repli d'une `Icone` vide) puis démarche.
+- `lib/creneaux.ts` — créneaux de `creneaux.duree` sur `creneaux.semaines`.
+  `creneaux.urgence: true` : premier créneau de chaque permanence =
+  **urgence** (`urgence`, `estCreneauUrgence()`), mention `textes.urgence`
+  encadrée au-dessus des horaires, réservable (`reservable`) seulement avec
+  une session de l'espace bénévoles (`locals.user`, revérifié par
+  `/api/rdv/prendre`, 403 sinon).
+- Étape 3 « Vous » : **« C'est mon premier rendez-vous »** (civilité si
+  `genre` demandé — choix Grist libellés par `civilite:` —, nom,
+  coordonnées) ou **`textes.dejaVenu`** (un seul champ « Prénom et nom »,
+  fiche réutilisée telle quelle, étape 4 sautée — dernière étape « 4 »).
+- Zones (`zones:` de `rdv.yaml`, `label` = choix Grist `Zone_geographique`) :
+  `lib/zones.ts` côté serveur, prop `zones` de `RdvForm.vue`,
+  `deduireZone()` (`geographie.ts`), revalidées par `estZoneConnue()`.
+- `lib/beneficiaires.ts` — premier RDV : rapproche par **email OU
+  téléphone** (un des deux obligatoire, `validation.ts`) ou crée. Déjà
+  venu : `rechercherParNomComplet()` = « prénom nom » ou « nom prénom »
+  **exacts** (hors accents/casse/tirets, jamais partiel, un mot seul ne
+  suffit pas), ne renvoie que prénom/nom de la fiche et un indice masqué ;
+  `beneficiaireCorrespond()` revérifie à l'envoi (un id seul ne suffit pas).
+- `lib/reservation.ts` — revérifie la disponibilité puis écrit la ligne `RDV`.
+- Routes (`api/`, déclarées dans `plugin.ts`) : `GET /api/rdv/creneaux`,
+  `GET /api/rdv/demarches`, `GET /api/rdv/listes`, `GET /api/rdv/commune`,
+  `GET /api/rdv/beneficiaires` (`?q=<prénom nom>`), `POST /api/rdv/prendre`,
+  `GET /api/rdv/ics` (`?date=&heure=&demarche=<id>`, titre `textes.nom`,
+  lieu et documents recalculés côté serveur).
+- `lib/ics.ts` — événement d'agenda partagé par la route `.ics` et le QR
+  code (heure Europe/Paris convertie en UTC, durée `creneaux.duree`).
+- **Module « Rendez-vous »** (`admin/`, bureau + `animateur`, registre
+  `modules.ts` avec `plugin: 'rdv'` → masqué si le plugin est inactif,
+  `ADMIN_MODULES.filter(disponible)`) : `RdvModule.vue` (à venir / passés,
+  par jour, filtre statut, recherche) ; clic → `RdvEditeur.vue`, **second
+  panneau fixé à gauche du panneau des modules** (`sm:right-[36rem]`, dans le
+  DOM du panneau pour son piège de focus, Échap capturé sur `window`) :
+  bénéficiaire et son commentaire en lecture seule, créneau (créneaux libres
+  seulement + l'actuel) / démarche / statut, puis **compte rendu** :
+  colonnes facultatives de `RDV` listées dans `admin/suivi.ts` (`SUIVI` :
+  Lieu_reel, Materiel_utilise, Sous_thematique_demarche, Niveau_autonomie,
+  Oriente_autre_structure, Notes_accompagnement, Evaluation_satisfaction,
+  Suggestions_beneficiaire ; proposées si présentes avec le bon type, choix
+  lus dans Grist via `listColumns()`, ChoiceList écrites `['L', …]` ou
+  `null` ; `affichage: 'smileys'` = satisfaction en visages, `visage()` de
+  `admin/client.ts`, de la meilleure réponse à la pire). Créneau pris = tout RDV non « Annulé »
+  (`STATUTS_OCCUPANTS` de `lib/grist.ts`, page publique comme éditeur).
+  Serveur `admin/gestion.ts` (`listerRdv()`, `modifierRdv()` :
+  `creneauEstLibre(date, heure, sauf)`, lieu et thématiques recalculés),
+  routes `admin/api/` injectées par `plugin.ts` (`/api/admin/rdv`,
+  `/api/admin/rdv/[id]`, garde `animateur` dans `GUARDS`), écrit dans Grist
+  sans reconstruction, `logEvent('rdv.modification')`. `request()` de
+  `src/components/admin/client.ts` exporté pour les modules de plugin.
 
 Pistes de suite non traitées (à reprendre si redemandé) :
-1. Mécanisme de collecte de l'évaluation bénéficiaire (colonnes Grist
-   `Evaluation_satisfaction`/`Suggestions_beneficiaire` prêtes, rien de
-   branché côté formulaire).
+1. Collecte de l'évaluation par le bénéficiaire lui-même (aujourd'hui
+   saisie par l'équipe dans le compte rendu).
 2. Notification email/SMS de confirmation ou de rappel de RDV.
-3. Vue admin pour lister/annuler des RDV (aujourd'hui uniquement gérable
-   depuis Grist directement).
+3. ~~Vue admin~~ faite : module « Rendez-vous » (voir ci-dessus).
 4. Suppression de `Table1` (table Grist vide créée par défaut, sans impact).
 
 ## CI

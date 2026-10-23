@@ -84,6 +84,35 @@ Le mode est détecté (Docker si `docker-compose.yml` et la commande `docker`
 sont présents, sinon Node seul) ; `--docker` / `--node` pour l'imposer.
 `SITE_URL` doit être dans le `.env`.
 
+⚠️ **Plugins** (volets activables, [src/plugins/README.md](../src/plugins/README.md)) :
+ils sont inactifs par défaut. Quand une version transforme en plugin un volet
+que le site utilise déjà, ajouter **avant** la mise à jour dans
+`src/content/reglages.yaml` :
+
+```yaml
+plugins:
+  rdv: true
+```
+
+Sinon le volet disparaît du site après la mise à jour. Les notes de version
+le signalent.
+
+**Prise de RDV (plugin `rdv`, version qui suit la 0.4.9)** — en plus de la
+ligne ci-dessus, dans `src/content/` :
+
+1. créer `rdv.yaml` (modèle commenté : `src/plugins/rdv/rdv.exemple.yaml`) et
+   y reprendre les permanences de `conseiller-numerique.yaml` et les zones de
+   `zones-geographiques.yaml`, puis supprimer ces deux fichiers ;
+2. retirer `forms.rdvConseillerNumerique` de `reglages.yaml` (l'ouverture se
+   règle par `ouvert:` dans `rdv.yaml`) ;
+3. logo de l'encart éventuel : le copier dans `images/` et l'indiquer dans
+   `encart.logo` ;
+4. `adresse: /rdv-conseiller-numerique` pour garder l'ancienne adresse de la page.
+
+Oubli (clé inconnue, `rdv.yaml` absent, logo introuvable) : la nouvelle
+version ne se construit pas, avec un message qui dit quoi corriger ; le site
+en ligne reste sur l'ancienne.
+
 Le principe est le même dans les deux modes :
 
 1. **la nouvelle version est construite à côté**, avec le contenu et le

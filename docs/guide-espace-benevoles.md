@@ -218,10 +218,9 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
   (ex. « Production v0.2.0 »), visible du bureau seulement.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
-- **Contenu ▾** regroupe **Actualités** et **Pages** : un clic affiche les
-  deux, côte à côte, juste en dessous (fermé par un clic ailleurs ou
-  **Échap**). Sans le droit d'en voir les deux, le module visible a son
-  propre bouton.
+- **Contenus ▾** regroupe **Actualités**, **Pages** et **Activités** : un
+  clic les affiche côte à côte, juste en dessous (fermé par un clic ailleurs
+  ou **Échap**). Avec le droit d'en voir un seul, il a son propre bouton.
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
   la partie assombrie de la page. Dans un formulaire (actualité, page ou
   activité à ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
@@ -241,9 +240,11 @@ Les modules visibles dépendent de votre groupe :
 | Actualités | ✅ | ✅ | ✅ | — |
 | Pages | ✅ | ✅ | ✅ | — |
 | Activités | ✅ | ✅ | ✅ | — |
+| Rendez-vous (si le plugin `rdv` est actif) | ✅ | ✅ | — | ✅ |
 | Association | ✅ | ✅ | — | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
+| Plugins | ✅ | — | — | — |
 | Mon compte | ✅ | ✅ | ✅ | ✅ |
 
 Le bouton **Pages réservées** n'apparaît que pour qui n'a pas le module
@@ -256,6 +257,42 @@ mots de passe, actualités, pages, activités et catégories ajoutées /
 modifiées / supprimées, changements d'ordre, informations de l'association, résultat de
 chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
+
+**Rendez-vous** (bureau et animateur·rice·s, si la prise de RDV est activée) :
+les rendez-vous pris en ligne, **À venir** ou **Passés**, par jour, avec un
+filtre de statut et une recherche (nom, démarche). Un clic sur un RDV ouvre
+un **second panneau à gauche** : coordonnées et commentaire du bénéficiaire
+(lecture seule, la fiche se modifie dans Grist) et le rendez-vous — jour et
+horaire (seuls les créneaux libres de la période de réservation sont
+proposés, urgences comprises), démarche, **statut** (Confirmé, Honoré, Absent,
+Annulé : seul « Annulé » libère le créneau), puis, après le rendez-vous, le
+**compte rendu de l'accompagnement** (lieu réel, matériel utilisé,
+sous-thématique, niveau d'autonomie, orientation vers une autre structure,
+notes) et l'**avis du bénéficiaire** (satisfaction, à choisir parmi cinq visages — un
+nouveau clic l'efface —, suggestions) — rubriques
+reprises des colonnes du document Grist. **Enregistrer** écrit directement dans Grist, sans reconstruire
+le site ; un créneau déjà pris est refusé. Échap ou la croix ferme l'éditeur.
+Chaque modification est notée dans le journal.
+
+**Plugins** (super admin seulement) : volets du site que l'association active
+ou non (aujourd'hui : prise de rendez-vous en ligne). La liste montre chaque
+plugin et son état (actif, inactif, ou activation / désactivation en attente
+de publication) ; l'icône **paramètres** (roue dentée) ouvre sa page de
+configuration, un seul formulaire : description, documentation, ce qui lui
+manque, la case **Plugin actif**, puis ses réglages par rubrique — pour la
+prise de RDV : **adresse de la page** (ex. `/rendez-vous`, refusée si une
+page du site l'utilise déjà ; les liens déjà écrits vers l'ancienne adresse
+ne changent pas) et **document Grist** (adresse de l'instance, identifiant du
+document, noms des tables ; un champ vide reprend la valeur du `.env`,
+affichée en gris ; la clé d'API reste dans le `.env`). En bas, **Enregistrer
+et publier**, qui reconstruit le site (ou rejoint les
+modifications en attente avec « Enregistrer sans publier »). Un plugin dont
+un fichier de réglages manque (ex. `src/content/rdv.yaml`) ne peut pas être
+activé ; une clé secrète absente du `.env` est signalée, et la page dit
+laquelle est utilisée (prise de RDV : `GRIST_API_KEY_RDV`, clé limitée au
+document des RDV, sinon `GRIST_API_KEY`, celle de l'adhésion). Désactiver retire du site tout ce que le
+plugin y ajoute, ses réglages sont gardés. Le changement est noté dans le
+journal.
 
 ### Pages réservées
 
@@ -411,8 +448,8 @@ blocs :
 - **Page classique** : du texte mis en forme (titres `##`, listes, liens,
   tableaux) et une photo de couverture facultative ;
 - **Page enrichie** : la même chose, plus des **blocs** (grille de cartes,
-  encadré tarif, bouton, encadré d'information, rendez-vous du Conseiller
-  Numérique). « Ajouter un bloc » le crée et insère son marqueur
+  encadré tarif, bouton, encadré d'information, prise de rendez-vous si le
+  plugin `rdv` est actif). « Ajouter un bloc » le crée et insère son marqueur
   `[[bloc:…]]` dans le texte à l'endroit du curseur ; le bloc s'affiche à
   cet endroit (on peut déplacer la ligne du marqueur). Sous les textes des
   blocs (cartes, encadré), « Insérer un lien vers une page du site » ; sous
@@ -454,7 +491,7 @@ page est fournie par le site, l'association règle le reste.
   `{{association.nom}}`… sont acceptées. Un texte vidé reprend sa valeur
   d'origine ; « rétablir les textes d'origine » les remet tous.
 - **L'accueil** est composé de **modules**, dans l'ordre d'affichage :
-  bandeau, dernières actualités, activités, RDV Conseiller Numérique, appel à
+  bandeau, dernières actualités, activités, prise de rendez-vous (plugin `rdv`), appel à
   l'action, partenaires, texte libre. Le crayon de l'Accueil permet d'en
   **ajouter** (liste « Ajouter un module… » ; l'appel à l'action et le texte
   libre peuvent figurer plusieurs fois), d'en **retirer** (corbeille), de

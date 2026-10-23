@@ -12,6 +12,8 @@ import vue from '@astrojs/vue';
 
 import sitePages from './src/integrations/site-pages.ts';
 import buildInfo from './src/integrations/build-info.ts';
+import plugins from './src/integrations/plugins.ts';
+import { PLUGIN_MANIFESTS } from './src/plugins/manifests.ts';
 
 /**
  * Domaine public du site, propre à chaque association : `SITE_URL` dans le
@@ -84,11 +86,8 @@ export default defineConfig({
       GRIST_TABLE_ACTIVITES: envField.string({ context: 'server', access: 'secret', default: 'Activite' }),
       GRIST_TABLE_SAISONS: envField.string({ context: 'server', access: 'secret', default: 'Saisons' }),
       GRIST_TABLE_PRESENCE: envField.string({ context: 'server', access: 'secret', default: 'Presence' }),
-      // Grist — second document : RDV Conseiller Numérique
-      GRIST_DOC_ID_RDV: envField.string({ context: 'server', access: 'secret', optional: true }),
-      GRIST_TABLE_BENEFICIAIRES: envField.string({ context: 'server', access: 'secret', default: 'Beneficiaires' }),
-      GRIST_TABLE_RDV: envField.string({ context: 'server', access: 'secret', default: 'RDV' }),
-      GRIST_TABLE_DEMARCHES: envField.string({ context: 'server', access: 'secret', default: 'Demarches' }),
+      // Variables propres à chaque plugin (src/plugins/<id>/plugin.ts).
+      ...Object.assign({}, ...PLUGIN_MANIFESTS.map((p) => p.env)),
       // Bulletin d'adhésion PDF (docs/bulletin-pdf.md)
       GOTENBERG_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
       GOTENBERG_USERNAME: envField.string({ context: 'server', access: 'secret', optional: true }),
@@ -120,5 +119,6 @@ export default defineConfig({
 
   // sitePages : retire du build le HTML des pages du site désactivées (404 réel).
   // buildInfo : empreinte du build (build-info.json), lue par scripts/start.mjs.
-  integrations: [mdx(), vue(), sitePages(), buildInfo()]
+  // plugins : routes des plugins actifs (src/plugins/, `plugins:` de reglages.yaml).
+  integrations: [mdx(), vue(), sitePages(), buildInfo(), plugins()]
 });

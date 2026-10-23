@@ -117,7 +117,7 @@ function valider() {
 					<span class="mb-1 block text-sm font-medium text-gray-700">Pour qui ?</span>
 					<select
 						v-model.number="membreCourant"
-						class="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:outline-none"
+						class="w-full rounded-xl border border-gray-200 px-4 py-1.5 text-sm text-gray-900 focus:border-primary focus:outline-none"
 					>
 						<option v-for="m in membres" :key="m.membreId" :value="m.membreId">
 							{{ m.label }}

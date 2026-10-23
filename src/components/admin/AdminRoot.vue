@@ -228,7 +228,7 @@ onBeforeUnmount(() => {
 						<i :class="['fa-solid', entry.module.icon, 'text-gray-300']" aria-hidden="true"></i>
 						<span class="hidden sm:inline">{{ entry.module.label }}</span>
 					</button>
-					<!-- Menu déroulant (ex. « Contenu ») : en surbrillance quand l'un de ses modules est ouvert. -->
+					<!-- Menu déroulant (ex. « Contenus ») : en surbrillance quand l'un de ses modules est ouvert. -->
 					<button
 						v-else
 						type="button"

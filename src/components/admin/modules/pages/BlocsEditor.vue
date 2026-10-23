@@ -6,6 +6,7 @@
  */
 import { computed, ref } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
+import { disponible } from '../../../../plugins';
 import { BLOC_TYPES, blocMarkersIn, emptyBloc, type Bloc, type BlocType, type BlocTypeDef } from '../../../../lib/blocs';
 import { iconButtonClass, inputClass, sortableProps } from '../../context';
 import BlocFields from './BlocFields.vue';
@@ -15,7 +16,8 @@ import OrderArrows from './OrderArrows.vue';
 const props = defineProps<{ blocs: Record<string, Bloc>; body: string }>();
 const emit = defineEmits<{ insert: [id: string] }>();
 
-const types = Object.entries(BLOC_TYPES) as [BlocType, BlocTypeDef][];
+// Types d'un plugin inactif : non proposés (un bloc déjà présent reste modifiable).
+const types = (Object.entries(BLOC_TYPES) as [BlocType, BlocTypeDef][]).filter(([, d]) => disponible(d));
 const def = (type: BlocType): BlocTypeDef => BLOC_TYPES[type];
 const newType = ref<BlocType>(types[0][0]);
 const placed = computed(() => new Set(blocMarkersIn(props.body)));

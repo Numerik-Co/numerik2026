@@ -156,7 +156,7 @@ blocs:
     titre: "Bon à savoir"
     texte: "Un message à mettre en avant."
   rdv:
-    type: rdv-conseiller   # permanences du Conseiller Numérique (titre et texte facultatifs)
+    type: rdv              # prise de rendez-vous, si le plugin est actif (titre et texte facultatifs)
   contact:
     type: bouton
     texte: "Nous contacter"

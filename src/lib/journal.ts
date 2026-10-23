@@ -43,6 +43,8 @@ export type JournalAction =
 	| 'ordre-menu.modification'
 	| 'association.modification'
 	| 'charte.modification'
+	| 'plugin.modification'
+	| 'rdv.modification'
 	| 'compte.creation'
 	| 'compte.modification'
 	| 'compte.reinitialisation'

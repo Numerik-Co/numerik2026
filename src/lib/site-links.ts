@@ -18,6 +18,8 @@ import { listActivitySources } from './activity-writer';
 import { readCategorySources } from './category-writer';
 import { NEWS_SLUG, newsSourceDir, readNewsSource } from './news-writer';
 import { listPagesSource } from './page-writer';
+import { pluginActif } from '../plugins';
+import { RDV_HREF, RDV_NOM, rdvToggle } from '../plugins/rdv';
 
 export interface SiteLink {
 	title: string;
@@ -32,12 +34,12 @@ export interface SiteLinkGroup {
 	links: SiteLink[];
 }
 
-/** Pages applicatives du modèle (formulaires, services) : `form` = clé de `site.forms`, signalée si fermée. */
-const SERVICE_PAGES: { title: string; href: string; form?: keyof typeof site.forms }[] = [
+/** Pages applicatives du modèle (formulaires, services) : `form` = clé de `site.forms`, `closed` = fermée (plugin) ; signalées. */
+const SERVICE_PAGES: { title: string; href: string; form?: keyof typeof site.forms; closed?: boolean }[] = [
 	{ title: 'Adhérer', href: '/adherer' },
 	{ title: "Formulaire d'adhésion", href: '/adherer/formulaire', form: 'adhesion' },
 	{ title: 'Inscription à une activité', href: '/inscription', form: 'inscription' },
-	{ title: 'Rendez-vous avec le Conseiller Numérique', href: '/rdv-conseiller-numerique', form: 'rdvConseillerNumerique' },
+	...(pluginActif('rdv') ? [{ title: RDV_NOM, href: RDV_HREF, closed: !rdvToggle().enabled }] : []),
 	{ title: 'Je participe', href: '/je-participe' },
 ];
 
@@ -59,10 +61,10 @@ export async function listSiteLinks(): Promise<SiteLinkGroup[]> {
 					.filter((p) => p.active)
 					.sort((a, b) => a.order - b.order)
 					.map((p) => ({ title: p.label, href: p.href })),
-				...SERVICE_PAGES.map(({ title, href, form }) => ({
+				...SERVICE_PAGES.map(({ title, href, form, closed }) => ({
 					title,
 					href,
-					...(form && !site.forms[form].enabled ? { note: 'formulaire fermé' } : {}),
+					...(closed || (form && !site.forms[form].enabled) ? { note: 'formulaire fermé' } : {}),
 				})),
 			],
 		},
