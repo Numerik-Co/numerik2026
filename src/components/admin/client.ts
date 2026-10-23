@@ -322,6 +322,7 @@ export interface PluginItem {
 	enLigne: boolean;
 	manquants: { fichier: string; aide: string }[];
 	avertissements: { nom: string; aide: string }[];
+	secrets: { nom: string; utilise: string | null }[];
 	fichierReglages: string | null;
 	champs: PluginChamp[];
 }

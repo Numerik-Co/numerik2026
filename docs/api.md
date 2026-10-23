@@ -70,6 +70,7 @@ configurée »), le reste du site fonctionne.
 | `GRIST_TABLE_SAISONS` | Table des saisons (défaut `Saisons`) — optionnel |
 | `GRIST_TABLE_PRESENCE` | Table de présence aux ateliers (défaut `Presence`) — optionnel |
 | `GRIST_DOC_ID_RDV` | Document Grist des RDV (plugin `rdv`) — optionnel, voir [le plugin](../src/plugins/rdv/README.md) |
+| `GRIST_API_KEY_RDV` | Clé API Grist propre au plugin `rdv` — **secret**, facultative (sinon `GRIST_API_KEY`) ; conseillée : limitée au document des RDV |
 | `GRIST_TABLE_BENEFICIAIRES` / `GRIST_TABLE_RDV` / `GRIST_TABLE_DEMARCHES` | Tables du document RDV (défauts `Beneficiaires`, `RDV`, `Demarches`) — optionnel |
 | `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
 | `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |

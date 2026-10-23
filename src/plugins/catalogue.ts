@@ -19,8 +19,12 @@ export interface PluginInfo {
 	doc: string;
 	/** Fichiers de `src/content/` sans lesquels le plugin ne peut pas être activé. */
 	requis?: { fichier: string; aide: string }[];
-	/** Secrets du `.env` (jamais réglables depuis le site) : signalés si absents, sans bloquer l'activation. */
-	env?: { nom: string; aide: string }[];
+	/**
+	 * Secrets du `.env` (jamais réglables depuis le site) : signalés si absents
+	 * (`repli` compris), sans bloquer l'activation ; la page de configuration
+	 * dit lequel est utilisé.
+	 */
+	env?: { nom: string; aide: string; repli?: string }[];
 	/**
 	 * Réglages modifiables dans la page de configuration du module « Plugins »,
 	 * écrits dans `fichier` (de `src/content/`). Un champ `type: 'adresse'` est
@@ -37,7 +41,13 @@ export const PLUGINS = {
 		icon: 'fa-calendar-check',
 		doc: 'src/plugins/rdv/README.md',
 		requis: [{ fichier: 'rdv.yaml', aide: 'Copier le modèle src/plugins/rdv/rdv.exemple.yaml puis l’adapter (adresse, textes, permanences).' }],
-		env: [{ nom: 'GRIST_API_KEY', aide: 'Clé d’API Grist, dans le .env (partagée avec l’adhésion) : sans elle, aucun RDV ne peut être pris.' }],
+		env: [
+			{
+				nom: 'GRIST_API_KEY_RDV',
+				repli: 'GRIST_API_KEY',
+				aide: 'Clé d’API Grist, dans le .env : GRIST_API_KEY_RDV (clé limitée au document des RDV, conseillé) ou, à défaut, GRIST_API_KEY (celle de l’adhésion). Sans clé, aucun RDV ne peut être pris.',
+			},
+		],
 		reglages: {
 			fichier: 'rdv.yaml',
 			champs: [

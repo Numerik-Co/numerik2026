@@ -12,11 +12,13 @@
  * Adresse de l'instance, document et tables : `grist:` de `src/content/rdv.yaml`
  * (réglables depuis le module « Plugins », lus au build), sinon variables du
  * `.env` lues au DÉMARRAGE du serveur (`astro:env`, cf. `src/lib/adhesion/grist.ts`).
- * La clé d'API vient toujours du `.env` : jamais figée dans dist/.
+ * La clé d'API vient toujours du `.env` (`GRIST_API_KEY_RDV`, sinon
+ * `GRIST_API_KEY`) : jamais figée dans dist/.
  */
 
 import {
 	GRIST_API_KEY,
+	GRIST_API_KEY_RDV,
 	GRIST_BASE_URL,
 	GRIST_DOC_ID_RDV,
 	GRIST_TABLE_BENEFICIAIRES,
@@ -30,6 +32,8 @@ import { rdvConfig } from './config';
 const { grist } = rdvConfig;
 const BASE_URL = grist.url ?? GRIST_BASE_URL;
 const DOC_ID = grist.document ?? GRIST_DOC_ID_RDV;
+/** Clé propre au plugin (limitée au document des RDV) si elle existe, sinon celle de l'adhésion. */
+const API_KEY = GRIST_API_KEY_RDV || GRIST_API_KEY;
 
 export const TABLES = {
 	beneficiaires: grist.tables.beneficiaires ?? GRIST_TABLE_BENEFICIAIRES,
@@ -90,7 +94,7 @@ export const STATUT_RDV = {
 export { GristError };
 
 export function assertGristConfig(): void {
-	if (!BASE_URL || !DOC_ID || !GRIST_API_KEY) {
+	if (!BASE_URL || !DOC_ID || !API_KEY) {
 		throw new GristError('Configuration Grist (RDV) manquante côté serveur.', 500);
 	}
 }
@@ -121,7 +125,7 @@ async function gristFetch<T>(path: string, init?: RequestInit): Promise<T> {
 	const res = await fetch(docUrl(path), {
 		...init,
 		headers: {
-			Authorization: `Bearer ${GRIST_API_KEY}`,
+			Authorization: `Bearer ${API_KEY}`,
 			'Content-Type': 'application/json',
 			...init?.headers,
 		},

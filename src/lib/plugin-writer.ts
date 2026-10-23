@@ -53,6 +53,8 @@ export interface PluginState {
 	manquants: { fichier: string; aide: string }[];
 	/** Secrets du `.env` absents et réglages obligatoires vides partout : signalés seulement. */
 	avertissements: { nom: string; aide: string }[];
+	/** Secrets du `.env` : variable effectivement utilisée (la sienne, son repli) ou `null` si aucune n'est renseignée. */
+	secrets: { nom: string; utilise: string | null }[];
 	/** Fichier des réglages (`src/content/…`), `null` si le plugin n'en a pas. */
 	fichierReglages: string | null;
 	champs: ChampState[];
@@ -86,8 +88,12 @@ export async function readPluginsSource(): Promise<PluginState[]> {
 				const repli = env || c.defaut || '';
 				return { ...c, valeur: typeof lu === 'string' ? lu : '', repli, source: env ? 'env' : c.defaut ? 'defaut' : 'aucune' };
 			});
+			const secrets = (info.env ?? []).map((e) => ({
+				nom: e.nom,
+				utilise: getSecret(e.nom) ? e.nom : e.repli && getSecret(e.repli) ? e.repli : null,
+			}));
 			const avertissements = [
-				...(info.env ?? []).filter((e) => !getSecret(e.nom)).map((e) => ({ ...e })),
+				...(info.env ?? []).filter((e, i) => !secrets[i].utilise).map((e) => ({ nom: e.nom, aide: e.aide })),
 				...champs
 					.filter((c) => c.obligatoire && !c.valeur && !c.repli)
 					.map((c) => ({ nom: c.label, aide: `à renseigner ici${c.env ? ` ou dans le .env (${c.env})` : ''} : le plugin ne peut pas fonctionner sans.` })),
@@ -102,6 +108,7 @@ export async function readPluginsSource(): Promise<PluginState[]> {
 				enLigne: pluginActif(id),
 				manquants,
 				avertissements,
+				secrets,
 				fichierReglages: info.reglages ? `src/content/${info.reglages.fichier}` : null,
 				champs,
 			};

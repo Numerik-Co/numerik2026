@@ -235,7 +235,9 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   si pris (`adresseOccupee()` de `page-writer.ts`, qui refuse aussi une page
   à l'adresse d'un plugin actif : `src/lib/plugin-adresses.ts`) ; plugin RDV :
   adresse + `grist:` (url, document, tables) de `rdv.yaml`, avant le `.env`
-  dans `lib/grist.ts`, clé d'API toujours dans le `.env` ; route
+  dans `lib/grist.ts`, clé d'API toujours dans le `.env` (`GRIST_API_KEY_RDV`
+  propre au plugin, sinon `GRIST_API_KEY` ; `env[].repli` du catalogue, la
+  page dit laquelle est utilisée) ; route
   `/api/admin/plugins`) ; Mon compte (module Comptes ouvert sur sa
   propre fiche : `AccountsModule.vue` prop `self`, via `props` du registre ;
   nom + email seuls, `GET`/`PUT /api/admin/mon-compte`, `readProfileFields()`,

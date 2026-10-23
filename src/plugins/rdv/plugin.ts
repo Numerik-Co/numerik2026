@@ -39,6 +39,9 @@ export default {
 	],
 	env: {
 		// Grist — document des RDV (GRIST_BASE_URL / GRIST_API_KEY partagés avec l'adhésion).
+		// Clé d'API propre au plugin, facultative (sinon GRIST_API_KEY) : une clé limitée
+		// au document des RDV n'expose pas celui de l'adhésion.
+		GRIST_API_KEY_RDV: envField.string({ context: 'server', access: 'secret', optional: true }),
 		GRIST_DOC_ID_RDV: envField.string({ context: 'server', access: 'secret', optional: true }),
 		GRIST_TABLE_BENEFICIAIRES: envField.string({ context: 'server', access: 'secret', default: 'Beneficiaires' }),
 		GRIST_TABLE_RDV: envField.string({ context: 'server', access: 'secret', default: 'RDV' }),

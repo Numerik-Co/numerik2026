@@ -197,8 +197,20 @@ onMounted(load);
 			</fieldset>
 			<p v-if="ouvert.fichierReglages" class="text-xs text-gray-500">
 				Réglages enregistrés dans <code class="rounded bg-gray-100 px-1">{{ ouvert.fichierReglages }}</code> ; un champ
-				vide reprend la valeur indiquée en gris. La clé d'API Grist reste dans le .env.
+				vide reprend la valeur indiquée en gris.
 			</p>
+			<ul v-if="ouvert.secrets.length" class="space-y-1 text-xs text-gray-500">
+				<li v-for="s in ouvert.secrets" :key="s.nom">
+					<i class="fa-solid fa-key mr-1" aria-hidden="true"></i>
+					Clé secrète (dans le .env, jamais ici) :
+					<template v-if="s.utilise === s.nom"><code class="rounded bg-gray-100 px-1">{{ s.nom }}</code>, propre au plugin.</template>
+					<template v-else-if="s.utilise">
+						<code class="rounded bg-gray-100 px-1">{{ s.utilise }}</code>, partagée ; ajouter
+						<code class="rounded bg-gray-100 px-1">{{ s.nom }}</code> pour une clé propre au plugin.
+					</template>
+					<template v-else>aucune.</template>
+				</li>
+			</ul>
 		</div>
 
 		<p v-if="error" class="mt-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>

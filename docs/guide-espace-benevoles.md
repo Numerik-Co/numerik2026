@@ -272,8 +272,9 @@ affichée en gris ; la clé d'API reste dans le `.env`). En bas, **Enregistrer
 et publier**, qui reconstruit le site (ou rejoint les
 modifications en attente avec « Enregistrer sans publier »). Un plugin dont
 un fichier de réglages manque (ex. `src/content/rdv.yaml`) ne peut pas être
-activé ; une variable d'environnement absente du `.env` (ex.
-`GRIST_DOC_ID_RDV`) est signalée. Désactiver retire du site tout ce que le
+activé ; une clé secrète absente du `.env` est signalée, et la page dit
+laquelle est utilisée (prise de RDV : `GRIST_API_KEY_RDV`, clé limitée au
+document des RDV, sinon `GRIST_API_KEY`, celle de l'adhésion). Désactiver retire du site tout ce que le
 plugin y ajoute, ses réglages sont gardés. Le changement est noté dans le
 journal.
 
