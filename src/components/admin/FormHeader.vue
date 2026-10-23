@@ -4,7 +4,8 @@
  * accent, même style que les boutons du site) puis l'élément en cours
  * (pastille ronde bleu clair, icône « modifier » ou « + », puis son titre, qui suit la saisie du champ
  * Titre — titre enregistré ou « Nouvelle … » s'il est vide) pour savoir où
- * l'on se trouve. Actualités, Pages, Activités, Comptes.
+ * l'on se trouve. Actualités, Pages, Activités, Comptes, Plugins. Slot par
+ * défaut : affiché à droite du titre (ex. état du plugin).
  */
 const props = defineProps<{ back: string; title: string; editing: boolean }>();
 const emit = defineEmits<{ back: [] }>();
@@ -29,6 +30,7 @@ const emit = defineEmits<{ back: [] }>();
 				<span class="sr-only">{{ props.editing ? 'Modification :' : 'Création :' }}</span>
 			</span>
 			<h3 class="min-w-0 font-heading text-lg font-semibold leading-snug text-gray-900">{{ props.title }}</h3>
+			<slot />
 		</div>
 	</div>
 </template>

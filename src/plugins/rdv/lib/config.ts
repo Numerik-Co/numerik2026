@@ -20,6 +20,7 @@ import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import { AGENDA_DAYS } from '../../../lib/agenda';
 import { pluginActif } from '../..';
+import { FORMATS } from '../../champs';
 import { ADRESSE_DEFAUT, ADRESSE_RE } from './adresse';
 import type { RdvFormReglages } from './types';
 
@@ -112,7 +113,12 @@ const DEFAUTS = {
 	icones: {} as Record<string, string>,
 	permanences: [] as z.infer<typeof permanenceSchema>[],
 	zones: [] as z.infer<typeof zoneSchema>[],
+	/** Document Grist : vide = variables du `.env` (`lib/grist.ts`). La clé d'API reste dans le `.env`. */
+	grist: {} as { url?: string; document?: string; tables?: { beneficiaires?: string; rdv?: string; demarches?: string } },
 };
+
+const formatChamp = (type: keyof typeof FORMATS) =>
+	z.string({ error: 'texte attendu' }).trim().regex(FORMATS[type].re, FORMATS[type].message);
 
 const partiel = <T extends z.ZodRawShape>(shape: T) => z.strictObject(shape).partial().nullish();
 
@@ -160,6 +166,11 @@ const schema = z
 			.array(zoneSchema)
 			.nullish()
 			.refine((list) => !list || new Set(list.map((zone) => zone.label)).size === list.length, 'deux zones ont le même label'),
+		grist: partiel({
+			url: formatChamp('url'),
+			document: formatChamp('identifiant'),
+			tables: partiel({ beneficiaires: formatChamp('table'), rdv: formatChamp('table'), demarches: formatChamp('table') }),
+		}),
 	})
 	.partial()
 	.nullish()
@@ -195,6 +206,7 @@ export function parseRdvConfig(text: string | undefined) {
 		icones: o.icones ?? DEFAUTS.icones,
 		permanences: (o.permanences ?? DEFAUTS.permanences).toSorted((a, b) => AGENDA_DAYS.indexOf(a.day) - AGENDA_DAYS.indexOf(b.day)),
 		zones: o.zones ?? DEFAUTS.zones,
+		grist: { ...o.grist, tables: { ...o.grist?.tables } },
 	};
 }
 

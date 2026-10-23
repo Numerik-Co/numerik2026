@@ -91,6 +91,18 @@ icones:
   'Aide aux démarches administratives': fa-landmark
   'E-mail': fa-envelope
 
+# Document Grist des RDV (facultatif) : vide = valeurs du .env (GRIST_BASE_URL,
+# GRIST_DOC_ID_RDV, GRIST_TABLE_*). Réglable aussi depuis l'espace bénévoles,
+# module « Plugins ». La clé d'API (GRIST_API_KEY) reste toujours dans le .env.
+#
+# grist:
+#   url: https://grist.exemple.fr
+#   document: identifiantDuDocument
+#   tables:
+#     beneficiaires: Beneficiaires
+#     rdv: RDV
+#     demarches: Demarches
+
 # -----------------------------------------------------------------------------
 #  Permanences : jours, horaires et lieux où l'on peut prendre RDV.
 #

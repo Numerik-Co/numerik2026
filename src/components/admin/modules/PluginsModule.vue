@@ -1,17 +1,21 @@
 <script setup lang="ts">
 /**
  * Module « Plugins » (groupe `superadmin` seul) : volets activables du site
- * (catalogue `src/plugins/catalogue.ts`). Activer ou désactiver écrit
- * `plugins.<id>` de `reglages.yaml` puis reconstruit le site (suivi par
+ * (catalogue `src/plugins/catalogue.ts`). Liste (icône, nom, état, bouton
+ * « paramètres ») → page de configuration du plugin : description,
+ * prérequis, réglages (`reglages.champs` du catalogue, par rubrique), case
+ * « plugin actif », et une seule paire de boutons d'enregistrement en bas.
+ * Enregistrer écrit `plugins.<id>` de `reglages.yaml` et les réglages dans
+ * le fichier du plugin, puis reconstruit le site (suivi par
  * `usePublication`), ou rejoint les modifications en attente. Un plugin dont
- * un fichier requis manque ne peut pas être activé ; une variable
- * d'environnement absente est seulement signalée.
+ * un fichier requis manque ne peut être ni activé ni réglé.
  */
 import { computed, inject, onMounted, ref } from 'vue';
+import FormHeader from '../FormHeader.vue';
 import PublishButtons from '../PublishButtons.vue';
 import PublishStatus from '../PublishStatus.vue';
-import { ApiError, pluginsApi, type PluginItem } from '../client';
-import { ADMIN_CONTEXT, rememberOpenModule, takeModuleToReopen } from '../context';
+import { ApiError, pluginsApi, type PluginChamp, type PluginItem } from '../client';
+import { ADMIN_CONTEXT, iconButtonClass, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 import { isDeferredSubmit } from '../lot';
 import { usePublication } from '../usePublication';
 
@@ -20,8 +24,56 @@ const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 const plugins = ref<PluginItem[]>([]);
 const availability = ref<{ ok: boolean; reason?: string }>({ ok: true });
 const loading = ref(true);
-const busy = ref<string | null>(null);
+const busy = ref(false);
 const error = ref('');
+/** Plugin dont la page de configuration est ouverte (`null` = liste). */
+const ouvertId = ref<string | null>(null);
+const ouvert = computed(() => plugins.value.find((p) => p.id === ouvertId.value) ?? null);
+
+/** Saisie en cours de la page de configuration. */
+const actif = ref(false);
+const valeurs = ref<Record<string, string>>({});
+
+function ouvrir(p: PluginItem) {
+	ouvertId.value = p.id;
+	actif.value = p.actif;
+	valeurs.value = Object.fromEntries(p.champs.map((c) => [c.cle, c.valeur]));
+	error.value = '';
+}
+
+function fermer() {
+	ouvertId.value = null;
+	error.value = '';
+}
+
+/** Réglages regroupés par rubrique, dans l'ordre du catalogue. */
+const groupes = computed(() => {
+	const map = new Map<string, PluginChamp[]>();
+	for (const c of ouvert.value?.champs ?? []) {
+		if (!map.has(c.groupe)) map.set(c.groupe, []);
+		map.get(c.groupe)!.push(c);
+	}
+	return [...map];
+});
+
+const modifie = computed(
+	() => !!ouvert.value && (actif.value !== ouvert.value.actif || ouvert.value.champs.some((c) => (valeurs.value[c.cle] ?? '').trim() !== c.valeur)),
+);
+
+/** Texte de repli affiché dans un champ vide. */
+function repli(c: PluginChamp): string {
+	if (c.source === 'env') return `${c.repli} (valeur du .env, ${c.env})`;
+	if (c.source === 'defaut') return `${c.repli} (par défaut)`;
+	return c.env ? `vide : à renseigner ici ou dans le .env (${c.env})` : '';
+}
+
+/** État affiché : celui des sources, ou le changement pas encore en ligne. */
+function etat(p: PluginItem): { texte: string; classe: string } {
+	if (p.actif !== p.enLigne) {
+		return { texte: p.actif ? 'Activation en attente' : 'Désactivation en attente', classe: 'bg-amber-100 text-amber-800' };
+	}
+	return p.actif ? { texte: 'Actif', classe: 'bg-green-100 text-green-800' } : { texte: 'Inactif', classe: 'bg-gray-100 text-gray-600' };
+}
 
 function fail(e: unknown) {
 	takeModuleToReopen();
@@ -35,6 +87,7 @@ async function load() {
 		plugins.value = res.plugins;
 		availability.value = res.availability;
 		receive(res.status);
+		if (ouvert.value) ouvrir(ouvert.value);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -51,17 +104,16 @@ const locked = computed(() => !availability.value.ok || following.value);
 
 async function submit(plugin: PluginItem, event: Event) {
 	error.value = '';
-	busy.value = plugin.id;
-	const actif = !plugin.actif;
+	busy.value = true;
 	try {
 		rememberOpenModule('plugins');
-		const result = await pluginsApi.update(plugin.id, actif, { deferred: isDeferredSubmit(event) });
-		afterSave(`Plugin « ${plugin.label} » ${actif ? 'activé' : 'désactivé'}`, result);
+		const result = await pluginsApi.update(plugin.id, actif.value, valeurs.value, { deferred: isDeferredSubmit(event) });
+		afterSave(`Plugin « ${plugin.label} »`, result);
 		if (result.deferred) await load();
 	} catch (e) {
 		fail(e);
 	} finally {
-		busy.value = null;
+		busy.value = false;
 	}
 }
 
@@ -80,65 +132,101 @@ onMounted(load);
 		@publish-lot="publishLot"
 	/>
 	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
-	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
-
-	<p class="mb-4 text-sm font-light text-gray-600">
-		Volets du site que l'association active ou non. Un plugin inactif n'existe pas sur le site : ni page, ni encart,
-		ni lien. Changer l'état reconstruit le site.
-	</p>
 
 	<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
-	<ul v-else class="space-y-4">
-		<li v-for="p in plugins" :key="p.id" class="rounded-xl border border-gray-200 bg-white p-4">
-			<div class="flex items-start gap-3">
-				<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+
+	<!-- Page de configuration d'un plugin : un seul formulaire -->
+	<form v-else-if="ouvert" @submit.prevent="submit(ouvert, $event)">
+		<FormHeader back="Tous les plugins" :title="ouvert.label" :editing="true" @back="fermer">
+			<span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold" :class="etat(ouvert).classe">{{ etat(ouvert).texte }}</span>
+		</FormHeader>
+
+		<div class="space-y-4">
+			<p class="text-sm font-light text-gray-600">{{ ouvert.description }}</p>
+			<p class="text-xs text-gray-500">
+				Documentation : <code class="rounded bg-gray-100 px-1">{{ ouvert.doc }}</code> (identifiant
+				<code class="rounded bg-gray-100 px-1">{{ ouvert.id }}</code>)
+			</p>
+
+			<ul v-if="ouvert.manquants.length" class="space-y-1 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+				<li v-for="m in ouvert.manquants" :key="m.fichier">
+					<i class="fa-solid fa-circle-xmark mr-1" aria-hidden="true"></i>
+					<code>{{ m.fichier }}</code> absent : {{ m.aide }}
+				</li>
+			</ul>
+			<ul v-if="ouvert.avertissements.length" class="space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+				<li v-for="a in ouvert.avertissements" :key="a.nom">
+					<i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>
+					<code>{{ a.nom }}</code> : {{ a.aide }}
+				</li>
+			</ul>
+
+			<label class="flex items-start gap-3 rounded-xl border border-gray-200 p-4 text-sm">
+				<input
+					v-model="actif"
+					type="checkbox"
+					class="mt-0.5 accent-primary"
+					:disabled="locked || (!ouvert.actif && ouvert.manquants.length > 0)"
+				/>
+				<span>
+					<span class="block font-medium text-gray-900">Plugin actif</span>
+					<span class="block text-xs text-gray-500">
+						Inactif, le site n'a plus rien de ce plugin (page, encart, liens) ; ses réglages et son contenu sont gardés.
+					</span>
+				</span>
+			</label>
+
+			<fieldset v-for="[groupe, champs] in groupes" :key="groupe" class="rounded-xl border border-gray-200 p-4">
+				<legend class="px-1 font-heading text-sm font-semibold text-gray-900">{{ groupe }}</legend>
+				<div class="space-y-4">
+					<div v-for="c in champs" :key="c.cle">
+						<label :for="`plugin-${ouvert.id}-${c.cle}`" class="text-sm font-medium text-gray-700">{{ c.label }}</label>
+						<input
+							:id="`plugin-${ouvert.id}-${c.cle}`"
+							v-model.trim="valeurs[c.cle]"
+							type="text"
+							spellcheck="false"
+							autocomplete="off"
+							:placeholder="repli(c)"
+							:disabled="locked || ouvert.manquants.length > 0"
+							:class="inputClass"
+						/>
+						<p v-if="c.aide" class="mt-1 text-xs text-gray-500">{{ c.aide }}</p>
+					</div>
+				</div>
+			</fieldset>
+			<p v-if="ouvert.fichierReglages" class="text-xs text-gray-500">
+				Réglages enregistrés dans <code class="rounded bg-gray-100 px-1">{{ ouvert.fichierReglages }}</code> ; un champ
+				vide reprend la valeur indiquée en gris. La clé d'API Grist reste dans le .env.
+			</p>
+		</div>
+
+		<p v-if="error" class="mt-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<div class="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-5">
+			<PublishButtons :busy="busy" :disabled="locked || busy || !modifie" />
+		</div>
+	</form>
+
+	<!-- Catalogue -->
+	<template v-else>
+		<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<ul class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+			<li v-for="p in plugins" :key="p.id" class="flex items-center gap-3 px-4 py-3">
+				<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
 					<i class="fa-solid" :class="p.icon" aria-hidden="true"></i>
 				</span>
-				<div class="min-w-0 flex-1">
-					<div class="flex flex-wrap items-center gap-2">
-						<h3 class="font-heading text-base text-gray-900">{{ p.label }}</h3>
-						<span
-							class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-							:class="p.actif ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'"
-						>
-							{{ p.actif ? 'Actif' : 'Inactif' }}
-						</span>
-						<span v-if="p.actif !== p.enLigne" class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
-							en attente de publication
-						</span>
-					</div>
-					<p class="mt-1 text-sm font-light text-gray-600">{{ p.description }}</p>
-					<p class="mt-1 text-xs text-gray-500">
-						Documentation : <code class="rounded bg-gray-100 px-1">{{ p.doc }}</code> (identifiant
-						<code class="rounded bg-gray-100 px-1">{{ p.id }}</code>)
-					</p>
-
-					<ul v-if="p.manquants.length" class="mt-3 space-y-1 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
-						<li v-for="m in p.manquants" :key="m.fichier">
-							<i class="fa-solid fa-circle-xmark mr-1" aria-hidden="true"></i>
-							<code>{{ m.fichier }}</code> absent : {{ m.aide }}
-						</li>
-					</ul>
-					<ul v-if="p.avertissements.length" class="mt-3 space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-						<li v-for="a in p.avertissements" :key="a.nom">
-							<i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>
-							<code>{{ a.nom }}</code> non renseignée : {{ a.aide }}
-						</li>
-					</ul>
-
-					<form class="mt-4 flex flex-wrap items-center gap-2" @submit.prevent="submit(p, $event)">
-						<PublishButtons
-							compact
-							:label="p.actif ? 'Désactiver et publier' : 'Activer et publier'"
-							:busy="busy === p.id"
-							:disabled="locked || busy !== null || (!p.actif && p.manquants.length > 0)"
-						/>
-					</form>
-					<p v-if="p.actif" class="mt-2 text-xs text-gray-500">
-						Désactiver retire du site tout ce que le plugin y ajoute ; ses réglages et son contenu sont gardés.
-					</p>
-				</div>
-			</div>
-		</li>
-	</ul>
+				<span class="min-w-0 flex-1 font-heading text-sm text-gray-900">{{ p.label }}</span>
+				<span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold" :class="etat(p).classe">{{ etat(p).texte }}</span>
+				<button
+					type="button"
+					:class="[iconButtonClass, 'text-primary']"
+					:aria-label="`Configurer « ${p.label} »`"
+					title="Configurer"
+					@click="ouvrir(p)"
+				>
+					<i class="fa-solid fa-gear" aria-hidden="true"></i>
+				</button>
+			</li>
+		</ul>
+	</template>
 </template>

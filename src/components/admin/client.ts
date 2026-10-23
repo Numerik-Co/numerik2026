@@ -322,13 +322,28 @@ export interface PluginItem {
 	enLigne: boolean;
 	manquants: { fichier: string; aide: string }[];
 	avertissements: { nom: string; aide: string }[];
+	fichierReglages: string | null;
+	champs: PluginChamp[];
+}
+
+/** Réglage d'un plugin (cf. `ChampState`, src/lib/plugin-writer.ts) : `valeur` du fichier, `repli` si vide. */
+export interface PluginChamp {
+	cle: string;
+	label: string;
+	groupe: string;
+	type: string;
+	aide?: string;
+	env?: string;
+	valeur: string;
+	repli: string;
+	source: 'env' | 'defaut' | 'aucune';
 }
 
 export const pluginsApi = {
 	list: () =>
 		request<{ plugins: PluginItem[]; status: PublishStatus; availability: { ok: boolean; reason?: string } }>('GET', '/api/admin/plugins'),
-	update: (id: string, actif: boolean, options?: SaveOptions) =>
-		request<SaveResult>('PUT', saveUrl('/api/admin/plugins', options), { id, actif }),
+	update: (id: string, actif: boolean, valeurs: Record<string, string>, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl('/api/admin/plugins', options), { id, actif, valeurs }),
 };
 
 export const associationApi = {

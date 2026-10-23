@@ -88,7 +88,12 @@ Un dossier vide n'est pas créé : chaque plugin n'a que ceux dont il a besoin.
    `plugins.<id>` est aussitôt reconnu, inactif par défaut, et le plugin
    apparaît dans le module « Plugins » (`icon`, `doc`, `requis` = fichiers
    de `src/content/` sans lesquels l'activation est refusée, `env` =
-   variables signalées si absentes).
+   secrets du `.env` signalés si absents, `reglages` = fichier de
+   `src/content/` et champs modifiables dans la page de configuration du
+   module : `cle` à points, `groupe`, `type` — `adresse` (page publique,
+   contrôlée contre les pages du site), `url`, `identifiant`, `table`, formats
+   dans `src/plugins/champs.ts` —, `defaut`, `env` de repli, `obligatoire`).
+   Le plugin lit ces valeurs dans son fichier avant le `.env`.
 2. Le dossier `src/plugins/<id>/` avec son `plugin.ts`, ajouté à
    `PLUGIN_MANIFESTS` (`manifests.ts`).
 3. Chaque branchement dans le reste du site passe par `pluginActif()` ou

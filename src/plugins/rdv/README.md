@@ -16,9 +16,12 @@ Voir aussi [les plugins](../README.md) (activation, organisation).
 
 1. **Document Grist** avec les trois tables du [schéma attendu](#schéma-grist-attendu)
    (`Beneficiaires`, `RDV`, `Demarches`), distinct du document de l'adhésion.
-2. **`.env`** : `GRIST_BASE_URL` et `GRIST_API_KEY` (partagés avec l'adhésion),
-   `GRIST_DOC_ID_RDV` (identifiant du document, dans son URL Grist) ; noms de
-   tables facultatifs, voir [Variables d'environnement](#variables-denvironnement).
+2. **`.env`** : `GRIST_API_KEY` (clé d'API, partagée avec l'adhésion — le seul
+   réglage qui ne peut être que là). Adresse de l'instance, document et noms
+   de tables : dans le `.env` (`GRIST_BASE_URL`, `GRIST_DOC_ID_RDV`,
+   `GRIST_TABLE_*`, voir [Variables d'environnement](#variables-denvironnement))
+   **ou** dans `grist:` de `rdv.yaml`, réglable depuis l'espace bénévoles
+   (module « Plugins », super admin), qui passe avant le `.env`.
 3. **`src/content/rdv.yaml`** : copier [`rdv.exemple.yaml`](rdv.exemple.yaml)
    (commenté) et l'adapter : adresse de la page, textes, permanences, zones…
 4. **Activer** le plugin dans `src/content/reglages.yaml` :
@@ -242,8 +245,8 @@ En plus de `GRIST_BASE_URL` et `GRIST_API_KEY` (voir
 
 | Variable | Rôle |
 | :--- | :--- |
-| `GRIST_DOC_ID_RDV` | Identifiant du document Grist des RDV (distinct de celui de l'adhésion) |
-| `GRIST_TABLE_BENEFICIAIRES` / `GRIST_TABLE_RDV` / `GRIST_TABLE_DEMARCHES` | Noms des tables si différents des défauts — facultatif |
+| `GRIST_DOC_ID_RDV` | Identifiant du document Grist des RDV (distinct de celui de l'adhésion) — remplacé par `grist.document` de `rdv.yaml` s'il est renseigné |
+| `GRIST_TABLE_BENEFICIAIRES` / `GRIST_TABLE_RDV` / `GRIST_TABLE_DEMARCHES` | Noms des tables si différents des défauts — facultatif, remplacés par `grist.tables.*` de `rdv.yaml` |
 
 ## Pistes d'évolution
 

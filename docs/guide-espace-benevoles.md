@@ -259,10 +259,17 @@ chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
 
 **Plugins** (super admin seulement) : volets du site que l'association active
-ou non (aujourd'hui : prise de rendez-vous en ligne). Pour chacun : son état
-(actif / inactif, « en attente de publication » si le changement n'est pas
-encore en ligne), sa documentation, et ce qui lui manque. **Activer et
-publier** / **Désactiver et publier** reconstruit le site (ou rejoint les
+ou non (aujourd'hui : prise de rendez-vous en ligne). La liste montre chaque
+plugin et son état (actif, inactif, ou activation / désactivation en attente
+de publication) ; l'icône **paramètres** (roue dentée) ouvre sa page de
+configuration, un seul formulaire : description, documentation, ce qui lui
+manque, la case **Plugin actif**, puis ses réglages par rubrique — pour la
+prise de RDV : **adresse de la page** (ex. `/rendez-vous`, refusée si une
+page du site l'utilise déjà ; les liens déjà écrits vers l'ancienne adresse
+ne changent pas) et **document Grist** (adresse de l'instance, identifiant du
+document, noms des tables ; un champ vide reprend la valeur du `.env`,
+affichée en gris ; la clé d'API reste dans le `.env`). En bas, **Enregistrer
+et publier**, qui reconstruit le site (ou rejoint les
 modifications en attente avec « Enregistrer sans publier »). Un plugin dont
 un fichier de réglages manque (ex. `src/content/rdv.yaml`) ne peut pas être
 activé ; une variable d'environnement absente du `.env` (ex.

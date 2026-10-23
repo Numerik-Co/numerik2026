@@ -9,8 +9,10 @@
  * (thématiques, genre, tranche d'âge, statut) sont lues dans le document
  * lui-même (`listes.ts`).
  *
- * Configuration lue au DÉMARRAGE du serveur (`astro:env`, cf.
- * `src/lib/adhesion/grist.ts`) : jamais figée dans dist/.
+ * Adresse de l'instance, document et tables : `grist:` de `src/content/rdv.yaml`
+ * (réglables depuis le module « Plugins », lus au build), sinon variables du
+ * `.env` lues au DÉMARRAGE du serveur (`astro:env`, cf. `src/lib/adhesion/grist.ts`).
+ * La clé d'API vient toujours du `.env` : jamais figée dans dist/.
  */
 
 import {
@@ -22,11 +24,17 @@ import {
 	GRIST_TABLE_RDV,
 } from 'astro:env/server';
 import { GristError } from '../../../lib/adhesion/grist';
+import { rdvConfig } from './config';
+
+// `grist:` de `src/content/rdv.yaml` (module « Plugins ») avant le `.env`.
+const { grist } = rdvConfig;
+const BASE_URL = grist.url ?? GRIST_BASE_URL;
+const DOC_ID = grist.document ?? GRIST_DOC_ID_RDV;
 
 export const TABLES = {
-	beneficiaires: GRIST_TABLE_BENEFICIAIRES,
-	rdv: GRIST_TABLE_RDV,
-	demarches: GRIST_TABLE_DEMARCHES,
+	beneficiaires: grist.tables.beneficiaires ?? GRIST_TABLE_BENEFICIAIRES,
+	rdv: grist.tables.rdv ?? GRIST_TABLE_RDV,
+	demarches: grist.tables.demarches ?? GRIST_TABLE_DEMARCHES,
 } as const;
 
 export const COLS = {
@@ -82,7 +90,7 @@ export const STATUT_RDV = {
 export { GristError };
 
 export function assertGristConfig(): void {
-	if (!GRIST_BASE_URL || !GRIST_DOC_ID_RDV || !GRIST_API_KEY) {
+	if (!BASE_URL || !DOC_ID || !GRIST_API_KEY) {
 		throw new GristError('Configuration Grist (RDV) manquante côté serveur.', 500);
 	}
 }
@@ -105,7 +113,7 @@ export function refList(...values: (string | number)[]): (string | number)[] {
 }
 
 function docUrl(path: string): string {
-	return `${GRIST_BASE_URL}/api/docs/${GRIST_DOC_ID_RDV}${path}`;
+	return `${BASE_URL}/api/docs/${DOC_ID}${path}`;
 }
 
 async function gristFetch<T>(path: string, init?: RequestInit): Promise<T> {

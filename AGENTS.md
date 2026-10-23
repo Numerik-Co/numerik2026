@@ -227,7 +227,16 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   `superadmin` seul ; Plugins : `PluginsModule.vue`, `src/lib/plugin-writer.ts`
   écrit `plugins.<id>` de `reglages.yaml` en place puis publie, activation
   refusée si un fichier `requis` du catalogue manque, `env` absentes
-  signalées, route `/api/admin/plugins`) ; Mon compte (module Comptes ouvert sur sa
+  signalées ; liste → page de configuration (roue dentée), **un seul
+  formulaire** : case « Plugin actif » + réglages `reglages.champs` du
+  catalogue (types et formats `src/plugins/champs.ts`, écrits dans le
+  fichier du plugin, vide = clé retirée → `.env` ou défaut, repli affiché en
+  gris) ; `savePlugin(id, actif, valeurs)` ; champ `type: 'adresse'` refusé
+  si pris (`adresseOccupee()` de `page-writer.ts`, qui refuse aussi une page
+  à l'adresse d'un plugin actif : `src/lib/plugin-adresses.ts`) ; plugin RDV :
+  adresse + `grist:` (url, document, tables) de `rdv.yaml`, avant le `.env`
+  dans `lib/grist.ts`, clé d'API toujours dans le `.env` ; route
+  `/api/admin/plugins`) ; Mon compte (module Comptes ouvert sur sa
   propre fiche : `AccountsModule.vue` prop `self`, via `props` du registre ;
   nom + email seuls, `GET`/`PUT /api/admin/mon-compte`, `readProfileFields()`,
   plus le changement de mot de passe : `PasswordModule.vue` intégré, aussi
