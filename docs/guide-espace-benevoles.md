@@ -244,6 +244,7 @@ Les modules visibles dépendent de votre groupe :
 | Association | ✅ | ✅ | — | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
+| Plugins | ✅ | — | — | — |
 | Mon compte | ✅ | ✅ | ✅ | ✅ |
 
 Le bouton **Pages réservées** n'apparaît que pour qui n'a pas le module
@@ -256,6 +257,18 @@ mots de passe, actualités, pages, activités et catégories ajoutées /
 modifiées / supprimées, changements d'ordre, informations de l'association, résultat de
 chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
+
+**Plugins** (super admin seulement) : volets du site que l'association active
+ou non (aujourd'hui : prise de rendez-vous en ligne). Pour chacun : son état
+(actif / inactif, « en attente de publication » si le changement n'est pas
+encore en ligne), sa documentation, et ce qui lui manque. **Activer et
+publier** / **Désactiver et publier** reconstruit le site (ou rejoint les
+modifications en attente avec « Enregistrer sans publier »). Un plugin dont
+un fichier de réglages manque (ex. `src/content/rdv.yaml`) ne peut pas être
+activé ; une variable d'environnement absente du `.env` (ex.
+`GRIST_DOC_ID_RDV`) est signalée. Désactiver retire du site tout ce que le
+plugin y ajoute, ses réglages sont gardés. Le changement est noté dans le
+journal.
 
 ### Pages réservées
 

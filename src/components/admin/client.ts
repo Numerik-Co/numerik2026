@@ -311,6 +311,26 @@ export const dropdownsApi = {
 		request<SaveResult>('DELETE', saveUrl(`/api/admin/menus-deroulants/${encodeURIComponent(folder)}`, options), { confirm: folder }),
 };
 
+/** Plugin du catalogue tel que le montre le module « Plugins » (cf. src/lib/plugin-writer.ts). */
+export interface PluginItem {
+	id: string;
+	label: string;
+	description: string;
+	icon: string;
+	doc: string;
+	actif: boolean;
+	enLigne: boolean;
+	manquants: { fichier: string; aide: string }[];
+	avertissements: { nom: string; aide: string }[];
+}
+
+export const pluginsApi = {
+	list: () =>
+		request<{ plugins: PluginItem[]; status: PublishStatus; availability: { ok: boolean; reason?: string } }>('GET', '/api/admin/plugins'),
+	update: (id: string, actif: boolean, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl('/api/admin/plugins', options), { id, actif }),
+};
+
 export const associationApi = {
 	get: () =>
 		request<{ association: Association; status: PublishStatus; availability: { ok: boolean; reason?: string } }>(

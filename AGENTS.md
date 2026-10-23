@@ -197,7 +197,7 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   (`/api/admin/comptes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/liens`, `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
-  `redacteur`, `/api/admin/journal` → `superadmin` seul).
+  `redacteur`, `/api/admin/journal` et `/api/admin/plugins` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
   d'admin et par `site-build.ts` (résultat des publications).
@@ -223,8 +223,11 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   actualiser ») puis rechargement de la page, module rouvert
   (`reopenAfterReload` → `takeModuleToReopen` dans `AdminRoot`) ; page en
   404 (supprimée, déplacée) → `status.href` ou l'accueil.
-- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal (`exclusive`,
-  `superadmin` seul) ; Mon compte (module Comptes ouvert sur sa
+- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal et **Plugins** (`exclusive`,
+  `superadmin` seul ; Plugins : `PluginsModule.vue`, `src/lib/plugin-writer.ts`
+  écrit `plugins.<id>` de `reglages.yaml` en place puis publie, activation
+  refusée si un fichier `requis` du catalogue manque, `env` absentes
+  signalées, route `/api/admin/plugins`) ; Mon compte (module Comptes ouvert sur sa
   propre fiche : `AccountsModule.vue` prop `self`, via `props` du registre ;
   nom + email seuls, `GET`/`PUT /api/admin/mon-compte`, `readProfileFields()`,
   plus le changement de mot de passe : `PasswordModule.vue` intégré, aussi

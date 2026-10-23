@@ -13,8 +13,11 @@ L'adhésion deviendra un plugin plus tard, sur le même modèle.
 
 ## Activer ou désactiver un plugin
 
-Dans `src/content/reglages.yaml` (fichier de l'association, jamais remplacé
-par une mise à jour) :
+Depuis l'espace bénévoles, module **« Plugins »** (super admin seul) :
+activer / désactiver, avec publication, et ce qui manque à chaque plugin
+(fichier de réglages, variable d'environnement). Ou à la main, dans
+`src/content/reglages.yaml` (fichier de l'association, jamais remplacé par
+une mise à jour) :
 
 ```yaml
 plugins:
@@ -82,7 +85,10 @@ Un dossier vide n'est pas créé : chaque plugin n'a que ceux dont il a besoin.
 ## Ajouter un plugin
 
 1. Une entrée dans `PLUGINS` (`catalogue.ts`) : le réglage
-   `plugins.<id>` est aussitôt reconnu, inactif par défaut.
+   `plugins.<id>` est aussitôt reconnu, inactif par défaut, et le plugin
+   apparaît dans le module « Plugins » (`icon`, `doc`, `requis` = fichiers
+   de `src/content/` sans lesquels l'activation est refusée, `env` =
+   variables signalées si absentes).
 2. Le dossier `src/plugins/<id>/` avec son `plugin.ts`, ajouté à
    `PLUGIN_MANIFESTS` (`manifests.ts`).
 3. Chaque branchement dans le reste du site passe par `pluginActif()` ou

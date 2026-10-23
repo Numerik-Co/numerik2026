@@ -94,6 +94,14 @@ export const ADMIN_MODULES: AdminModule[] = [
 		component: defineAsyncComponent(() => import('./modules/JournalModule.vue')),
 	},
 	{
+		id: 'plugins',
+		label: 'Plugins',
+		icon: 'fa-puzzle-piece',
+		groups: ['superadmin'],
+		exclusive: true,
+		component: defineAsyncComponent(() => import('./modules/PluginsModule.vue')),
+	},
+	{
 		id: 'mon-compte',
 		label: 'Mon compte',
 		icon: 'fa-user-pen',

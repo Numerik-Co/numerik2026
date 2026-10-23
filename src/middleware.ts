@@ -4,7 +4,7 @@
  *  - `/api/auth/*`, `/api/admin/*` : requêtes du site lui-même uniquement ;
  *  - `/api/admin/*` : connexion obligatoire (401) ;
  *  - préfixes de `GUARDS` : groupe requis (403), `admin` / `superadmin`
- *    passent toujours, sauf garde `noAdmin` (journal : `superadmin` seul) ;
+ *    passent toujours, sauf garde `noAdmin` (journal, plugins : `superadmin` seul) ;
  *  - mot de passe provisoire (`mustChangePassword`) : seule
  *    `/api/admin/mot-de-passe` répond (403 ailleurs).
  * L'interface (modale de connexion, barre et modules) est un îlot Vue
@@ -22,6 +22,7 @@ import { readSession } from './lib/auth/session';
 /** Routes réservées à certains groupes (en plus de la connexion). Tenir aligné avec `ADMIN_MODULES`. */
 const GUARDS: { prefix: string; groups: AuthGroup[]; message: string; noAdmin?: true }[] = [
 	{ prefix: '/api/admin/journal', groups: ['superadmin'], message: 'Le journal est réservé au super admin.', noAdmin: true },
+	{ prefix: '/api/admin/plugins', groups: ['superadmin'], message: 'La gestion des plugins est réservée au super admin.', noAdmin: true },
 	{ prefix: '/api/admin/comptes', groups: ['admin'], message: 'La gestion des comptes est réservée au bureau.' },
 	{ prefix: '/api/admin/version', groups: ['admin'], message: 'Réservé au bureau.' },
 	{ prefix: '/api/admin/association', groups: ['admin'], message: "Les informations de l'association sont réservées au bureau." },
