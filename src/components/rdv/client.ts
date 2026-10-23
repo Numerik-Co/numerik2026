@@ -27,9 +27,7 @@ export const rdvApi = {
 	creneaux: () => get<Creneau[]>('/api/rdv/creneaux'),
 	demarches: () => get<Demarche[]>('/api/rdv/demarches'),
 	communes: (q: string) => get<CommuneSuggestion[]>(`/api/rdv/commune?q=${encodeURIComponent(q)}`),
-	beneficiaires: (prenom: string, nom: string) =>
-		get<BeneficiaireRecherche[]>(
-			`/api/rdv/beneficiaires?prenom=${encodeURIComponent(prenom)}&nom=${encodeURIComponent(nom)}`,
-		),
+	beneficiaires: (nomComplet: string) =>
+		get<BeneficiaireRecherche[]>(`/api/rdv/beneficiaires?q=${encodeURIComponent(nomComplet)}`),
 	prendre: (payload: PriseRdvPayload) => post<PriseRdvResult>('/api/rdv/prendre', payload),
 };

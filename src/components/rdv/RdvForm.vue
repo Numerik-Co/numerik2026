@@ -6,6 +6,8 @@ import { fr } from 'date-fns/locale';
 import {
 	GENRE_CHOICES,
 	STATUT_BENEFICIAIRE_CHOICES,
+	THEMATIQUE_CHOICES,
+	THEMATIQUE_ICONES,
 	TRANCHE_AGE_CHOICES,
 } from '../../lib/rdv/choices';
 import { deduireZone, type ZoneGeographiqueConfig } from '../../lib/rdv/geographie';
@@ -110,6 +112,37 @@ function choisirDemarche(id: number) {
 	form.demarcheIds = [id];
 }
 
+// Catalogue trop long pour une seule liste : on choisit d'abord la
+// thématique (seules celles qui ont au moins une démarche, dans l'ordre de
+// THEMATIQUE_CHOICES), puis la démarche parmi les siennes. Une seule
+// thématique → liste directe.
+const thematiques = computed(() => {
+	const nb = new Map<string, number>();
+	for (const d of demarches.value) nb.set(d.thematique, (nb.get(d.thematique) ?? 0) + 1);
+	const connues: string[] = THEMATIQUE_CHOICES.filter((t) => nb.has(t));
+	const autres = [...nb.keys()].filter((t) => !connues.includes(t)).sort((a, b) => a.localeCompare(b, 'fr'));
+	return [...connues, ...autres].map((nom) => ({ nom, nb: nb.get(nom) ?? 0, icone: iconeThematique(nom) }));
+});
+const thematiqueChoisie = ref<string | null>(null);
+const thematiqueAffichee = computed(() =>
+	thematiques.value.length === 1 ? thematiques.value[0].nom : thematiqueChoisie.value,
+);
+const demarchesAffichees = computed(() =>
+	demarches.value
+		.filter((d) => d.thematique === thematiqueAffichee.value)
+		.sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+);
+
+function iconeThematique(nom: string): string {
+	return THEMATIQUE_ICONES[nom as keyof typeof THEMATIQUE_ICONES] ?? 'fa-circle-question';
+}
+
+function choisirThematique(nom: string | null) {
+	thematiqueChoisie.value = nom;
+	// La démarche retenue doit appartenir à la thématique affichée.
+	if (!demarchesAffichees.value.some((d) => form.demarcheIds.includes(d.id))) form.demarcheIds = [];
+}
+
 const demarchesResume = computed(() =>
 	demarches.value
 		.filter((d) => form.demarcheIds.includes(d.id))
@@ -157,8 +190,9 @@ function continuerCoordonnees() {
 }
 
 // --- Étape « Vous » : premier RDV (fiche créée) ou déjà venu (fiche
-// recherchée par prénom + nom), pour ne pas créer de doublons dans Grist. ---
+// recherchée par un seul champ prénom + nom), pour ne pas créer de doublons dans Grist. ---
 const parcours = ref<'' | 'nouveau' | 'connu'>('');
+const nomComplet = ref('');
 const resultatsRecherche = ref<BeneficiaireRecherche[]>([]);
 const etatRecherche = ref<'idle' | 'busy' | 'ok' | 'erreur'>('idle');
 const beneficiaireChoisi = ref<number | null>(null);
@@ -176,18 +210,28 @@ function reinitialiserRecherche() {
 }
 
 // Nom modifié après une recherche : le résultat affiché ne correspond plus.
-watch(
-	() => [form.prenom, form.nom],
-	() => {
-		if (parcours.value === 'connu' && etatRecherche.value !== 'idle') reinitialiserRecherche();
-	},
-);
+watch(nomComplet, () => {
+	if (parcours.value === 'connu' && etatRecherche.value !== 'idle') reinitialiserRecherche();
+});
+
+// Fiche choisie : ses prénom + nom vont dans le formulaire (revérifiés avec
+// l'id à l'envoi, cf. beneficiaireCorrespond).
+watch(beneficiaireChoisi, (id) => {
+	const fiche = resultatsRecherche.value.find((r) => r.beneficiaireId === id);
+	if (!fiche) return;
+	form.prenom = fiche.prenom;
+	form.nom = fiche.nom;
+});
 
 async function rechercherFiche() {
-	if (!peutAvancer(['prenom', 'nom'])) return;
+	if (nomComplet.value.trim().split(/\s+/).length < 2) {
+		errors.value = { nomComplet: 'Indiquez votre prénom et votre nom.' };
+		return;
+	}
+	errors.value = {};
 	etatRecherche.value = 'busy';
 	try {
-		resultatsRecherche.value = await rdvApi.beneficiaires(form.prenom.trim(), form.nom.trim());
+		resultatsRecherche.value = await rdvApi.beneficiaires(nomComplet.value.trim());
 		// Un seul résultat : présélectionné, la personne n'a plus qu'à continuer.
 		beneficiaireChoisi.value = resultatsRecherche.value.length === 1 ? resultatsRecherche.value[0].beneficiaireId : null;
 		etatRecherche.value = 'ok';
@@ -222,7 +266,7 @@ const parJour = computed(() => {
 /** Jours où au moins un créneau reste libre — reçoivent un marqueur dans le calendrier. */
 const joursDisponibles = computed(() => {
 	const s = new Set<string>();
-	for (const c of creneaux.value) if (c.disponible) s.add(c.date);
+	for (const c of creneaux.value) if (c.reservable) s.add(c.date);
 	return s;
 });
 
@@ -245,6 +289,9 @@ const creneauxDuJour = computed(() => {
 	return parJour.value.get(dateToIso(dateChoisie.value)) ?? [];
 });
 
+/** Créneau d'urgence du jour affiché (premier de la permanence), pour la mention sous les horaires. */
+const urgenceDuJour = computed(() => creneauxDuJour.value.find((c) => c.urgence) ?? null);
+
 const libelleJourChoisi = computed(() => (dateChoisie.value ? libelleJour(dateToIso(dateChoisie.value)) : ''));
 
 rdvApi
@@ -254,7 +301,7 @@ rdvApi
 		etatCreneaux.value = 'ok';
 		// Présélectionne le premier jour où un créneau reste libre, pour éviter
 		// un calendrier vide à l'ouverture.
-		const premier = data.find((c) => c.disponible)?.date;
+		const premier = data.find((c) => c.reservable)?.date;
 		if (premier) dateChoisie.value = isoToDate(premier);
 	})
 	.catch(() => {
@@ -268,7 +315,7 @@ watch(dateChoisie, (date) => {
 });
 
 function choisirCreneau(c: Creneau) {
-	if (!c.disponible) return;
+	if (!c.reservable) return;
 	creneauChoisi.value = c;
 }
 
@@ -527,35 +574,75 @@ async function envoyer() {
 						Sélectionnez une démarche — le rendez-vous dure 30 minutes, ce qui ne permet d'en traiter qu'une seule.
 					</p>
 
-					<p v-if="etatDemarches === 'chargement'" class="mt-4 text-sm text-gray-500">Chargement…</p>
+					<p v-if="etatDemarches === 'chargement'" class="mt-4 flex flex-col items-center gap-3 py-8 text-sm text-gray-500" role="status">
+						<i class="fa-solid fa-spinner fa-spin text-4xl text-primary" aria-hidden="true"></i>
+						Chargement des démarches…
+					</p>
 					<p v-else-if="etatDemarches === 'erreur'" class="mt-4 text-sm text-red-600">
 						Impossible de charger les démarches proposées pour l'instant. Réessayez dans un instant.
 					</p>
 					<p v-else-if="!demarches.length" class="mt-4 text-sm text-gray-600">
 						Aucune démarche disponible pour le moment — contactez-nous directement.
 					</p>
-					<div v-else class="mt-4 grid gap-2 sm:grid-cols-2">
-						<label
-							v-for="d in demarches"
-							:key="d.id"
-							class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm"
-							:class="form.demarcheIds.includes(d.id) ? 'border-primary bg-primary/5' : ''"
-						>
-							<input
-								type="radio"
-								name="demarche"
-								:checked="form.demarcheIds.includes(d.id)"
-								class="sr-only"
-								@change="choisirDemarche(d.id)"
-							/>
-							<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-								<i class="fa-solid" :class="d.icone" aria-hidden="true"></i>
+					<div v-else-if="!thematiqueAffichee" class="mt-4">
+						<p class="text-sm font-medium text-gray-700">Choisissez d'abord un domaine :</p>
+						<div class="mt-2 grid gap-2 sm:grid-cols-2">
+							<button
+								v-for="t in thematiques"
+								:key="t.nom"
+								type="button"
+								class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2 text-left text-sm transition-colors hover:border-primary hover:bg-primary/5"
+								@click="choisirThematique(t.nom)"
+							>
+								<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+									<i class="fa-solid" :class="t.icone" aria-hidden="true"></i>
+								</span>
+								<span class="flex-1">
+									<span class="block font-medium text-gray-900">{{ t.nom }}</span>
+									<span class="block text-xs text-gray-500">{{ t.nb }} démarche{{ t.nb > 1 ? 's' : '' }}</span>
+								</span>
+								<i class="fa-solid fa-chevron-right text-xs text-gray-400" aria-hidden="true"></i>
+							</button>
+						</div>
+					</div>
+					<div v-else class="mt-4">
+						<div v-if="thematiques.length > 1" class="flex flex-wrap items-center gap-3">
+							<button
+								type="button"
+								class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"
+								@click="choisirThematique(null)"
+							>
+								<i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+								Autres domaines
+							</button>
+							<span class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+								<i class="fa-solid" :class="iconeThematique(thematiqueAffichee)" aria-hidden="true"></i>
+								{{ thematiqueAffichee }}
 							</span>
-							<span>
-								<span class="block font-medium text-gray-900">{{ d.nom }}</span>
-								<span class="block text-xs text-gray-500">{{ d.thematique }}</span>
-							</span>
-						</label>
+						</div>
+						<div class="mt-3 grid gap-2 sm:grid-cols-2">
+							<label
+								v-for="d in demarchesAffichees"
+								:key="d.id"
+								class="flex items-center gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+								:class="form.demarcheIds.includes(d.id) ? 'border-primary bg-primary/5' : ''"
+							>
+								<input
+									type="radio"
+									name="demarche"
+									:checked="form.demarcheIds.includes(d.id)"
+									class="sr-only"
+									@change="choisirDemarche(d.id)"
+								/>
+								<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+									<i class="fa-solid" :class="d.icone || iconeThematique(d.thematique)" aria-hidden="true"></i>
+								</span>
+								<span>
+									<span class="block font-medium text-gray-900">{{ d.nom }}</span>
+									<span v-if="d.description" class="block text-xs text-gray-500">{{ d.description }}</span>
+								</span>
+							</label>
+						</div>
 					</div>
 					<p v-if="errors.demarcheIds" class="mt-3 text-sm text-red-600">{{ errors.demarcheIds }}</p>
 
@@ -591,7 +678,10 @@ async function envoyer() {
 				<template v-if="step === 2">
 					<p class="mt-1 text-sm text-gray-600">Permanences de 30 minutes avec le·la conseiller·ère numérique.</p>
 
-					<p v-if="etatCreneaux === 'chargement'" class="mt-4 text-sm text-gray-500">Chargement des créneaux…</p>
+					<p v-if="etatCreneaux === 'chargement'" class="mt-4 flex flex-col items-center gap-3 py-8 text-sm text-gray-500" role="status">
+						<i class="fa-solid fa-spinner fa-spin text-4xl text-primary" aria-hidden="true"></i>
+						Chargement des créneaux…
+					</p>
 					<p v-else-if="etatCreneaux === 'erreur'" class="mt-4 text-sm text-red-600">
 						Impossible de charger les créneaux pour l'instant. Réessayez dans un instant.
 					</p>
@@ -618,6 +708,14 @@ async function envoyer() {
 						<div>
 							<p v-if="!dateChoisie" class="text-sm text-gray-500">Choisissez une date dans le calendrier.</p>
 							<template v-else>
+								<div v-if="urgenceDuJour" class="mb-3 rounded-lg border border-amber-500 px-3 py-2 text-sm text-gray-900">
+									<i class="fa-solid fa-circle-exclamation text-base text-amber-600" aria-hidden="true"></i>
+									<p class="mt-1">
+										Le premier créneau de {{ urgenceDuJour.heure.replace(':', 'h') }} est réservé aux demandes
+										urgentes : seule notre conseillère numérique ou la mairie peuvent évaluer votre besoin
+										d'urgence.
+									</p>
+								</div>
 								<p class="text-sm font-medium text-gray-900">{{ libelleJourChoisi }}</p>
 								<p v-if="!creneauxDuJour.length" class="mt-3 text-sm text-gray-500">Aucun créneau ce jour-là.</p>
 								<div v-else class="mt-3 flex flex-wrap gap-2">
@@ -625,17 +723,26 @@ async function envoyer() {
 										v-for="c in creneauxDuJour"
 										:key="c.heure"
 										type="button"
-										:disabled="!c.disponible"
+										:disabled="!c.reservable"
+										:title="c.urgence ? 'Créneau réservé aux urgences' : undefined"
 										class="rounded-full border px-4 py-1.5 text-sm transition-colors"
 										:class="
 											creneauChoisi?.date === c.date && creneauChoisi?.heure === c.heure
 												? 'border-primary bg-primary text-white'
-												: c.disponible
-													? 'border-gray-300 text-gray-700 hover:border-primary hover:text-primary'
-													: 'cursor-not-allowed border-gray-100 text-gray-300 line-through'
+												: !c.disponible
+													? 'cursor-not-allowed border-gray-100 text-gray-300 line-through'
+													: !c.reservable
+														? 'cursor-not-allowed border-dashed border-amber-300 bg-amber-50 text-amber-700'
+														: 'border-gray-300 text-gray-700 hover:border-primary hover:text-primary'
 										"
 										@click="choisirCreneau(c)"
 									>
+										<i
+											v-if="c.urgence"
+											class="fa-solid mr-1 text-xs"
+											:class="c.reservable ? 'fa-circle-exclamation' : 'fa-lock'"
+											aria-hidden="true"
+										></i>
 										{{ c.heure }}
 									</button>
 								</div>
@@ -738,18 +845,20 @@ async function envoyer() {
 						</div>
 					</template>
 
-					<!-- Déjà venu : recherche sur prénom + nom -->
+					<!-- Déjà venu : recherche sur un seul champ prénom + nom -->
 					<template v-else-if="parcours === 'connu'">
-						<div class="mt-6 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+						<div class="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
 							<div>
-								<label class="text-sm font-medium text-gray-700">Prénom</label>
-								<input v-model="form.prenom" type="text" :class="champCls('prenom')" @keydown.enter.prevent="rechercherFiche" />
-								<p v-if="errors.prenom" class="mt-1 text-xs text-red-600">{{ errors.prenom }}</p>
-							</div>
-							<div>
-								<label class="text-sm font-medium text-gray-700">Nom</label>
-								<input v-model="form.nom" type="text" :class="champCls('nom')" @keydown.enter.prevent="rechercherFiche" />
-								<p v-if="errors.nom" class="mt-1 text-xs text-red-600">{{ errors.nom }}</p>
+								<label for="rdv-nom-complet" class="text-sm font-medium text-gray-700">Prénom et nom</label>
+								<input
+									id="rdv-nom-complet"
+									v-model="nomComplet"
+									type="text"
+									autocomplete="name"
+									placeholder="ex. Marie Dupont"
+									:class="champCls('nomComplet')"
+									@keydown.enter.prevent="rechercherFiche"
+								/>
 							</div>
 							<button
 								type="button"
@@ -758,9 +867,10 @@ async function envoyer() {
 								class="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white disabled:opacity-50"
 							>
 								<i class="fa-solid fa-magnifying-glass mr-1" aria-hidden="true"></i>
-								{{ etatRecherche === 'busy' ? 'Recherche…' : 'Me retrouver' }}
+								<i v-if="etatRecherche === 'busy'" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ etatRecherche === 'busy' ? 'Recherche…' : 'Me retrouver' }}
 							</button>
 						</div>
+						<p v-if="errors.nomComplet" class="mt-1 text-xs text-red-600">{{ errors.nomComplet }}</p>
 
 						<p v-if="etatRecherche === 'erreur'" class="mt-4 text-sm text-red-600">
 							La recherche est indisponible pour le moment, merci de réessayer.
@@ -779,7 +889,7 @@ async function envoyer() {
 								>
 									<input v-model="beneficiaireChoisi" type="radio" :value="r.beneficiaireId" class="accent-primary" />
 									<span>
-										<span class="block font-medium text-gray-900">{{ form.prenom.trim() }} {{ form.nom.trim() }}</span>
+										<span class="block font-medium text-gray-900">{{ r.prenom }} {{ r.nom }}</span>
 										<span v-if="r.indice" class="block text-gray-500">{{ r.indice }}</span>
 									</span>
 								</label>
@@ -929,7 +1039,7 @@ async function envoyer() {
 					:disabled="etatEnvoi === 'busy'"
 					class="mt-4 w-full rounded-full bg-accent px-5 py-2.5 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
 				>
-					{{ etatEnvoi === 'busy' ? 'Envoi…' : 'Confirmer le rendez-vous' }}
+					<i v-if="etatEnvoi === 'busy'" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ etatEnvoi === 'busy' ? 'Envoi…' : 'Confirmer le rendez-vous' }}
 				</button>
 			</div>
 		</form>

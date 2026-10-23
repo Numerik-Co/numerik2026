@@ -471,7 +471,10 @@ seulement) → consentement/envoi.
   tenu à jour **directement dans Grist** par l'association, aucune admin
   côté site. `Documents` (facultatif, une ligne par document à apporter) est
   affiché en rappel sur l'écran de confirmation de `RdvForm.vue` (après
-  envoi uniquement).
+  envoi uniquement). Étape 1 en deux temps : thématique (`Thematique`,
+  celles qui ont au moins une démarche, icônes `THEMATIQUE_ICONES` de
+  `choices.ts`, aussi en repli d'une `Icone` vide) puis démarches de cette
+  thématique ; une seule thématique = liste directe.
 - `src/components/sections/RdvCtaSection.astro` — encart d'accueil
   (`src/pages/index.astro`, juste avant « Envie de nous rejoindre ? ») :
   jours, horaires et lieux déduits de `conseillerNumerique`, bouton vers
@@ -479,10 +482,14 @@ seulement) → consentement/envoi.
   fermé dans `site.forms`). Props facultatives : `eyebrow`, `title`,
   `description`, `buttonLabel`, `buttonHref`.
 - `src/lib/rdv/creneaux.ts` — créneaux de 30 min dérivés de
-  `conseillerNumerique` (`src/lib/agenda.ts`).
+  `conseillerNumerique` (`src/lib/agenda.ts`) Premier créneau de chaque
+  permanence = **urgence** (`urgence`, `estCreneauUrgence()`) : affiché avec
+  une mention encadrée au-dessus des horaires, réservable
+  (`reservable`) seulement avec une session de l'espace bénévoles
+  (`locals.user`, revérifié par `/api/rdv/prendre`, 403 sinon).
 - Étape 3 « Vous » : choix **« C'est mon premier rendez-vous »** (saisie
   civilité/nom/coordonnées puis profil, étape 4) ou **« J'ai déjà rencontré le·la
-  conseiller·ère »** (recherche prénom + nom, fiche existante réutilisée telle
+  conseiller·ère »** (un seul champ « Prénom et nom », fiche existante réutilisée telle
   quelle, étape 4 profil sautée — la dernière étape s'affiche alors « 4 »).
   Objectif : pas de doublons dans `Beneficiaires`. Les pièces à apporter ne
   sont rappelées qu'après l'envoi (écran de confirmation).
@@ -496,15 +503,16 @@ seulement) → consentement/envoi.
   par **email OU téléphone** (un seul des deux est obligatoire à la saisie,
   jamais aucun — voir `validation.ts` — et le rapprochement ne compare que
   le champ effectivement renseigné, filet anti-doublon) ou en crée un
-  nouveau. Déjà venu : `rechercherBeneficiaires()` = prénom ET nom **exacts**
-  (hors accents/casse/tirets, jamais de recherche partielle), ne renvoie
-  qu'un indice masqué (`j•••@gmail.com · 06 •• •• •• 78 · commune`) ;
+  nouveau. Déjà venu : `rechercherParNomComplet()` = « prénom nom » ou « nom
+  prénom » **exacts** (hors accents/casse/tirets, jamais de recherche
+  partielle, un mot seul ne suffit pas), ne renvoie que prénom/nom de la
+  fiche (déjà saisis) et un indice masqué (`j•••@gmail.com · 06 •• •• •• 78 · commune`) ;
   `beneficiaireCorrespond()` revérifie à l'envoi que l'id choisi porte bien
   ce nom (un id seul ne suffit pas).
 - `src/lib/rdv/reservation.ts` — revérifie la disponibilité puis écrit la
   ligne `RDV` (même doc Grist que `Beneficiaires`/`Demarches`).
 - Routes : `GET /api/rdv/creneaux`, `GET /api/rdv/demarches`,
-  `GET /api/rdv/commune`, `GET /api/rdv/beneficiaires` (`?prenom=&nom=`),
+  `GET /api/rdv/commune`, `GET /api/rdv/beneficiaires` (`?q=<prénom nom>`),
   `POST /api/rdv/prendre`, `GET /api/rdv/ics`
   (`?date=&heure=&demarche=<id>` → fichier `.ics` ; lieu et documents
   recalculés côté serveur).

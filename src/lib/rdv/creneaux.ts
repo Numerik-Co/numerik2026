@@ -7,6 +7,10 @@
  * Les créneaux déjà pris (ligne `RDV` non annulée à la même Date+Heure)
  * sont retournés avec `disponible: false` pour être grisés côté formulaire,
  * pas masqués.
+ *
+ * Le premier créneau de chaque permanence est réservé aux urgences : affiché
+ * à tou·te·s, il n'est réservable que par une personne connectée à l'espace
+ * bénévoles (`reservable`, revérifié par `/api/rdv/prendre`).
  */
 
 import { conseillerNumerique } from '../agenda';
@@ -90,6 +94,8 @@ function genererCandidats(depuis: Date): Creneau[] {
 				heure: minutesToHeure(t),
 				lieu: session.location ?? '',
 				disponible: true,
+				urgence: t === debut,
+				reservable: true,
 			});
 		}
 	}
@@ -101,8 +107,11 @@ function cle(date: string, heure: string): string {
 	return `${date}_${heure}`;
 }
 
-/** Créneaux de la fenêtre de réservation, `disponible: false` pour ceux déjà pris. */
-export async function fetchCreneauxDisponibles(depuis = new Date()): Promise<Creneau[]> {
+/**
+ * Créneaux de la fenêtre de réservation, `disponible: false` pour ceux déjà
+ * pris ; `connecte` ouvre la réservation des créneaux d'urgence.
+ */
+export async function fetchCreneauxDisponibles(connecte: boolean, depuis = new Date()): Promise<Creneau[]> {
 	const candidats = genererCandidats(depuis);
 	if (candidats.length === 0) return candidats;
 
@@ -114,13 +123,22 @@ export async function fetchCreneauxDisponibles(depuis = new Date()): Promise<Cre
 		}),
 	);
 
-	return candidats.map((c) => ({ ...c, disponible: !pris.has(cle(c.date, c.heure)) }));
+	return candidats.map((c) => {
+		const disponible = !pris.has(cle(c.date, c.heure));
+		return { ...c, disponible, reservable: disponible && (!c.urgence || connecte) };
+	});
 }
 
 /** Lieu de la permanence pour une date donnée, déduit du jour (`conseillerNumerique`). */
 export function lieuPourDate(dateIso: string): string | null {
 	const jour = jourSemaineLabel(dateIso);
 	return conseillerNumerique.find((s) => s.day === jour)?.location ?? null;
+}
+
+/** `heure` ("09:00") est-elle le premier créneau — réservé aux urgences — de la permanence de cette date ? */
+export function estCreneauUrgence(dateIso: string, heure: string): boolean {
+	const session = conseillerNumerique.find((s) => s.day === jourSemaineLabel(dateIso));
+	return session !== undefined && minutesToHeure(parseHeureAgenda(session.start)) === heure;
 }
 
 /** Un créneau précis (date+heure) est-il toujours libre ? Revérifié à l'écriture. */
