@@ -5,6 +5,7 @@ import {
 	TRANCHE_AGE_CHOICES,
 } from '../../../lib/rdv/choices';
 import { estZoneConnue } from '../../../lib/rdv/zones';
+import { estCreneauUrgence } from '../../../lib/rdv/creneaux';
 import { GristError } from '../../../lib/rdv/grist';
 import { prendreRendezVous } from '../../../lib/rdv/reservation';
 import { isNonEmptyString, json } from '../../../lib/adhesion/http';
@@ -57,10 +58,14 @@ function estValide(body: unknown): body is PriseRdvPayload {
 }
 
 /** Prise de RDV publique : rapproche/crée le bénéficiaire puis réserve le créneau. */
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
 	const body = await request.json().catch(() => null);
 	if (!estValide(body)) {
 		return json({ error: 'Requête invalide.' }, 400);
+	}
+	// Premier créneau de la permanence : urgences, réservées par un·e bénévole connecté·e.
+	if (!locals.user && estCreneauUrgence(body.date, body.heure)) {
+		return json({ error: 'Ce créneau est réservé aux urgences : contactez directement l’association.' }, 403);
 	}
 
 	try {

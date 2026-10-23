@@ -40,7 +40,11 @@ export interface Creneau {
 	jour: string; // "Lundi"…
 	heure: string; // "09:00"
 	lieu: string;
-	disponible: boolean;
+	disponible: boolean; // pas encore pris
+	/** Premier créneau de la permanence, réservé aux urgences (cf. `creneaux.ts`). */
+	urgence: boolean;
+	/** Réservable par la personne qui consulte : libre, et hors urgence ou connecté·e. */
+	reservable: boolean;
 }
 
 /** Informations facultatives sur le bénéficiaire, alignées sur le CRA Coop. */
@@ -56,6 +60,9 @@ export interface BeneficiaireInfos {
 /** Résultat de recherche « J'ai déjà rencontré le·la conseiller·ère » — jamais de coordonnées en clair. */
 export interface BeneficiaireRecherche {
 	beneficiaireId: number;
+	/** Prénom et nom de la fiche, tels qu'enregistrés (déjà saisis à l'identique par la personne). */
+	prenom: string;
+	nom: string;
 	indice: string; // ex. "j•••@gmail.com · 06 •• •• •• 78 · Lannion"
 }
 

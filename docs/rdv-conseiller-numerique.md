@@ -12,7 +12,7 @@ directement dans le document Grist **« RDV Conseiller Numérique »** (tables
 - Chaque étape n'apparaît qu'une fois la précédente validée.
 - Un RDV = **une démarche**, **30 minutes**, gratuit.
 - Pas de compte ni de mot de passe : une personne déjà venue est retrouvée par
-  son **prénom + nom**.
+  son **prénom et nom**, saisis dans un seul champ (dans un ordre ou l'autre).
 
 ## Vue d'ensemble
 
@@ -68,7 +68,7 @@ Deux choix, pour **ne pas créer de doublons** dans `Beneficiaires` :
 | Choix | Ce que ça fait |
 | :--- | :--- |
 | **C'est mon premier rendez-vous** | On saisit civilité, prénom, nom et **au moins un** e-mail ou téléphone (pour pouvoir prévenir la personne). Une fiche est créée à l'envoi. |
-| **J'ai déjà rencontré le·la conseiller·ère** | On saisit seulement **prénom + nom**, le formulaire retrouve la fiche existante. |
+| **J'ai déjà rencontré le·la conseiller·ère** | On saisit seulement **prénom et nom** dans un seul champ, le formulaire retrouve la fiche existante. |
 
 - **Déjà venu·e** — trois cas après « Me retrouver » :
   - **1 fiche** → présélectionnée, on continue ;
@@ -172,7 +172,7 @@ orientation, notes…) : ces colonnes ne sont jamais écrites par le site.
 | `GET /api/rdv/demarches` | Catalogue des démarches |
 | `GET /api/rdv/creneaux` | Créneaux des 3 semaines, libres ou pris |
 | `GET /api/rdv/commune?q=` | Autocomplétion de la commune |
-| `GET /api/rdv/beneficiaires?prenom=&nom=` | Fiches correspondant **exactement** au prénom + nom, avec indice masqué uniquement |
+| `GET /api/rdv/beneficiaires?q=` | Un seul champ « prénom nom » (dans un ordre ou l'autre) : fiches correspondant **exactement**, avec prénom/nom de la fiche et indice masqué uniquement |
 | `POST /api/rdv/prendre` | Enregistre le RDV. Avec `beneficiaireId`, le serveur vérifie que la fiche porte bien ce prénom + nom (un identifiant seul ne suffit pas) |
 | `GET /api/rdv/ics?date=&heure=&demarche=` | Fichier `.ics`. Lieu et pièces sont recalculés côté serveur : on ne peut pas faire servir un événement au texte arbitraire |
 

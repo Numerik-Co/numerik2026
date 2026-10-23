@@ -4,8 +4,9 @@
  * Deux parcours dans le formulaire (étape « Vous ») :
  * - « C'est mon premier RDV » : `trouverOuCreerBeneficiaire()`, qui rapproche
  *   quand même par email/téléphone (filet anti-doublon) avant de créer ;
- * - « J'ai déjà rencontré le·la conseiller·ère » : `rechercherBeneficiaires()` par
- *   prénom + nom exacts, puis `beneficiaireCorrespond()` à l'envoi.
+ * - « J'ai déjà rencontré le·la conseiller·ère » : `rechercherParNomComplet()`
+ *   (un seul champ « prénom nom », dans un ordre ou l'autre, exact), puis
+ *   `beneficiaireCorrespond()` à l'envoi.
  */
 
 import { normalize } from '../adhesion/http';
@@ -95,21 +96,42 @@ function masquerTelephone(tel: string): string {
  * parcourir la liste des bénéficiaires depuis la page publique. Seul un
  * indice masqué (email/téléphone) est renvoyé, pour départager des homonymes.
  */
-export async function rechercherBeneficiaires(prenom: string, nom: string): Promise<BeneficiaireRecherche[]> {
-	const p = cleNom(prenom);
-	const n = cleNom(nom);
-	if (!p || !n) return [];
+/** Fiches dont (prénom, nom normalisés) satisfont `garder`, avec un indice masqué pour départager. */
+async function rechercher(garder: (prenom: string, nom: string) => boolean): Promise<BeneficiaireRecherche[]> {
 	const c = COLS.beneficiaire;
 	const records = await listRecords(TABLES.beneficiaires);
 	return records
-		.filter((r) => cleNom(String(r.fields[c.prenom] ?? '')) === p && cleNom(String(r.fields[c.nom] ?? '')) === n)
+		.filter((r) => garder(cleNom(String(r.fields[c.prenom] ?? '')), cleNom(String(r.fields[c.nom] ?? ''))))
 		.slice(0, 5)
 		.map((r) => {
 			const email = masquerEmail(String(r.fields[c.email] ?? '').trim());
 			const tel = masquerTelephone(String(r.fields[c.telephone] ?? '').trim());
 			const commune = String(r.fields[c.commune] ?? '').trim();
-			return { beneficiaireId: r.id, indice: [email, tel, commune].filter(Boolean).join(' · ') };
+			return {
+				beneficiaireId: r.id,
+				prenom: String(r.fields[c.prenom] ?? '').trim(),
+				nom: String(r.fields[c.nom] ?? '').trim(),
+				indice: [email, tel, commune].filter(Boolean).join(' · '),
+			};
 		});
+}
+
+export async function rechercherBeneficiaires(prenom: string, nom: string): Promise<BeneficiaireRecherche[]> {
+	const p = cleNom(prenom);
+	const n = cleNom(nom);
+	if (!p || !n) return [];
+	return rechercher((fp, fn) => fp === p && fn === n);
+}
+
+/**
+ * Un seul champ « prénom nom » : correspond exactement à « prénom nom » ou
+ * « nom prénom » (hors accents/casse/tirets) — jamais de recherche partielle.
+ * Un seul mot ne suffit pas.
+ */
+export async function rechercherParNomComplet(saisie: string): Promise<BeneficiaireRecherche[]> {
+	const q = cleNom(saisie);
+	if (!q.includes(' ')) return [];
+	return rechercher((p, n) => Boolean(p && n) && (`${p} ${n}` === q || `${n} ${p}` === q));
 }
 
 /**

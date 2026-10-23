@@ -58,6 +58,33 @@ export const THEMATIQUE_CHOICES = [
 	'Aide aux démarches administratives',
 ] as const;
 
+/**
+ * Icône Font Awesome (préfixe "fa-solid" ajouté à l'affichage) de chaque
+ * thématique : boutons de catégorie du bloc 1, et repli pour une démarche
+ * dont la colonne Grist `Icone` est vide.
+ */
+export const THEMATIQUE_ICONES: Record<(typeof THEMATIQUE_CHOICES)[number], string> = {
+	'Diagnostic numérique': 'fa-stethoscope',
+	'Prendre en main du matériel': 'fa-laptop',
+	'Maintenance de matériel': 'fa-screwdriver-wrench',
+	'Gérer ses contenus numériques': 'fa-folder-open',
+	'Navigation sur internet': 'fa-globe',
+	'E-mail': 'fa-envelope',
+	Bureautique: 'fa-file-lines',
+	'Réseaux sociaux communication': 'fa-comments',
+	Santé: 'fa-heart-pulse',
+	'Banque et achats en ligne': 'fa-credit-card',
+	'Accompagner un professionnel': 'fa-briefcase',
+	'Insertion professionnelle': 'fa-user-tie',
+	'Prévention en sécurité numérique': 'fa-shield-halved',
+	Parentalité: 'fa-children',
+	'Scolarité et numérique': 'fa-graduation-cap',
+	'Créer avec le numérique': 'fa-palette',
+	'Culture numérique': 'fa-book-open',
+	'Intelligence artificielle': 'fa-robot',
+	'Aide aux démarches administratives': 'fa-landmark',
+};
+
 export const STATUT_RDV = {
 	confirme: 'Confirmé',
 	annule: 'Annulé',
