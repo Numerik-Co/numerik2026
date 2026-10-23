@@ -571,7 +571,8 @@ accepté à la lecture : `RDV_TYPES_RENOMMES`), champs vides = `encart:`.
   Oriente_autre_structure, Notes_accompagnement, Evaluation_satisfaction,
   Suggestions_beneficiaire ; proposées si présentes avec le bon type, choix
   lus dans Grist via `listColumns()`, ChoiceList écrites `['L', …]` ou
-  `null`). Créneau pris = tout RDV non « Annulé »
+  `null` ; `affichage: 'smileys'` = satisfaction en visages, `visage()` de
+  `admin/client.ts`, de la meilleure réponse à la pire). Créneau pris = tout RDV non « Annulé »
   (`STATUTS_OCCUPANTS` de `lib/grist.ts`, page publique comme éditeur).
   Serveur `admin/gestion.ts` (`listerRdv()`, `modifierRdv()` :
   `creneauEstLibre(date, heure, sauf)`, lieu et thématiques recalculés),

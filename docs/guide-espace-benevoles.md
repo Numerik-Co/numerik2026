@@ -268,7 +268,8 @@ proposés, urgences comprises), démarche, **statut** (Confirmé, Honoré, Absen
 Annulé : seul « Annulé » libère le créneau), puis, après le rendez-vous, le
 **compte rendu de l'accompagnement** (lieu réel, matériel utilisé,
 sous-thématique, niveau d'autonomie, orientation vers une autre structure,
-notes) et l'**avis du bénéficiaire** (satisfaction, suggestions) — rubriques
+notes) et l'**avis du bénéficiaire** (satisfaction, à choisir parmi cinq visages — un
+nouveau clic l'efface —, suggestions) — rubriques
 reprises des colonnes du document Grist. **Enregistrer** écrit directement dans Grist, sans reconstruire
 le site ; un créneau déjà pris est refusé. Échap ou la croix ferme l'éditeur.
 Chaque modification est notée dans le journal.

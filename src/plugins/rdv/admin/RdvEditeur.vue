@@ -16,7 +16,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { ApiError } from '../../../components/admin/client';
 import { inputClass } from '../../../components/admin/context';
 import type { Creneau, Demarche } from '../lib/types';
-import { classeStatut, libelleDate, rdvAdminApi, type ChampSuivi, type RdvItem } from './client';
+import { classeStatut, libelleDate, rdvAdminApi, visage, type ChampSuivi, type RdvItem } from './client';
 
 const props = defineProps<{ rdv: RdvItem; demarches: Demarche[]; statuts: string[]; suivi: ChampSuivi[]; creneaux: Creneau[] }>();
 const emit = defineEmits<{ close: []; saved: [] }>();
@@ -272,6 +272,29 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 									@click="basculer(c.cle, x)"
 								>
 									{{ x }}
+								</button>
+							</div>
+						</template>
+						<template v-else-if="c.type === 'choix' && c.affichage === 'smileys'">
+							<p class="text-sm font-medium text-gray-700">{{ c.label }}</p>
+							<div class="mt-1.5 flex flex-wrap justify-center gap-2" role="radiogroup" :aria-label="c.label">
+								<button
+									v-for="(x, i) in c.choix"
+									:key="x"
+									type="button"
+									role="radio"
+									class="flex w-24 flex-col items-center gap-1 rounded-xl border-2 px-2 py-2 text-xs transition-colors"
+									:class="suivi[c.cle] === x ? visage(i, c.choix.length).fond : 'border-transparent hover:bg-gray-50'"
+									:aria-checked="suivi[c.cle] === x"
+									:title="suivi[c.cle] === x ? 'Cliquer à nouveau pour effacer' : x"
+									@click="suivi[c.cle] = suivi[c.cle] === x ? '' : x"
+								>
+									<i
+										class="fa-solid text-3xl"
+										:class="[visage(i, c.choix.length).icone, suivi[c.cle] === x || !suivi[c.cle] ? visage(i, c.choix.length).couleur : 'text-gray-200']"
+										aria-hidden="true"
+									></i>
+									<span class="text-center leading-tight text-gray-700">{{ x }}</span>
 								</button>
 							</div>
 						</template>

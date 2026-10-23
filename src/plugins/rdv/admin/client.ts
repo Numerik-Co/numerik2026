@@ -32,7 +32,26 @@ export interface ChampSuivi {
 	label: string;
 	groupe: 'compte-rendu' | 'avis';
 	type: 'choix' | 'choix-multiples' | 'texte';
+	affichage?: 'smileys';
 	choix: string[];
+}
+
+/**
+ * Visages (Font Awesome Free, CC BY 4.0) d'une échelle de satisfaction, de la
+ * meilleure réponse à la pire. Échelle de 5 : un visage par choix ; autre
+ * longueur : réparti sur l'échelle.
+ */
+const VISAGES = [
+	{ icone: 'fa-face-laugh-beam', couleur: 'text-green-400', fond: 'bg-green-50 border-green-200' },
+	{ icone: 'fa-face-smile', couleur: 'text-lime-400', fond: 'bg-lime-50 border-lime-200' },
+	{ icone: 'fa-face-meh', couleur: 'text-gray-400', fond: 'bg-gray-50 border-gray-200' },
+	{ icone: 'fa-face-frown', couleur: 'text-orange-300', fond: 'bg-orange-50 border-orange-200' },
+	{ icone: 'fa-face-sad-tear', couleur: 'text-red-300', fond: 'bg-red-50 border-red-200' },
+];
+
+export function visage(index: number, total: number) {
+	const pos = total <= 1 ? 0 : Math.round((index * (VISAGES.length - 1)) / (total - 1));
+	return VISAGES[pos];
 }
 
 export const rdvAdminApi = {

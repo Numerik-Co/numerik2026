@@ -15,6 +15,8 @@ export interface ChampSuivi {
 	groupe: 'compte-rendu' | 'avis';
 	type: 'choix' | 'choix-multiples' | 'texte';
 	aide?: string;
+	/** `smileys` : un choix unique montré en visages (de la meilleure à la pire réponse, ordre de la colonne Grist). */
+	affichage?: 'smileys';
 }
 
 export const SUIVI: ChampSuivi[] = [
@@ -24,7 +26,7 @@ export const SUIVI: ChampSuivi[] = [
 	{ cle: 'Niveau_autonomie', label: "Niveau d'autonomie", groupe: 'compte-rendu', type: 'choix' },
 	{ cle: 'Oriente_autre_structure', label: 'Orienté·e vers une autre structure', groupe: 'compte-rendu', type: 'choix' },
 	{ cle: 'Notes_accompagnement', label: "Notes d'accompagnement", groupe: 'compte-rendu', type: 'texte' },
-	{ cle: 'Evaluation_satisfaction', label: 'Satisfaction', groupe: 'avis', type: 'choix' },
+	{ cle: 'Evaluation_satisfaction', label: 'Satisfaction', groupe: 'avis', type: 'choix', affichage: 'smileys' },
 	{ cle: 'Suggestions_beneficiaire', label: 'Suggestions', groupe: 'avis', type: 'texte' },
 ];
 

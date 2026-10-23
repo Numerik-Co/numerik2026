@@ -202,7 +202,7 @@ ou d'un autre type, n'est simplement pas proposée ; choix lus dans Grist) :
 | `Niveau_autonomie` | Choice | Compte rendu de l'accompagnement |
 | `Oriente_autre_structure` | Choice | Compte rendu de l'accompagnement |
 | `Notes_accompagnement` | Text | Compte rendu de l'accompagnement |
-| `Evaluation_satisfaction` | Choice | Avis du bénéficiaire (recueilli par l'équipe) |
+| `Evaluation_satisfaction` | Choice | Avis du bénéficiaire (recueilli par l'équipe), en visages Font Awesome Free (de la meilleure réponse à la pire, ordre des choix Grist) |
 | `Suggestions_beneficiaire` | Text | Avis du bénéficiaire |
 
 Toute autre colonne est libre : le site ne l'écrit jamais. **Annuler un RDV** : passer `Statut_rdv` à « Annulé » dans
