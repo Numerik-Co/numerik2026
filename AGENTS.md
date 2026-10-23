@@ -244,7 +244,7 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
   plus le changement de mot de passe : `PasswordModule.vue` intégré, aussi
   modale du mot de passe provisoire) est rangé (`placement: 'user'`) avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
-  Actualités et Pages sont regroupées sous **Contenu ▾** (`menu: 'contenu'`,
+  Actualités, Pages et Activités sont regroupées sous **Contenus ▾** (`menu: 'contenu'`,
   `ADMIN_MENUS` / `barEntries()` dans `modules.ts`, sous-liens côte à côte ;
   un seul module visible du menu = bouton direct).
 
@@ -558,12 +558,33 @@ accepté à la lecture : `RDV_TYPES_RENOMMES`), champs vides = `encart:`.
   lieu et documents recalculés côté serveur).
 - `lib/ics.ts` — événement d'agenda partagé par la route `.ics` et le QR
   code (heure Europe/Paris convertie en UTC, durée `creneaux.duree`).
+- **Module « Rendez-vous »** (`admin/`, bureau + `animateur`, registre
+  `modules.ts` avec `plugin: 'rdv'` → masqué si le plugin est inactif,
+  `ADMIN_MODULES.filter(disponible)`) : `RdvModule.vue` (à venir / passés,
+  par jour, filtre statut, recherche) ; clic → `RdvEditeur.vue`, **second
+  panneau fixé à gauche du panneau des modules** (`sm:right-[36rem]`, dans le
+  DOM du panneau pour son piège de focus, Échap capturé sur `window`) :
+  bénéficiaire et son commentaire en lecture seule, créneau (créneaux libres
+  seulement + l'actuel) / démarche / statut, puis **compte rendu** :
+  colonnes facultatives de `RDV` listées dans `admin/suivi.ts` (`SUIVI` :
+  Lieu_reel, Materiel_utilise, Sous_thematique_demarche, Niveau_autonomie,
+  Oriente_autre_structure, Notes_accompagnement, Evaluation_satisfaction,
+  Suggestions_beneficiaire ; proposées si présentes avec le bon type, choix
+  lus dans Grist via `listColumns()`, ChoiceList écrites `['L', …]` ou
+  `null`). Créneau pris = tout RDV non « Annulé »
+  (`STATUTS_OCCUPANTS` de `lib/grist.ts`, page publique comme éditeur).
+  Serveur `admin/gestion.ts` (`listerRdv()`, `modifierRdv()` :
+  `creneauEstLibre(date, heure, sauf)`, lieu et thématiques recalculés),
+  routes `admin/api/` injectées par `plugin.ts` (`/api/admin/rdv`,
+  `/api/admin/rdv/[id]`, garde `animateur` dans `GUARDS`), écrit dans Grist
+  sans reconstruction, `logEvent('rdv.modification')`. `request()` de
+  `src/components/admin/client.ts` exporté pour les modules de plugin.
 
 Pistes de suite non traitées (à reprendre si redemandé) :
-1. Mécanisme de collecte de l'évaluation bénéficiaire.
+1. Collecte de l'évaluation par le bénéficiaire lui-même (aujourd'hui
+   saisie par l'équipe dans le compte rendu).
 2. Notification email/SMS de confirmation ou de rappel de RDV.
-3. Vue admin pour lister/annuler des RDV (aujourd'hui uniquement gérable
-   depuis Grist directement) — prochaine étape, dans `admin/` du plugin.
+3. ~~Vue admin~~ faite : module « Rendez-vous » (voir ci-dessus).
 4. Suppression de `Table1` (table Grist vide créée par défaut, sans impact).
 
 ## CI

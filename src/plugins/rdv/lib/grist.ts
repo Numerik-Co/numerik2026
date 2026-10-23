@@ -68,11 +68,11 @@ export const COLS = {
 		creeLe: 'Cree_le',
 		// Demarche_nom : ancien champ libre, remplacé par `demarche` (catalogue
 		// structuré) — colonne conservée dans Grist mais plus jamais écrite.
-		// Colonnes complétées ensuite par l'équipe directement dans
-		// Grist (jamais écrites par ce code) : Materiel_utilise,
-		// Sous_thematique_demarche, Niveau_autonomie, Oriente_autre_structure,
-		// Notes_accompagnement, Lieu_reel, Evaluation_satisfaction,
-		// Suggestions_beneficiaire.
+		// Compte rendu après le RDV (facultatives : voir `SUIVI` de
+		// `admin/suivi.ts`, écrites depuis le module « Rendez-vous ») :
+		// Lieu_reel, Materiel_utilise, Sous_thematique_demarche,
+		// Niveau_autonomie, Oriente_autre_structure, Notes_accompagnement,
+		// Evaluation_satisfaction, Suggestions_beneficiaire.
 	},
 	demarche: {
 		nom: 'Nom',
@@ -90,6 +90,9 @@ export const STATUT_RDV = {
 	honore: 'Honoré',
 	absent: 'Absent',
 } as const;
+
+/** Statuts qui occupent le créneau : tous sauf « Annulé » (seule l'annulation le libère). */
+export const STATUTS_OCCUPANTS: string[] = [STATUT_RDV.confirme, STATUT_RDV.honore, STATUT_RDV.absent];
 
 export { GristError };
 
@@ -180,15 +183,28 @@ export async function updateRecord(
 	});
 }
 
+/** Colonne d'une table : type Grist (`Text`, `Choice`, `ChoiceList`…) et choix éventuels, dans l'ordre défini dans Grist. */
+export interface GristColonne {
+	id: string;
+	type: string;
+	choices: string[];
+}
+
+export async function listColumns(table: string): Promise<GristColonne[]> {
+	const data = await gristFetch<{ columns: { id: string; fields: { type?: string; widgetOptions?: string } }[] }>(`/tables/${table}/columns`);
+	return data.columns.map((c) => {
+		let choices: string[] = [];
+		try {
+			const parsed = (JSON.parse(c.fields.widgetOptions || '{}') as { choices?: unknown }).choices;
+			if (Array.isArray(parsed)) choices = parsed.filter((x): x is string => typeof x === 'string');
+		} catch {
+			// widgetOptions illisible : pas de choix
+		}
+		return { id: c.id, type: c.fields.type ?? '', choices };
+	});
+}
+
 /** Choix d'une colonne Choice / ChoiceList, dans l'ordre défini dans Grist. */
 export async function listChoices(table: string, colonne: string): Promise<string[]> {
-	const data = await gristFetch<{ columns: { id: string; fields: { widgetOptions?: string } }[] }>(`/tables/${table}/columns`);
-	const options = data.columns.find((c) => c.id === colonne)?.fields.widgetOptions;
-	if (!options) return [];
-	try {
-		const choices = (JSON.parse(options) as { choices?: unknown }).choices;
-		return Array.isArray(choices) ? choices.filter((c): c is string => typeof c === 'string') : [];
-	} catch {
-		return [];
-	}
+	return (await listColumns(table)).find((c) => c.id === colonne)?.choices ?? [];
 }

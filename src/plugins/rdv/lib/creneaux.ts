@@ -4,7 +4,7 @@
  * fixe (`creneaux.duree` de `rdv.yaml`, 30 min par défaut) — ni l'équipe ni
  * le bénéficiaire ne peuvent choisir une autre durée.
  *
- * Les créneaux déjà pris (ligne `RDV` non annulée à la même Date+Heure)
+ * Les créneaux déjà pris (ligne `RDV` non annulée à la même Date+Heure : `STATUTS_OCCUPANTS`)
  * sont retournés avec `disponible: false` pour être grisés côté formulaire,
  * pas masqués.
  *
@@ -16,7 +16,7 @@
 
 import { rdvConfig } from './config';
 import { permanences } from './permanences';
-import { COLS, dateToEpochSeconds, epochSecondsToDate, listRecords, TABLES, STATUT_RDV } from './grist';
+import { COLS, dateToEpochSeconds, epochSecondsToDate, listRecords, TABLES, STATUTS_OCCUPANTS } from './grist';
 import type { Creneau } from './types';
 
 const FUSEAU = 'Europe/Paris';
@@ -116,7 +116,7 @@ export async function fetchCreneauxDisponibles(connecte: boolean, depuis = new D
 	const candidats = genererCandidats(depuis);
 	if (candidats.length === 0) return candidats;
 
-	const rdvsConfirmes = await listRecords(TABLES.rdv, { [COLS.rdv.statut]: [STATUT_RDV.confirme] });
+	const rdvsConfirmes = await listRecords(TABLES.rdv, { [COLS.rdv.statut]: STATUTS_OCCUPANTS });
 	const pris = new Set(
 		rdvsConfirmes.map((r) => {
 			const dateIso = epochSecondsToDate(Number(r.fields[COLS.rdv.date]));
@@ -143,14 +143,18 @@ export function estCreneauUrgence(dateIso: string, heure: string): boolean {
 	return session !== undefined && minutesToHeure(parseHeureAgenda(session.start)) === heure;
 }
 
-/** Un créneau précis (date+heure) est-il toujours libre ? Revérifié à l'écriture. */
-export async function creneauEstLibre(date: string, heure: string): Promise<boolean> {
+/**
+ * Un créneau précis (date+heure) est-il toujours libre ? Revérifié à
+ * l'écriture. `sauf` : RDV à ne pas compter (celui qu'on déplace, depuis
+ * l'espace bénévoles).
+ */
+export async function creneauEstLibre(date: string, heure: string, sauf?: number): Promise<boolean> {
 	const dateEpoch = dateToEpochSeconds(date);
 	if (dateEpoch === null) return false;
 	const rdvs = await listRecords(TABLES.rdv, {
 		[COLS.rdv.date]: [dateEpoch],
 		[COLS.rdv.heure]: [heure],
-		[COLS.rdv.statut]: [STATUT_RDV.confirme],
+		[COLS.rdv.statut]: STATUTS_OCCUPANTS,
 	});
-	return rdvs.length === 0;
+	return rdvs.every((r) => r.id === sauf);
 }

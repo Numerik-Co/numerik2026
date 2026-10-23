@@ -153,7 +153,7 @@ function message(s: SeanceCourante): string {
 				v-model="recherche"
 				type="text"
 				placeholder="Nom, prénom…"
-				class="mt-4 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:outline-none"
+				class="mt-4 w-full rounded-xl border border-gray-200 px-4 py-1.5 text-sm text-gray-900 focus:border-primary focus:outline-none"
 			/>
 			<p v-if="rechercheEnCours" class="mt-2 text-xs text-gray-400">Recherche…</p>
 			<ul v-else-if="candidats.length" class="mt-3 space-y-2">

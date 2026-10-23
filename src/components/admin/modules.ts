@@ -9,14 +9,17 @@
  * `admin` et `superadmin` voient tous les modules, sauf `exclusive` (réservé
  * aux seuls `groups`). Le contrôle réel est côté serveur. `menu` range le
  * bouton dans un menu déroulant de la barre (`ADMIN_MENUS`, sous-liens côte à
- * côte), seulement si au moins deux de ses modules sont visibles.
+ * côte), seulement si au moins deux de ses modules sont visibles. Module
+ * apporté par un plugin (`plugin`, composant dans `src/plugins/<id>/admin/`) :
+ * absent si le plugin est inactif sur le site en ligne.
  */
 import { defineAsyncComponent, type Component } from 'vue';
 import { hasAdminRights, type AuthGroup } from '../../lib/auth/groups';
+import { disponible, type PluginId } from '../../plugins';
 
 /** Menus déroulants de la barre : libellé et icône du bouton qui regroupe les modules. */
 export const ADMIN_MENUS = {
-	contenu: { label: 'Contenu', icon: 'fa-pen-to-square' },
+	contenu: { label: 'Contenus', icon: 'fa-pen-to-square' },
 } as const;
 export type AdminMenuId = keyof typeof ADMIN_MENUS;
 
@@ -37,6 +40,8 @@ export interface AdminModule {
 	replacedBy?: string;
 	/** Props passées au composant (ex. module « Comptes » ouvert sur son propre compte). */
 	props?: Record<string, unknown>;
+	/** Apporté par ce plugin : masqué s'il est inactif. */
+	plugin?: PluginId;
 }
 
 export const ADMIN_MODULES: AdminModule[] = [
@@ -69,7 +74,16 @@ export const ADMIN_MODULES: AdminModule[] = [
 		label: 'Activités',
 		icon: 'fa-person-chalkboard',
 		groups: ['redacteur'],
+		menu: 'contenu',
 		component: defineAsyncComponent(() => import('./modules/ActivitiesModule.vue')),
+	},
+	{
+		id: 'rendez-vous',
+		label: 'Rendez-vous',
+		icon: 'fa-calendar-check',
+		groups: ['animateur'],
+		plugin: 'rdv',
+		component: defineAsyncComponent(() => import('../../plugins/rdv/admin/RdvModule.vue')),
 	},
 	{
 		id: 'association',
@@ -113,7 +127,7 @@ export const ADMIN_MODULES: AdminModule[] = [
 ];
 
 export function modulesFor(groups: AuthGroup[]): AdminModule[] {
-	const visible = ADMIN_MODULES.filter(
+	const visible = ADMIN_MODULES.filter(disponible).filter(
 		(m) =>
 			m.groups.length === 0 ||
 			(hasAdminRights(groups) && !m.exclusive) ||

@@ -36,6 +36,9 @@ export default {
 		route('/api/rdv/ics', 'api/ics.ts'),
 		route('/api/rdv/listes', 'api/listes.ts'),
 		route('/api/rdv/prendre', 'api/prendre.ts'),
+		// Module « Rendez-vous » de l'espace bénévoles (garde : src/middleware.ts).
+		route('/api/admin/rdv', 'admin/api/index.ts'),
+		route('/api/admin/rdv/[id]', 'admin/api/[id].ts'),
 	],
 	env: {
 		// Grist — document des RDV (GRIST_BASE_URL / GRIST_API_KEY partagés avec l'adhésion).

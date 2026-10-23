@@ -13,7 +13,7 @@ export async function fetchDemarches(): Promise<Demarche[]> {
 	const records = await listRecords(TABLES.demarches);
 	return records.map((r) => ({
 		id: r.id,
-		nom: String(r.fields[c.nom] ?? ''),
+		nom: String(r.fields[c.nom] ?? '').trim(),
 		thematique: String(r.fields[c.thematique] ?? ''),
 		icone: String(r.fields[c.icone] ?? ''),
 		description: String(r.fields[c.description] ?? ''),

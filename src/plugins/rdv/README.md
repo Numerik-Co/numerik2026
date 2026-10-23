@@ -187,12 +187,26 @@ ajoutée apparaît au chargement suivant de la page) :
 | `Demarche` | Reference List → Demarches | démarche choisie |
 | `Thematiques` | Choice List | déduite de la démarche (mêmes choix que `Demarches.Thematique`) |
 | `Commentaire_beneficiaire` | Text | |
-| `Statut_rdv` | Choice | `Confirmé`, `Annulé`, `Honoré`, `Absent` — un créneau est pris tant qu'un RDV « Confirmé » l'occupe |
+| `Statut_rdv` | Choice | `Confirmé`, `Annulé`, `Honoré`, `Absent` — un créneau est pris par tout RDV qui n'est pas « Annulé » |
 | `Cree_le` | Date | |
 
-Toute autre colonne (suivi après le RDV, notes…) est libre : le site ne
-l'écrit jamais. **Annuler un RDV** : passer `Statut_rdv` à « Annulé » dans
-Grist libère le créneau (pas encore d'interface côté site).
+**Compte rendu après le RDV** — colonnes facultatives de `RDV`, remplies
+depuis le module « Rendez-vous » de l'espace bénévoles (une colonne absente,
+ou d'un autre type, n'est simplement pas proposée ; choix lus dans Grist) :
+
+| Colonne | Type | Rubrique de l'éditeur |
+| :--- | :--- | :--- |
+| `Lieu_reel` | Choice | Compte rendu de l'accompagnement |
+| `Materiel_utilise` | Choice List | Compte rendu de l'accompagnement |
+| `Sous_thematique_demarche` | Choice List | Compte rendu de l'accompagnement |
+| `Niveau_autonomie` | Choice | Compte rendu de l'accompagnement |
+| `Oriente_autre_structure` | Choice | Compte rendu de l'accompagnement |
+| `Notes_accompagnement` | Text | Compte rendu de l'accompagnement |
+| `Evaluation_satisfaction` | Choice | Avis du bénéficiaire (recueilli par l'équipe) |
+| `Suggestions_beneficiaire` | Text | Avis du bénéficiaire |
+
+Toute autre colonne est libre : le site ne l'écrit jamais. **Annuler un RDV** : passer `Statut_rdv` à « Annulé » dans
+Grist, ou depuis le module « Rendez-vous » de l'espace bénévoles, libère le créneau.
 
 ## Où vont les données
 
@@ -214,7 +228,7 @@ Grist libère le créneau (pas encore d'interface côté site).
 | `formulaire/` | Îlot Vue `RdvForm.vue` (`client:load`, dans `<FormGate toggle={rdvToggle()}>`, réglages reçus en props : `rdvFormProps()`) et `client.ts` (appels aux routes) |
 | `sections/` | `RdvCtaSection.astro` (encart) et `definitions.ts` (module d'accueil et bloc `rdv`, ancien nom `rdv-conseiller` accepté à la lecture) |
 | `lib/` | Code serveur (ci-dessous) |
-| `admin/` | (à venir) module « Rendez-vous » de l'espace bénévoles |
+| `admin/` | Module « Rendez-vous » de l'espace bénévoles : `RdvModule.vue` (liste), `RdvEditeur.vue` (second panneau à gauche), `client.ts`, `gestion.ts` (lecture / modification dans Grist), `suivi.ts` (colonnes du compte rendu), routes `admin/api/` (`/api/admin/rdv`, `/api/admin/rdv/[id]`) |
 
 | `lib/` | Rôle |
 | :--- | :--- |
@@ -239,6 +253,8 @@ Grist libère le créneau (pas encore d'interface côté site).
 | `GET /api/rdv/beneficiaires?q=` | « prénom nom » (un ordre ou l'autre) : fiches correspondant **exactement**, indice masqué uniquement |
 | `POST /api/rdv/prendre` | Enregistre le RDV : fiche revérifiée (un identifiant seul ne suffit pas), créneau d'urgence refusé sans session (403), profil limité à `profil:` et aux choix Grist |
 | `GET /api/rdv/ics?date=&heure=&demarche=` | Fichier `.ics` ; lieu et pièces recalculés côté serveur |
+| `GET /api/admin/rdv` | Module « Rendez-vous » (bureau, animateur·rice·s) : RDV + fiche du bénéficiaire, démarches, statuts, créneaux |
+| `PUT /api/admin/rdv/[id]` | Modifie un RDV : créneau (seuls les libres sont proposés, revérifié libre hors ce RDV, lieu recalculé), démarche (thématiques recalculées), statut, compte rendu (choix contrôlés contre Grist) ; le commentaire du bénéficiaire est affiché, pas modifié ; journalisé |
 
 ### Variables d'environnement
 
@@ -253,8 +269,6 @@ En plus de `GRIST_BASE_URL` et `GRIST_API_KEY` (voir
 
 ## Pistes d'évolution
 
-1. Module « Rendez-vous » de l'espace bénévoles : lister / annuler les RDV.
-2. Recueillir l'évaluation du bénéficiaire.
-3. Envoyer une confirmation ou un rappel par e-mail / SMS (`ics.ts` est
+1. Envoyer une confirmation ou un rappel par e-mail / SMS (`ics.ts` est
    réutilisable pour joindre l'événement).
-4. Permettre à une personne déjà venue de mettre à jour ses coordonnées.
+2. Permettre à une personne déjà venue de mettre à jour ses coordonnées.

@@ -218,10 +218,9 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
   (ex. « Production v0.2.0 »), visible du bureau seulement.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
-- **Contenu ▾** regroupe **Actualités** et **Pages** : un clic affiche les
-  deux, côte à côte, juste en dessous (fermé par un clic ailleurs ou
-  **Échap**). Sans le droit d'en voir les deux, le module visible a son
-  propre bouton.
+- **Contenus ▾** regroupe **Actualités**, **Pages** et **Activités** : un
+  clic les affiche côte à côte, juste en dessous (fermé par un clic ailleurs
+  ou **Échap**). Avec le droit d'en voir un seul, il a son propre bouton.
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
   la partie assombrie de la page. Dans un formulaire (actualité, page ou
   activité à ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
@@ -241,6 +240,7 @@ Les modules visibles dépendent de votre groupe :
 | Actualités | ✅ | ✅ | ✅ | — |
 | Pages | ✅ | ✅ | ✅ | — |
 | Activités | ✅ | ✅ | ✅ | — |
+| Rendez-vous (si le plugin `rdv` est actif) | ✅ | ✅ | — | ✅ |
 | Association | ✅ | ✅ | — | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
@@ -257,6 +257,21 @@ mots de passe, actualités, pages, activités et catégories ajoutées /
 modifiées / supprimées, changements d'ordre, informations de l'association, résultat de
 chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
+
+**Rendez-vous** (bureau et animateur·rice·s, si la prise de RDV est activée) :
+les rendez-vous pris en ligne, **À venir** ou **Passés**, par jour, avec un
+filtre de statut et une recherche (nom, démarche). Un clic sur un RDV ouvre
+un **second panneau à gauche** : coordonnées et commentaire du bénéficiaire
+(lecture seule, la fiche se modifie dans Grist) et le rendez-vous — jour et
+horaire (seuls les créneaux libres de la période de réservation sont
+proposés, urgences comprises), démarche, **statut** (Confirmé, Honoré, Absent,
+Annulé : seul « Annulé » libère le créneau), puis, après le rendez-vous, le
+**compte rendu de l'accompagnement** (lieu réel, matériel utilisé,
+sous-thématique, niveau d'autonomie, orientation vers une autre structure,
+notes) et l'**avis du bénéficiaire** (satisfaction, suggestions) — rubriques
+reprises des colonnes du document Grist. **Enregistrer** écrit directement dans Grist, sans reconstruire
+le site ; un créneau déjà pris est refusé. Échap ou la croix ferme l'éditeur.
+Chaque modification est notée dans le journal.
 
 **Plugins** (super admin seulement) : volets du site que l'association active
 ou non (aujourd'hui : prise de rendez-vous en ligne). La liste montre chaque
