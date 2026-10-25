@@ -40,6 +40,7 @@ const ACTIONS: Record<string, { label: string; icon: string }> = {
 	'charte.modification': { label: 'Charte graphique modifiée', icon: 'fa-palette' },
 	'plugin.modification': { label: 'Plugin modifié', icon: 'fa-puzzle-piece' },
 	'rdv.modification': { label: 'Rendez-vous modifié', icon: 'fa-calendar-check' },
+	'rdv.suppression': { label: 'Rendez-vous supprimé', icon: 'fa-calendar-xmark' },
 	// Anciens noms (avant le 2026-10-08), pour les entrées déjà écrites.
 	'menu.ajout': { label: 'Menu déroulant ajouté', icon: 'fa-bars' },
 	'menu.modification': { label: 'Menu déroulant modifié', icon: 'fa-bars' },

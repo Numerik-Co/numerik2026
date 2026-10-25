@@ -1,5 +1,5 @@
 /** Appels du module « Rendez-vous » (routes `/api/admin/rdv*`, `api/` de ce dossier). */
-import { request } from '../../../components/admin/client';
+import { ApiError, request } from '../../../components/admin/client';
 import type { Creneau, Demarche } from '../lib/types';
 
 /** Cf. `RdvAdmin` (`gestion.ts`). */
@@ -58,7 +58,44 @@ export const rdvAdminApi = {
 	list: () =>
 		request<{ rdvs: RdvItem[]; demarches: Demarche[]; statuts: string[]; suivi: ChampSuivi[]; creneaux: Creneau[] }>('GET', '/api/admin/rdv'),
 	update: (id: number, m: RdvModification) => request<{ ok: true }>('PUT', `/api/admin/rdv/${id}`, m),
+	remove: (id: number, motif: string, precision: string) => request<{ ok: true }>('DELETE', `/api/admin/rdv/${id}`, { motif, precision }),
 };
+
+/** Télécharge le PDF de la semaine de `semaine` (lundi), généré par le serveur (Gotenberg). */
+export async function telechargerPdfSemaine(semaine: string): Promise<void> {
+	const res = await fetch(`/api/admin/rdv/pdf?semaine=${semaine}`);
+	if (!res.ok) {
+		const data = await res.json().catch(() => null);
+		throw new ApiError((data && data.error) || `Erreur ${res.status}`, res.status);
+	}
+	const url = URL.createObjectURL(await res.blob());
+	const lien = Object.assign(document.createElement('a'), { href: url, download: `rendez-vous-semaine-${semaine}.pdf` });
+	document.body.append(lien);
+	lien.click();
+	lien.remove();
+	setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** yyyy-mm-dd + n jours (calcul à midi UTC : pas de glissement de jour). */
+export function plusJours(iso: string, n: number): string {
+	const d = new Date(`${iso}T12:00:00Z`);
+	d.setUTCDate(d.getUTCDate() + n);
+	return d.toISOString().slice(0, 10);
+}
+
+/** Lundi de la semaine d'une date yyyy-mm-dd. */
+export function lundiDe(iso: string): string {
+	return plusJours(iso, -((new Date(`${iso}T12:00:00Z`).getUTCDay() + 6) % 7));
+}
+
+/** « 2026-10-26 » → « Semaine du 26 octobre 2026 ». */
+export function libelleSemaine(lundi: string): string {
+	const d = new Date(`${lundi}T12:00:00Z`);
+	return `Semaine du ${new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(d)}`;
+}
+
+/** Cf. `MOTIFS_SUPPRESSION` (`gestion.ts`). */
+export const MOTIFS_SUPPRESSION = ['Doublon (pris deux fois)', 'Erreur de saisie', 'Rendez-vous de test', 'Autre'];
 
 /** Couleurs du badge de statut (valeurs de la colonne Grist `Statut_rdv`). */
 export function classeStatut(statut: string): string {

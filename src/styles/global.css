@@ -122,3 +122,22 @@ html.has-admin-bar {
 html.has-admin-bar body {
 	padding-top: var(--admin-bar-h);
 }
+
+/* Ascenseur fin (panneaux de l'espace bénévoles) : même largeur sur tous les
+   écrans ; ::-webkit-scrollbar pour les navigateurs sans scrollbar-width. */
+@utility scrollbar-fin {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-gray-300) transparent;
+
+	&::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	&::-webkit-scrollbar-thumb {
+		background: var(--color-gray-300);
+		border-radius: 9999px;
+	}
+}

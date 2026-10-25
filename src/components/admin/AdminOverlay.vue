@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
 					<i class="fa-solid fa-xmark" aria-hidden="true"></i>
 				</button>
 			</header>
-			<div class="flex-1 overflow-y-auto px-5 py-5">
+			<div class="scrollbar-fin flex-1 overflow-y-auto px-5 py-5">
 				<slot />
 			</div>
 		</div>

@@ -73,6 +73,22 @@ function minutesToHeure(min: number): string {
 	return `${h}:${m}`;
 }
 
+/**
+ * Horaires de la permanence d'une date (`"09:00"`…, urgence = premier si
+ * `creneaux.urgence`), lieu compris ; `null` sans permanence ce jour-là.
+ */
+export function horairesDuJour(dateIso: string): { lieu: string; horaires: { heure: string; urgence: boolean }[] } | null {
+	const session = permanences.find((s) => s.day === jourSemaineLabel(dateIso));
+	if (!session) return null;
+	const debut = parseHeureAgenda(session.start);
+	const fin = parseHeureAgenda(session.end);
+	const horaires: { heure: string; urgence: boolean }[] = [];
+	for (let t = debut; t + DUREE_MIN <= fin; t += DUREE_MIN) {
+		horaires.push({ heure: minutesToHeure(t), urgence: rdvConfig.creneaux.urgence && t === debut });
+	}
+	return { lieu: session.location ?? '', horaires };
+}
+
 /** Créneaux candidats (sans distinction disponible/pris) sur la fenêtre de réservation. */
 function genererCandidats(depuis: Date): Creneau[] {
 	const aujourdhui = dateDuJourIso(depuis);

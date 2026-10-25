@@ -27,6 +27,11 @@ function gotenbergAuthHeaders(): Record<string, string> {
 	return { Authorization: `Basic ${creds}` };
 }
 
+/** Instance Gotenberg configurée (bulletin d'adhésion, PDF du module « Rendez-vous »). */
+export function isGotenbergEnabled(): boolean {
+	return Boolean(GOTENBERG_URL);
+}
+
 /** Durée de validité du lien de bulletin (le règlement se fait en présentiel, 24 h suffisent). */
 const TTL_SECONDS = 60 * 60 * 24;
 

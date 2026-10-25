@@ -183,6 +183,13 @@ export async function updateRecord(
 	});
 }
 
+export async function deleteRecord(table: string, id: number): Promise<void> {
+	await gristFetch(`/tables/${table}/data/delete`, {
+		method: 'POST',
+		body: JSON.stringify([id]),
+	});
+}
+
 /** Colonne d'une table : type Grist (`Text`, `Choice`, `ChoiceList`…) et choix éventuels, dans l'ordre défini dans Grist. */
 export interface GristColonne {
 	id: string;

@@ -228,7 +228,7 @@ Grist, ou depuis le module « Rendez-vous » de l'espace bénévoles, libère le
 | `formulaire/` | Îlot Vue `RdvForm.vue` (`client:load`, dans `<FormGate toggle={rdvToggle()}>`, réglages reçus en props : `rdvFormProps()`) et `client.ts` (appels aux routes) |
 | `sections/` | `RdvCtaSection.astro` (encart) et `definitions.ts` (module d'accueil et bloc `rdv`, ancien nom `rdv-conseiller` accepté à la lecture) |
 | `lib/` | Code serveur (ci-dessous) |
-| `admin/` | Module « Rendez-vous » de l'espace bénévoles : `RdvModule.vue` (liste), `RdvEditeur.vue` (second panneau à gauche), `client.ts`, `gestion.ts` (lecture / modification dans Grist), `suivi.ts` (colonnes du compte rendu), routes `admin/api/` (`/api/admin/rdv`, `/api/admin/rdv/[id]`) |
+| `admin/` | Module « Rendez-vous » de l'espace bénévoles : `RdvModule.vue` (liste, une semaine à la fois, chevrons ‹ ›), `RdvEditeur.vue` (second panneau à gauche), `client.ts`, `gestion.ts` (lecture / modification / suppression dans Grist), `semaine-pdf.ts` (PDF d'une semaine), `suivi.ts` (colonnes du compte rendu), routes `admin/api/` (`/api/admin/rdv`, `/api/admin/rdv/[id]`, `/api/admin/rdv/pdf`) |
 
 | `lib/` | Rôle |
 | :--- | :--- |
@@ -255,6 +255,8 @@ Grist, ou depuis le module « Rendez-vous » de l'espace bénévoles, libère le
 | `GET /api/rdv/ics?date=&heure=&demarche=` | Fichier `.ics` ; lieu et pièces recalculés côté serveur |
 | `GET /api/admin/rdv` | Module « Rendez-vous » (bureau, animateur·rice·s) : RDV + fiche du bénéficiaire, démarches, statuts, créneaux |
 | `PUT /api/admin/rdv/[id]` | Modifie un RDV : créneau (seuls les libres sont proposés, revérifié libre hors ce RDV, lieu recalculé), démarche (thématiques recalculées), statut, compte rendu (choix contrôlés contre Grist) ; le commentaire du bénéficiaire est affiché, pas modifié ; journalisé |
+| `GET /api/admin/rdv/pdf?semaine=<yyyy-mm-dd>` | PDF de la semaine (A4 paysage, lundi → vendredi ou dernier jour de permanence) : logo de l'association, bande de couleurs de la barre de navigation (`colors.stripe`), une colonne par jour de permanence, créneaux libres / occupés (démarche en gras et en bleu, usager, téléphone au format 06.12.34.56.78 sinon e-mail, commune, message ; statut s'il n'est pas « Confirmé », pour une semaine terminée seulement), RDV annulés exclus ; HTML de `admin/semaine-pdf.ts` converti par Gotenberg (`GOTENBERG_URL`, 503 si absent) |
+| `DELETE /api/admin/rdv/[id]` | Supprime la ligne `RDV` (doublon, erreur, test ; la fiche du bénéficiaire reste) : motif obligatoire (`MOTIFS_SUPPRESSION` de `gestion.ts`, « Autre » + précision), noté au journal avec le RDV supprimé |
 
 ### Variables d'environnement
 
