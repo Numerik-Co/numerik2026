@@ -5,13 +5,15 @@
 #   ./update.sh v1.2.0     version précise (aussi pour revenir en arrière)
 #
 # Options : --docker / --node (mode, détecté sinon), --no-pull (Docker : image
-# déjà présente localement, tests), --archive <fichier.tar.gz> (Node : archive
-# locale au lieu du téléchargement, tests).
+# déjà présente localement, tests ; pas de nettoyage des images), --archive
+# <fichier.tar.gz> (Node : archive locale au lieu du téléchargement, tests).
 #
 # Le contenu de l'association (src/content/, data/, .env) n'est jamais touché.
 # Principe : la nouvelle version est construite À CÔTÉ pendant que l'ancienne
 # tourne ; en cas d'échec, rien ne change. Puis bascule (quelques secondes),
 # vérification que le site répond, et retour à la version précédente sinon.
+# Docker : avant le téléchargement, les images du modèle autres que la version
+# en ligne (retour arrière) et la version visée sont supprimées.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -69,9 +71,33 @@ if [ "$cible" = "$actuelle" ] && [ "$(docker compose ps -q web 2>/dev/null)" != 
   exit 0
 fi
 
+# Anciennes versions du modèle : une image par version, jamais réutilisée
+# (on ne revient en arrière que sur la version en ligne, gardée). Sans ce
+# ménage, le disque finit plein (« no space left on device » au téléchargement).
+nettoyer_images() {
+  local tag
+  docker image ls "$IMAGE" --format '{{.Tag}}' | while read -r tag; do
+    case "$tag" in "$actuelle" | "$cible" | "<none>" | "") continue ;; esac
+    docker image rm "$IMAGE:$tag" >/dev/null 2>&1 && echo "  image supprimée : $IMAGE:$tag" || true
+  done
+  # Couches orphelines (versions remplacées sous la même étiquette).
+  docker image prune -f >/dev/null 2>&1 || true
+}
+
 if [ "$pull" = 1 ]; then
+  etape "Nettoyage des anciennes images (gardées : $actuelle, $cible)"
+  nettoyer_images
   etape "Téléchargement de l'image $IMAGE:$cible"
-  docker pull "$IMAGE:$cible" || echec "image introuvable : $IMAGE:$cible (version publiée ? paquet public ?)."
+  journal_pull=$(mktemp)
+  if ! docker pull "$IMAGE:$cible" 2>&1 | tee "$journal_pull"; then
+    if grep -q "no space left" "$journal_pull"; then
+      rm -f "$journal_pull"
+      echec "disque plein : libérer de la place (df -h /, docker system df, docker builder prune -f) puis relancer. Le site reste en version $actuelle."
+    fi
+    rm -f "$journal_pull"
+    echec "image introuvable : $IMAGE:$cible (version publiée ? paquet public ?)."
+  fi
+  rm -f "$journal_pull"
 fi
 docker image inspect "$IMAGE:$cible" >/dev/null 2>&1 \
   || echec "image absente localement : $IMAGE:$cible (relancer sans --no-pull)."

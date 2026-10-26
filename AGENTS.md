@@ -14,7 +14,10 @@ dans `.env`, construction à côté par `docker compose run` dans le volume
 `scripts/update.mjs`, sauvegarde `.update/`, code du modèle remplacé hors
 `src/content/`, `data/`, `.env`). `start.mjs` réutilise une version de
 `.releases/` déjà construite avec la même empreinte (`findRelease`) ;
-`pruneReleases` ne supprime jamais la version active.
+`pruneReleases` ne supprime jamais la version active. Docker : avant le
+`docker pull`, `nettoyer_images` d'`update.sh` supprime les images du modèle
+autres que la version en ligne et la version visée (+ `image prune`), sauf
+`--no-pull` ; disque plein au pull = message dédié.
 Production sans Docker : `npm start`
 (`node --env-file-if-exists=.env scripts/start.mjs` : construit le site si
 l'empreinte version + `SITE_URL` + `src/content/` diffère de
