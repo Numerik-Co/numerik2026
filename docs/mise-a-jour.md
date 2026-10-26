@@ -132,7 +132,18 @@ Le principe est le même dans les deux modes :
   (`docker compose run`), dans le volume `./.releases` partagé avec le
   conteneur en ligne ;
 - bascule : `docker compose up -d` (nouveau conteneur), puis le site doit
-  répondre en 3 minutes, sinon `NUMERIK_VERSION` reprend son ancienne valeur.
+  répondre en 3 minutes, sinon `NUMERIK_VERSION` reprend son ancienne valeur ;
+- **ménage des images** : avant le téléchargement, les images
+  `ghcr.io/numerik-co/numerik2026` autres que la version en ligne (gardée
+  pour le retour arrière) et la version visée sont supprimées, ainsi que les
+  couches orphelines (`docker image prune`). Une image pèse près de 1 Go :
+  sans ce ménage, le disque finit plein (`no space left on device` au
+  téléchargement, cas rencontré en 0.5.1). Disque plein malgré tout :
+  `update.sh` le dit, le site reste sur sa version ; libérer de la place
+  (`df -h /`, `docker system df`, `docker builder prune -f`) puis relancer.
+  Pas de ménage avec `--no-pull` (images gérées à la main) ;
+- `update.sh` lui-même vient du dépôt (`git pull` dans le dossier du site),
+  pas de l'image : le mettre à jour par `git pull` avant de s'en servir.
 
 Testé par la CI à chaque envoi (tâche « Mise à jour Docker ») : 0.0.1 →
 0.0.2 en sondant le site, puis une 0.0.3 cassée qui doit être refusée.
