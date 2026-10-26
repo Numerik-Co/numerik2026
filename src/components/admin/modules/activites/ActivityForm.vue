@@ -8,7 +8,8 @@
  * Le serveur valide tout (src/lib/activity-writer.ts) et reconstruit le site.
  */
 import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue';
-import { TYPES_ACTIVITE_INSCRIPTION } from '../../../../lib/adhesion/choices';
+import { pluginActif } from '../../../../plugins';
+import { TYPES_ACTIVITE_INSCRIPTION } from '../../../../plugins/adhesion/lib/choices';
 import {
 	ApiError,
 	activitiesApi,
@@ -244,8 +245,8 @@ async function submit(event: Event) {
 					</div>
 				</fieldset>
 
-				<!-- Inscription en ligne -->
-				<fieldset class="space-y-3 rounded-xl bg-gray-100 p-4">
+				<!-- Inscription en ligne (plugin adhésion ; inactif : réglages gardés tels quels) -->
+				<fieldset v-if="pluginActif('adhesion')" class="space-y-3 rounded-xl bg-gray-100 p-4">
 					<legend class="sr-only">Inscription en ligne</legend>
 					<label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
 						<input v-model="form.inscription" type="checkbox" class="rounded border-gray-300" />

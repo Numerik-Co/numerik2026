@@ -9,7 +9,7 @@
  *   `beneficiaireCorrespond()` à l'envoi.
  */
 
-import { normalize } from '../../../lib/adhesion/http';
+import { normalize } from '../../../lib/http';
 import { normaliserTelephone } from './validation';
 import { COLS, createRecord, dateToEpochSeconds, listRecords, TABLES, updateRecord } from './grist';
 import type { BeneficiaireInfos, BeneficiaireRecherche } from './types';

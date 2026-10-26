@@ -5,7 +5,7 @@
  * src/lib/activity-writer.ts) ; l'adresse, l'ordre et la photo restent dans
  * le formulaire. Le serveur revalide tout à l'enregistrement.
  */
-import { TYPES_ACTIVITE_INSCRIPTION } from '../../../../lib/adhesion/choices';
+import { TYPES_ACTIVITE_INSCRIPTION } from '../../../../plugins/adhesion/lib/choices';
 import { buildMarkdownFile, keyWarnings, parseMarkdownFile, textField } from '../../markdown-file';
 
 export interface ActivityFileFields {

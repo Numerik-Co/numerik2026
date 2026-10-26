@@ -5,7 +5,7 @@ import { estZoneConnue } from '../lib/zones';
 import { estCreneauUrgence } from '../lib/creneaux';
 import { GristError } from '../lib/grist';
 import { prendreRendezVous } from '../lib/reservation';
-import { isNonEmptyString, json } from '../../../lib/adhesion/http';
+import { isNonEmptyString, json } from '../../../lib/http';
 import type { PriseRdvPayload } from '../lib/types';
 
 export const prerender = false;

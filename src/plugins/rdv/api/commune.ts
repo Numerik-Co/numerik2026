@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { json } from '../../../lib/adhesion/http';
+import { json } from '../../../lib/http';
 import type { CommuneSuggestion } from '../lib/types';
 
 export const prerender = false;

@@ -3,7 +3,7 @@
  * façon (voir `../api/prendre.ts`) — ceci ne sert qu'à guider la
  * saisie.
  */
-import type { Errors } from '../../../lib/adhesion/validation';
+import type { Errors } from '../../../lib/http';
 import type { PriseRdvPayload } from './types';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;

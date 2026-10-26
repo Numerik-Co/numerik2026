@@ -29,8 +29,11 @@ import ActivityForm from './activites/ActivityForm.vue';
 import CategoryForm from './activites/CategoryForm.vue';
 import DragHandle from './pages/DragHandle.vue';
 import OrderArrows from './pages/OrderArrows.vue';
+import { pluginActif } from '../../../plugins';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
+/** Pastille « sans inscription » : seulement si l'inscription en ligne existe (plugin adhésion). */
+const adhesionActive = pluginActif('adhesion');
 
 type View =
 	| { name: 'list' }
@@ -366,7 +369,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 							<span v-if="!a.isPublish" :class="[badge, 'shrink-0 bg-amber-50 text-amber-800']">brouillon</span>
 							<span v-if="isPendingHref(a.href)" :class="[badge, 'shrink-0 bg-amber-100 text-amber-800']" title="Modification enregistrée, pas encore publiée">À publier</span>
 							<span v-if="a.level" :class="[greyBadge, 'shrink-0 whitespace-nowrap']">{{ a.level }}</span>
-							<span v-if="!a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
+							<span v-if="adhesionActive && !a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
 							<span class="ml-auto flex shrink-0 items-center gap-1">
 								<OrderArrows
 									:label="a.title"

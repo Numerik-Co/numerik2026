@@ -20,7 +20,7 @@ Deux mécanismes coexistent :
 | `src/pages/activites/[category]/[slug].astro` | `/activites/<categorie>/<slug>` | applicative | Détail d'une activité (`src/content/activites/`) |
 | `src/pages/actualites.astro` | `/actualites` | applicative | Liste des actualités + filtres + RSS |
 | `src/pages/actualites/[slug].astro` | `/actualites/<slug>` | applicative | Détail d'un article (`src/content/news/`) |
-| `src/pages/adherer.astro` | `/adherer` | applicative | Adhésion à l'association |
+| `src/plugins/adhesion/pages/adherer.astro` | `/adherer` | applicative | Adhésion à l'association |
 | `src/pages/contact.astro` | `/contact` | applicative | Coordonnées + formulaire de contact |
 | `src/pages/[...slug].astro` | (voir ci-dessous) | applicative | **Route attrape-tout** qui rend les pages de contenu |
 | `src/pages/404.astro` | (toute URL inconnue) | applicative | Page « en construction » |

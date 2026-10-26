@@ -75,24 +75,16 @@ export default defineConfig({
   // Usage : `import { GRIST_API_KEY } from 'astro:env/server'`. Doc : docs/api.md.
   env: {
     schema: {
-      // Grist — adhésion, inscriptions, planning, présence
+      // Grist — instance et clé partagées par les plugins adhésion et RDV
       GRIST_BASE_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
       GRIST_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
-      GRIST_DOC_ID: envField.string({ context: 'server', access: 'secret', optional: true }),
-      GRIST_TABLE_MEMBRES: envField.string({ context: 'server', access: 'secret', default: 'Membres' }),
-      GRIST_TABLE_ADHESIONS: envField.string({ context: 'server', access: 'secret', default: 'Adhesions' }),
-      GRIST_TABLE_INSCRIPTIONS: envField.string({ context: 'server', access: 'secret', default: 'Inscription' }),
-      GRIST_TABLE_COTISATIONS: envField.string({ context: 'server', access: 'secret', default: 'Cotisation' }),
-      GRIST_TABLE_ACTIVITES: envField.string({ context: 'server', access: 'secret', default: 'Activite' }),
-      GRIST_TABLE_SAISONS: envField.string({ context: 'server', access: 'secret', default: 'Saisons' }),
-      GRIST_TABLE_PRESENCE: envField.string({ context: 'server', access: 'secret', default: 'Presence' }),
-      // Variables propres à chaque plugin (src/plugins/<id>/plugin.ts).
+      // Variables propres à chaque plugin (src/plugins/<id>/plugin.ts) :
+      // document et tables de l'adhésion, BULLETIN_SECRET, document des RDV…
       ...Object.assign({}, ...PLUGIN_MANIFESTS.map((p) => p.env)),
-      // Bulletin d'adhésion PDF (docs/bulletin-pdf.md)
+      // Conversion HTML → PDF (src/lib/gotenberg.ts) : bulletin d'adhésion, semaine de RDV
       GOTENBERG_URL: envField.string({ context: 'server', access: 'secret', optional: true }),
       GOTENBERG_USERNAME: envField.string({ context: 'server', access: 'secret', optional: true }),
       GOTENBERG_PASSWORD: envField.string({ context: 'server', access: 'secret', optional: true }),
-      BULLETIN_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Espace bénévoles (docs/auth.md)
       AUTH_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
       // Publication depuis l'espace bénévoles (docs/publication.md)

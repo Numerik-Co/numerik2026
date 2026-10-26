@@ -1,6 +1,7 @@
 /**
  * Plugins du modèle : volets du site que chaque association active ou non
- * (`plugins:` de `src/content/reglages.yaml`, tous inactifs par défaut).
+ * (`plugins:` de `src/content/reglages.yaml` ; inactifs par défaut, sauf
+ * `actifParDefaut`).
  *
  * Module pur (seulement des modules purs importés) : chargé par la config Astro, par
  * `src/config/site.ts` et dans le navigateur. Nouveau plugin = une entrée
@@ -13,6 +14,11 @@ import { ADRESSE_DEFAUT as RDV_ADRESSE_DEFAUT } from './rdv/lib/adresse';
 export interface PluginInfo {
 	label: string;
 	description: string;
+	/**
+	 * Actif sans rien écrire dans `reglages.yaml` (volet que la plupart des
+	 * associations utilisent) ; `plugins: { <id>: false }` le désactive.
+	 */
+	actifParDefaut?: boolean;
 	/** Icône Font Awesome (module « Plugins » de l'espace bénévoles). */
 	icon: string;
 	/** Documentation du plugin (chemin dans le projet). */
@@ -34,6 +40,18 @@ export interface PluginInfo {
 }
 
 export const PLUGINS = {
+	adhesion: {
+		label: 'Adhésion et activités',
+		description:
+			'Adhésion en ligne et bulletin PDF, inscription aux activités, présence (« Je participe »), planning des activités lu dans Grist.',
+		actifParDefaut: true,
+		icon: 'fa-id-card',
+		doc: 'src/plugins/adhesion/README.md',
+		env: [
+			{ nom: 'GRIST_API_KEY', aide: 'Clé d’API Grist du document de l’adhésion, dans le .env. Sans clé, les formulaires (adhésion, inscription, présence) et le planning Grist ne fonctionnent pas.' },
+			{ nom: 'GRIST_DOC_ID', aide: 'Identifiant du document Grist de l’adhésion, dans le .env.' },
+		],
+	},
 	rdv: {
 		label: 'Prise de rendez-vous',
 		description:
@@ -88,3 +106,8 @@ export const PLUGINS = {
 export type PluginId = keyof typeof PLUGINS;
 
 export const PLUGIN_IDS = Object.keys(PLUGINS) as PluginId[];
+
+/** État d'un plugin quand `reglages.yaml` n'en dit rien. */
+export function actifParDefaut(id: PluginId): boolean {
+	return (PLUGINS[id] as PluginInfo).actifParDefaut === true;
+}

@@ -6,6 +6,7 @@
  */
 import type { envField } from 'astro/config';
 import type { PluginId } from './catalogue';
+import adhesion from './adhesion/plugin';
 import rdv from './rdv/plugin';
 
 export interface PluginManifest {
@@ -23,4 +24,4 @@ export interface PluginManifest {
 	env: Record<string, ReturnType<typeof envField.string>>;
 }
 
-export const PLUGIN_MANIFESTS: PluginManifest[] = [rdv];
+export const PLUGIN_MANIFESTS: PluginManifest[] = [adhesion, rdv];

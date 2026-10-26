@@ -55,11 +55,11 @@ Les briques sont rangées par famille dans des sous-dossiers de `src/components/
 
 | Composant | Usage |
 | :--- | :--- |
-| `forms/FormGate.astro` | Entoure un formulaire : `<FormGate form="<clé>">…</FormGate>`. Si `site.forms.<clé>.enabled` (défaut dans `src/config/site.ts`, réglé dans `src/content/reglages.yaml`) vaut `true`, rend le contenu du slot par défaut tel quel ; sinon, le remplace par un encart informatif (`closedTitle` + `closedMessage`). Slot nommé `fallback` optionnel : un bouton d'alternative affiché sous le message de fermeture (ex. `<Button slot="fallback" href="/contact">Nous contacter</Button>`). Clés actuelles : `adhesion` (`src/pages/adherer/formulaire.astro`), `contact` (`src/pages/contact.astro`). |
+| `forms/FormGate.astro` | Entoure un formulaire : `<FormGate form="<clé>">…</FormGate>`. Si `site.forms.<clé>.enabled` (défaut dans `src/config/site.ts`, réglé dans `src/content/reglages.yaml`) vaut `true`, rend le contenu du slot par défaut tel quel ; sinon, le remplace par un encart informatif (`closedTitle` + `closedMessage`). Slot nommé `fallback` optionnel : un bouton d'alternative affiché sous le message de fermeture (ex. `<Button slot="fallback" href="/contact">Nous contacter</Button>`). Clés actuelles : `adhesion` (`src/plugins/adhesion/pages/formulaire.astro`), `contact` (`src/pages/contact.astro`). |
 
 Pour la logique côté page — masquer un bouton d'accès quand le formulaire est
 fermé, par exemple — `src/lib/forms.ts` expose `isFormOpen(name)` et
-`getFormToggle(name)`. C'est ce qu'utilise `src/pages/adherer.astro` pour
+`getFormToggle(name)`. C'est ce qu'utilise `src/plugins/adhesion/pages/adherer.astro` pour
 cacher le bouton « Adhérer en ligne ».
 
 **Ajouter un nouveau formulaire au système** : ajouter une clé dans
@@ -144,7 +144,7 @@ Props :
 La quasi-totalité du site est du HTML statique. Les rares blocs qui ont besoin de JavaScript côté client (état, appels réseau) sont des **îlots** : des composants Vue montés dans une page Astro avec une directive `client:*`.
 
 - Intégration : `@astrojs/vue` (dans `astro.config.mjs`). Les fichiers `.vue` s'importent et s'utilisent comme des composants Astro, avec en plus `client:load` / `client:visible` / `client:idle` pour choisir quand ils s'hydratent.
-- Rangement : un dossier par îlot sous `src/components/<nom>/` (ex. `src/components/adhesion/`), avec le composant orchestrateur, ses sous-composants présentationnels et un `client.ts` pour les appels aux routes API.
+- Rangement : un dossier par îlot sous `src/components/<nom>/` (ex. `src/plugins/adhesion/formulaire/adhesion/`), avec le composant orchestrateur, ses sous-composants présentationnels et un `client.ts` pour les appels aux routes API.
 - Règle : un îlot ne parle jamais à un service externe directement — il appelle une route `src/pages/api/*` qui détient les secrets. Voir [api.md](api.md).
 
 Îlot existant : **`adhesion/AdhesionForm.vue`** — formulaire d'adhésion (`/adherer/formulaire`), détaillé dans [api.md](api.md).

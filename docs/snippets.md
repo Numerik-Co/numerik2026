@@ -202,7 +202,7 @@ Siège social : {{association.adresse}}
 
 Détail : [pages.md](pages.md#ajouter-une-page-applicative-astro).
 
-Modèle : `src/pages/inscription.astro`.
+Modèle : `src/plugins/adhesion/pages/inscription.astro`.
 
 ```astro
 ---
@@ -274,7 +274,7 @@ forms: {
 },
 ```
 
-2. Entourer le formulaire (voir `src/pages/inscription.astro`). Le slot
+2. Entourer le formulaire (voir `src/plugins/adhesion/pages/inscription.astro`). Le slot
    `fallback`, facultatif, s'affiche sous l'encart quand le formulaire est
    fermé :
 
@@ -313,7 +313,7 @@ Détail : [partage.md](partage.md).
 
 ```astro
 ---
-import InscriptionForm from '../components/inscription/InscriptionForm.vue';
+import InscriptionForm from '../formulaire/inscription/InscriptionForm.vue';
 ---
 
 <FormGate form="inscription">
@@ -324,7 +324,7 @@ import InscriptionForm from '../components/inscription/InscriptionForm.vue';
 ```
 
 Côté navigateur, on ne parle jamais à Grist : on passe par les routes
-`/api/*` via le client typé (`src/components/adhesion/client.ts`) :
+`/api/*` via le client typé (`src/plugins/adhesion/formulaire/adhesion/client.ts`) :
 
 ```ts
 import { adhesionApi } from '../adhesion/client';
@@ -334,14 +334,15 @@ const res = await adhesionApi.retrouverMembre({ nom, prenom });
 
 ### Route API Grist
 
-Motif de toutes les routes `src/pages/api/adhesion/*.ts` : rendu serveur,
+Motif de toutes les routes `src/plugins/adhesion/api/*.ts` (nouvelle route =
+le fichier + son nom dans `API` de `src/plugins/adhesion/plugin.ts`) : rendu serveur,
 validation du corps, erreurs Grist relayées avec leur statut. Détail :
 [api.md](api.md).
 
 ```ts
 import type { APIRoute } from 'astro';
-import { COLS, GristError, listRecords, TABLES } from '../../../lib/adhesion/grist';
-import { json } from '../../../lib/adhesion/http';
+import { COLS, GristError, listRecords, TABLES } from '../lib/grist';
+import { json } from '../../../lib/http';
 
 export const prerender = false;
 
@@ -370,7 +371,7 @@ export const POST: APIRoute = async ({ request }) => {
 
 Toujours passer par `COLS.*` / `TABLES.*` plutôt que d'écrire les noms de
 colonnes Grist en dur ; une nouvelle colonne s'ajoute dans `COLS`
-(`src/lib/adhesion/grist.ts`).
+(`src/plugins/adhesion/lib/grist.ts`).
 
 ### Module de l'espace bénévoles
 

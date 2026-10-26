@@ -16,7 +16,7 @@
 import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import raw from '../content/reglages.yaml?raw';
-import { PLUGIN_IDS, type PluginId } from '../plugins/catalogue';
+import { actifParDefaut, PLUGIN_IDS, type PluginId } from '../plugins/catalogue';
 
 export interface FormToggle {
 	/** `false` masque le formulaire et affiche `closedTitle` + `closedMessage` à la place. */
@@ -118,10 +118,11 @@ const DEFAULTS = {
 
 	/**
 	 * Plugins actifs (`src/plugins/`, catalogue `src/plugins/catalogue.ts`) :
-	 * tous inactifs par défaut, l'association active ceux qu'elle veut
-	 * (`plugins: { rdv: true }`). Changer ce réglage demande une reconstruction.
+	 * inactifs par défaut sauf `actifParDefaut` du catalogue (adhésion),
+	 * l'association active ceux qu'elle veut (`plugins: { rdv: true }`) ou en
+	 * désactive (`adhesion: false`). Changer ce réglage demande une reconstruction.
 	 */
-	plugins: Object.fromEntries(PLUGIN_IDS.map((id) => [id, false])) as Record<PluginId, boolean>,
+	plugins: Object.fromEntries(PLUGIN_IDS.map((id) => [id, actifParDefaut(id)])) as Record<PluginId, boolean>,
 };
 
 /** Couleurs du modèle (« rétablir » du module « Association », onglet Charte graphique). */

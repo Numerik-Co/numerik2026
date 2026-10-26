@@ -136,8 +136,8 @@ Grist…).
   `fallback` pour un bouton d'alternative.
 - `src/lib/forms.ts` — `isFormOpen(name)` / `getFormToggle(name)` pour la
   logique `.astro` (ex. masquer le bouton « Adhérer en ligne » dans
-  `src/pages/adherer.astro`).
-- Câblé sur `src/pages/adherer/formulaire.astro` (`adhesion`) et
+  `src/plugins/adhesion/pages/adherer.astro`).
+- Câblé sur `src/plugins/adhesion/pages/formulaire.astro` (`adhesion`) et
   `src/pages/contact.astro` (`contact`). Nouveau formulaire : ajouter une clé
   dans `site.forms` puis l'entourer d'un `<FormGate>`.
 
@@ -388,7 +388,7 @@ couleur par famille d'activité.
 - **Source du planning affiché sur `/activites`** : la table Grist
   `Activite` elle-même (chaque ligne est déjà un créneau précis : jour,
   horaires, lieu, encadrant·e·s), lue à chaque requête par
-  `fetchPlanningAgenda()` (`src/lib/adhesion/planning.ts`) et recombinée
+  `fetchPlanningAgenda()` (`src/plugins/adhesion/lib/planning.ts`) et recombinée
   avec `conseillerNumerique`. Seules les lignes `Publiee = true` de la
   saison en cours, avec une `Categorie_agenda` renseignée, et qui ont lieu
   dans la semaine en cours (`Ouverture` = date de 1re séance, puis
@@ -440,7 +440,7 @@ icônes font 24 px et sont centrées verticalement. Détail :
 
 ### Inscription en ligne à une activité
 
-Page `/inscription`, îlot Vue `src/components/inscription/InscriptionForm.vue`
+Page `/inscription`, îlot Vue `src/plugins/adhesion/formulaire/inscription/InscriptionForm.vue`
 (`client:load`), gardé par `<FormGate form="inscription">`. 3 étapes :
 profil (adhérent·e retrouvé·e par nom + prénom via
 `/api/adhesion/membre` `mode:'renouvellement'`, ou extérieur·e → fiche
@@ -467,12 +467,12 @@ responsable du foyer pour un membre rattaché. Détail : [docs/inscription.md](d
 ### Présence (« Je participe »)
 
 Page `/je-participe` (lien de menu, `src/config/site.ts`), îlot Vue
-`src/components/presence/PresenceForm.vue`. Sans système de connexion :
+`src/plugins/adhesion/formulaire/presence/PresenceForm.vue`. Sans système de connexion :
 un membre se retrouve par recherche de nom (réutilise la route publique
 `/api/adhesion/membres`), mémorisé ensuite en `localStorage` sur
 l'appareil. La page détecte la (les) séance(s) en cours parmi les lignes
 `Activite` publiées (`fetchSeancesCourantes()`,
-`src/lib/adhesion/presence.ts`) et propose un bouton « Je participe » /
+`src/plugins/adhesion/lib/presence.ts`) et propose un bouton « Je participe » /
 « Je ne pourrai pas venir » par séance candidate — écrit dans la table
 Grist `Presence` (une ligne par séance, `Presents` / `Absents` en
 RefList:Membres). Détail : [docs/api.md](docs/api.md).
@@ -484,7 +484,9 @@ RefList:Membres). Détail : [docs/api.md](docs/api.md).
 selon les besoins ; `plugin.ts` = manifeste, `index.ts` = ce que le reste
 du site en utilise). Catalogue `src/plugins/catalogue.ts` (`PLUGINS`, sans
 dépendance), réglage `plugins: { <id>: true }` de `reglages.yaml`
-(`site.plugins`, **inactif par défaut**, changer = reconstruire),
+(`site.plugins`, **inactif par défaut** sauf `actifParDefaut: true` du
+catalogue — `adhesion` —, `actifParDefaut(id)` lu par `site.ts` et
+`src/integrations/plugins.ts` ; changer = reconstruire),
 `pluginActif(id)` / `disponible(def)` (`src/plugins/index.ts`, aussi dans
 le navigateur). Routes d'un plugin **jamais dans `src/pages/`** : ajoutées
 par `src/integrations/plugins.ts` (`injectRoute`, d'après
@@ -496,8 +498,28 @@ déclarées dans `astro.config.mjs`. Modules d'accueil / blocs d'un plugin :
 `plugin: '<id>'`, filtrés par `disponible()` (éditeurs, `index.astro`,
 `DEFAULT_HOME`, `BlocView`). Mise à jour d'un site existant vers une
 version qui introduit un plugin : ajouter `plugins: <id>: true` à son
-`reglages.yaml` **avant**. Détail : [src/plugins/README.md](src/plugins/README.md).
-L'adhésion deviendra un plugin plus tard.
+`reglages.yaml` **avant** (inutile pour un plugin `actifParDefaut`). Outils
+partagés par les plugins, hors de leurs dossiers : `src/lib/http.ts`
+(`json`, `normalize`, type `Errors`), `src/lib/grist-error.ts`
+(`GristError`), `src/lib/gotenberg.ts` (`htmlToPdf`) — un plugin n'importe
+jamais le dossier d'un autre. Détail : [src/plugins/README.md](src/plugins/README.md).
+
+### Adhésion et activités (plugin `adhesion`, actif par défaut)
+
+`src/plugins/adhesion/` (doc : [src/plugins/adhesion/README.md](src/plugins/adhesion/README.md)) :
+adhésion en ligne + bulletin PDF (`/adherer`, `/adherer/formulaire`),
+inscription aux activités (`/inscription`), présence (`/je-participe`),
+planning Grist de `/activites` — tout ce qui lit le document Grist de
+l'adhésion (`GRIST_DOC_ID`, tables `Membres`, `Adhesions`, `Activite`…,
+`BULLETIN_SECRET` : `env` du manifeste). Pages `pages/`, routes `api/`
+(`/api/adhesion/*`, `/api/presence/*`, liste `API` de `plugin.ts`), îlots
+`formulaire/{adhesion,inscription,presence}/`, serveur `lib/`. Reste du site
+via `index.ts` : `planningActivites()` (vide si inactif),
+`lienAdhesionIndisponible(href)` (masque les liens vers ses pages : bouton
+CTA et « Je participe » du `Header`, boutons `Hero` / `CtaSection`),
+`ADHESION_HREF`… (plan du site, `SERVICE_PAGES`) ; bouton « S'inscrire »
+des fiches et réglages d'inscription du module « Activités » derrière
+`pluginActif('adhesion')`. Désactiver : `plugins: { adhesion: false }`.
 
 ### Prise de RDV (plugin `rdv`)
 
@@ -593,7 +615,7 @@ accepté à la lecture : `RDV_TYPES_RENOMMES`), champs vides = `encart:`.
   `?inline`, A4 paysage, créneaux de `horairesDuJour()` de `lib/creneaux.ts`
   + RDV non annulés : démarche, nom et message, sans coordonnées (RGPD) ; statut pour une
   semaine terminée seulement) converti par `htmlToPdf()` de
-  `src/lib/adhesion/bulletin.ts` (Gotenberg, `isGotenbergEnabled()`).
+  `src/lib/gotenberg.ts` (Gotenberg, `isGotenbergEnabled()`, partagé avec le bulletin d'adhésion).
   Zones qui défilent des panneaux d'admin : utilitaire `scrollbar-fin`
   (`src/styles/global.css`, ascenseur fin). `request()` de
   `src/components/admin/client.ts` exporté pour les modules de plugin.

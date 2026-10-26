@@ -292,7 +292,11 @@ ferme l'éditeur. Chaque modification et chaque suppression (avec son motif)
 est notée dans le journal.
 
 **Plugins** (super admin seulement) : volets du site que l'association active
-ou non (aujourd'hui : prise de rendez-vous en ligne). La liste montre chaque
+ou non (aujourd'hui : adhésion et activités — adhésion en ligne, inscription,
+« Je participe », planning Grist —, active par défaut, et prise de
+rendez-vous en ligne). Désactiver l'adhésion retire du site ses pages, le
+bouton « Adhérer », « Je participe », le bouton « S'inscrire » des fiches
+d'activité et les séances Grist du planning. La liste montre chaque
 plugin et son état (actif, inactif, ou activation / désactivation en attente
 de publication) ; l'icône **paramètres** (roue dentée) ouvre sa page de
 configuration, un seul formulaire : description, documentation, ce qui lui

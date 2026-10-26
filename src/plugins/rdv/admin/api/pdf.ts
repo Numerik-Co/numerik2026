@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { jsonError, withErrors } from '../../../../lib/auth/api';
-import { GotenbergError, htmlToPdf, isGotenbergEnabled } from '../../../../lib/adhesion/bulletin';
+import { GotenbergError, htmlToPdf, isGotenbergEnabled } from '../../../../lib/gotenberg';
 import { GristError } from '../../lib/grist';
 import { listerRdv } from '../gestion';
 import { lundiDe, nomFichier, semaineHtml } from '../semaine-pdf';

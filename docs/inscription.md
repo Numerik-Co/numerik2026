@@ -37,7 +37,7 @@ La personne choisit son profil :
 
 Activités Grist (table `Activite`) de la **saison en cours** et de **type
 `Séances`, `Ateliers` ou `Atelier CN`** (`TYPES_ACTIVITE_INSCRIPTION` dans
-`src/lib/adhesion/choices.ts`) : parcours, FabLab, ateliers et ateliers du
+`src/plugins/adhesion/lib/choices.ts`) : parcours, FabLab, ateliers et ateliers du
 Conseiller Numérique. Pour un·e non-adhérent·e, l'animateur·rice formalise
 l'adhésion ensuite. Route : `GET /api/adhesion/offre-inscription`.
 
@@ -213,17 +213,17 @@ présence (voir [api.md](api.md)).
 
 | Élément | Rôle |
 | :--- | :--- |
-| `src/pages/inscription.astro` | Page `/inscription` ; monte l'îlot Vue dans un `<FormGate form="inscription">`. |
-| `src/components/inscription/InscriptionForm.vue` | Îlot `client:load` : enchaînement des étapes, relais des paramètres `?activite=`/`?type=`, tarif mis en avant, appels API. |
-| `src/components/inscription/EtapeProfil.vue` | Étape 1 : choix adhérent·e / extérieur·e, recherche ou saisie, choix parmi les homonymes. |
-| `src/components/inscription/EtapeActivite.vue` | Étape 2 : liste des activités, tarif adhérent·e / non-adhérent·e, places restantes, « Complet », mode préinscription. |
-| `src/components/inscription/EtapeRecap.vue` | Étape 3 : confirmation, liste d'attente, tarif, rappel du règlement. |
+| `src/plugins/adhesion/pages/inscription.astro` | Page `/inscription` ; monte l'îlot Vue dans un `<FormGate form="inscription">`. |
+| `src/plugins/adhesion/formulaire/inscription/InscriptionForm.vue` | Îlot `client:load` : enchaînement des étapes, relais des paramètres `?activite=`/`?type=`, tarif mis en avant, appels API. |
+| `src/plugins/adhesion/formulaire/inscription/EtapeProfil.vue` | Étape 1 : choix adhérent·e / extérieur·e, recherche ou saisie, choix parmi les homonymes. |
+| `src/plugins/adhesion/formulaire/inscription/EtapeActivite.vue` | Étape 2 : liste des activités, tarif adhérent·e / non-adhérent·e, places restantes, « Complet », mode préinscription. |
+| `src/plugins/adhesion/formulaire/inscription/EtapeRecap.vue` | Étape 3 : confirmation, liste d'attente, tarif, rappel du règlement. |
 | `src/pages/activites/[category]/[slug].astro` | Bouton « S'inscrire » (condition `activity.inscription && isFormOpen('inscription')`). |
 | `src/lib/activites.ts` | Champs `inscription` (`frontmatter.inscription !== false`) et `inscriptionHref` (construit depuis `activiteGrist` / `typeGrist`). |
-| `src/lib/adhesion/activite-option.ts` | Ligne `Activite` → option (tarifs, places), partagé avec le parcours d'adhésion. |
+| `src/plugins/adhesion/lib/activite-option.ts` | Ligne `Activite` → option (tarifs, places), partagé avec le parcours d'adhésion. |
 
 Routes API utilisées (communes avec le parcours d'adhésion, client
-`adhesionApi` de `src/components/adhesion/client.ts`, détail dans
+`adhesionApi` de `src/plugins/adhesion/formulaire/adhesion/client.ts`, détail dans
 [api.md](api.md)) :
 
 | Route | Méthode | Usage dans ce formulaire |

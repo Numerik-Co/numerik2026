@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { fetchDemarches } from '../lib/demarches';
 import { GristError } from '../lib/grist';
-import { json } from '../../../lib/adhesion/http';
+import { json } from '../../../lib/http';
 
 export const prerender = false;
 

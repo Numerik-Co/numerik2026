@@ -20,6 +20,7 @@ import { NEWS_SLUG, newsSourceDir, readNewsSource } from './news-writer';
 import { listPagesSource } from './page-writer';
 import { pluginActif } from '../plugins';
 import { RDV_HREF, RDV_NOM, rdvToggle } from '../plugins/rdv';
+import { ADHESION_HREF, FORMULAIRE_HREF, INSCRIPTION_HREF, PRESENCE_HREF } from '../plugins/adhesion';
 
 export interface SiteLink {
 	title: string;
@@ -36,11 +37,15 @@ export interface SiteLinkGroup {
 
 /** Pages applicatives du modèle (formulaires, services) : `form` = clé de `site.forms`, `closed` = fermée (plugin) ; signalées. */
 const SERVICE_PAGES: { title: string; href: string; form?: keyof typeof site.forms; closed?: boolean }[] = [
-	{ title: 'Adhérer', href: '/adherer' },
-	{ title: "Formulaire d'adhésion", href: '/adherer/formulaire', form: 'adhesion' },
-	{ title: 'Inscription à une activité', href: '/inscription', form: 'inscription' },
+	...(pluginActif('adhesion')
+		? [
+				{ title: 'Adhérer', href: ADHESION_HREF },
+				{ title: "Formulaire d'adhésion", href: FORMULAIRE_HREF, form: 'adhesion' as const },
+				{ title: 'Inscription à une activité', href: INSCRIPTION_HREF, form: 'inscription' as const },
+			]
+		: []),
 	...(pluginActif('rdv') ? [{ title: RDV_NOM, href: RDV_HREF, closed: !rdvToggle().enabled }] : []),
-	{ title: 'Je participe', href: '/je-participe' },
+	...(pluginActif('adhesion') ? [{ title: 'Je participe', href: PRESENCE_HREF }] : []),
 ];
 
 const frenchDate = (iso: string) => {

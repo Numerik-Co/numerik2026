@@ -7,7 +7,7 @@
  * sans dépendance, utilisable par l'îlot Vue sans embarquer le YAML.
  */
 
-import { normalize } from '../../../lib/adhesion/http';
+import { normalize } from '../../../lib/http';
 
 /** Une zone proposée au bénéficiaire ; `label` = choix de la colonne Grist `Zone_geographique`. */
 export interface ZoneGeographiqueConfig {

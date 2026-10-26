@@ -11,7 +11,7 @@
  *
  * Adresse de l'instance, document et tables : `grist:` de `src/content/rdv.yaml`
  * (réglables depuis le module « Plugins », lus au build), sinon variables du
- * `.env` lues au DÉMARRAGE du serveur (`astro:env`, cf. `src/lib/adhesion/grist.ts`).
+ * `.env` lues au DÉMARRAGE du serveur (`astro:env`, cf. `src/plugins/adhesion/lib/grist.ts`).
  * La clé d'API vient toujours du `.env` (`GRIST_API_KEY_RDV`, sinon
  * `GRIST_API_KEY`) : jamais figée dans dist/.
  */
@@ -25,7 +25,7 @@ import {
 	GRIST_TABLE_DEMARCHES,
 	GRIST_TABLE_RDV,
 } from 'astro:env/server';
-import { GristError } from '../../../lib/adhesion/grist';
+import { GristError } from '../../../lib/grist-error';
 import { rdvConfig } from './config';
 
 // `grist:` de `src/content/rdv.yaml` (module « Plugins ») avant le `.env`.

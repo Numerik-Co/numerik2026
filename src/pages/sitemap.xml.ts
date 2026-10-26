@@ -16,6 +16,7 @@ import { absoluteUrl } from '../lib/seo';
 import { getSitePagesState } from '../lib/site-pages-content';
 import { pluginActif } from '../plugins';
 import { RDV_HREF } from '../plugins/rdv';
+import { ADHESION_HREF, INSCRIPTION_HREF } from '../plugins/adhesion';
 
 const escapeXml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -24,8 +25,8 @@ export const GET: APIRoute = async ({ site }) => {
 	const activitiesActive = sitePages.some((p) => p.id === 'activites');
 	const entries: { path: string; lastmod?: string }[] = [
 		...sitePages.map((p) => ({ path: p.href })),
-		{ path: '/adherer' },
-		...(settings.forms.inscription.enabled ? [{ path: '/inscription' }] : []),
+		...(pluginActif('adhesion') ? [{ path: ADHESION_HREF }] : []),
+		...(pluginActif('adhesion') && settings.forms.inscription.enabled ? [{ path: INSCRIPTION_HREF }] : []),
 		...(pluginActif('rdv') ? [{ path: RDV_HREF }] : []),
 		...(await getContentPages()).filter((p) => p.access === null).map((p) => ({ path: p.url })),
 		...(activitiesActive

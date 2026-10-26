@@ -16,7 +16,7 @@ Par défaut toutes les pages restent pré-rendues en HTML statique. Pour qu'une 
 export const prerender = false;
 ```
 
-C'est ce que font les routes `src/pages/api/adhesion/*`. Le reste du site (toutes les autres pages) continue d'être généré statiquement au build, sans changement de comportement ni de performance.
+C'est ce que font les routes `src/plugins/adhesion/api/*`. Le reste du site (toutes les autres pages) continue d'être généré statiquement au build, sans changement de comportement ni de performance.
 
 ## Adaptateur
 
@@ -94,11 +94,22 @@ en `access: 'secret'` : le code les lit par
   clair dans le build. (Une variable serveur `access: 'public'` d'`astro:env`
   est elle aussi figée au build — d'où `secret` partout.)
 
-Nouvelle variable : l'ajouter à `env.schema` (`astro.config.mjs`) et à
+Les variables propres à un plugin (document et tables Grist de l'adhésion,
+`BULLETIN_SECRET` : plugin `adhesion` ; document des RDV : plugin `rdv`)
+sont déclarées dans le manifeste du plugin (`src/plugins/<id>/plugin.ts`,
+`env`) et ajoutées au même schéma, que le plugin soit actif ou non.
+
+Nouvelle variable : l'ajouter à `env.schema` (`astro.config.mjs`) — ou à
+`env` du manifeste si elle n'appartient qu'à un plugin — et à
 `.env.example`. `DATA_DIR` fait exception (lue par `process.env` dans
 `src/lib/data-dir.ts`, partagé avec le CLI `auth-user`).
 
 ## Formulaire d'adhésion
+
+> Adhésion, inscription, présence et planning Grist forment le plugin
+> `adhesion` (actif par défaut) : code dans `src/plugins/adhesion/`, routes
+> `/api/adhesion/*` et `/api/presence/*` ajoutées seulement s'il est actif —
+> voir [son README](../src/plugins/adhesion/README.md).
 
 > Vue fonctionnelle du parcours (schéma + étape par étape, pour former des
 > utilisateurs) : [adhesion-parcours.md](adhesion-parcours.md). Ci-dessous, le
@@ -106,9 +117,9 @@ Nouvelle variable : l'ajouter à `env.schema` (`astro.config.mjs`) et à
 
 ### Îlot Vue
 
-`src/pages/adherer/formulaire.astro` monte l'îlot `src/components/adhesion/AdhesionForm.vue` en `client:load`, entouré de `<FormGate form="adhesion">`. Deux parcours (**Nouveau membre** / **Renouvellement**) et un déroulé : identité → cotisation → *(membres du groupe si cotisation multiple)* → activité → récapitulatif, chaque étape n'étant révélée qu'après le retour de la précédente. En **renouvellement**, l'étape 1 marque une pause « confirmation de la fiche + préférences » (cases `newsletter` / `droitImage` pré-cochées, écrites via `/api/adhesion/preferences`) ; si `Membres.Adhesion_en_cours` est vrai, la cotisation est **sautée** et on passe directement à l'activité (permet à un membre à jour de s'inscrire à une nouvelle activité).
+`src/plugins/adhesion/pages/formulaire.astro` monte l'îlot `src/plugins/adhesion/formulaire/adhesion/AdhesionForm.vue` en `client:load`, entouré de `<FormGate form="adhesion">`. Deux parcours (**Nouveau membre** / **Renouvellement**) et un déroulé : identité → cotisation → *(membres du groupe si cotisation multiple)* → activité → récapitulatif, chaque étape n'étant révélée qu'après le retour de la précédente. En **renouvellement**, l'étape 1 marque une pause « confirmation de la fiche + préférences » (cases `newsletter` / `droitImage` pré-cochées, écrites via `/api/adhesion/preferences`) ; si `Membres.Adhesion_en_cours` est vrai, la cotisation est **sautée** et on passe directement à l'activité (permet à un membre à jour de s'inscrire à une nouvelle activité).
 
-**Fermer les adhésions en ligne** : passer `site.forms.adhesion.enabled` à `false` dans `src/content/reglages.yaml`. Le formulaire est alors remplacé par le message `closedTitle` / `closedMessage`, et le bouton « Adhérer en ligne » de `src/pages/adherer.astro` disparaît (`isFormOpen('adhesion')`). Voir [composants.md](composants.md#forms) pour le mécanisme `FormGate`.
+**Fermer les adhésions en ligne** : passer `site.forms.adhesion.enabled` à `false` dans `src/content/reglages.yaml`. Le formulaire est alors remplacé par le message `closedTitle` / `closedMessage`, et le bouton « Adhérer en ligne » de `src/plugins/adhesion/pages/adherer.astro` disparaît (`isFormOpen('adhesion')`). Voir [composants.md](composants.md#forms) pour le mécanisme `FormGate`.
 
 | Composant | Rôle |
 | :--- | :--- |
@@ -120,11 +131,11 @@ Nouvelle variable : l'ajouter à `env.schema` (`astro.config.mjs`) et à
 | `SectionActivite.vue` | étape 3 ; « N places restantes » / « Complet ». Select **« Pour qui ? »** si l'adhésion compte plusieurs membres. Bouton **« Ajouter une activité »** → `POST /api/adhesion/inscription` immédiat (1 `Inscription` par membre × activité), la ligne s'ajoute à la liste ; **« Valider mon inscription »** → enregistre la sélection en attente puis va au récap ; **« Continuer sans activité »** (visible tant qu'aucune activité n'est ajoutée) → récap sans créer d'`Inscription`. Pas de retrait ici — se corrige ensuite dans Grist. |
 | `SectionRecap.vue` | récapitulatif (liste des activités, une par ligne) + montant à régler (règlement en présentiel) + lien bulletin PDF |
 
-Les appels réseau passent par `src/components/adhesion/client.ts`.
+Les appels réseau passent par `src/plugins/adhesion/formulaire/adhesion/client.ts`.
 
-### Routes API (`src/pages/api/adhesion/`)
+### Routes API (`src/plugins/adhesion/api/`)
 
-Toutes en `prerender = false`. Elles ne parlent à Grist qu'à travers `src/lib/adhesion/grist.ts`.
+Toutes en `prerender = false`. Elles ne parlent à Grist qu'à travers `src/plugins/adhesion/lib/grist.ts`.
 
 | Route | Méthode | Rôle |
 | :--- | :--- | :--- |
@@ -161,7 +172,7 @@ Document Grist distinct (`GRIST_DOC_ID_RDV`), tables `Beneficiaires`, `RDV`,
 ## Planning hebdomadaire (Activite)
 
 `src/pages/activites.astro` (`prerender = false`) lit à chaque requête la
-table **`Activite`** via `src/lib/adhesion/planning.ts`
+table **`Activite`** via `src/plugins/adhesion/lib/planning.ts`
 (`fetchPlanningAgenda()`) et l'affiche avec `WeeklyAgenda.astro`. Chaque
 ligne `Activite` est déjà un créneau précis (jour, horaires, lieu,
 encadrant·e·s) — pas de table séparée : seules les lignes `Publiee = true`
@@ -180,7 +191,7 @@ momentanément indisponible » (prop `notice` de `WeeklyAgenda`). Plus de
 planning figé de secours : il devenait faux sans que personne le voie.
 
 Colonnes du planning sur `Activite` (mapping `COLS.activite` dans
-`src/lib/adhesion/grist.ts`), en plus de celles déjà utilisées par
+`src/plugins/adhesion/lib/grist.ts`), en plus de celles déjà utilisées par
 l'adhésion (`Nom`, `Saison`…) :
 
 | Colonne | Type Grist | Rôle |
@@ -197,11 +208,11 @@ l'adhésion (`Nom`, `Saison`…) :
 
 ## Présence (« Je participe »)
 
-`/je-participe` (îlot Vue `src/components/presence/PresenceForm.vue`, `client:load`) permet à un membre de signaler sa présence — ou son absence — à la séance en cours, sans système de connexion : l'identification se fait par sélection dans une liste (recherche par nom, route déjà publique `/api/adhesion/membres`), mémorisée ensuite en `localStorage` sur l'appareil (`changerMembre()` permet de ré-choisir, ex. appareil partagé).
+`/je-participe` (îlot Vue `src/plugins/adhesion/formulaire/presence/PresenceForm.vue`, `client:load`) permet à un membre de signaler sa présence — ou son absence — à la séance en cours, sans système de connexion : l'identification se fait par sélection dans une liste (recherche par nom, route déjà publique `/api/adhesion/membres`), mémorisée ensuite en `localStorage` sur l'appareil (`changerMembre()` permet de ré-choisir, ex. appareil partagé).
 
 ### Détection de la séance en cours
 
-`fetchSeancesCourantes(membreId)` (`src/lib/adhesion/presence.ts`) reprend les lignes `Activite` publiées de la saison en cours (mêmes critères que le planning), **restreintes à celles où le membre a une `Inscription`** (table `Inscription`, cf. parcours d'adhésion), et ne retient que celles dont l'horaire couvre l'instant présent (marge de 15 min avant le début, jusqu'à la fin). 0, 1 ou plusieurs séances peuvent correspondre à la fois (ex. deux créneaux qui se chevauchent) — la page affiche alors un bouton « Je participe » / « Je ne pourrai pas venir » par séance candidate. `enregistrerPresence()` revérifie cette inscription avant d'écrire (au cas où la liste affichée serait périmée) et renvoie `non-inscrit` sinon.
+`fetchSeancesCourantes(membreId)` (`src/plugins/adhesion/lib/presence.ts`) reprend les lignes `Activite` publiées de la saison en cours (mêmes critères que le planning), **restreintes à celles où le membre a une `Inscription`** (table `Inscription`, cf. parcours d'adhésion), et ne retient que celles dont l'horaire couvre l'instant présent (marge de 15 min avant le début, jusqu'à la fin). 0, 1 ou plusieurs séances peuvent correspondre à la fois (ex. deux créneaux qui se chevauchent) — la page affiche alors un bouton « Je participe » / « Je ne pourrai pas venir » par séance candidate. `enregistrerPresence()` revérifie cette inscription avant d'écrire (au cas où la liste affichée serait périmée) et renvoie `non-inscrit` sinon.
 
 ### Table `Presence`
 
@@ -216,7 +227,7 @@ Une ligne par **séance** (`Activite` × `Date`, calculée côté serveur = aujo
 
 `enregistrerPresence()` relit la ligne de la séance (ou la crée si absente), vérifie que le membre n'est pas déjà dans la liste visée (`Presents` ou `Absents`) puis réécrit la liste complète — pas d'opération atomique « ajouter un élément » côté API Grist. Suffisant pour une petite association ; pas garanti à l'abri d'une double-écriture si deux personnes valident à la même seconde.
 
-### Routes API (`src/pages/api/presence/`)
+### Routes API (`src/plugins/adhesion/api/presence/`)
 
 | Route | Méthode | Rôle |
 | :--- | :--- | :--- |
@@ -225,9 +236,9 @@ Une ligne par **séance** (`Activite` × `Date`, calculée côté serveur = aujo
 
 ### Mapping Grist — le seul point à ajuster
 
-`src/lib/adhesion/grist.ts` centralise tout ce qui dépend du schéma : `TABLES` (défauts = `Membres` / `Adhesions` / `Inscription` / `Cotisation` / `Activite` / `Saisons` / `Presence`, surchargeables par variables d'environnement), `COLS`, les valeurs de listes de choix (`GENRE_CHOICES`, `ROLE_*`, `STATUT_IMPAYE`, `DISPO_*`), et les helpers `dateToEpochSeconds` / `refList` / `parseRefList` / `currentSaisonId`.
+`src/plugins/adhesion/lib/grist.ts` centralise tout ce qui dépend du schéma : `TABLES` (défauts = `Membres` / `Adhesions` / `Inscription` / `Cotisation` / `Activite` / `Saisons` / `Presence`, surchargeables par variables d'environnement), `COLS`, les valeurs de listes de choix (`GENRE_CHOICES`, `ROLE_*`, `STATUT_IMPAYE`, `DISPO_*`), et les helpers `dateToEpochSeconds` / `refList` / `parseRefList` / `currentSaisonId`.
 
-`src/lib/adhesion/membre-fields.ts` porte la validation + conversion d'un membre **côté serveur** (partagée par `membre` et `co-membre`). `src/lib/adhesion/validation.ts` porte la validation **côté client** (`validateMembre` / `validateContact` / `validateRenouvellement`) : champs obligatoires, format courriel / code postal / téléphone (10 chiffres, au moins un des deux), date de naissance non future et plausible. Les composants passent le résultat à `MembreFields` via la prop `errors` et bloquent l'envoi tant qu'il reste une erreur ; le serveur revalide systématiquement.
+`src/plugins/adhesion/lib/membre-fields.ts` porte la validation + conversion d'un membre **côté serveur** (partagée par `membre` et `co-membre`). `src/plugins/adhesion/lib/validation.ts` porte la validation **côté client** (`validateMembre` / `validateContact` / `validateRenouvellement`) : champs obligatoires, format courriel / code postal / téléphone (10 chiffres, au moins un des deux), date de naissance non future et plausible. Les composants passent le résultat à `MembreFields` via la prop `errors` et bloquent l'envoi tant qu'il reste une erreur ; le serveur revalide systématiquement.
 
 ### Bulletin d'adhésion en PDF
 

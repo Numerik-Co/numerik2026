@@ -9,6 +9,7 @@ import { getActivitiesByCategory, renderActivity } from '../../../lib/activites'
 import { categories, getCategory } from '../../../lib/categories';
 import { association } from '../../../lib/association';
 import { isFormOpen } from '../../../lib/forms';
+import { pluginActif } from '../../../plugins';
 
 export async function getStaticPaths() {
 	const perCategory = await Promise.all(
@@ -29,7 +30,7 @@ export async function getStaticPaths() {
 const { activity, prev, next } = Astro.props;
 const { html, headings } = await renderActivity(activity);
 const category = getCategory(activity.category);
-const inscriptionVisible = activity.inscription && isFormOpen('inscription');
+const inscriptionVisible = pluginActif('adhesion') && activity.inscription && isFormOpen('inscription');
 ---
 
 <ArticleLayout

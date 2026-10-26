@@ -7,9 +7,8 @@ dans le site quand il est inactif.
 
 | Plugin | Dossier | Contenu |
 | :--- | :--- | :--- |
+| `adhesion` | [`adhesion/`](adhesion/README.md) | Adhésion en ligne et bulletin PDF, inscription aux activités, présence, planning Grist — **actif par défaut** |
 | `rdv` | [`rdv/`](rdv/README.md) | Prise de rendez-vous en ligne (réglages de l'asso : `src/content/rdv.yaml`) |
-
-L'adhésion deviendra un plugin plus tard, sur le même modèle.
 
 ## Activer ou désactiver un plugin
 
@@ -22,10 +21,13 @@ une mise à jour) :
 ```yaml
 plugins:
   rdv: true
+  adhesion: false
 ```
 
-**Tous les plugins sont inactifs par défaut** : si rien n'est écrit, le volet
-n'existe pas sur le site. Changer la valeur demande de **reconstruire** le site
+**Les plugins sont inactifs par défaut** : si rien n'est écrit, le volet
+n'existe pas sur le site. Exception : ceux marqués `actifParDefaut` dans le
+catalogue (aujourd'hui `adhesion`), présents tant que `reglages.yaml` ne dit
+pas `false`. Changer la valeur demande de **reconstruire** le site
 (`npm start` le fait tout seul au démarrage quand `src/content/` a changé ; en
 dev, le serveur redémarre de lui-même).
 
@@ -82,10 +84,20 @@ Un dossier vide n'est pas créé : chaque plugin n'a que ceux dont il a besoin.
 - **Ailleurs** (planning, plan du site, liens) : `pluginActif('<id>')` ou une
   fonction de `<id>/index.ts` qui renvoie une liste vide si inactif.
 
+### Outils partagés
+
+Un plugin n'importe jamais le dossier d'un autre : ce qui sert à plusieurs
+vit dans `src/lib/` — `http.ts` (`json`, `normalize`, type `Errors`),
+`grist-error.ts` (`GristError`), `gotenberg.ts` (conversion HTML → PDF).
+Les variables Grist communes (`GRIST_BASE_URL`, `GRIST_API_KEY`) et Gotenberg
+sont déclarées dans `astro.config.mjs` ; le reste, dans le manifeste de chaque
+plugin.
+
 ## Ajouter un plugin
 
 1. Une entrée dans `PLUGINS` (`catalogue.ts`) : le réglage
-   `plugins.<id>` est aussitôt reconnu, inactif par défaut, et le plugin
+   `plugins.<id>` est aussitôt reconnu, inactif par défaut (`actifParDefaut:
+   true` pour un volet que la plupart des associations utilisent), et le plugin
    apparaît dans le module « Plugins » (`icon`, `doc`, `requis` = fichiers
    de `src/content/` sans lesquels l'activation est refusée, `env` =
    secrets du `.env` signalés si absents, `reglages` = fichier de
