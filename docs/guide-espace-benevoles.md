@@ -261,12 +261,14 @@ masquables, une page par année. Lecture seule.
 **Rendez-vous** (bureau et animateur·rice·s, si la prise de RDV est activée) :
 les rendez-vous pris en ligne, **une semaine à la fois** (ouvert sur la
 semaine en cours ; chevrons ‹ › pour la précédente ou la suivante, « Cette
-semaine » pour revenir), par jour, avec un filtre de statut. La recherche
-(nom, démarche) porte sur toutes les semaines ; un clic sur une semaine
+semaine » pour revenir), par jour. La recherche, en haut du module (nom,
+démarche, date au format 26/10/26 ou 26/10/2026 — « 26/10 » suffit —, et/ou
+statut), porte sur toutes les semaines, passées comprises ; plusieurs mots
+se cumulent (« camille 26/10 ») ; un clic sur une semaine
 trouvée l'affiche. Le bouton **PDF** télécharge le planning de la semaine
 affichée, du lundi au vendredi (logo de l'association, une colonne par jour,
-créneaux libres et rendez-vous : démarche, usager, téléphone — sinon
-e-mail —, commune et message ; statut — Honoré, Absent — sur une semaine
+créneaux libres et rendez-vous : démarche, nom de l'usager et son message — les
+coordonnées restent dans le module, RGPD oblige — ; statut — Honoré, Absent — sur une semaine
 terminée seulement ; rendez-vous annulés exclus) — document interne, à ne
 pas diffuser. Il faut le serveur PDF (Gotenberg, `GOTENBERG_URL` du `.env`).
 Un clic sur un RDV ouvre un **second panneau à gauche** : coordonnées et commentaire du bénéficiaire

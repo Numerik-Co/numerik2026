@@ -2,10 +2,11 @@
 /**
  * Module « Rendez-vous » du plugin RDV (bureau et animateur·rice·s) : RDV
  * d'une semaine à la fois (ouvert sur la semaine en cours, chevrons ‹ › pour
- * la précédente / suivante, même vide), par jour, avec filtre de statut, et
- * bouton « PDF » de la semaine affichée (vue semaine, `semaine-pdf.ts`). La
- * recherche (nom, démarche) porte sur toutes les semaines ; un clic sur une
- * semaine trouvée y ramène. Un clic sur un RDV ouvre l'éditeur
+ * la précédente / suivante, même vide), par jour, et bouton « PDF » de la
+ * semaine affichée (vue semaine, `semaine-pdf.ts`). La recherche, en tête
+ * (nom, démarche, date jj/mm/aa ou jj/mm/aaaa, et/ou statut), porte sur
+ * toutes les semaines, passées comprises ; un clic sur une semaine trouvée
+ * y ramène. Un clic sur un RDV ouvre l'éditeur
  * (`RdvEditeur.vue`) dans un second panneau, à gauche de celui-ci. Les
  * modifications vont directement dans Grist (pas de reconstruction du site).
  */
@@ -64,17 +65,33 @@ async function load() {
 
 const sansAccents = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 const q = computed(() => sansAccents(recherche.value.trim()));
+/** Recherche (texte et/ou statut) : porte sur toutes les semaines, passées comprises. */
+const enRecherche = computed(() => !!q.value || !!statut.value);
+
+/** « 1/9/26 » → « 01/09/26 » (date jj/mm, jj/mm/aa ou jj/mm/aaaa) ; autre mot inchangé. */
+function motCherche(mot: string): string {
+	const d = /^(\d{1,2})\/(\d{1,2})(\/(\d{2}|\d{4}))?$/.exec(mot);
+	return d ? `${d[1].padStart(2, '0')}/${d[2].padStart(2, '0')}${d[3] ?? ''}` : mot;
+}
+/** Mots de la recherche : chacun doit se retrouver dans le RDV (nom, démarche, date). */
+const mots = computed(() => q.value.split(/\s+/).filter(Boolean).map(motCherche));
+
+/** Texte où chercher : nom, démarches, date en jj/mm/aaaa et jj/mm/aa. */
+function texteRecherche(r: RdvItem): string {
+	const [a, m, j] = r.date.split('-');
+	return sansAccents(`${r.beneficiaire.prenom} ${r.beneficiaire.nom} ${r.demarches.join(' ')} ${j}/${m}/${a} ${j}/${m}/${a.slice(2)}`);
+}
 
 const changerSemaine = (pas: number) => (semaine.value = plusJours(semaine.value, 7 * pas));
 
-/** RDV affichés : ceux de la semaine, ou, pendant une recherche, ceux de toutes les semaines. */
+/** RDV affichés : ceux de la semaine, ou, pendant une recherche (texte ou statut), ceux de toutes les semaines. */
 const affiches = computed(() => {
 	const fin = plusJours(semaine.value, 6);
 	return rdvs.value.filter(
 		(r) =>
-			(q.value || (r.date >= semaine.value && r.date <= fin)) &&
+			(enRecherche.value || (r.date >= semaine.value && r.date <= fin)) &&
 			(!statut.value || r.statut === statut.value) &&
-			(!q.value || sansAccents(`${r.beneficiaire.prenom} ${r.beneficiaire.nom} ${r.demarches.join(' ')}`).includes(q.value)),
+			(!mots.value.length || mots.value.every((mot) => texteRecherche(r).includes(mot))),
 	);
 });
 
@@ -95,6 +112,7 @@ const parSemaine = computed(() => {
 function allerA(lundi: string) {
 	semaine.value = lundi;
 	recherche.value = '';
+	statut.value = '';
 }
 
 const pdfEnCours = ref(false);
@@ -124,19 +142,36 @@ onMounted(load);
 	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
 
 	<div class="mb-4 space-y-3">
+		<!-- Recherche en tête (texte, statut) : elle porte sur toutes les semaines, pas seulement celle affichée. -->
+		<div class="grid gap-2 sm:grid-cols-[1fr_auto]">
+			<div class="relative">
+				<i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 mt-0.5 -translate-y-1/2 text-sm text-gray-400" aria-hidden="true"></i>
+				<input
+					v-model="recherche"
+					type="search"
+					placeholder="Rechercher un nom, une démarche, une date (jj/mm/aa)…"
+					:class="[inputClass, 'pl-9']"
+					aria-label="Rechercher dans toutes les semaines"
+				/>
+			</div>
+			<select v-model="statut" :class="inputClass" aria-label="Statut (toutes les semaines)">
+				<option value="">Tous les statuts</option>
+				<option v-for="s in statuts" :key="s" :value="s">{{ s }}</option>
+			</select>
+		</div>
 		<div class="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
 			<div class="flex min-w-0 flex-1 items-center gap-1">
-				<button type="button" :class="chevron" :disabled="!!q" aria-label="Semaine précédente" @click="changerSemaine(-1)">
+				<button type="button" :class="chevron" :disabled="enRecherche" aria-label="Semaine précédente" @click="changerSemaine(-1)">
 					<i class="fa-solid fa-chevron-left text-sm" aria-hidden="true"></i>
 				</button>
 				<h3 class="min-w-0 truncate text-center font-heading text-base font-semibold text-gray-900" aria-live="polite">
-					{{ q ? 'Toutes les semaines' : libelleSemaine(semaine) }}
+					{{ enRecherche ? 'Toutes les semaines' : libelleSemaine(semaine) }}
 				</h3>
-				<button type="button" :class="chevron" :disabled="!!q" aria-label="Semaine suivante" @click="changerSemaine(1)">
+				<button type="button" :class="chevron" :disabled="enRecherche" aria-label="Semaine suivante" @click="changerSemaine(1)">
 					<i class="fa-solid fa-chevron-right text-sm" aria-hidden="true"></i>
 				</button>
 			</div>
-			<div v-if="!q" class="flex shrink-0 items-center gap-2">
+			<div v-if="!enRecherche" class="flex shrink-0 items-center gap-2">
 				<button
 					v-if="semaine !== cetteSemaine"
 					type="button"
@@ -159,25 +194,18 @@ onMounted(load);
 			</div>
 		</div>
 		<p v-if="pdfErreur" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ pdfErreur }}</p>
-		<div class="grid gap-2 sm:grid-cols-[1fr_auto]">
-			<input v-model="recherche" type="search" placeholder="Rechercher un nom, une démarche…" :class="inputClass" aria-label="Rechercher dans toutes les semaines" />
-			<select v-model="statut" :class="inputClass" aria-label="Statut">
-				<option value="">Tous les statuts</option>
-				<option v-for="s in statuts" :key="s" :value="s">{{ s }}</option>
-			</select>
-		</div>
 	</div>
 
 	<p v-if="loading" class="flex items-center gap-2 text-sm font-light text-gray-500" role="status">
 		<i class="fa-solid fa-spinner fa-spin text-primary" aria-hidden="true"></i>Chargement des rendez-vous…
 	</p>
 	<p v-else-if="!parSemaine.length" class="text-sm font-light text-gray-500">
-		{{ q ? 'Aucun rendez-vous trouvé' : 'Aucun rendez-vous cette semaine' }}{{ statut ? ' pour ce statut' : '' }}.
+		{{ enRecherche ? 'Aucun rendez-vous trouvé' : 'Aucun rendez-vous cette semaine' }}.
 	</p>
 	<div v-else class="space-y-8">
 		<div v-for="[lundi, jours] in parSemaine" :key="lundi" class="space-y-5">
 			<button
-				v-if="q"
+				v-if="enRecherche"
 				type="button"
 				class="flex w-full items-center justify-between gap-3 border-b border-gray-200 pb-2 text-left font-heading text-sm font-semibold text-gray-900 hover:text-primary"
 				:aria-label="`Afficher la ${libelleSemaine(lundi).toLowerCase()}`"

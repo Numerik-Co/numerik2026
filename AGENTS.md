@@ -561,7 +561,7 @@ accepté à la lecture : `RDV_TYPES_RENOMMES`), champs vides = `encart:`.
 - **Module « Rendez-vous »** (`admin/`, bureau + `animateur`, registre
   `modules.ts` avec `plugin: 'rdv'` → masqué si le plugin est inactif,
   `ADMIN_MODULES.filter(disponible)`) : `RdvModule.vue` (une semaine à la fois,
-  par jour, filtre statut, recherche) ; clic → `RdvEditeur.vue`, **second
+  par jour, recherche texte + statut sur toutes les semaines) ; clic → `RdvEditeur.vue`, **second
   panneau fixé à gauche du panneau des modules** (`sm:right-[36rem]`, dans le
   DOM du panneau pour son piège de focus, Échap capturé sur `window`) :
   bénéficiaire et son commentaire en lecture seule, créneau (créneaux libres
@@ -584,11 +584,12 @@ accepté à la lecture : `RDV_TYPES_RENOMMES`), champs vides = `encart:`.
   (`MOTIFS_SUPPRESSION`, « Autre » + précision), `logEvent('rdv.suppression')`
   avec le RDV supprimé et le motif. Éditeur en 2 colonnes par requête de
   conteneur (`@container` / `@3xl:grid-cols-2`). Liste d'une semaine à la
-  fois (chevrons ‹ ›, « Cette semaine » ; recherche = toutes les semaines,
+  fois (chevrons ‹ ›, « Cette semaine » ; recherche texte — mots cumulés, dates jj/mm[/aa[aa]] — et/ou statut = toutes les semaines,
   regroupées, clic → la semaine), bouton « PDF » de la semaine affichée → `GET /api/admin/rdv/pdf?semaine=`
   (`admin/api/pdf.ts`, HTML de `admin/semaine-pdf.ts` : logo en data URI
   `?inline`, A4 paysage, créneaux de `horairesDuJour()` de `lib/creneaux.ts`
-  + RDV non annulés, statut pour une semaine terminée seulement) converti par `htmlToPdf()` de
+  + RDV non annulés : démarche, nom et message, sans coordonnées (RGPD) ; statut pour une
+  semaine terminée seulement) converti par `htmlToPdf()` de
   `src/lib/adhesion/bulletin.ts` (Gotenberg, `isGotenbergEnabled()`).
   Zones qui défilent des panneaux d'admin : utilitaire `scrollbar-fin`
   (`src/styles/global.css`, ascenseur fin). `request()` de

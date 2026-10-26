@@ -2,12 +2,13 @@
  * PDF d'une semaine de RDV (module « Rendez-vous », bouton par semaine) :
  * vue semaine en A4 paysage — logo de l'association, une colonne par
  * jour de permanence (ou portant un RDV), chaque créneau libre ou occupé
- * (démarche, usager, téléphone ou e-mail, commune, message ; statut pour
- * une semaine terminée seulement). RDV « Annulé » non repris : le créneau
- * apparaît libre. HTML converti par Gotenberg (`htmlToPdf()`, partagé avec
- * le bulletin d'adhésion).
+ * (démarche, nom de l'usager et son message ; statut pour une semaine
+ * terminée seulement). RDV « Annulé » non repris : le créneau apparaît libre. HTML
+ * converti par Gotenberg (`htmlToPdf()`, partagé avec le bulletin d'adhésion).
  *
- * Code serveur uniquement (noms et téléphones des bénéficiaires).
+ * RGPD (minimisation) : document imprimé, donc ni coordonnées ni commune
+ * du bénéficiaire — consultables dans le module si besoin.
+ * Code serveur uniquement (noms des bénéficiaires).
  */
 import { association } from '../../../lib/association';
 import { site } from '../../../config/site';
@@ -57,13 +58,6 @@ function periode(lundi: string, dernier: string): string {
 	return `du ${debut} au ${fin}`;
 }
 
-/** « 0600000001 » ou « +33 6 00 00 00 01 » → « 06.00.00.00.01 » ; autre format laissé tel quel. */
-function telephone(tel: string): string {
-	let chiffres = tel.replace(/\D/g, '');
-	if (/^33\d{9}$/.test(chiffres)) chiffres = `0${chiffres.slice(2)}`;
-	return /^\d{10}$/.test(chiffres) ? chiffres.match(/\d{2}/g)!.join('.') : tel;
-}
-
 interface Ligne {
 	heure: string;
 	rdv: RdvAdmin[];
@@ -82,18 +76,15 @@ function lignesDuJour(date: string, rdvs: RdvAdmin[]): { lieu: string; lignes: L
 	return { lieu: permanence?.lieu || rdvs.find((r) => r.lieu)?.lieu || '', lignes };
 }
 
-/** Carte d'un RDV : démarche (gras, bleu comme l'heure), usager, téléphone sinon e-mail, commune, message. */
+/** Carte d'un RDV : démarche (gras, bleu comme l'heure), nom de l'usager, message. */
 function carteRdv(r: RdvAdmin, avecStatut: boolean): string {
 	const b = r.beneficiaire;
 	const nom = [b.prenom, b.nom].filter(Boolean).join(' ') || 'Bénéficiaire inconnu·e';
-	const statut = avecStatut && r.statut && r.statut !== STATUT_RDV.confirme ? `<span class="statut">${echapper(r.statut)}</span>` : '';
-	const contact = b.telephone ? telephone(b.telephone) : b.email;
 	const commentaire = r.commentaire.length > 140 ? `${r.commentaire.slice(0, 140)}…` : r.commentaire;
+	const statut = avecStatut && r.statut && r.statut !== STATUT_RDV.confirme ? `<span class="statut">${echapper(r.statut)}</span>` : '';
 	return `<div class="rdv">
 		<div class="demarche">${echapper(r.demarches.join(', ') || 'Démarche non précisée')}${statut}</div>
 		<div class="usager">${echapper(nom)}</div>
-		${contact ? `<div class="contact">${echapper(contact)}</div>` : ''}
-		${b.commune ? `<div class="commune">${echapper(b.commune)}</div>` : ''}
 		${commentaire ? `<div class="commentaire">« ${echapper(commentaire)} »</div>` : ''}
 	</div>`;
 }
@@ -167,9 +158,8 @@ export function semaineHtml(lundi: string, tous: RdvAdmin[]): string {
 	.rdv + .rdv { margin-top: 1.5mm; padding-top: 1.5mm; border-top: 0.2mm dashed #e5e7eb; }
 	.demarche { font-weight: 700; color: var(--primary); }
 	.usager { font-weight: 600; color: #111827; }
-	.statut { margin-left: 1.5mm; padding: 0 1.5mm; border-radius: 1mm; background: #fef3c7; color: #92400e; font-size: 6.5pt; font-weight: 600; }
-	.contact, .commune { color: #374151; overflow-wrap: anywhere; }
 	.commentaire { margin-top: 0.5mm; color: #6b7280; font-style: italic; }
+	.statut { margin-left: 1.5mm; padding: 0 1.5mm; border-radius: 1mm; background: #fef3c7; color: #92400e; font-size: 6.5pt; font-weight: 600; }
 	.vide { margin-top: 10mm; text-align: center; font-size: 11pt; color: #6b7280; }
 	/* Bas de chaque page (élément fixe : répété par Chromium à l'impression). */
 	.pied { position: fixed; bottom: 0; left: 0; right: 0; font-size: 7pt; color: #9ca3af; text-align: right; }
