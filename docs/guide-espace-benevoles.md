@@ -259,9 +259,19 @@ chaque publication, comptes). Recherche par nom ou objet, connexions
 masquables, une page par année. Lecture seule.
 
 **Rendez-vous** (bureau et animateur·rice·s, si la prise de RDV est activée) :
-les rendez-vous pris en ligne, **À venir** ou **Passés**, par jour, avec un
-filtre de statut et une recherche (nom, démarche). Un clic sur un RDV ouvre
-un **second panneau à gauche** : coordonnées et commentaire du bénéficiaire
+les rendez-vous pris en ligne, **une semaine à la fois** (ouvert sur la
+semaine en cours ; chevrons ‹ › pour la précédente ou la suivante, « Cette
+semaine » pour revenir), par jour. La recherche, en haut du module (nom,
+démarche, date au format 26/10/26 ou 26/10/2026 — « 26/10 » suffit —, et/ou
+statut), porte sur toutes les semaines, passées comprises ; plusieurs mots
+se cumulent (« camille 26/10 ») ; un clic sur une semaine
+trouvée l'affiche. Le bouton **PDF** télécharge le planning de la semaine
+affichée, du lundi au vendredi (logo de l'association, une colonne par jour,
+créneaux libres et rendez-vous : démarche, nom de l'usager et son message — les
+coordonnées restent dans le module, RGPD oblige — ; statut — Honoré, Absent — sur une semaine
+terminée seulement ; rendez-vous annulés exclus) — document interne, à ne
+pas diffuser. Il faut le serveur PDF (Gotenberg, `GOTENBERG_URL` du `.env`).
+Un clic sur un RDV ouvre un **second panneau à gauche** : coordonnées et commentaire du bénéficiaire
 (lecture seule, la fiche se modifie dans Grist) et le rendez-vous — jour et
 horaire (seuls les créneaux libres de la période de réservation sont
 proposés, urgences comprises), démarche, **statut** (Confirmé, Honoré, Absent,
@@ -271,8 +281,15 @@ sous-thématique, niveau d'autonomie, orientation vers une autre structure,
 notes) et l'**avis du bénéficiaire** (satisfaction, à choisir parmi cinq visages — un
 nouveau clic l'efface —, suggestions) — rubriques
 reprises des colonnes du document Grist. **Enregistrer** écrit directement dans Grist, sans reconstruire
-le site ; un créneau déjà pris est refusé. Échap ou la croix ferme l'éditeur.
-Chaque modification est notée dans le journal.
+le site ; un créneau déjà pris est refusé. Sur un écran assez large, les
+rubriques sont sur deux colonnes (bénéficiaire et rendez-vous à gauche, compte
+rendu et avis à droite). **Supprimer** (en bas de l'éditeur) efface le
+rendez-vous de Grist — pour un doublon, une erreur de saisie, un test ; un
+rendez-vous décommandé se passe plutôt en « Annulé » — après le choix d'un
+**motif** (Doublon, Erreur de saisie, Rendez-vous de test, ou Autre avec une
+précision obligatoire) ; la fiche du bénéficiaire reste. Échap ou la croix
+ferme l'éditeur. Chaque modification et chaque suppression (avec son motif)
+est notée dans le journal.
 
 **Plugins** (super admin seulement) : volets du site que l'association active
 ou non (aujourd'hui : prise de rendez-vous en ligne). La liste montre chaque

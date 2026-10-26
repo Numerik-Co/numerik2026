@@ -72,7 +72,7 @@ configurée »), le reste du site fonctionne.
 | `GRIST_DOC_ID_RDV` | Document Grist des RDV (plugin `rdv`) — optionnel, voir [le plugin](../src/plugins/rdv/README.md) |
 | `GRIST_API_KEY_RDV` | Clé API Grist propre au plugin `rdv` — **secret**, facultative (sinon `GRIST_API_KEY`) ; conseillée : limitée au document des RDV |
 | `GRIST_TABLE_BENEFICIAIRES` / `GRIST_TABLE_RDV` / `GRIST_TABLE_DEMARCHES` | Tables du document RDV (défauts `Beneficiaires`, `RDV`, `Demarches`) — optionnel |
-| `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
+| `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF et le PDF des semaines de RDV (module « Rendez-vous ») (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
 | `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |
 | `BULLETIN_SECRET` | Secret HMAC du lien de bulletin — **secret**, requis avec `GOTENBERG_URL` |
 | `AUTH_SECRET` | Signature des sessions de l'espace bénévoles (≥ 32 caractères) — **secret**, voir [auth.md](auth.md) |

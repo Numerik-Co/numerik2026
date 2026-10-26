@@ -2,13 +2,13 @@
  * Gestion des RDV depuis l'espace bénévoles (module « Rendez-vous » du
  * plugin, bureau et animateur·rice·s) : liste des RDV avec la fiche du
  * bénéficiaire, et modification d'un RDV (créneau, démarche, statut,
- * compte rendu : `suivi.ts`). Écrit directement dans Grist : pas de reconstruction du site.
+ * compte rendu : `suivi.ts`) ou suppression motivée. Écrit directement dans Grist : pas de reconstruction du site.
  *
  * Code serveur uniquement.
  */
 import { creneauEstLibre, lieuPourDate } from '../lib/creneaux';
 import { demarchesParIds, fetchDemarches } from '../lib/demarches';
-import { COLS, dateToEpochSeconds, epochSecondsToDate, listRecords, refList, STATUT_RDV, TABLES, updateRecord } from '../lib/grist';
+import { COLS, dateToEpochSeconds, epochSecondsToDate, deleteRecord, listRecords, refList, STATUT_RDV, TABLES, updateRecord } from '../lib/grist';
 import type { Demarche } from '../lib/types';
 import { champsSuivi, ecrireSuivi, lireSuivi, type ChampSuiviDispo } from './suivi';
 
@@ -170,4 +170,32 @@ export async function modifierRdv(id: number, m: ModificationRdv): Promise<Resul
 
 	await updateRecord(TABLES.rdv, id, champs);
 	return { ok: true, changements };
+}
+
+/** Motifs proposés à la suppression (« Autre » = motif libre obligatoire). */
+export const MOTIFS_SUPPRESSION = ['Doublon (pris deux fois)', 'Erreur de saisie', 'Rendez-vous de test', 'Autre'] as const;
+
+/** Corps JSON → motif de suppression (« Autre : précision », précision obligatoire pour « Autre »). */
+export function lireMotifSuppression(raw: unknown): string | null {
+	const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+	const motif = typeof r.motif === 'string' ? r.motif : '';
+	const precision = typeof r.precision === 'string' ? r.precision.trim().slice(0, 500) : '';
+	if (!(MOTIFS_SUPPRESSION as readonly string[]).includes(motif)) return null;
+	if (motif === 'Autre') return precision || null;
+	return precision ? `${motif} : ${precision}` : motif;
+}
+
+export type ResultatSuppression = { ok: true; rdv: RdvAdmin } | { ok: false; erreur: string; status: number };
+
+/**
+ * Supprime la ligne `RDV` (la fiche du bénéficiaire reste) : doublon, erreur,
+ * test. Un RDV simplement décommandé se passe plutôt en « Annulé » (gardé
+ * dans les statistiques).
+ */
+export async function supprimerRdv(id: number): Promise<ResultatSuppression> {
+	const { rdvs } = await listerRdv();
+	const rdv = rdvs.find((r) => r.id === id);
+	if (!rdv) return { ok: false, erreur: 'Rendez-vous introuvable (déjà supprimé dans Grist ?).', status: 404 };
+	await deleteRecord(TABLES.rdv, id);
+	return { ok: true, rdv };
 }

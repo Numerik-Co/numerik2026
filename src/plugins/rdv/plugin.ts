@@ -38,6 +38,7 @@ export default {
 		route('/api/rdv/prendre', 'api/prendre.ts'),
 		// Module « Rendez-vous » de l'espace bénévoles (garde : src/middleware.ts).
 		route('/api/admin/rdv', 'admin/api/index.ts'),
+		route('/api/admin/rdv/pdf', 'admin/api/pdf.ts'),
 		route('/api/admin/rdv/[id]', 'admin/api/[id].ts'),
 	],
 	env: {

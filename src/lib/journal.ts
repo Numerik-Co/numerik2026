@@ -45,6 +45,7 @@ export type JournalAction =
 	| 'charte.modification'
 	| 'plugin.modification'
 	| 'rdv.modification'
+	| 'rdv.suppression'
 	| 'compte.creation'
 	| 'compte.modification'
 	| 'compte.reinitialisation'
