@@ -89,8 +89,8 @@ onMounted(load);
 		@cancel-reload="cancelReload"
 		@publish-lot="publishLot"
 	/>
-	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
-	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+	<p v-if="!availability.ok" class="mb-4 alerte-attention">{{ availability.reason }}</p>
+	<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
 
 	<FormTabs v-model="tab" :tabs="TABS" prefix="asso" :marks="dirty" />
 

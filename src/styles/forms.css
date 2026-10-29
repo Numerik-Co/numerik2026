@@ -1,0 +1,88 @@
+/* Champs de formulaire du site (pages publiques, plugins, espace bénévoles).
+   Seul endroit où régler leur apparence : hauteur, bordure, focus, erreur.
+
+   - `champ` : input texte / email / date / nombre…, select, textarea.
+     Taille « sm » façon Bootstrap (form-control-sm) : ~30 px de haut.
+   - `champ-erreur` : à ajouter à `champ` quand la valeur est refusée.
+   - `champ-groupe` : bordure autour d'un préfixe + champ (adresse « /activites/… »),
+     sur le conteneur ; le <input> qu'il contient n'a besoin d'aucune classe.
+   - `champ-libelle` : <label> (ou <span>, <legend>, <p>) au-dessus d'un champ.
+   - `champ-aide` : texte d'aide sous un champ.
+   - `champ-erreur-texte` : message d'erreur sous un champ.
+   - `message-erreur` : erreur d'un groupe ou d'une étape (« choisissez un créneau »).
+   - `alerte-erreur`, `alerte-succes`, `alerte-attention` : encart en tête ou en
+     pied de formulaire (échec d'envoi, « Enregistré », avertissement).
+
+   Couche `components` : une classe Tailwind ajoutée à côté (`w-28`, `pl-9`,
+   `font-mono`, `mt-4`…) l'emporte toujours. Cases à cocher et boutons radio
+   ne sont pas concernés. Côté Vue, l'espace bénévoles passe par `inputClass`
+   (src/components/admin/context.ts), qui vaut `mt-1 champ`. */
+
+:root {
+	--champ-py: 0.25rem; /* hauteur : 0.25rem = sm, 0.5rem = taille normale */
+	--champ-px: 0.75rem;
+	--champ-rayon: var(--radius-lg);
+}
+
+@layer components {
+	.champ,
+	.champ-groupe {
+		@apply w-full border border-gray-300 bg-white text-sm text-gray-900;
+		border-radius: var(--champ-rayon);
+	}
+
+	.champ {
+		@apply outline-none placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500;
+		padding: var(--champ-py) var(--champ-px);
+	}
+
+	.champ-erreur {
+		@apply border-red-400 focus:border-red-400 focus:ring-red-400/20;
+	}
+
+	.champ-groupe {
+		@apply flex items-center focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20;
+
+		& > span {
+			@apply whitespace-nowrap text-gray-500;
+			padding-left: var(--champ-px);
+		}
+
+		& > input {
+			@apply min-w-0 flex-1 border-0 bg-transparent outline-none focus:ring-0;
+			border-radius: var(--champ-rayon);
+			padding: var(--champ-py) var(--champ-px) var(--champ-py) 0;
+		}
+	}
+
+	.champ-libelle {
+		@apply block text-sm font-medium text-gray-700;
+	}
+
+	.champ-aide {
+		@apply mt-1 block text-xs font-light text-gray-500;
+	}
+
+	.champ-erreur-texte {
+		@apply mt-1 block text-xs text-red-600;
+	}
+
+	.message-erreur {
+		@apply text-sm text-red-600;
+	}
+
+	.alerte-erreur,
+	.alerte-succes,
+	.alerte-attention {
+		@apply rounded-lg px-3 py-2 text-sm;
+	}
+	.alerte-erreur {
+		@apply bg-red-50 text-red-700;
+	}
+	.alerte-succes {
+		@apply bg-green-50 text-green-800;
+	}
+	.alerte-attention {
+		@apply bg-amber-50 text-amber-900;
+	}
+}

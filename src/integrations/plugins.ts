@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
 import { parse as parseYaml } from 'yaml';
-import { actifParDefaut } from '../plugins/catalogue';
+import { resoudrePlugins } from '../plugins/catalogue';
 import { PLUGIN_MANIFESTS } from '../plugins/manifests';
 
 function pluginsActifs(file: URL): Record<string, unknown> {
@@ -32,10 +32,10 @@ export default function plugins(): AstroIntegration {
 				const reglages = new URL('src/content/reglages.yaml', config.root);
 				addWatchFile(reglages);
 				addWatchFile(new URL('src/content/rdv.yaml', config.root));
-				const actifs = pluginsActifs(reglages);
+				const actifs = resoudrePlugins(pluginsActifs(reglages));
 				for (const plugin of PLUGIN_MANIFESTS) {
-					// Absent de reglages.yaml : état par défaut du catalogue (adhésion : actif).
-					if ((actifs[plugin.id] ?? actifParDefaut(plugin.id)) !== true) continue;
+					// Écrit dans reglages.yaml, sinon défaut du catalogue ; plugins requis actifs.
+					if (!actifs[plugin.id]) continue;
 					for (const r of plugin.routes(config.root)) {
 						injectRoute({ pattern: r.pattern, entrypoint: fileURLToPath(new URL(r.entrypoint, config.root)) });
 					}

@@ -321,6 +321,8 @@ export interface PluginItem {
 	doc: string;
 	actif: boolean;
 	enLigne: boolean;
+	requisInactifs: { id: string; label: string }[];
+	dependants: { id: string; label: string }[];
 	manquants: { fichier: string; aide: string }[];
 	avertissements: { nom: string; aide: string }[];
 	secrets: { nom: string; utilise: string | null }[];

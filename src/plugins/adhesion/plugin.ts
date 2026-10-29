@@ -7,7 +7,10 @@ import type { PluginManifest } from '../manifests';
 
 const route = (pattern: string, fichier: string) => ({ pattern, entrypoint: `src/plugins/adhesion/${fichier}` });
 
-/** Routes `/api/adhesion/<nom>` : un fichier `api/<nom>.ts` chacune. */
+/**
+ * Routes `/api/adhesion/<nom>` : un fichier `api/<nom>.ts` chacune. `membre`
+ * et `inscription` servent aussi au plugin inscription (qui requiert celui-ci).
+ */
 const API = [
 	'activites',
 	'adresse',
@@ -20,10 +23,7 @@ const API = [
 	'inscription',
 	'membre',
 	'membres',
-	'offre-inscription',
-	'participant-exterieur',
 	'preferences',
-	'preinscription',
 ];
 
 export default {
@@ -31,7 +31,6 @@ export default {
 	routes: () => [
 		route('/adherer', 'pages/adherer.astro'),
 		route('/adherer/formulaire', 'pages/formulaire.astro'),
-		route('/inscription', 'pages/inscription.astro'),
 		route('/je-participe', 'pages/je-participe.astro'),
 		...API.map((nom) => route(`/api/adhesion/${nom}`, `api/${nom}.ts`)),
 		route('/api/presence/inscrire', 'api/presence/inscrire.ts'),

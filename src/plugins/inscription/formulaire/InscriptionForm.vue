@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { adhesionApi } from '../adhesion/client';
+import { adhesionApi, inscriptionApi } from './client';
 import EtapeProfil from './EtapeProfil.vue';
 import EtapeActivite from './EtapeActivite.vue';
 import EtapeRecap from './EtapeRecap.vue';
@@ -10,7 +10,7 @@ import type {
 	Genre,
 	MembreCandidat,
 	Profil,
-} from '../../lib/types';
+} from '../../adhesion/lib/types';
 
 type Step = 'profil' | 'activite' | 'recap';
 
@@ -37,7 +37,7 @@ const activites = ref<ActiviteOption[]>([]);
 const activiteId = ref<number | null>(null);
 const activiteLabel = ref('');
 const prix = ref<number | null>(null);
-/** Prix de l'adhésion individuelle de la saison (`/api/adhesion/offre-inscription`). */
+/** Prix de l'adhésion individuelle de la saison (`/api/inscription/offre`). */
 const prixAdhesion = ref<number | null>(null);
 const disponibilite = ref('');
 /** `preinscription` : l'activité visée n'est pas publiée, on note seulement l'intérêt. */
@@ -101,7 +101,7 @@ async function submitExterieur() {
 	busy.value = true;
 	error.value = '';
 	try {
-		const res = await adhesionApi.creerParticipantExterieur({ ...exterieur });
+		const res = await inscriptionApi.creerParticipantExterieur({ ...exterieur });
 		identifier(res.membreId, `${res.prenom} ${res.nom}`.trim(), false);
 	} catch (e) {
 		error.value = messageOf(e);
@@ -120,7 +120,7 @@ async function identifier(id: number, label: string, adhesionEnCours: boolean) {
 		try {
 			// Le serveur restreint la liste aux activités visées par la fiche d'origine
 			// ou bascule en préinscription si aucune n'est publiée.
-			const res = await adhesionApi.offreInscription(cible.value);
+			const res = await inscriptionApi.offre(cible.value);
 			activites.value = res.activites;
 			mode.value = res.mode;
 			cibleIntrouvable.value = res.cibleIntrouvable;
@@ -143,7 +143,7 @@ async function submitPreinscription(id: number) {
 	busy.value = true;
 	error.value = '';
 	try {
-		await adhesionApi.preinscrire({ membreId: membreId.value, activiteId: id });
+		await inscriptionApi.preinscrire({ membreId: membreId.value, activiteId: id });
 		activiteLabel.value = activites.value.find((a) => a.id === id)?.label ?? '';
 		prix.value = null;
 		preinscrit.value = true;
@@ -246,7 +246,7 @@ function annuler() {
 			/>
 		</ol>
 
-		<p v-if="error" class="mt-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+		<p v-if="error" class="mt-6 alerte-erreur" role="alert">
 			{{ error }}
 		</p>
 

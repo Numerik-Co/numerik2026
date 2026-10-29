@@ -32,8 +32,8 @@ import OrderArrows from './pages/OrderArrows.vue';
 import { pluginActif } from '../../../plugins';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
-/** Pastille « sans inscription » : seulement si l'inscription en ligne existe (plugin adhésion). */
-const adhesionActive = pluginActif('adhesion');
+/** Pastille « sans inscription » : seulement si l'inscription en ligne existe (plugin inscription). */
+const inscriptionActive = pluginActif('inscription');
 
 type View =
 	| { name: 'list' }
@@ -223,8 +223,8 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 		@cancel-reload="cancelReload"
 		@publish-lot="publishLot"
 	/>
-	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
-	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+	<p v-if="!availability.ok" class="mb-4 alerte-attention">{{ availability.reason }}</p>
+	<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
 
 	<!-- Liste -->
 	<template v-if="view.name === 'list'">
@@ -262,7 +262,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 				<button type="button" class="text-xs font-medium text-gray-700 hover:underline" @click="cancelOrder">Annuler</button>
 			</form>
 
-			<p v-if="orphans.length" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+			<p v-if="orphans.length" class="alerte-erreur" role="alert">
 				Catégorie inconnue pour : {{ orphans.map((a) => a.title || a.slug).join(', ') }}. Ouvrez la fiche et choisissez une
 				catégorie, sinon les prochaines publications échoueront.
 			</p>
@@ -369,7 +369,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 							<span v-if="!a.isPublish" :class="[badge, 'shrink-0 bg-amber-50 text-amber-800']">brouillon</span>
 							<span v-if="isPendingHref(a.href)" :class="[badge, 'shrink-0 bg-amber-100 text-amber-800']" title="Modification enregistrée, pas encore publiée">À publier</span>
 							<span v-if="a.level" :class="[greyBadge, 'shrink-0 whitespace-nowrap']">{{ a.level }}</span>
-							<span v-if="adhesionActive && !a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
+							<span v-if="inscriptionActive && !a.inscription" :class="[greyBadge, 'shrink-0 whitespace-nowrap']" title="Bouton « S'inscrire » masqué">sans inscription</span>
 							<span class="ml-auto flex shrink-0 items-center gap-1">
 								<OrderArrows
 									:label="a.title"

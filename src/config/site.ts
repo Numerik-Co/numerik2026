@@ -16,7 +16,7 @@
 import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import raw from '../content/reglages.yaml?raw';
-import { actifParDefaut, PLUGIN_IDS, type PluginId } from '../plugins/catalogue';
+import { actifParDefaut, PLUGIN_IDS, resoudrePlugins, type PluginId } from '../plugins/catalogue';
 
 export interface FormToggle {
 	/** `false` masque le formulaire et affiche `closedTitle` + `closedMessage` à la place. */
@@ -186,7 +186,8 @@ export function parseReglages(text: string) {
 		forms: Object.fromEntries(
 			Object.entries(DEFAULTS.forms).map(([k, d]) => [k, { ...d, ...o.forms?.[k as FormKey] }]),
 		) as Record<FormKey, FormToggle>,
-		plugins: { ...DEFAULTS.plugins, ...o.plugins },
+		// Valeurs écrites, sinon défauts ; inactif si un plugin requis l'est.
+		plugins: resoudrePlugins({ ...DEFAULTS.plugins, ...o.plugins }),
 	};
 }
 

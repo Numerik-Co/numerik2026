@@ -81,29 +81,29 @@ async function submit(event: Event) {
 			Une catégorie regroupe des activités (comme « Ateliers ») : elle a sa carte sur l'accueil et sur la page Activités, et sa
 			propre page qui liste ses activités.
 		</p>
-		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
 
 		<div>
-			<label for="cat-label" class="block text-sm font-semibold text-gray-700">Nom</label>
+			<label for="cat-label" class="champ-libelle">Nom</label>
 			<input id="cat-label" v-model="form.label" type="text" required maxlength="40" :class="inputClass" />
 		</div>
 		<div>
-			<label for="cat-slug" class="block text-sm font-semibold text-gray-700">Adresse</label>
+			<label for="cat-slug" class="champ-libelle">Adresse</label>
 			<div
-				class="mt-1 flex items-center rounded-lg border border-gray-300 bg-white text-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+				class="mt-1 champ-groupe"
 			>
-				<span class="whitespace-nowrap pl-3 text-gray-500">/activites/</span>
+				<span>/activites/</span>
 				<input
 					id="cat-slug"
 					:value="slug"
 					type="text"
 					pattern="[a-z0-9]+(-[a-z0-9]+)*"
 					:readonly="Boolean(editing)"
-					:class="['min-w-0 flex-1 rounded-r-lg border-0 py-2 pr-3 focus:outline-none focus:ring-0', editing ? 'text-gray-500' : 'text-gray-900']"
+					:class="{ 'text-gray-500': editing }"
 					@input="onSlugInput"
 				/>
 			</div>
-			<p v-if="!editing" class="mt-1 text-xs font-light text-gray-500">
+			<p v-if="!editing" class="champ-aide">
 				Déduite du nom ; ne change plus après la création. La catégorie se place en dernière position ; les flèches ↑/↓ de la
 				liste changent l'ordre.
 			</p>
@@ -128,11 +128,11 @@ async function submit(event: Event) {
 		</fieldset>
 
 		<div>
-			<label for="cat-description" class="block text-sm font-semibold text-gray-700">
+			<label for="cat-description" class="champ-libelle">
 				Description <span class="font-light text-gray-500">(facultative)</span>
 			</label>
 			<textarea id="cat-description" v-model="form.description" rows="3" maxlength="300" :class="inputClass"></textarea>
-			<p class="mt-1 text-xs font-light text-gray-500">Une phrase, affichée dans le bandeau de la page de la catégorie.</p>
+			<p class="champ-aide">Une phrase, affichée dans le bandeau de la page de la catégorie.</p>
 		</div>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">

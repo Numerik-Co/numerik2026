@@ -1,8 +1,7 @@
 /**
  * Ce que le plugin adhésion fournit au reste du site — toujours à travers ce
  * fichier ou `pluginActif('adhesion')`, pour qu'un plugin inactif n'y laisse
- * aucune trace (planning Grist, bouton « S'inscrire », liens « Adhérer » et
- * « Je participe »).
+ * aucune trace (planning Grist, liens « Adhérer » et « Je participe »).
  */
 import type { AgendaSession } from '../../lib/agenda';
 import { pluginActif } from '..';
@@ -11,7 +10,6 @@ import { fetchPlanningAgenda } from './lib/planning';
 /** Pages publiques du plugin (liens du site, plan du site). */
 export const ADHESION_HREF = '/adherer';
 export const FORMULAIRE_HREF = '/adherer/formulaire';
-export const INSCRIPTION_HREF = '/inscription';
 export const PRESENCE_HREF = '/je-participe';
 
 /**
@@ -24,11 +22,13 @@ export async function planningActivites(): Promise<AgendaSession[]> {
 }
 
 /**
- * Lien du site qui mène à une page du plugin (`/adherer…`, `/inscription`,
- * `/je-participe`) : à masquer quand le plugin est inactif (404).
+ * Lien du site qui mène à une page du plugin (`/adherer…`, `/je-participe`)
+ * ou du plugin inscription (`/inscription`, qui le requiert) : à masquer
+ * quand il est inactif (404).
  */
 export function lienAdhesionIndisponible(href: string): boolean {
-	if (pluginActif('adhesion')) return false;
 	const chemin = href.split(/[?#]/)[0].replace(/\/+$/, '');
-	return [ADHESION_HREF, INSCRIPTION_HREF, PRESENCE_HREF].some((p) => chemin === p || chemin.startsWith(`${p}/`));
+	const vers = (p: string) => chemin === p || chemin.startsWith(`${p}/`);
+	if (vers('/inscription')) return !pluginActif('inscription');
+	return !pluginActif('adhesion') && [ADHESION_HREF, PRESENCE_HREF].some(vers);
 }

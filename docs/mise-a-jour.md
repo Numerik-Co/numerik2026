@@ -85,7 +85,7 @@ sont présents, sinon Node seul) ; `--docker` / `--node` pour l'imposer.
 `SITE_URL` doit être dans le `.env`.
 
 ⚠️ **Plugins** (volets activables, [src/plugins/README.md](../src/plugins/README.md)) :
-ils sont inactifs par défaut (sauf l'adhésion). Quand une version transforme en plugin un volet
+ils sont inactifs par défaut (sauf l'adhésion et l'inscription). Quand une version transforme en plugin un volet
 que le site utilise déjà, ajouter **avant** la mise à jour dans
 `src/content/reglages.yaml` :
 
@@ -97,10 +97,12 @@ plugins:
 Sinon le volet disparaît du site après la mise à jour. Les notes de version
 le signalent.
 
-**Adhésion (plugin `adhesion`, version qui suit la 0.5.1)** : actif par
-défaut, rien à faire — adhésion, inscription, présence et planning Grist
-restent en place. Une association qui n'en veut pas écrit `adhesion: false`
-sous `plugins:` (ou le désactive dans le module « Plugins »).
+**Adhésion et inscription (plugins `adhesion` et `inscription`, version qui
+suit la 0.5.1)** : actifs par défaut, rien à faire — adhésion, inscription,
+présence et planning Grist restent en place. Une association qui n'en veut
+pas écrit `adhesion: false` (retire aussi l'inscription) ou
+`inscription: false` sous `plugins:`, ou les désactive dans le module
+« Plugins ».
 
 **Prise de RDV (plugin `rdv`, version qui suit la 0.4.9)** — en plus de la
 ligne ci-dessus, dans `src/content/` :

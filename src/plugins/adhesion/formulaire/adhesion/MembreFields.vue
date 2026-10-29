@@ -18,11 +18,10 @@ const genres: { value: string; label: string }[] = [
 	{ value: 'Association', label: 'Association' },
 ];
 
-const base =
-	'mt-1 w-full rounded-lg border px-3 py-1.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary/20';
+const base = 'mt-1 champ';
 
 function cls(field: keyof MembrePayload): string {
-	return `${base} ${props.errors?.[field] ? 'border-red-400 focus:border-red-400' : 'border-gray-200 focus:border-primary'}`;
+	return `${base} ${props.errors?.[field] ? 'champ-erreur' : ''}`;
 }
 
 // --- Autocomplétion d'adresse (API Adresse / BAN) ---
@@ -61,7 +60,7 @@ function choisir(s: AdresseSuggestion) {
 <template>
 	<div class="grid gap-4 sm:grid-cols-2">
 		<fieldset class="sm:col-span-2">
-			<legend class="text-sm font-medium text-gray-700">Genre</legend>
+			<legend class="champ-libelle">Genre</legend>
 			<div class="mt-2 flex flex-wrap gap-2">
 				<label
 					v-for="g in genres"
@@ -76,32 +75,32 @@ function choisir(s: AdresseSuggestion) {
 					<span>{{ g.label }}</span>
 				</label>
 			</div>
-			<p v-if="errors?.genre" class="mt-1 text-xs text-red-600">{{ errors.genre }}</p>
+			<p v-if="errors?.genre" class="champ-erreur-texte">{{ errors.genre }}</p>
 		</fieldset>
 
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700">Nom</span>
+			<span class="champ-libelle">Nom</span>
 			<input v-model.trim="membre.nom" autocomplete="family-name" :class="cls('nom')" />
-			<span v-if="errors?.nom" class="mt-1 block text-xs text-red-600">{{ errors.nom }}</span>
+			<span v-if="errors?.nom" class="champ-erreur-texte">{{ errors.nom }}</span>
 		</label>
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700">Prénom</span>
+			<span class="champ-libelle">Prénom</span>
 			<input v-model.trim="membre.prenom" autocomplete="given-name" :class="cls('prenom')" />
-			<span v-if="errors?.prenom" class="mt-1 block text-xs text-red-600">{{ errors.prenom }}</span>
+			<span v-if="errors?.prenom" class="champ-erreur-texte">{{ errors.prenom }}</span>
 		</label>
 		<label v-if="membre.genre !== 'Association'" class="block">
-			<span class="text-sm font-medium text-gray-700">Date de naissance</span>
+			<span class="champ-libelle">Date de naissance</span>
 			<input v-model="membre.dateNaissance" type="date" autocomplete="bday" :class="cls('dateNaissance')" />
-			<span v-if="errors?.dateNaissance" class="mt-1 block text-xs text-red-600">{{ errors.dateNaissance }}</span>
+			<span v-if="errors?.dateNaissance" class="champ-erreur-texte">{{ errors.dateNaissance }}</span>
 		</label>
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700">Courriel</span>
+			<span class="champ-libelle">Courriel</span>
 			<input v-model.trim="membre.email" type="email" autocomplete="email" :class="cls('email')" />
-			<span v-if="errors?.email" class="mt-1 block text-xs text-red-600">{{ errors.email }}</span>
+			<span v-if="errors?.email" class="champ-erreur-texte">{{ errors.email }}</span>
 		</label>
 
 		<div class="relative block sm:col-span-2">
-			<span class="text-sm font-medium text-gray-700">Adresse</span>
+			<span class="champ-libelle">Adresse</span>
 			<input
 				v-model.trim="membre.adresse"
 				autocomplete="off"
@@ -125,33 +124,33 @@ function choisir(s: AdresseSuggestion) {
 					</button>
 				</li>
 			</ul>
-			<span v-if="errors?.adresse" class="mt-1 block text-xs text-red-600">{{ errors.adresse }}</span>
+			<span v-if="errors?.adresse" class="champ-erreur-texte">{{ errors.adresse }}</span>
 		</div>
 
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700">Code postal</span>
+			<span class="champ-libelle">Code postal</span>
 			<input
 				v-model.trim="membre.codePostal"
 				inputmode="numeric"
 				autocomplete="postal-code"
 				:class="cls('codePostal')"
 			/>
-			<span v-if="errors?.codePostal" class="mt-1 block text-xs text-red-600">{{ errors.codePostal }}</span>
+			<span v-if="errors?.codePostal" class="champ-erreur-texte">{{ errors.codePostal }}</span>
 		</label>
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700">Commune</span>
+			<span class="champ-libelle">Commune</span>
 			<input v-model.trim="membre.commune" autocomplete="address-level2" :class="cls('commune')" />
-			<span v-if="errors?.commune" class="mt-1 block text-xs text-red-600">{{ errors.commune }}</span>
+			<span v-if="errors?.commune" class="champ-erreur-texte">{{ errors.commune }}</span>
 		</label>
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700">Téléphone fixe</span>
+			<span class="champ-libelle">Téléphone fixe</span>
 			<input v-model.trim="membre.telFixe" type="tel" autocomplete="tel" :class="cls('telFixe')" />
-			<span v-if="errors?.telFixe" class="mt-1 block text-xs text-red-600">{{ errors.telFixe }}</span>
+			<span v-if="errors?.telFixe" class="champ-erreur-texte">{{ errors.telFixe }}</span>
 		</label>
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700">Téléphone mobile</span>
+			<span class="champ-libelle">Téléphone mobile</span>
 			<input v-model.trim="membre.telMobile" type="tel" autocomplete="tel" :class="cls('telMobile')" />
-			<span v-if="errors?.telMobile" class="mt-1 block text-xs text-red-600">{{ errors.telMobile }}</span>
+			<span v-if="errors?.telMobile" class="champ-erreur-texte">{{ errors.telMobile }}</span>
 		</label>
 
 		<template v-if="!hidePreferences">

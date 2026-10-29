@@ -128,13 +128,13 @@ defineExpose({ reset });
 
 			<!-- Membre existant -->
 			<div v-else-if="panneau === 'existant'" class="mt-5 border-t border-gray-100 pt-5">
-				<label class="block text-sm font-medium text-gray-700">
+				<label class="champ-libelle">
 					Rechercher un membre existant
 					<input
 						v-model.trim="recherche"
 						type="search"
 						placeholder="Nom ou prénom…"
-						class="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+						class="mt-1 champ"
 						@input="onRecherche"
 					/>
 				</label>

@@ -202,7 +202,7 @@ Siège social : {{association.adresse}}
 
 Détail : [pages.md](pages.md#ajouter-une-page-applicative-astro).
 
-Modèle : `src/plugins/adhesion/pages/inscription.astro`.
+Modèle : `src/plugins/inscription/pages/inscription.astro`.
 
 ```astro
 ---
@@ -274,7 +274,7 @@ forms: {
 },
 ```
 
-2. Entourer le formulaire (voir `src/plugins/adhesion/pages/inscription.astro`). Le slot
+2. Entourer le formulaire (voir `src/plugins/inscription/pages/inscription.astro`). Le slot
    `fallback`, facultatif, s'affiche sous l'encart quand le formulaire est
    fermé :
 
@@ -313,7 +313,7 @@ Détail : [partage.md](partage.md).
 
 ```astro
 ---
-import InscriptionForm from '../formulaire/inscription/InscriptionForm.vue';
+import InscriptionForm from '../formulaire/InscriptionForm.vue';
 ---
 
 <FormGate form="inscription">
@@ -402,6 +402,44 @@ const { user, sessionExpired } = inject(ADMIN_CONTEXT)!;
 
 Bouton qui ouvre la connexion, n'importe où : `<button type="button" data-auth-open>Se connecter</button>`.
 
+### Champs de formulaire
+
+Tous les champs du site (pages publiques, plugins, espace bénévoles) partagent
+les classes de `src/styles/forms.css` : hauteur, bordure, focus et erreur se
+règlent **là seulement** (`--champ-py` : `0.25rem` = taille « sm » façon
+Bootstrap, ~30 px ; `0.5rem` = taille normale).
+
+```vue
+<input v-model="nom" type="text" class="mt-1 champ" />
+<select v-model="statut" :class="['mt-1 champ', { 'champ-erreur': erreur }]">…</select>
+<textarea rows="4" class="mt-1 champ font-mono"></textarea>
+
+<!-- préfixe + champ : la bordure va sur le conteneur -->
+<div class="mt-1 champ-groupe">
+	<span>/activites/</span>
+	<input v-model="slug" type="text" />
+</div>
+```
+
+Libellés, aides et messages, mêmes fichier et principe :
+
+```vue
+<label for="nom" class="champ-libelle">Nom</label>
+<input id="nom" v-model="nom" :class="['mt-1 champ', { 'champ-erreur': erreurs.nom }]" />
+<p v-if="erreurs.nom" class="champ-erreur-texte">{{ erreurs.nom }}</p>
+<p v-else class="champ-aide">Tel qu'il apparaîtra sur la carte d'adhérent·e.</p>
+
+<p v-if="erreurEtape" class="mt-3 message-erreur">Choisissez un créneau.</p>
+<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
+<p v-if="done" class="alerte-succes" role="status">Enregistré.</p>
+<p class="alerte-attention">Mot de passe provisoire : choisissez-en un nouveau.</p>
+```
+
+Espace bénévoles : `inputClass` (`mt-1 champ`) et `compactInputClass`
+(`champ`, largeur à ajouter) de `src/components/admin/context.ts`. Une classe
+Tailwind ajoutée à côté (`w-28`, `pl-9`…) l'emporte toujours (couche
+`components`). Cases à cocher et radios ne sont pas concernés.
+
 ### Classes Tailwind récurrentes
 
 | Usage | Classes |
@@ -411,6 +449,6 @@ Bouton qui ouvre la connexion, n'importe où : `<button type="button" data-auth-
 | Texte secondaire | `text-sm font-light text-gray-600` |
 | Pastille d'icône | `flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-xl text-primary` |
 | Bouton d'action (formulaires Vue) | `rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white hover:opacity-90` |
-| Message d'erreur | `rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700` |
+| Message d'erreur | `alerte-erreur` (voir [Champs de formulaire](#champs-de-formulaire)) |
 
 Couleurs (`primary`, `secondary`, `accent`) et polices : [theme.md](theme.md).

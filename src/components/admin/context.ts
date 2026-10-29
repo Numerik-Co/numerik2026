@@ -56,12 +56,11 @@ export function takeModuleToReopen(): string | null {
 	}
 }
 
-/** Classes Tailwind des champs de formulaire de l'espace bénévoles. */
-export const inputClass =
-	'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
+/** Champs de formulaire de l'espace bénévoles : classe `champ` de src/styles/forms.css (apparence réglée là). */
+export const inputClass = 'mt-1 champ';
 
 /** Champ court sur la même ligne que d'autres éléments (couleur hexadécimale…) : largeur à ajouter. */
-export const compactInputClass = inputClass.replace('mt-1 ', '').replace('w-full ', '');
+export const compactInputClass = 'champ';
 
 /** Bouton icône des listes (modifier, supprimer) ; ajouter la couleur. Libellé en `aria-label` + `title`. */
 export const iconButtonClass =

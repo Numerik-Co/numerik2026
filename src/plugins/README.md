@@ -7,7 +7,8 @@ dans le site quand il est inactif.
 
 | Plugin | Dossier | Contenu |
 | :--- | :--- | :--- |
-| `adhesion` | [`adhesion/`](adhesion/README.md) | Adhésion en ligne et bulletin PDF, inscription aux activités, présence, planning Grist — **actif par défaut** |
+| `adhesion` | [`adhesion/`](adhesion/README.md) | Adhésion en ligne et bulletin PDF, présence, planning Grist — **actif par défaut** |
+| `inscription` | [`inscription/`](inscription/README.md) | Inscription aux activités (`/inscription`, bouton « S'inscrire ») — **actif par défaut**, requiert `adhesion` |
 | `rdv` | [`rdv/`](rdv/README.md) | Prise de rendez-vous en ligne (réglages de l'asso : `src/content/rdv.yaml`) |
 
 ## Activer ou désactiver un plugin
@@ -26,8 +27,12 @@ plugins:
 
 **Les plugins sont inactifs par défaut** : si rien n'est écrit, le volet
 n'existe pas sur le site. Exception : ceux marqués `actifParDefaut` dans le
-catalogue (aujourd'hui `adhesion`), présents tant que `reglages.yaml` ne dit
-pas `false`. Changer la valeur demande de **reconstruire** le site
+catalogue (aujourd'hui `adhesion` et `inscription`), présents tant que
+`reglages.yaml` ne dit pas `false`. Un plugin qui en **requiert** un autre
+(`requiert` du catalogue : `inscription` → `adhesion`) est inactif quand
+celui-ci l'est, quoi que dise son propre réglage ; le module « Plugins »
+refuse de l'activer avant et prévient qu'en désactivant le premier, on
+retire aussi le second. Changer la valeur demande de **reconstruire** le site
 (`npm start` le fait tout seul au démarrage quand `src/content/` a changé ; en
 dev, le serveur redémarre de lui-même).
 
@@ -86,7 +91,10 @@ Un dossier vide n'est pas créé : chaque plugin n'a que ceux dont il a besoin.
 
 ### Outils partagés
 
-Un plugin n'importe jamais le dossier d'un autre : ce qui sert à plusieurs
+Un plugin n'importe jamais le dossier d'un autre, sauf celui d'un plugin
+qu'il **requiert** (`requiert` du catalogue : il est alors sûr qu'il est
+actif) — ainsi `inscription` utilise le code et les routes d'`adhesion`. Ce
+qui sert à des plugins indépendants
 vit dans `src/lib/` — `http.ts` (`json`, `normalize`, type `Errors`),
 `grist-error.ts` (`GristError`), `gotenberg.ts` (conversion HTML → PDF).
 Les variables Grist communes (`GRIST_BASE_URL`, `GRIST_API_KEY`) et Gotenberg
@@ -97,7 +105,8 @@ plugin.
 
 1. Une entrée dans `PLUGINS` (`catalogue.ts`) : le réglage
    `plugins.<id>` est aussitôt reconnu, inactif par défaut (`actifParDefaut:
-   true` pour un volet que la plupart des associations utilisent), et le plugin
+   true` pour un volet que la plupart des associations utilisent ;
+   `requiert: ['<id>']` s'il se sert d'un autre plugin), et le plugin
    apparaît dans le module « Plugins » (`icon`, `doc`, `requis` = fichiers
    de `src/content/` sans lesquels l'activation est refusée, `env` =
    secrets du `.env` signalés si absents, `reglages` = fichier de

@@ -89,11 +89,10 @@ const form = reactive({
 
 const errors = ref<Record<string, string | undefined>>({});
 
-const champBase =
-	'mt-1 w-full rounded-lg border px-3 py-1.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary/20';
+const champBase = 'mt-1 champ';
 
 function champCls(champ: string): string {
-	return `${champBase} ${errors.value[champ] ? 'border-red-400 focus:border-red-400' : 'border-gray-200 focus:border-primary'}`;
+	return `${champBase} ${errors.value[champ] ? 'champ-erreur' : ''}`;
 }
 
 // --- Démarches (bloc 1) : catalogue Grist (table Demarches), pas les
@@ -605,14 +604,14 @@ async function envoyer() {
 						<i class="fa-solid fa-spinner fa-spin text-4xl text-primary" aria-hidden="true"></i>
 						Chargement des démarches…
 					</p>
-					<p v-else-if="etatDemarches === 'erreur'" class="mt-4 text-sm text-red-600">
+					<p v-else-if="etatDemarches === 'erreur'" class="mt-4 message-erreur">
 						Impossible de charger les démarches proposées pour l'instant. Réessayez dans un instant.
 					</p>
 					<p v-else-if="!demarches.length" class="mt-4 text-sm text-gray-600">
 						Aucune démarche disponible pour le moment — contactez-nous directement.
 					</p>
 					<div v-else-if="!thematiqueAffichee" class="mt-4">
-						<p class="text-sm font-medium text-gray-700">Choisissez d'abord un domaine :</p>
+						<p class="champ-libelle">Choisissez d'abord un domaine :</p>
 						<div class="mt-2 grid gap-2 sm:grid-cols-2">
 							<button
 								v-for="t in thematiques"
@@ -671,10 +670,10 @@ async function envoyer() {
 							</label>
 						</div>
 					</div>
-					<p v-if="errors.demarcheIds" class="mt-3 text-sm text-red-600">{{ errors.demarcheIds }}</p>
+					<p v-if="errors.demarcheIds" class="mt-3 message-erreur">{{ errors.demarcheIds }}</p>
 
 					<div class="mt-4">
-						<label class="text-sm font-medium text-gray-700">Un mot pour préparer votre venue ? (facultatif)</label>
+						<label class="champ-libelle">Un mot pour préparer votre venue ? (facultatif)</label>
 						<textarea v-model="form.commentaire" rows="3" :class="champCls('commentaire')"></textarea>
 					</div>
 
@@ -709,7 +708,7 @@ async function envoyer() {
 						<i class="fa-solid fa-spinner fa-spin text-4xl text-primary" aria-hidden="true"></i>
 						Chargement des créneaux…
 					</p>
-					<p v-else-if="etatCreneaux === 'erreur'" class="mt-4 text-sm text-red-600">
+					<p v-else-if="etatCreneaux === 'erreur'" class="mt-4 message-erreur">
 						Impossible de charger les créneaux pour l'instant. Réessayez dans un instant.
 					</p>
 					<p v-else-if="!creneaux.length" class="mt-4 text-sm text-gray-600">
@@ -772,7 +771,7 @@ async function envoyer() {
 							</template>
 						</div>
 					</div>
-					<p v-if="errors.heure" class="mt-3 text-sm text-red-600">{{ errors.heure }}</p>
+					<p v-if="errors.heure" class="mt-3 message-erreur">{{ errors.heure }}</p>
 
 					<button
 						type="button"
@@ -830,21 +829,21 @@ async function envoyer() {
 					<template v-if="parcours === 'nouveau'">
 						<div class="mt-6 grid gap-4" :class="demande('genre') ? 'sm:grid-cols-3' : 'sm:grid-cols-2'">
 							<div v-if="demande('genre')">
-								<label class="text-sm font-medium text-gray-700">Civilité</label>
+								<label class="champ-libelle">Civilité</label>
 								<select v-model="form.genre" :class="champCls('genre')">
 									<option value="">Non précisée</option>
 									<option v-for="c in civilites" :key="c.valeur" :value="c.valeur">{{ c.libelle }}</option>
 								</select>
 							</div>
 							<div>
-								<label class="text-sm font-medium text-gray-700">Prénom</label>
+								<label class="champ-libelle">Prénom</label>
 								<input v-model="form.prenom" type="text" :class="champCls('prenom')" />
-								<p v-if="errors.prenom" class="mt-1 text-xs text-red-600">{{ errors.prenom }}</p>
+								<p v-if="errors.prenom" class="champ-erreur-texte">{{ errors.prenom }}</p>
 							</div>
 							<div>
-								<label class="text-sm font-medium text-gray-700">Nom</label>
+								<label class="champ-libelle">Nom</label>
 								<input v-model="form.nom" type="text" :class="champCls('nom')" />
-								<p v-if="errors.nom" class="mt-1 text-xs text-red-600">{{ errors.nom }}</p>
+								<p v-if="errors.nom" class="champ-erreur-texte">{{ errors.nom }}</p>
 							</div>
 						</div>
 
@@ -855,14 +854,14 @@ async function envoyer() {
 
 						<div class="mt-4 grid gap-4 sm:grid-cols-2">
 							<div>
-								<label class="text-sm font-medium text-gray-700">E-mail</label>
+								<label class="champ-libelle">E-mail</label>
 								<input v-model="form.email" type="email" :class="champCls('email')" />
-								<p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
+								<p v-if="errors.email" class="champ-erreur-texte">{{ errors.email }}</p>
 							</div>
 							<div>
-								<label class="text-sm font-medium text-gray-700">Téléphone</label>
+								<label class="champ-libelle">Téléphone</label>
 								<input v-model="form.telephone" type="tel" :class="champCls('telephone')" />
-								<p v-if="errors.telephone" class="mt-1 text-xs text-red-600">{{ errors.telephone }}</p>
+								<p v-if="errors.telephone" class="champ-erreur-texte">{{ errors.telephone }}</p>
 							</div>
 						</div>
 					</template>
@@ -871,7 +870,7 @@ async function envoyer() {
 					<template v-else-if="parcours === 'connu'">
 						<div class="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
 							<div>
-								<label for="rdv-nom-complet" class="text-sm font-medium text-gray-700">Prénom et nom</label>
+								<label for="rdv-nom-complet" class="champ-libelle">Prénom et nom</label>
 								<input
 									id="rdv-nom-complet"
 									v-model="nomComplet"
@@ -892,9 +891,9 @@ async function envoyer() {
 								<i v-if="etatRecherche === 'busy'" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ etatRecherche === 'busy' ? 'Recherche…' : 'Me retrouver' }}
 							</button>
 						</div>
-						<p v-if="errors.nomComplet" class="mt-1 text-xs text-red-600">{{ errors.nomComplet }}</p>
+						<p v-if="errors.nomComplet" class="champ-erreur-texte">{{ errors.nomComplet }}</p>
 
-						<p v-if="etatRecherche === 'erreur'" class="mt-4 text-sm text-red-600">
+						<p v-if="etatRecherche === 'erreur'" class="mt-4 message-erreur">
 							La recherche est indisponible pour le moment, merci de réessayer.
 						</p>
 
@@ -916,7 +915,7 @@ async function envoyer() {
 									</span>
 								</label>
 							</div>
-							<p v-if="errors.beneficiaire" class="mt-1 text-xs text-red-600">{{ errors.beneficiaire }}</p>
+							<p v-if="errors.beneficiaire" class="champ-erreur-texte">{{ errors.beneficiaire }}</p>
 						</div>
 
 						<div v-else-if="etatRecherche === 'ok'" class="mt-4 rounded-lg bg-amber-50 p-4 text-sm text-gray-700">
@@ -961,7 +960,7 @@ async function envoyer() {
 					</p>
 
 					<div v-if="demande('commune')" class="relative mt-4">
-						<label class="text-sm font-medium text-gray-700">Commune de résidence</label>
+						<label class="champ-libelle">Commune de résidence</label>
 						<input
 							v-model.trim="form.commune"
 							type="text"
@@ -989,7 +988,7 @@ async function envoyer() {
 					</div>
 
 					<div v-if="demande('zone') && (form.commune || !demande('commune')) && props.zones.length" class="mt-4">
-						<label class="text-sm font-medium text-gray-700">Origine géographique</label>
+						<label class="champ-libelle">Origine géographique</label>
 						<div class="mt-2 flex flex-wrap gap-2">
 							<button
 								v-for="z in props.zones.map((zone) => zone.label)"
@@ -1010,14 +1009,14 @@ async function envoyer() {
 
 					<div v-if="demande('trancheAge') || demande('statut')" class="mt-4 grid gap-4 sm:grid-cols-2">
 						<div v-if="demande('trancheAge')">
-							<label class="text-sm font-medium text-gray-700">Tranche d'âge</label>
+							<label class="champ-libelle">Tranche d'âge</label>
 							<select v-model="form.trancheAge" :class="champCls('trancheAge')">
 								<option value="">Non précisée</option>
 								<option v-for="t in listes.tranchesAge" :key="t" :value="t">{{ t }}</option>
 							</select>
 						</div>
 						<div v-if="demande('statut')">
-							<label class="text-sm font-medium text-gray-700">Statut</label>
+							<label class="champ-libelle">Statut</label>
 							<select v-model="form.statut" :class="champCls('statut')">
 								<option value="">Non précisé</option>
 								<option v-for="s in listes.statuts" :key="s" :value="s">{{ s }}</option>
@@ -1051,9 +1050,9 @@ async function envoyer() {
 					<input v-model="form.consentement" type="checkbox" class="mt-0.5 accent-primary" />
 					{{ textes.consentement }}
 				</label>
-				<p v-if="errors.consentement" class="mt-1 text-xs text-red-600">{{ errors.consentement }}</p>
+				<p v-if="errors.consentement" class="champ-erreur-texte">{{ errors.consentement }}</p>
 
-				<p v-if="messageErreur" class="mt-4 text-sm text-red-600">{{ messageErreur }}</p>
+				<p v-if="messageErreur" class="mt-4 message-erreur">{{ messageErreur }}</p>
 
 				<button
 					type="submit"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { ExterieurPayload, MembreCandidat, Profil } from '../../lib/types';
+import type { ExterieurPayload, MembreCandidat, Profil } from '../../adhesion/lib/types';
 
 const props = defineProps<{
 	adherent: { nom: string; prenom: string };
@@ -21,8 +21,7 @@ const emit = defineEmits<{
 
 const profil = defineModel<Profil>('profil', { required: true });
 
-const champ =
-	'mt-1 w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20';
+const champ = 'mt-1 champ';
 
 const montreErreurs = ref(false);
 
@@ -96,22 +95,22 @@ function onSubmitExterieur() {
 			<form v-if="profil === 'adherent'" class="mt-5" @submit.prevent="onSubmitAdherent" novalidate>
 				<div class="grid gap-4 sm:grid-cols-2">
 					<label class="block">
-						<span class="text-sm font-medium text-gray-700">Nom</span>
+						<span class="champ-libelle">Nom</span>
 						<input v-model.trim="adherent.nom" autocomplete="family-name" :class="champ" />
-						<span v-if="montreErreurs && !adherent.nom.trim()" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreurs && !adherent.nom.trim()" class="champ-erreur-texte">
 							Le nom est obligatoire.
 						</span>
 					</label>
 					<label class="block">
-						<span class="text-sm font-medium text-gray-700">Prénom</span>
+						<span class="champ-libelle">Prénom</span>
 						<input v-model.trim="adherent.prenom" autocomplete="given-name" :class="champ" />
-						<span v-if="montreErreurs && !adherent.prenom.trim()" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreurs && !adherent.prenom.trim()" class="champ-erreur-texte">
 							Le prénom est obligatoire.
 						</span>
 					</label>
 				</div>
 
-				<p v-if="introuvable" class="mt-3 text-sm text-red-600">
+				<p v-if="introuvable" class="mt-3 message-erreur">
 					Aucune fiche trouvée à ce nom. Vérifiez l'orthographe, ou choisissez « Je suis extérieur·e »
 					ci-dessus.
 				</p>
@@ -145,7 +144,7 @@ function onSubmitExterieur() {
 			<!-- Profil extérieur : identité minimale + téléphone -->
 			<form v-else-if="profil === 'exterieur'" class="mt-5" @submit.prevent="onSubmitExterieur" novalidate>
 				<fieldset class="mb-4">
-					<legend class="text-sm font-medium text-gray-700">Genre</legend>
+					<legend class="champ-libelle">Genre</legend>
 					<div class="mt-2 flex flex-wrap gap-2">
 						<label
 							v-for="g in genres"
@@ -157,28 +156,28 @@ function onSubmitExterieur() {
 							<span>{{ g.label }}</span>
 						</label>
 					</div>
-					<p v-if="montreErreurs && !exterieur.genre" class="mt-1 text-xs text-red-600">
+					<p v-if="montreErreurs && !exterieur.genre" class="champ-erreur-texte">
 						Sélectionnez un genre.
 					</p>
 				</fieldset>
 
 				<div class="grid gap-4 sm:grid-cols-2">
 					<label class="block">
-						<span class="text-sm font-medium text-gray-700">Nom</span>
+						<span class="champ-libelle">Nom</span>
 						<input v-model.trim="exterieur.nom" autocomplete="family-name" :class="champ" />
-						<span v-if="montreErreurs && !exterieur.nom.trim()" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreurs && !exterieur.nom.trim()" class="champ-erreur-texte">
 							Le nom est obligatoire.
 						</span>
 					</label>
 					<label class="block">
-						<span class="text-sm font-medium text-gray-700">Prénom</span>
+						<span class="champ-libelle">Prénom</span>
 						<input v-model.trim="exterieur.prenom" autocomplete="given-name" :class="champ" />
-						<span v-if="montreErreurs && !exterieur.prenom.trim()" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreurs && !exterieur.prenom.trim()" class="champ-erreur-texte">
 							Le prénom est obligatoire.
 						</span>
 					</label>
 					<label class="block sm:col-span-2">
-						<span class="text-sm font-medium text-gray-700">Téléphone</span>
+						<span class="champ-libelle">Téléphone</span>
 						<input
 							v-model.trim="exterieur.telephone"
 							type="tel"
@@ -186,7 +185,7 @@ function onSubmitExterieur() {
 							placeholder="06 12 34 56 78"
 							:class="champ"
 						/>
-						<span v-if="montreErreurs && !exterieur.telephone.trim()" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreurs && !exterieur.telephone.trim()" class="champ-erreur-texte">
 							Le téléphone est obligatoire, pour vous recontacter au sujet de l'activité.
 						</span>
 					</label>

@@ -188,7 +188,7 @@ export interface ActiviteOption {
 	placesRestantes: number | null; // null = non plafonnée / inconnu
 }
 
-/** Inscription en ligne — activités proposées à l'étape 2 (`/api/adhesion/offre-inscription`). */
+/** Inscription en ligne — activités proposées à l'étape 2 (`/api/inscription/offre`, plugin inscription). */
 export interface OffreInscription {
 	/**
 	 * `inscription` : activités ouvertes (publiées) à choisir.

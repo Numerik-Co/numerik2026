@@ -10,6 +10,11 @@ activité, ou directement à l'adresse `/inscription`.
 > aussi inscrire à des activités au passage. Les deux formulaires écrivent
 > dans la même table Grist `Inscription`.
 
+> Plugin **`inscription`** (actif par défaut, requiert le plugin `adhesion`) :
+> code dans `src/plugins/inscription/`, voir [son README](../src/plugins/inscription/README.md).
+> `plugins: { inscription: false }` dans `reglages.yaml` retire la page et
+> le bouton « S'inscrire » des fiches.
+
 ## Le parcours en 3 étapes
 
 ### 1. « Qui êtes-vous ? »
@@ -39,7 +44,7 @@ Activités Grist (table `Activite`) de la **saison en cours** et de **type
 `Séances`, `Ateliers` ou `Atelier CN`** (`TYPES_ACTIVITE_INSCRIPTION` dans
 `src/plugins/adhesion/lib/choices.ts`) : parcours, FabLab, ateliers et ateliers du
 Conseiller Numérique. Pour un·e non-adhérent·e, l'animateur·rice formalise
-l'adhésion ensuite. Route : `GET /api/adhesion/offre-inscription`.
+l'adhésion ensuite. Route : `GET /api/inscription/offre`.
 
 Trois cas :
 
@@ -54,7 +59,7 @@ Trois cas :
   `30/09/2026 : Intéressé·e par « Module IA » — préinscription` (pas de
   doublon si elle y figure déjà). Aucune ligne `Inscription` n'est créée :
   l'association recontacte la personne à l'ouverture. Route :
-  `POST /api/adhesion/preinscription` ;
+  `POST /api/inscription/preinscription` ;
 - **accès direct à `/inscription`** (ou fiche sans activité Grist
   correspondante, ex. Parcours Junior, Cours individuels) : toutes les
   activités **publiées** sont listées. Les activités non publiées
@@ -213,11 +218,11 @@ présence (voir [api.md](api.md)).
 
 | Élément | Rôle |
 | :--- | :--- |
-| `src/plugins/adhesion/pages/inscription.astro` | Page `/inscription` ; monte l'îlot Vue dans un `<FormGate form="inscription">`. |
-| `src/plugins/adhesion/formulaire/inscription/InscriptionForm.vue` | Îlot `client:load` : enchaînement des étapes, relais des paramètres `?activite=`/`?type=`, tarif mis en avant, appels API. |
-| `src/plugins/adhesion/formulaire/inscription/EtapeProfil.vue` | Étape 1 : choix adhérent·e / extérieur·e, recherche ou saisie, choix parmi les homonymes. |
-| `src/plugins/adhesion/formulaire/inscription/EtapeActivite.vue` | Étape 2 : liste des activités, tarif adhérent·e / non-adhérent·e, places restantes, « Complet », mode préinscription. |
-| `src/plugins/adhesion/formulaire/inscription/EtapeRecap.vue` | Étape 3 : confirmation, liste d'attente, tarif, rappel du règlement. |
+| `src/plugins/inscription/pages/inscription.astro` | Page `/inscription` ; monte l'îlot Vue dans un `<FormGate form="inscription">`. |
+| `src/plugins/inscription/formulaire/InscriptionForm.vue` | Îlot `client:load` : enchaînement des étapes, relais des paramètres `?activite=`/`?type=`, tarif mis en avant, appels API. |
+| `src/plugins/inscription/formulaire/EtapeProfil.vue` | Étape 1 : choix adhérent·e / extérieur·e, recherche ou saisie, choix parmi les homonymes. |
+| `src/plugins/inscription/formulaire/EtapeActivite.vue` | Étape 2 : liste des activités, tarif adhérent·e / non-adhérent·e, places restantes, « Complet », mode préinscription. |
+| `src/plugins/inscription/formulaire/EtapeRecap.vue` | Étape 3 : confirmation, liste d'attente, tarif, rappel du règlement. |
 | `src/pages/activites/[category]/[slug].astro` | Bouton « S'inscrire » (condition `activity.inscription && isFormOpen('inscription')`). |
 | `src/lib/activites.ts` | Champs `inscription` (`frontmatter.inscription !== false`) et `inscriptionHref` (construit depuis `activiteGrist` / `typeGrist`). |
 | `src/plugins/adhesion/lib/activite-option.ts` | Ligne `Activite` → option (tarifs, places), partagé avec le parcours d'adhésion. |
@@ -229,9 +234,9 @@ Routes API utilisées (communes avec le parcours d'adhésion, client
 | Route | Méthode | Usage dans ce formulaire |
 | :--- | :--- | :--- |
 | `/api/adhesion/membre` (`mode: 'renouvellement'`) | POST | Étape 1 adhérent·e : retrouver la fiche par nom + prénom (`ok` / `ambigu` / `introuvable`). Le formulaire inscrit `ficheId` (la fiche trouvée), jamais `membreId` (qui désigne le·la responsable du foyer pour un membre rattaché — logique propre à l'adhésion). |
-| `/api/adhesion/participant-exterieur` | POST | Étape 1 extérieur·e : créer la fiche `Membres` minimale (rôle `Contact`). Propre à ce formulaire. |
-| `/api/adhesion/offre-inscription` | GET | Étape 2 : activités proposées (`?activite=` répétable, `?type=`) → `{ mode, activites, cibleIntrouvable }`. Propre à ce formulaire. |
-| `/api/adhesion/preinscription` | POST | Étape 2, mode préinscription : note l'intérêt dans `Membres.Commentaires`. Propre à ce formulaire. |
+| `/api/inscription/participant-exterieur` | POST | Étape 1 extérieur·e : créer la fiche `Membres` minimale (rôle `Contact`). Propre à ce formulaire. |
+| `/api/inscription/offre` | GET | Étape 2 : activités proposées (`?activite=` répétable, `?type=`) → `{ mode, activites, cibleIntrouvable }`. Propre à ce formulaire. |
+| `/api/inscription/preinscription` | POST | Étape 2, mode préinscription : note l'intérêt dans `Membres.Commentaires`. Propre à ce formulaire. |
 | `/api/adhesion/inscription` | POST | Passage à l'étape 3 : crée la ligne `Inscription` (activité publiée uniquement, montant dû = `Tarif_non_adherent` sans adhésion en cours, sinon `Tarif`) ; `Liste d'attente` si `Places_restantes <= 0`, sinon `Inscrit`. |
 
 ## Limites connues

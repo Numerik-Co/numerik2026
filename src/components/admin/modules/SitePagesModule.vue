@@ -297,8 +297,8 @@ onMounted(load);
 		@cancel-reload="cancelReload"
 		@publish-lot="publishLot"
 	/>
-	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
-	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+	<p v-if="!availability.ok" class="mb-4 alerte-attention">{{ availability.reason }}</p>
+	<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
 
 	<!-- Liste -->
 	<template v-if="view.name === 'list'">
@@ -654,15 +654,15 @@ onMounted(load);
 			libellé n'est pas cliquable et n'a pas de contenu propre : seules ses pages ont un lien.
 		</p>
 		<div>
-			<label for="dropdown-label" class="block text-sm font-semibold text-gray-700">Libellé</label>
+			<label for="dropdown-label" class="champ-libelle">Libellé</label>
 			<input id="dropdown-label" v-model="dropdownForm.label" type="text" required :class="inputClass" />
 		</div>
 		<div v-if="!view.dropdown">
-			<label for="dropdown-folder" class="block text-sm font-semibold text-gray-700">
+			<label for="dropdown-folder" class="champ-libelle">
 				Adresse <span class="font-light text-gray-500">(facultative, déduite du libellé)</span>
 			</label>
 			<input id="dropdown-folder" v-model="dropdownForm.folder" type="text" pattern="[a-z0-9]+(-[a-z0-9]+)*" :class="inputClass" />
-			<p class="mt-1 text-xs font-light text-gray-500">Début de l'adresse des pages du menu déroulant (/adresse/page). Ne change plus ensuite.</p>
+			<p class="champ-aide">Début de l'adresse des pages du menu déroulant (/adresse/page). Ne change plus ensuite.</p>
 		</div>
 		<p v-if="!view.dropdown" class="text-xs font-light text-gray-500">
 			Le menu déroulant se place en dernière position du menu de navigation ; les flèches ↑/↓ de la liste changent l'ordre.

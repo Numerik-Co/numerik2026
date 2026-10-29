@@ -28,9 +28,9 @@ async function submit() {
 <template>
 	<form class="space-y-4" @submit.prevent="submit">
 		<p class="text-sm font-light text-gray-600">Réservé au bureau et aux animateur·rice·s de l'association.</p>
-		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
 		<div>
-			<label for="admin-login" class="block text-sm font-medium text-gray-700">Identifiant</label>
+			<label for="admin-login" class="champ-libelle">Identifiant</label>
 			<input
 				id="admin-login"
 				v-model="login"
@@ -44,7 +44,7 @@ async function submit() {
 			/>
 		</div>
 		<div>
-			<label for="admin-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+			<label for="admin-password" class="champ-libelle">Mot de passe</label>
 			<input id="admin-password" v-model="password" type="password" required autocomplete="current-password" :class="inputClass" />
 		</div>
 		<button

@@ -178,7 +178,7 @@ async function submit(event: Event) {
 <template>
 	<FormHeader back="Toutes les activités" :title="form.title.trim() || (editing ? editing.title || editing.slug : 'Nouvelle activité')" :editing="Boolean(editing)" @back="emit('cancel')" />
 	<form class="space-y-5" @submit.prevent="submit" @invalid.capture="onInvalid">
-		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
 
 		<div>
 			<EditFileBar v-if="editing" :imported="imported" @download="downloadFile" @load="loadFile" />
@@ -186,47 +186,47 @@ async function submit(event: Event) {
 
 			<div v-show="tab === 'infos'" id="act-panel-infos" role="tabpanel" aria-labelledby="act-tab-infos" class="space-y-5">
 				<div>
-					<label for="act-title" class="block text-sm font-semibold text-gray-700">Titre</label>
+					<label for="act-title" class="champ-libelle">Titre</label>
 					<input id="act-title" v-model="form.title" type="text" required :class="inputClass" />
 					<SeoLength :text="form.title" kind="titre" suffix />
 				</div>
 				<div>
-					<label for="act-excerpt" class="block text-sm font-semibold text-gray-700">Résumé</label>
+					<label for="act-excerpt" class="champ-libelle">Résumé</label>
 					<textarea id="act-excerpt" v-model="form.excerpt" rows="2" required :class="inputClass"></textarea>
 					<SeoLength :text="form.excerpt" kind="description" />
-					<p class="mt-1 text-xs font-light text-gray-500">Une ou deux phrases : affiché sur la carte de l'activité et dans les moteurs de recherche.</p>
+					<p class="champ-aide">Une ou deux phrases : affiché sur la carte de l'activité et dans les moteurs de recherche.</p>
 				</div>
 
 				<!-- Emplacement -->
 				<fieldset class="space-y-3 rounded-xl bg-gray-100 p-4">
 					<legend class="sr-only">Emplacement</legend>
 					<div>
-						<label for="act-category" class="block text-sm font-semibold text-gray-700">Catégorie</label>
+						<label for="act-category" class="champ-libelle">Catégorie</label>
 						<select id="act-category" v-model="form.category" required :class="inputClass">
 							<option value="" disabled>Choisir…</option>
 							<option v-for="c in props.categories" :key="c.slug" :value="c.slug">{{ c.label }}</option>
 						</select>
-						<p v-if="!editing || categoryChanged" class="mt-1 text-xs font-light text-gray-500">
+						<p v-if="!editing || categoryChanged" class="champ-aide">
 							L'activité se place en dernière position{{ categoryLabel ? ` de « ${categoryLabel} »` : '' }} ; les flèches ↑/↓ de la liste changent l'ordre.
 						</p>
 					</div>
 					<div>
-						<label for="act-slug" class="block text-sm font-semibold text-gray-700">Adresse</label>
+						<label for="act-slug" class="champ-libelle">Adresse</label>
 						<div
-							class="mt-1 flex items-center rounded-lg border border-gray-300 bg-white text-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+							class="mt-1 champ-groupe"
 						>
-							<span class="whitespace-nowrap pl-3 text-gray-500">/activites/{{ form.category || '…' }}/</span>
+							<span>/activites/{{ form.category || '…' }}/</span>
 							<input
 								id="act-slug"
 								:value="slug"
 								type="text"
 								pattern="[a-z0-9]+(-[a-z0-9]+)*"
 								:readonly="Boolean(editing)"
-								:class="['min-w-0 flex-1 rounded-r-lg border-0 py-2 pr-3 focus:outline-none focus:ring-0', editing ? 'text-gray-500' : 'text-gray-900']"
+								:class="{ 'text-gray-500': editing }"
 								@input="onSlugInput"
 							/>
 						</div>
-						<p v-if="!editing" class="mt-1 text-xs font-light text-gray-500">Déduite du titre ; ne change plus après la création.</p>
+						<p v-if="!editing" class="champ-aide">Déduite du titre ; ne change plus après la création.</p>
 						<p v-if="categoryChanged" class="mt-1 text-xs text-amber-800">
 							La catégorie change : l'adresse devient /activites/{{ form.category }}/{{ slug }}, les liens vers l'ancienne ne
 							fonctionneront plus.
@@ -237,16 +237,16 @@ async function submit(event: Event) {
 						Publiée <span class="font-light text-gray-500">(décochée : brouillon, absente du site)</span>
 					</label>
 					<div>
-						<label for="act-level" class="block text-sm font-semibold text-gray-700">
+						<label for="act-level" class="champ-libelle">
 							Niveau <span class="font-light text-gray-500">(facultatif)</span>
 						</label>
 						<input id="act-level" v-model="form.level" type="text" placeholder="Ex. Grand débutant, Initiation, Tous niveaux" :class="inputClass" />
-						<p class="mt-1 text-xs font-light text-gray-500">Pastille affichée sur la carte de l'activité.</p>
+						<p class="champ-aide">Pastille affichée sur la carte de l'activité.</p>
 					</div>
 				</fieldset>
 
-				<!-- Inscription en ligne (plugin adhésion ; inactif : réglages gardés tels quels) -->
-				<fieldset v-if="pluginActif('adhesion')" class="space-y-3 rounded-xl bg-gray-100 p-4">
+				<!-- Inscription en ligne (plugin inscription ; inactif : réglages gardés tels quels) -->
+				<fieldset v-if="pluginActif('inscription')" class="space-y-3 rounded-xl bg-gray-100 p-4">
 					<legend class="sr-only">Inscription en ligne</legend>
 					<label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
 						<input v-model="form.inscription" type="checkbox" class="rounded border-gray-300" />
@@ -255,17 +255,17 @@ async function submit(event: Event) {
 					<p v-if="!form.inscription" class="text-xs font-light text-gray-500">Masqué (ex. activité sur rendez-vous).</p>
 					<template v-else>
 						<div>
-							<label for="act-grist" class="block text-sm font-semibold text-gray-700">
+							<label for="act-grist" class="champ-libelle">
 								Activité(s) Grist visée(s) <span class="font-light text-gray-500">(facultatif, une par ligne)</span>
 							</label>
 							<textarea id="act-grist" v-model="form.activiteGrist" rows="2" :placeholder="form.title" :class="inputClass"></textarea>
-							<p class="mt-1 text-xs font-light text-gray-500">
+							<p class="champ-aide">
 								Nom exact de la colonne « Nom » de la table Activite ; terminer par <code>*</code> pour viser tous les noms qui
 								commencent ainsi (ex. <code>Initiation*</code>). Vide : le titre de la fiche.
 							</p>
 						</div>
 						<div>
-							<label for="act-type" class="block text-sm font-semibold text-gray-700">
+							<label for="act-type" class="champ-libelle">
 								Type Grist visé <span class="font-light text-gray-500">(facultatif)</span>
 							</label>
 							<select id="act-type" v-model="form.typeGrist" :class="inputClass">
@@ -280,9 +280,9 @@ async function submit(event: Event) {
 			<div v-show="tab === 'contenu'" id="act-panel-contenu" role="tabpanel" aria-labelledby="act-tab-contenu">
 				<!-- Texte -->
 				<div>
-					<label for="act-body" class="block text-sm font-semibold text-gray-700">Texte de la fiche (Markdown)</label>
+					<label for="act-body" class="champ-libelle">Texte de la fiche (Markdown)</label>
 					<textarea id="act-body" ref="bodyField" v-model="form.body" rows="16" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
-					<p class="mt-1 text-xs font-light text-gray-500">
+					<p class="champ-aide">
 						<code>## Titre de section</code> (alimente le sommaire), <code>**gras**</code>, <code>*italique*</code>,
 						<code>- liste</code>, <code>[lien](/contact)</code>. Le HTML est accepté (tableaux, encadrés…).
 					</p>
@@ -315,9 +315,9 @@ async function submit(event: Event) {
 							Annuler le changement de photo
 						</button>
 					</div>
-					<p v-if="!editing?.cover && !photo" class="mt-1 text-xs font-light text-gray-500">Sans photo, la carte affiche « Image à venir ».</p>
+					<p v-if="!editing?.cover && !photo" class="champ-aide">Sans photo, la carte affiche « Image à venir ».</p>
 					<div v-if="editing?.cover || photo" class="mt-3">
-						<label for="act-credit" class="block text-sm font-semibold text-gray-700">
+						<label for="act-credit" class="champ-libelle">
 							Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
 						</label>
 						<input id="act-credit" v-model="form.imageCredit" type="text" placeholder="Photo : Prénom Nom / Source" :class="inputClass" />

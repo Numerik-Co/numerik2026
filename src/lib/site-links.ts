@@ -20,7 +20,8 @@ import { NEWS_SLUG, newsSourceDir, readNewsSource } from './news-writer';
 import { listPagesSource } from './page-writer';
 import { pluginActif } from '../plugins';
 import { RDV_HREF, RDV_NOM, rdvToggle } from '../plugins/rdv';
-import { ADHESION_HREF, FORMULAIRE_HREF, INSCRIPTION_HREF, PRESENCE_HREF } from '../plugins/adhesion';
+import { ADHESION_HREF, FORMULAIRE_HREF, PRESENCE_HREF } from '../plugins/adhesion';
+import { INSCRIPTION_HREF } from '../plugins/inscription';
 
 export interface SiteLink {
 	title: string;
@@ -41,9 +42,9 @@ const SERVICE_PAGES: { title: string; href: string; form?: keyof typeof site.for
 		? [
 				{ title: 'Adhérer', href: ADHESION_HREF },
 				{ title: "Formulaire d'adhésion", href: FORMULAIRE_HREF, form: 'adhesion' as const },
-				{ title: 'Inscription à une activité', href: INSCRIPTION_HREF, form: 'inscription' as const },
 			]
 		: []),
+	...(pluginActif('inscription') ? [{ title: 'Inscription à une activité', href: INSCRIPTION_HREF, form: 'inscription' as const }] : []),
 	...(pluginActif('rdv') ? [{ title: RDV_NOM, href: RDV_HREF, closed: !rdvToggle().enabled }] : []),
 	...(pluginActif('adhesion') ? [{ title: 'Je participe', href: PRESENCE_HREF }] : []),
 ];

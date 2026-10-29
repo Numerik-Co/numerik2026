@@ -359,7 +359,7 @@ onMounted(load);
 		@publish-lot="publishLot"
 	/>
 
-	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+	<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
 
 	<!-- Liste -->
 	<template v-if="view === 'list'">
@@ -377,7 +377,7 @@ onMounted(load);
 				Voir la page Actualités <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
 			</a>
 		</div>
-		<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+		<p v-if="!availability.ok" class="mb-4 alerte-attention">
 			{{ availability.reason }}
 		</p>
 
@@ -439,13 +439,13 @@ onMounted(load);
 		<!-- Fichier Markdown -->
 		<div>
 			<div class="flex flex-wrap items-baseline justify-between gap-2">
-				<p class="text-sm font-medium text-gray-700">1. Le texte (fichier .md)</p>
+				<p class="champ-libelle">1. Le texte (fichier .md)</p>
 				<button type="button" class="text-sm font-medium text-primary hover:underline" @click="downloadTemplate">
 					<i class="fa-solid fa-download mr-1 text-xs" aria-hidden="true"></i>
 					Télécharger un modèle
 				</button>
 			</div>
-			<p class="mt-1 text-xs font-light text-gray-500">
+			<p class="champ-aide">
 				Le modèle est daté du jour : complétez-le dans un éditeur de texte puis déposez-le ici.
 			</p>
 			<label
@@ -481,7 +481,7 @@ onMounted(load);
 
 		<!-- Photo -->
 		<div>
-			<p class="text-sm font-medium text-gray-700">
+			<p class="champ-libelle">
 				2. La photo de couverture <span class="font-light text-gray-500">(facultative)</span>
 			</p>
 			<label
@@ -502,7 +502,7 @@ onMounted(load);
 				</template>
 				<input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" @change="pickPhoto(($event.target as HTMLInputElement).files?.[0])" />
 			</label>
-			<p v-if="photo" class="mt-1 text-xs font-light text-gray-500">
+			<p v-if="photo" class="champ-aide">
 				{{ photo.name }} — la position GPS et les autres métadonnées sont retirées à l'envoi.
 			</p>
 		</div>
@@ -530,29 +530,29 @@ onMounted(load);
 
 			<div v-show="editTab === 'infos'" id="ed-panel-infos" role="tabpanel" aria-labelledby="ed-tab-infos" class="space-y-4">
 				<div>
-					<label for="ed-title" class="block text-sm font-semibold text-gray-700">Titre</label>
+					<label for="ed-title" class="champ-libelle">Titre</label>
 					<input id="ed-title" v-model="editForm.title" type="text" required :class="inputClass" />
 					<SeoLength :text="editForm.title" kind="titre" suffix />
 				</div>
 				<div class="grid gap-4 sm:grid-cols-2">
 					<div>
-						<label for="ed-date" class="block text-sm font-semibold text-gray-700">Date de publication</label>
+						<label for="ed-date" class="champ-libelle">Date de publication</label>
 						<input id="ed-date" v-model="editForm.publishAt" type="date" required :class="inputClass" />
 					</div>
 					<div>
-						<label for="ed-tag" class="block text-sm font-semibold text-gray-700">
+						<label for="ed-tag" class="champ-libelle">
 							Catégorie <span class="font-light text-gray-500">(facultative)</span>
 						</label>
 						<input id="ed-tag" v-model="editForm.tag" type="text" placeholder="Ateliers" :class="inputClass" />
 					</div>
 				</div>
 				<div>
-					<label for="ed-excerpt" class="block text-sm font-semibold text-gray-700">Résumé</label>
+					<label for="ed-excerpt" class="champ-libelle">Résumé</label>
 					<textarea id="ed-excerpt" v-model="editForm.excerpt" rows="2" required :class="inputClass"></textarea>
 					<SeoLength :text="editForm.excerpt" kind="description" />
 				</div>
 				<div>
-					<label for="ed-author" class="block text-sm font-semibold text-gray-700">
+					<label for="ed-author" class="champ-libelle">
 						Auteur·rice <span class="font-light text-gray-500">(facultatif)</span>
 					</label>
 					<input id="ed-author" v-model="editForm.author" type="text" :class="inputClass" />
@@ -573,9 +573,9 @@ onMounted(load);
 
 			<div v-show="editTab === 'contenu'" id="ed-panel-contenu" role="tabpanel" aria-labelledby="ed-tab-contenu">
 				<div>
-					<label for="ed-body" class="block text-sm font-semibold text-gray-700">Texte (Markdown)</label>
+					<label for="ed-body" class="champ-libelle">Texte (Markdown)</label>
 					<textarea id="ed-body" ref="bodyField" v-model="editForm.body" rows="14" required :class="[inputClass, 'font-mono text-xs leading-relaxed']"></textarea>
-					<p class="mt-1 text-xs font-light text-gray-500">
+					<p class="champ-aide">
 						<code>## Sous-titre</code>, <code>**gras**</code>, <code>*italique*</code>, <code>- liste</code>,
 						<code>[lien](https://…)</code>. Le HTML est accepté (tableaux, encadrés, vidéos YouTube/Vimeo…) ; le code
 						exécutable (scripts…) est retiré à l'affichage.
@@ -617,7 +617,7 @@ onMounted(load);
 					</div>
 				</fieldset>
 				<div>
-					<label for="ed-credit" class="block text-sm font-semibold text-gray-700">
+					<label for="ed-credit" class="champ-libelle">
 						Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
 					</label>
 					<input id="ed-credit" v-model="editForm.imageCredit" type="text" placeholder="Photo : Prénom Nom" :class="inputClass" />

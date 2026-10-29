@@ -131,7 +131,7 @@ onMounted(load);
 		@cancel-reload="cancelReload"
 		@publish-lot="publishLot"
 	/>
-	<p v-if="!availability.ok" class="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{{ availability.reason }}</p>
+	<p v-if="!availability.ok" class="mb-4 alerte-attention">{{ availability.reason }}</p>
 
 	<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 
@@ -148,13 +148,17 @@ onMounted(load);
 				<code class="rounded bg-gray-100 px-1">{{ ouvert.id }}</code>)
 			</p>
 
-			<ul v-if="ouvert.manquants.length" class="space-y-1 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+			<p v-if="ouvert.requisInactifs.length" class="alerte-erreur">
+				<i class="fa-solid fa-circle-xmark mr-1" aria-hidden="true"></i>
+				Requiert le plugin « {{ ouvert.requisInactifs.map((r) => r.label).join(' », « ') }} », inactif : activez-le d'abord.
+			</p>
+			<ul v-if="ouvert.manquants.length" class="space-y-1 alerte-erreur">
 				<li v-for="m in ouvert.manquants" :key="m.fichier">
 					<i class="fa-solid fa-circle-xmark mr-1" aria-hidden="true"></i>
 					<code>{{ m.fichier }}</code> absent : {{ m.aide }}
 				</li>
 			</ul>
-			<ul v-if="ouvert.avertissements.length" class="space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+			<ul v-if="ouvert.avertissements.length" class="space-y-1 alerte-attention">
 				<li v-for="a in ouvert.avertissements" :key="a.nom">
 					<i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>
 					<code>{{ a.nom }}</code> : {{ a.aide }}
@@ -166,12 +170,15 @@ onMounted(load);
 					v-model="actif"
 					type="checkbox"
 					class="mt-0.5 accent-primary"
-					:disabled="locked || (!ouvert.actif && ouvert.manquants.length > 0)"
+					:disabled="locked || (!ouvert.actif && (ouvert.manquants.length > 0 || ouvert.requisInactifs.length > 0))"
 				/>
 				<span>
 					<span class="block font-medium text-gray-900">Plugin actif</span>
 					<span class="block text-xs text-gray-500">
 						Inactif, le site n'a plus rien de ce plugin (page, encart, liens) ; ses réglages et son contenu sont gardés.
+					</span>
+					<span v-if="ouvert.dependants.length" class="block text-xs text-amber-800">
+						Le désactiver retire aussi : {{ ouvert.dependants.map((d) => d.label).join(', ') }}.
 					</span>
 				</span>
 			</label>
@@ -180,7 +187,7 @@ onMounted(load);
 				<legend class="px-1 font-heading text-sm font-semibold text-gray-900">{{ groupe }}</legend>
 				<div class="space-y-4">
 					<div v-for="c in champs" :key="c.cle">
-						<label :for="`plugin-${ouvert.id}-${c.cle}`" class="text-sm font-medium text-gray-700">{{ c.label }}</label>
+						<label :for="`plugin-${ouvert.id}-${c.cle}`" class="champ-libelle">{{ c.label }}</label>
 						<input
 							:id="`plugin-${ouvert.id}-${c.cle}`"
 							v-model.trim="valeurs[c.cle]"
@@ -191,7 +198,7 @@ onMounted(load);
 							:disabled="locked || ouvert.manquants.length > 0"
 							:class="inputClass"
 						/>
-						<p v-if="c.aide" class="mt-1 text-xs text-gray-500">{{ c.aide }}</p>
+						<p v-if="c.aide" class="champ-aide">{{ c.aide }}</p>
 					</div>
 				</div>
 			</fieldset>
@@ -213,7 +220,7 @@ onMounted(load);
 			</ul>
 		</div>
 
-		<p v-if="error" class="mt-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="mt-6 alerte-erreur" role="alert">{{ error }}</p>
 		<div class="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-5">
 			<PublishButtons :busy="busy" :disabled="locked || busy || !modifie" />
 		</div>
@@ -221,7 +228,7 @@ onMounted(load);
 
 	<!-- Catalogue -->
 	<template v-else>
-		<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
 		<ul class="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
 			<li v-for="p in plugins" :key="p.id" class="flex items-center gap-3 px-4 py-3">
 				<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">

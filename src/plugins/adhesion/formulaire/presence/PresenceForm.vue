@@ -153,7 +153,7 @@ function message(s: SeanceCourante): string {
 				v-model="recherche"
 				type="text"
 				placeholder="Nom, prénom…"
-				class="mt-4 w-full rounded-xl border border-gray-200 px-4 py-1.5 text-sm text-gray-900 focus:border-primary focus:outline-none"
+				class="mt-4 champ"
 			/>
 			<p v-if="rechercheEnCours" class="mt-2 text-xs text-gray-400">Recherche…</p>
 			<ul v-else-if="candidats.length" class="mt-3 space-y-2">
@@ -186,7 +186,7 @@ function message(s: SeanceCourante): string {
 			</div>
 
 			<p v-if="etatSeances === 'chargement'" class="mt-4 text-sm text-gray-500">Chargement…</p>
-			<p v-else-if="etatSeances === 'erreur'" class="mt-4 text-sm text-red-600">
+			<p v-else-if="etatSeances === 'erreur'" class="mt-4 message-erreur">
 				Impossible de charger le planning pour l'instant. Réessayez dans un instant.
 			</p>
 			<p v-else-if="!seances.length" class="mt-4 text-sm text-gray-600">Aucun atelier en ce moment.</p>

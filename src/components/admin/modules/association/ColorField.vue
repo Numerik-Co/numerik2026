@@ -34,7 +34,7 @@ const LEVELS = {
 		/>
 		<div class="min-w-0 flex-1">
 			<div class="flex flex-wrap items-baseline gap-x-2">
-				<label :for="props.id" class="text-sm font-medium text-gray-700">{{ props.label }}</label>
+				<label :for="props.id" class="champ-libelle">{{ props.label }}</label>
 				<span class="text-xs font-light text-gray-500">{{ props.help }}</span>
 			</div>
 			<div class="mt-1 flex flex-wrap items-center gap-2">
@@ -44,7 +44,7 @@ const LEVELS = {
 					type="text"
 					maxlength="7"
 					spellcheck="false"
-					:class="[compactInputClass, 'w-28 font-mono', { 'border-red-400': !valid }]"
+					:class="[compactInputClass, 'w-28 font-mono', { 'champ-erreur': !valid }]"
 				/>
 				<span v-if="level" :class="['rounded-full px-2 py-0.5 text-xs', LEVELS[level].class]" :title="`Contraste ${ratio!.toFixed(1)}:1`">
 					{{ LEVELS[level].text }}

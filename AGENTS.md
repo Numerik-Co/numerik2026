@@ -363,6 +363,17 @@ service = l'y ajouter). Détail : [docs/referencement.md](docs/referencement.md)
 
 ## Composants réutilisables
 
+### Champs de formulaire
+
+`src/styles/forms.css` (importé par `global.css`, couche `components`) :
+`champ` (input, select, textarea ; taille « sm » façon Bootstrap, ~30 px,
+`--champ-py`), `champ-erreur`, `champ-groupe` (préfixe + champ),
+`champ-libelle`, `champ-aide`, `champ-erreur-texte` (sous un champ),
+`message-erreur` (groupe, étape), encarts `alerte-erreur` / `alerte-succes` /
+`alerte-attention`. **Jamais de chaîne de classes de champ recopiée** : `class="champ"`, ou `inputClass` /
+`compactInputClass` de `src/components/admin/context.ts` dans l'espace
+bénévoles. Détail : [docs/snippets.md](docs/snippets.md#champs-de-formulaire).
+
 ### Agenda hebdomadaire
 
 Affiche le planning des séances de la semaine, jour par jour, avec code
@@ -440,12 +451,12 @@ icônes font 24 px et sont centrées verticalement. Détail :
 
 ### Inscription en ligne à une activité
 
-Page `/inscription`, îlot Vue `src/plugins/adhesion/formulaire/inscription/InscriptionForm.vue`
+Plugin `inscription` (voir ci-dessous). Page `/inscription`, îlot Vue `src/plugins/inscription/formulaire/InscriptionForm.vue`
 (`client:load`), gardé par `<FormGate form="inscription">`. 3 étapes :
 profil (adhérent·e retrouvé·e par nom + prénom via
 `/api/adhesion/membre` `mode:'renouvellement'`, ou extérieur·e → fiche
-`Membres` minimale rôle `Contact` via `/api/adhesion/participant-exterieur`)
-→ activité (`/api/adhesion/offre-inscription` : saison en cours, type
+`Membres` minimale rôle `Contact` via `/api/inscription/participant-exterieur`)
+→ activité (`/api/inscription/offre` : saison en cours, type
 `Séances`/`Ateliers`/`Atelier CN` — `TYPES_ACTIVITE_INSCRIPTION` ; les
 activités de la fiche d'origine si l'une est publiée, sinon tous les
 publiés ; si `Activite.Tarif_non_adherent` renseigné : total adhérent·e =
@@ -454,7 +465,7 @@ si `Adhesion_requise`) et total non-adhérent·e = `Tarif_non_adherent`, mis
 en avant selon `Adhesion_en_cours`) → récap (`/api/adhesion/inscription`,
 montant dû = `Tarif_non_adherent` sans adhésion en cours, sinon `Tarif` ;
 `Liste d'attente` si complet, règlement sur place). Activités visées **toutes non publiées**
-→ « Me préinscrire » (`/api/adhesion/preinscription`, ligne ajoutée à
+→ « Me préinscrire » (`/api/inscription/preinscription`, ligne ajoutée à
 `Membres.Commentaires`, pas d'`Inscription`). Bouton « S'inscrire » dans la
 sidebar de `src/pages/activites/[category]/[slug].astro` →
 `activity.inscriptionHref` (`src/lib/activites.ts`, depuis le frontmatter
@@ -485,8 +496,12 @@ selon les besoins ; `plugin.ts` = manifeste, `index.ts` = ce que le reste
 du site en utilise). Catalogue `src/plugins/catalogue.ts` (`PLUGINS`, sans
 dépendance), réglage `plugins: { <id>: true }` de `reglages.yaml`
 (`site.plugins`, **inactif par défaut** sauf `actifParDefaut: true` du
-catalogue — `adhesion` —, `actifParDefaut(id)` lu par `site.ts` et
-`src/integrations/plugins.ts` ; changer = reconstruire),
+catalogue — `adhesion`, `inscription` — ; `requiert: ['<id>']` = inactif si
+le plugin requis l'est, et seul dossier d'un autre plugin importable ;
+`resoudrePlugins()` du catalogue, lu par `site.ts` et
+`src/integrations/plugins.ts` ; module « Plugins » : activation refusée si
+un requis est inactif, `requisInactifs` / `dependants` de
+`plugin-writer.ts` ; changer = reconstruire),
 `pluginActif(id)` / `disponible(def)` (`src/plugins/index.ts`, aussi dans
 le navigateur). Routes d'un plugin **jamais dans `src/pages/`** : ajoutées
 par `src/integrations/plugins.ts` (`injectRoute`, d'après
@@ -508,18 +523,28 @@ jamais le dossier d'un autre. Détail : [src/plugins/README.md](src/plugins/READ
 
 `src/plugins/adhesion/` (doc : [src/plugins/adhesion/README.md](src/plugins/adhesion/README.md)) :
 adhésion en ligne + bulletin PDF (`/adherer`, `/adherer/formulaire`),
-inscription aux activités (`/inscription`), présence (`/je-participe`),
-planning Grist de `/activites` — tout ce qui lit le document Grist de
+présence (`/je-participe`), planning Grist de `/activites` — tout ce qui
+lit le document Grist de
 l'adhésion (`GRIST_DOC_ID`, tables `Membres`, `Adhesions`, `Activite`…,
 `BULLETIN_SECRET` : `env` du manifeste). Pages `pages/`, routes `api/`
 (`/api/adhesion/*`, `/api/presence/*`, liste `API` de `plugin.ts`), îlots
-`formulaire/{adhesion,inscription,presence}/`, serveur `lib/`. Reste du site
+`formulaire/{adhesion,presence}/`, serveur `lib/`. Reste du site
 via `index.ts` : `planningActivites()` (vide si inactif),
 `lienAdhesionIndisponible(href)` (masque les liens vers ses pages : bouton
 CTA et « Je participe » du `Header`, boutons `Hero` / `CtaSection`),
-`ADHESION_HREF`… (plan du site, `SERVICE_PAGES`) ; bouton « S'inscrire »
-des fiches et réglages d'inscription du module « Activités » derrière
-`pluginActif('adhesion')`. Désactiver : `plugins: { adhesion: false }`.
+`ADHESION_HREF`… (plan du site, `SERVICE_PAGES`). Désactiver :
+`plugins: { adhesion: false }` (retire aussi l'inscription).
+
+**Plugin `inscription`** (actif par défaut, **requiert `adhesion`**) :
+`src/plugins/inscription/` (doc : [src/plugins/inscription/README.md](src/plugins/inscription/README.md)),
+page `/inscription`, routes `/api/inscription/{offre,preinscription,participant-exterieur}`,
+îlot `formulaire/InscriptionForm.vue` + `formulaire/client.ts`
+(`inscriptionApi`, et `adhesionApi` / `get` / `post` du plugin adhésion :
+`/api/adhesion/membre` et `/api/adhesion/inscription` restent à l'adhésion,
+le formulaire d'adhésion inscrit aussi à une activité). Reste du site :
+`inscriptionEnLigne()` (`index.ts`) pour le bouton « S'inscrire » des
+fiches, `pluginActif('inscription')` pour les réglages d'inscription du
+module « Activités », `INSCRIPTION_HREF` (plan du site, `SERVICE_PAGES`).
 
 ### Prise de RDV (plugin `rdv`)
 

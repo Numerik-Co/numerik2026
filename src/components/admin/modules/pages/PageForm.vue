@@ -283,7 +283,7 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 			<p class="flex items-center gap-3 text-xs font-medium uppercase tracking-wide text-gray-400">
 				<span class="h-px flex-1 bg-gray-200"></span>ou à partir d'un fichier .md<span class="h-px flex-1 bg-gray-200"></span>
 			</p>
-			<p v-if="error" class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+			<p v-if="error" class="mt-3 alerte-erreur" role="alert">{{ error }}</p>
 			<label
 				class="mt-3 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm transition-colors"
 				:class="mdDragOver ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'"
@@ -316,10 +316,10 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 				<li v-for="w in imported.warnings" :key="w">{{ w }}</li>
 			</ul>
 		</div>
-		<p v-if="editing?.technique" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+		<p v-if="editing?.technique" class="alerte-attention">
 			Page technique (.mdx) : elle se modifie dans le code, pas ici.
 		</p>
-		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
 
 		<div>
 			<EditFileBar v-if="editing && !editing.technique" :imported="imported" @download="downloadFile" @load="pickMarkdown" />
@@ -333,24 +333,24 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 				</div>
 
 				<div>
-					<label for="pg-title" class="block text-sm font-semibold text-gray-700">Titre</label>
+					<label for="pg-title" class="champ-libelle">Titre</label>
 					<input id="pg-title" v-model="form.title" type="text" required :class="inputClass" />
 					<SeoLength :text="form.title" kind="titre" suffix />
 				</div>
 				<div>
-					<label for="pg-description" class="block text-sm font-semibold text-gray-700">
+					<label for="pg-description" class="champ-libelle">
 						Description <span class="font-light text-gray-500">(facultative)</span>
 					</label>
 					<textarea id="pg-description" v-model="form.description" rows="2" :class="inputClass"></textarea>
 					<SeoLength :text="form.description" kind="description" />
-					<p class="mt-1 text-xs font-light text-gray-500">Affichée sous le titre et dans les moteurs de recherche.</p>
+					<p class="champ-aide">Affichée sous le titre et dans les moteurs de recherche.</p>
 				</div>
 
 				<!-- Emplacement -->
 				<fieldset class="space-y-3 rounded-xl bg-gray-100 p-4">
 					<legend class="sr-only">Emplacement</legend>
 					<div>
-						<label for="pg-placement" class="block text-sm font-semibold text-gray-700">Emplacement</label>
+						<label for="pg-placement" class="champ-libelle">Emplacement</label>
 						<select id="pg-placement" v-model="form.placement" :class="inputClass">
 							<option value="menu">Menu de navigation</option>
 							<option value="libre">Page libre (hors menu, accessible par son adresse ou un lien)</option>
@@ -358,22 +358,21 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 						</select>
 					</div>
 					<div v-if="form.placement === 'menu' && props.dropdowns.length">
-						<label for="pg-menu-position" class="block text-sm font-semibold text-gray-700">Position dans le menu</label>
+						<label for="pg-menu-position" class="champ-libelle">Position dans le menu</label>
 						<select id="pg-menu-position" v-model="form.menuPosition" :class="inputClass">
 							<option value="racine">Lien direct</option>
 							<option v-for="d in props.dropdowns" :key="d.folder" :value="`dropdown:${d.folder}`">Dans le menu déroulant « {{ d.label }} »</option>
 						</select>
 					</div>
 					<div>
-						<label for="pg-slug" class="block text-sm font-semibold text-gray-700">Adresse</label>
-						<div class="mt-1 flex items-center rounded-lg border border-gray-300 bg-white text-sm focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
-							<span class="whitespace-nowrap pl-3 text-gray-500">/{{ prefix }}</span>
+						<label for="pg-slug" class="champ-libelle">Adresse</label>
+						<div class="mt-1 champ-groupe">
+							<span>/{{ prefix }}</span>
 							<input
 								id="pg-slug"
 								:value="slug"
 								type="text"
 								pattern="[a-z0-9]+(-[a-z0-9]+)*"
-								class="min-w-0 flex-1 rounded-r-lg border-0 py-2 pr-3 text-gray-900 focus:outline-none focus:ring-0"
 								@input="onSlugInput"
 							/>
 						</div>
@@ -384,11 +383,11 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 					</div>
 
 					<div v-if="form.placement === 'menu'">
-						<label for="pg-menu-label" class="block text-sm font-semibold text-gray-700">
+						<label for="pg-menu-label" class="champ-libelle">
 							Libellé dans le menu de navigation <span class="font-light text-gray-500">(facultatif)</span>
 						</label>
 						<input id="pg-menu-label" v-model="form.menuLabel" type="text" :placeholder="form.title" :class="inputClass" />
-						<p v-if="placedLast" class="mt-1 text-xs font-light text-gray-500">
+						<p v-if="placedLast" class="champ-aide">
 							La page se place en dernière position {{ dropdownLabel ? `du menu déroulant « ${dropdownLabel} »` : 'du menu de navigation' }}.
 						</p>
 					</div>
@@ -406,7 +405,7 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 			<div v-show="tab === 'contenu'" id="pg-panel-contenu" role="tabpanel" aria-labelledby="pg-tab-contenu" class="space-y-5">
 				<!-- Texte -->
 				<div>
-					<label for="pg-body" class="block text-sm font-semibold text-gray-700">Texte (Markdown)</label>
+					<label for="pg-body" class="champ-libelle">Texte (Markdown)</label>
 					<textarea
 						id="pg-body"
 						ref="bodyField"
@@ -415,7 +414,7 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 						required
 						:class="[inputClass, 'font-mono text-xs leading-relaxed']"
 					></textarea>
-					<p class="mt-1 text-xs font-light text-gray-500">
+					<p class="champ-aide">
 						<code>## Titre de section</code> (alimente le sommaire), <code>**gras**</code>, <code>*italique*</code>,
 						<code>- liste</code>, <code>[lien](/contact)</code>. Le HTML est accepté (tableaux, encadrés…).
 					</p>
@@ -465,7 +464,7 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 						</button>
 					</div>
 					<div v-if="editing?.cover || photo" class="mt-3">
-						<label for="pg-credit" class="block text-sm font-semibold text-gray-700">
+						<label for="pg-credit" class="champ-libelle">
 							Crédit photo <span class="font-light text-gray-500">(facultatif)</span>
 						</label>
 						<input id="pg-credit" v-model="form.imageCredit" type="text" placeholder="Photo : Prénom Nom" :class="inputClass" />

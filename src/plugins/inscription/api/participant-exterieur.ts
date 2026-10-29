@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
-import { COLS, createRecord, GristError, ROLE_CONTACT, TABLES } from '../lib/grist';
-import { readGenre } from '../lib/membre-fields';
+import { COLS, createRecord, GristError, ROLE_CONTACT, TABLES } from '../../adhesion/lib/grist';
+import { readGenre } from '../../adhesion/lib/membre-fields';
 import { isNonEmptyString, json } from '../../../lib/http';
-import type { ExterieurResult } from '../lib/types';
+import type { ExterieurResult } from '../../adhesion/lib/types';
 
 export const prerender = false;
 
@@ -45,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
 		return json(result);
 	} catch (err) {
 		const status = err instanceof GristError ? err.status : 500;
-		console.error('[api/adhesion/participant-exterieur]', err);
+		console.error('[api/inscription/participant-exterieur]', err);
 		return json({ error: "Échec de l'enregistrement." }, status);
 	}
 };

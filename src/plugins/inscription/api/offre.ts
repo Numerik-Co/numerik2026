@@ -7,10 +7,10 @@ import {
 	TABLES,
 	TYPES_ACTIVITE_INSCRIPTION,
 	type GristRecord,
-} from '../lib/grist';
-import { toActiviteOption } from '../lib/activite-option';
+} from '../../adhesion/lib/grist';
+import { toActiviteOption } from '../../adhesion/lib/activite-option';
 import { json, normalize, toNumberOrNull } from '../../../lib/http';
-import type { OffreInscription } from '../lib/types';
+import type { OffreInscription } from '../../adhesion/lib/types';
 
 export const prerender = false;
 
@@ -91,7 +91,7 @@ export const GET: APIRoute = async ({ url }) => {
 		return json(result);
 	} catch (err) {
 		const status = err instanceof GristError ? err.status : 500;
-		console.error('[api/adhesion/offre-inscription]', err);
+		console.error('[api/inscription/offre]', err);
 		return json({ error: 'Impossible de charger les activités.' }, status);
 	}
 };

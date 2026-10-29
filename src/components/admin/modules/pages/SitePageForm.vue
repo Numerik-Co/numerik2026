@@ -90,13 +90,13 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 			Page du site <strong class="font-medium text-gray-800">{{ def.label }}</strong> ({{ props.page.href }}) : sa mise en
 			page est fournie par le site ; vous réglez son lien dans le menu et {{ def.modules ? 'ses modules' : 'ses textes' }}.
 		</p>
-		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
 
 		<!-- Lien dans le menu -->
 		<fieldset class="space-y-3 rounded-xl bg-gray-100 p-4">
 			<legend class="sr-only">Lien dans le menu de navigation</legend>
 			<div>
-				<label for="sp-label" class="block text-sm font-semibold text-gray-700">Libellé dans le menu de navigation</label>
+				<label for="sp-label" class="champ-libelle">Libellé dans le menu de navigation</label>
 				<input id="sp-label" v-model="form.label" type="text" required :placeholder="def.label" :class="inputClass" />
 			</div>
 			<div>
@@ -104,7 +104,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 					<input v-model="form.show" type="checkbox" class="rounded border-gray-300" />
 					Visible dans le menu de navigation
 				</label>
-				<p class="mt-1 text-xs font-light text-gray-500">Décoché : la page reste accessible par son adresse.</p>
+				<p class="champ-aide">Décoché : la page reste accessible par son adresse.</p>
 			</div>
 		</fieldset>
 
@@ -115,7 +115,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 		<fieldset v-for="section in def.sections" :key="section.title" class="space-y-3">
 			<legend class="font-heading text-sm font-semibold text-gray-900">{{ section.title }}</legend>
 			<div v-for="t in section.texts" :key="t.name">
-				<label :for="`sp-${t.name}`" class="block text-sm font-medium text-gray-700">{{ t.label }}</label>
+				<label :for="`sp-${t.name}`" class="champ-libelle">{{ t.label }}</label>
 				<textarea
 					v-if="t.multiline"
 					:id="`sp-${t.name}`"
@@ -126,7 +126,7 @@ const variables = Object.entries(PAGE_VARIABLES).map(([name, v]) => ({ token: `{
 				></textarea>
 				<input v-else :id="`sp-${t.name}`" v-model="form.textes[t.name]" type="text" :placeholder="t.default" :class="inputClass" />
 				<SeoLength v-if="t.seo" :text="form.textes[t.name] || t.default" :kind="t.seo.kind" :suffix="t.seo.suffix" />
-				<p v-if="t.help" class="mt-1 text-xs font-light text-gray-500">{{ t.help }}</p>
+				<p v-if="t.help" class="champ-aide">{{ t.help }}</p>
 			</div>
 		</fieldset>
 

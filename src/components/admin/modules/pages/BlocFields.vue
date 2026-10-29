@@ -25,7 +25,7 @@ const keep = (name: string) => (el: unknown) => {
 <template>
 	<div class="space-y-3">
 		<div v-for="f in props.fields" :key="f.name">
-			<label :for="`${props.idPrefix}-${f.name}`" class="block text-sm font-semibold text-gray-700">
+			<label :for="`${props.idPrefix}-${f.name}`" class="champ-libelle">
 				{{ f.label }}
 				<span v-if="!f.required && f.type !== 'select'" class="font-light text-gray-500">(facultatif)</span>
 			</label>
@@ -65,7 +65,7 @@ const keep = (name: string) => (el: unknown) => {
 					@input="set(f.name, $event)"
 				/>
 			</div>
-			<p v-if="f.help" class="mt-1 text-xs font-light text-gray-500">{{ f.help }}</p>
+			<p v-if="f.help" class="champ-aide">{{ f.help }}</p>
 			<LinkPicker
 				v-if="f.type === 'markdown' || f.type === 'url'"
 				:model-value="value(f.name)"

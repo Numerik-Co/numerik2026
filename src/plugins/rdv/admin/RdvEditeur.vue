@@ -248,13 +248,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 							<h3 class="font-heading text-sm font-semibold text-gray-900">Rendez-vous</h3>
 							<div class="grid gap-4 sm:grid-cols-2">
 								<div>
-									<label for="rdv-jour" class="text-sm font-medium text-gray-700">Jour</label>
+									<label for="rdv-jour" class="champ-libelle">Jour</label>
 									<select id="rdv-jour" v-model="date" :class="inputClass" @change="changerJour">
 										<option v-for="j in jours" :key="j" :value="j">{{ libelleDate(j) }}</option>
 									</select>
 								</div>
 								<div>
-									<label for="rdv-heure" class="text-sm font-medium text-gray-700">Horaire</label>
+									<label for="rdv-heure" class="champ-libelle">Horaire</label>
 									<select id="rdv-heure" v-model="heure" :class="inputClass">
 										<option v-if="!horaires.length" value="" disabled>Aucun créneau libre ce jour-là</option>
 										<option v-for="h in horaires" :key="h.heure" :value="h.heure">
@@ -269,7 +269,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 							</p>
 
 							<div>
-								<label for="rdv-demarche" class="text-sm font-medium text-gray-700">Démarche</label>
+								<label for="rdv-demarche" class="champ-libelle">Démarche</label>
 								<select id="rdv-demarche" v-model="demarcheId" :class="inputClass">
 									<option :value="0" disabled>Choisir une démarche…</option>
 									<optgroup v-for="[thematique, liste] in parThematique" :key="thematique" :label="thematique">
@@ -279,11 +279,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 							</div>
 
 							<div>
-								<label for="rdv-statut" class="text-sm font-medium text-gray-700">Statut</label>
+								<label for="rdv-statut" class="champ-libelle">Statut</label>
 								<select id="rdv-statut" v-model="statut" :class="inputClass">
 									<option v-for="s in statuts" :key="s" :value="s">{{ s }}</option>
 								</select>
-								<p class="mt-1 text-xs text-gray-500">« Annulé » libère le créneau pour une autre réservation.</p>
+								<p class="champ-aide">« Annulé » libère le créneau pour une autre réservation.</p>
 							</div>
 						</div>
 					</div>
@@ -297,7 +297,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 							</div>
 							<div v-for="c in g.champs" :key="c.cle">
 								<template v-if="c.type === 'choix-multiples'">
-									<p class="text-sm font-medium text-gray-700">{{ c.label }}</p>
+									<p class="champ-libelle">{{ c.label }}</p>
 									<div class="mt-1.5 flex flex-wrap gap-2" role="group" :aria-label="c.label">
 										<button
 											v-for="x in c.choix"
@@ -317,7 +317,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 									</div>
 								</template>
 								<template v-else-if="c.type === 'choix' && c.affichage === 'smileys'">
-									<p class="text-sm font-medium text-gray-700">{{ c.label }}</p>
+									<p class="champ-libelle">{{ c.label }}</p>
 									<div class="mt-1.5 flex flex-wrap justify-center gap-2" role="radiogroup" :aria-label="c.label">
 										<button
 											v-for="(x, i) in c.choix"
@@ -340,14 +340,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 									</div>
 								</template>
 								<template v-else-if="c.type === 'choix'">
-									<label :for="`rdv-suivi-${c.cle}`" class="text-sm font-medium text-gray-700">{{ c.label }}</label>
+									<label :for="`rdv-suivi-${c.cle}`" class="champ-libelle">{{ c.label }}</label>
 									<select :id="`rdv-suivi-${c.cle}`" v-model="suivi[c.cle]" :class="inputClass">
 										<option value="">Non renseigné</option>
 										<option v-for="x in c.choix" :key="x" :value="x">{{ x }}</option>
 									</select>
 								</template>
 								<template v-else>
-									<label :for="`rdv-suivi-${c.cle}`" class="text-sm font-medium text-gray-700">{{ c.label }}</label>
+									<label :for="`rdv-suivi-${c.cle}`" class="champ-libelle">{{ c.label }}</label>
 									<textarea :id="`rdv-suivi-${c.cle}`" v-model="suivi[c.cle]" rows="3" :class="inputClass"></textarea>
 								</template>
 							</div>
@@ -355,8 +355,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 					</div>
 				</div>
 
-				<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
-				<p v-else-if="enregistre && !modifie" class="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800" role="status">
+				<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
+				<p v-else-if="enregistre && !modifie" class="alerte-succes" role="status">
 					<i class="fa-solid fa-circle-check mr-1" aria-hidden="true"></i>Modifications enregistrées dans Grist.
 				</p>
 
@@ -395,7 +395,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 						</p>
 					</div>
 					<fieldset>
-						<legend class="text-sm font-medium text-gray-700">Motif</legend>
+						<legend class="champ-libelle">Motif</legend>
 						<div class="mt-1.5 flex flex-wrap gap-2">
 							<label
 								v-for="m in MOTIFS_SUPPRESSION"
@@ -408,7 +408,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 						</div>
 					</fieldset>
 					<div>
-						<label for="rdv-motif-precision" class="text-sm font-medium text-gray-700">
+						<label for="rdv-motif-precision" class="champ-libelle">
 							Précision<span v-if="motif !== 'Autre'" class="font-normal text-gray-500"> (facultative)</span>
 						</label>
 						<input

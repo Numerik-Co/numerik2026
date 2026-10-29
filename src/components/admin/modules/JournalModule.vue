@@ -98,13 +98,13 @@ onMounted(() => load());
 
 	<div class="mb-4 flex flex-wrap items-end gap-3">
 		<div v-if="years.length > 1">
-			<label for="journal-year" class="block text-sm font-semibold text-gray-700">Année</label>
+			<label for="journal-year" class="champ-libelle">Année</label>
 			<select id="journal-year" v-model="year" :class="[inputClass, 'w-auto']" @change="load(year)">
 				<option v-for="y in years" :key="y" :value="y">{{ y }}</option>
 			</select>
 		</div>
 		<div class="min-w-48 flex-1">
-			<label for="journal-filter" class="block text-sm font-semibold text-gray-700">Rechercher</label>
+			<label for="journal-filter" class="champ-libelle">Rechercher</label>
 			<input id="journal-filter" v-model="filter" type="search" placeholder="Nom, actualité, compte…" :class="inputClass" />
 		</div>
 		<label class="flex items-center gap-2 pb-2 text-sm text-gray-700">
@@ -113,7 +113,7 @@ onMounted(() => load());
 		</label>
 	</div>
 
-	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+	<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
 	<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 	<p v-else-if="shown.length === 0" class="text-sm font-light text-gray-500">Aucun événement.</p>
 	<ol v-else class="divide-y divide-gray-100 rounded-xl border border-gray-100">

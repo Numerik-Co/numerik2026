@@ -7,7 +7,7 @@ import {
 	TABLES,
 	TYPES_ACTIVITE_INSCRIPTION,
 	updateRecord,
-} from '../lib/grist';
+} from '../../adhesion/lib/grist';
 import { json } from '../../../lib/http';
 
 export const prerender = false;
@@ -54,7 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
 		return json({ ok: true });
 	} catch (err) {
 		const status = err instanceof GristError ? err.status : 500;
-		console.error('[api/adhesion/preinscription]', err);
+		console.error('[api/inscription/preinscription]', err);
 		return json({ error: "Échec de l'enregistrement de la préinscription." }, status);
 	}
 };

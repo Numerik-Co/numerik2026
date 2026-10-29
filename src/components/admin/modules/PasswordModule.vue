@@ -41,22 +41,22 @@ async function submit() {
 
 <template>
 	<form class="space-y-4" @submit.prevent="submit">
-		<p v-if="props.forced" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+		<p v-if="props.forced" class="alerte-attention">
 			Votre mot de passe est provisoire : choisissez le vôtre pour accéder à l'espace bénévoles.
 		</p>
-		<p v-if="done" class="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800" role="status">
+		<p v-if="done" class="alerte-succes" role="status">
 			Mot de passe modifié. Vos autres appareils sont déconnectés.
 		</p>
-		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
 		<input type="text" :value="user?.login" autocomplete="username" hidden />
 		<div>
-			<label for="pw-current" class="block text-sm font-medium text-gray-700">
+			<label for="pw-current" class="champ-libelle">
 				{{ props.forced ? 'Mot de passe provisoire' : 'Mot de passe actuel' }}
 			</label>
 			<input id="pw-current" v-model="current" type="password" required autocomplete="current-password" :class="inputClass" />
 		</div>
 		<div>
-			<label for="pw-next" class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+			<label for="pw-next" class="champ-libelle">Nouveau mot de passe</label>
 			<input
 				id="pw-next"
 				v-model="next"
@@ -66,12 +66,12 @@ async function submit() {
 				autocomplete="new-password"
 				:class="inputClass"
 			/>
-			<p class="mt-1 text-xs font-light text-gray-500">
+			<p class="champ-aide">
 				{{ PASSWORD_MIN_LENGTH }} caractères minimum. Une courte phrase est idéale.
 			</p>
 		</div>
 		<div>
-			<label for="pw-confirm" class="block text-sm font-medium text-gray-700">Confirmer le nouveau mot de passe</label>
+			<label for="pw-confirm" class="champ-libelle">Confirmer le nouveau mot de passe</label>
 			<input id="pw-confirm" v-model="confirm" type="password" required autocomplete="new-password" :class="inputClass" />
 		</div>
 		<button

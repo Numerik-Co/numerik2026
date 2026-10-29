@@ -126,7 +126,7 @@ function reorderItems(bloc: Bloc, list: NonNullable<Bloc['items']>) {
 
 		<div class="flex flex-wrap items-end gap-2 rounded-xl border border-dashed border-gray-300 p-4">
 			<div class="min-w-48 flex-1">
-				<label for="bloc-new-type" class="block text-sm font-semibold text-gray-700">Ajouter un bloc</label>
+				<label for="bloc-new-type" class="champ-libelle">Ajouter un bloc</label>
 				<select id="bloc-new-type" v-model="newType" :class="inputClass">
 					<option v-for="[type, d] in types" :key="type" :value="type">{{ d.label }} — {{ d.description }}</option>
 				</select>

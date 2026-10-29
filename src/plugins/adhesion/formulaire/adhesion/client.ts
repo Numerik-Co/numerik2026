@@ -13,19 +13,16 @@ import type {
 	CotisationOption,
 	CotisationPayload,
 	DetacherMembrePayload,
-	ExterieurPayload,
-	ExterieurResult,
 	InscriptionResult,
 	MembrePayload,
 	MembreRecherche,
 	MembreResult,
-	OffreInscription,
-	PreinscriptionPayload,
 	RenouvellementPayload,
 	RenouvPreferencesPayload,
 } from '../../lib/types';
 
-async function post<T>(url: string, body: unknown): Promise<T> {
+/** POST JSON vers une route du site ; erreur = message renvoyé par la route. Aussi utilisé par le plugin inscription. */
+export async function post<T>(url: string, body: unknown): Promise<T> {
 	const res = await fetch(url, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -38,7 +35,7 @@ async function post<T>(url: string, body: unknown): Promise<T> {
 	return data as T;
 }
 
-async function get<T>(url: string): Promise<T> {
+export async function get<T>(url: string): Promise<T> {
 	const res = await fetch(url);
 	const data = await res.json().catch(() => null);
 	if (!res.ok) {
@@ -50,11 +47,6 @@ async function get<T>(url: string): Promise<T> {
 export const adhesionApi = {
 	cotisations: () => get<CotisationOption[]>('/api/adhesion/cotisations'),
 	activites: () => get<ActiviteOption[]>('/api/adhesion/activites'),
-	/** `cible` : la query string reçue par /inscription (`activite=…&type=…`), relayée telle quelle. */
-	offreInscription: (cible: URLSearchParams) =>
-		get<OffreInscription>(`/api/adhesion/offre-inscription?${cible}`),
-	preinscrire: (payload: PreinscriptionPayload) =>
-		post<{ ok: true }>('/api/adhesion/preinscription', payload),
 
 	creerMembre: (payload: MembrePayload) =>
 		post<MembreResult>('/api/adhesion/membre', { mode: 'nouveau', ...payload }),
@@ -68,8 +60,6 @@ export const adhesionApi = {
 	inscrireContact: (payload: ContactPayload) =>
 		post<{ membreId: number }>('/api/adhesion/contact', payload),
 
-	creerParticipantExterieur: (payload: ExterieurPayload) =>
-		post<ExterieurResult>('/api/adhesion/participant-exterieur', payload),
 
 	ajouterCoMembre: (payload: CoMembrePayload) =>
 		post<CoMembreResult>('/api/adhesion/co-membre', payload),

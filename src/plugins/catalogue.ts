@@ -19,6 +19,11 @@ export interface PluginInfo {
 	 * associations utilisent) ; `plugins: { <id>: false }` le désactive.
 	 */
 	actifParDefaut?: boolean;
+	/**
+	 * Plugins dont celui-ci se sert (routes, code) : il n'est actif que s'ils le
+	 * sont tous, et c'est le seul dossier d'un autre plugin qu'il peut importer.
+	 */
+	requiert?: readonly string[];
 	/** Icône Font Awesome (module « Plugins » de l'espace bénévoles). */
 	icon: string;
 	/** Documentation du plugin (chemin dans le projet). */
@@ -43,7 +48,7 @@ export const PLUGINS = {
 	adhesion: {
 		label: 'Adhésion et activités',
 		description:
-			'Adhésion en ligne et bulletin PDF, inscription aux activités, présence (« Je participe »), planning des activités lu dans Grist.',
+			'Adhésion en ligne et bulletin PDF, présence (« Je participe »), planning des activités lu dans Grist.',
 		actifParDefaut: true,
 		icon: 'fa-id-card',
 		doc: 'src/plugins/adhesion/README.md',
@@ -51,6 +56,15 @@ export const PLUGINS = {
 			{ nom: 'GRIST_API_KEY', aide: 'Clé d’API Grist du document de l’adhésion, dans le .env. Sans clé, les formulaires (adhésion, inscription, présence) et le planning Grist ne fonctionnent pas.' },
 			{ nom: 'GRIST_DOC_ID', aide: 'Identifiant du document Grist de l’adhésion, dans le .env.' },
 		],
+	},
+	inscription: {
+		label: 'Inscription aux activités',
+		description:
+			'Page /inscription et bouton « S’inscrire » des fiches d’activité : adhérent·e ou personne extérieure, liste d’attente, préinscription. Requiert le plugin Adhésion (même document Grist).',
+		actifParDefaut: true,
+		requiert: ['adhesion'],
+		icon: 'fa-clipboard-list',
+		doc: 'src/plugins/inscription/README.md',
 	},
 	rdv: {
 		label: 'Prise de rendez-vous',
@@ -110,4 +124,20 @@ export const PLUGIN_IDS = Object.keys(PLUGINS) as PluginId[];
 /** État d'un plugin quand `reglages.yaml` n'en dit rien. */
 export function actifParDefaut(id: PluginId): boolean {
 	return (PLUGINS[id] as PluginInfo).actifParDefaut === true;
+}
+
+/** Plugins requis par `id` (`requiert`). */
+export function requis(id: PluginId): PluginId[] {
+	return [...((PLUGINS[id] as PluginInfo).requiert ?? [])] as PluginId[];
+}
+
+/**
+ * Plugins réellement actifs d'après `plugins:` de `reglages.yaml` : valeur
+ * écrite, sinon `actifParDefaut` ; puis inactif si un plugin requis l'est.
+ */
+export function resoudrePlugins(lus: Partial<Record<string, unknown>>): Record<PluginId, boolean> {
+	const voulu = (id: PluginId) => (typeof lus[id] === 'boolean' ? (lus[id] as boolean) : actifParDefaut(id));
+	const actif = (id: PluginId, vus: PluginId[] = []): boolean =>
+		voulu(id) && requis(id).every((r) => !vus.includes(r) && actif(r, [...vus, id]));
+	return Object.fromEntries(PLUGIN_IDS.map((id) => [id, actif(id)])) as Record<PluginId, boolean>;
 }

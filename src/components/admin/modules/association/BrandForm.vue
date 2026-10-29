@@ -177,7 +177,7 @@ onBeforeUnmount(() => {
 <template>
 	<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
 	<form v-else-if="source" class="space-y-6" @submit.prevent="submit">
-		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
 
 		<!-- Modifications en attente : enregistrées en une seule publication -->
 		<div
@@ -286,7 +286,7 @@ onBeforeUnmount(() => {
 						maxlength="7"
 						spellcheck="false"
 						:aria-label="`Couleur ${i + 1} de la bande`"
-						:class="[compactInputClass, 'w-28 font-mono', { 'border-red-400': !COLOR_PATTERN.test(s.value) }]"
+						:class="[compactInputClass, 'w-28 font-mono', { 'champ-erreur': !COLOR_PATTERN.test(s.value) }]"
 					/>
 					<span class="ml-auto flex items-center gap-1">
 						<OrderArrows :label="`couleur ${i + 1}`" :first="i === 0" :last="i === stripe.length - 1" :disabled="false" @up="moveStripe(i, -1)" @down="moveStripe(i, 1)" />

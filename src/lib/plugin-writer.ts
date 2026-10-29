@@ -20,7 +20,7 @@ import { join } from 'node:path';
 import { getSecret } from 'astro:env/server';
 import { isMap, parseDocument, YAMLMap, type Document } from 'yaml';
 import { parseReglages } from '../config/site';
-import { PLUGIN_IDS, PLUGINS, type PluginId, type PluginInfo } from '../plugins/catalogue';
+import { PLUGIN_IDS, PLUGINS, requis, type PluginId, type PluginInfo } from '../plugins/catalogue';
 import { FORMATS, type ChampPlugin } from '../plugins/champs';
 import { pluginActif } from '../plugins';
 import type { Applied } from './content-transaction';
@@ -49,6 +49,10 @@ export interface PluginState {
 	actif: boolean;
 	/** État du site en ligne (construit), différent tant que la modification n'est pas publiée. */
 	enLigne: boolean;
+	/** Plugins requis inactifs (`requiert` du catalogue) : activation impossible. */
+	requisInactifs: { id: PluginId; label: string }[];
+	/** Plugins qui requièrent celui-ci : désactivés avec lui. */
+	dependants: { id: PluginId; label: string }[];
 	/** Fichiers requis absents : activation et réglages impossibles. */
 	manquants: { fichier: string; aide: string }[];
 	/** Secrets du `.env` absents et réglages obligatoires vides partout : signalés seulement. */
@@ -93,7 +97,7 @@ export async function readPluginsSource(): Promise<PluginState[]> {
 				utilise: getSecret(e.nom) ? e.nom : e.repli && getSecret(e.repli) ? e.repli : null,
 			}));
 			const avertissements = [
-				...(info.env ?? []).filter((e, i) => !secrets[i].utilise).map((e) => ({ nom: e.nom, aide: e.aide })),
+				...(info.env ?? []).filter((_, i) => !secrets[i].utilise).map((e) => ({ nom: e.nom, aide: e.aide })),
 				...champs
 					.filter((c) => c.obligatoire && !c.valeur && !c.repli)
 					.map((c) => ({ nom: c.label, aide: `à renseigner ici${c.env ? ` ou dans le .env (${c.env})` : ''} : le plugin ne peut pas fonctionner sans.` })),
@@ -106,6 +110,10 @@ export async function readPluginsSource(): Promise<PluginState[]> {
 				doc: info.doc,
 				actif: plugins[id],
 				enLigne: pluginActif(id),
+				requisInactifs: requis(id)
+					.filter((r) => !plugins[r])
+					.map((r) => ({ id: r, label: PLUGINS[r].label })),
+				dependants: PLUGIN_IDS.filter((d) => requis(d).includes(id)).map((d) => ({ id: d, label: PLUGINS[d].label })),
 				manquants,
 				avertissements,
 				secrets,
@@ -189,6 +197,9 @@ export async function savePlugin(id: unknown, actif: unknown, valeurs: unknown):
 	}
 
 	if (actif !== state.actif) {
+		if (actif && state.requisInactifs.length) {
+			errors.push(`Activation impossible : activez d'abord le plugin « ${state.requisInactifs.map((r) => r.label).join(' », « ')} », qu'il requiert.`);
+		}
 		if (actif && state.manquants.length) {
 			errors.push(`Activation impossible : ${state.manquants.map((m) => `${m.fichier} absent (${m.aide})`).join(' ')}`);
 		}

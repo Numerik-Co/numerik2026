@@ -139,7 +139,7 @@ onMounted(load);
 </script>
 
 <template>
-	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+	<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
 
 	<div class="mb-4 space-y-3">
 		<!-- Recherche en tête (texte, statut) : elle porte sur toutes les semaines, pas seulement celle affichée. -->
@@ -193,7 +193,7 @@ onMounted(load);
 				</button>
 			</div>
 		</div>
-		<p v-if="pdfErreur" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ pdfErreur }}</p>
+		<p v-if="pdfErreur" class="alerte-erreur" role="alert">{{ pdfErreur }}</p>
 	</div>
 
 	<p v-if="loading" class="flex items-center gap-2 text-sm font-light text-gray-500" role="status">

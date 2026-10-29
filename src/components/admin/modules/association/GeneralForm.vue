@@ -58,15 +58,13 @@ function reset() {
 
 /** En-tête des sections, comme les listes du module « Pages ». */
 const headerClass = 'flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-100 px-4 py-2.5';
-const labelClass = 'block text-sm font-medium text-gray-700';
-const helpClass = 'mt-1 text-xs font-light text-gray-500';
 /** Champ sur la même ligne que son libellé (réseaux sociaux). */
 const inlineInputClass = inputClass.replace('mt-1 ', '');
 </script>
 
 <template>
 	<form class="space-y-6" @submit.prevent="submit">
-		<p v-if="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
 		<p class="text-sm font-light text-gray-600">
 			Ces informations sont affichées sur tout le site : en-tête, pied de page, page Contact, mentions légales, aperçus de
 			partage… et dans le texte des pages grâce aux variables <code class="text-gray-900" v-text="'{{association.nom}}'"></code>,
@@ -94,13 +92,13 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 			</header>
 			<div class="space-y-4 p-4">
 				<div>
-					<label for="asso-name" :class="labelClass">Nom de l'association</label>
+					<label for="asso-name" class="champ-libelle">Nom de l'association</label>
 					<input id="asso-name" v-model="form.name" type="text" required maxlength="80" :class="inputClass" />
 				</div>
 				<div>
-					<label for="asso-description" :class="labelClass">Présentation</label>
+					<label for="asso-description" class="champ-libelle">Présentation</label>
 					<textarea id="asso-description" v-model="form.description" rows="3" required maxlength="300" :class="inputClass"></textarea>
-					<p :class="helpClass">Une phrase : page d'accueil et résultats des moteurs de recherche ({{ form.description.length }}/300).</p>
+					<p class="champ-aide">Une phrase : page d'accueil et résultats des moteurs de recherche ({{ form.description.length }}/300).</p>
 				</div>
 			</div>
 		</section>
@@ -114,23 +112,23 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 			</header>
 			<div class="grid gap-4 p-4 sm:grid-cols-2">
 				<div>
-					<label for="asso-email" :class="labelClass">Email de contact</label>
+					<label for="asso-email" class="champ-libelle">Email de contact</label>
 					<input id="asso-email" v-model="form.email" type="email" required :class="inputClass" />
 				</div>
 				<div>
-					<label for="asso-phone" :class="labelClass">Téléphone</label>
+					<label for="asso-phone" class="champ-libelle">Téléphone</label>
 					<input id="asso-phone" v-model="form.phone" type="tel" required :class="inputClass" />
 				</div>
 				<div class="sm:col-span-2">
-					<label for="asso-street" :class="labelClass">Adresse du siège</label>
+					<label for="asso-street" class="champ-libelle">Adresse du siège</label>
 					<input id="asso-street" v-model="form.address.street" type="text" required placeholder="N° et rue" :class="inputClass" />
 				</div>
 				<div>
-					<label for="asso-postal" :class="labelClass">Code postal</label>
+					<label for="asso-postal" class="champ-libelle">Code postal</label>
 					<input id="asso-postal" v-model="form.address.postalCode" type="text" required inputmode="numeric" :class="inputClass" />
 				</div>
 				<div>
-					<label for="asso-city" :class="labelClass">Ville</label>
+					<label for="asso-city" class="champ-libelle">Ville</label>
 					<input id="asso-city" v-model="form.address.city" type="text" required :class="inputClass" />
 				</div>
 			</div>
@@ -167,39 +165,39 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 			</header>
 			<div class="grid gap-4 p-4 sm:grid-cols-2">
 				<div>
-					<label for="asso-rna" :class="labelClass">Numéro RNA</label>
+					<label for="asso-rna" class="champ-libelle">Numéro RNA</label>
 					<input id="asso-rna" v-model="form.legal.registrationNumber" type="text" placeholder="W…" :class="inputClass" />
 				</div>
 				<div>
-					<label for="asso-siret" :class="labelClass">Numéro SIRET</label>
+					<label for="asso-siret" class="champ-libelle">Numéro SIRET</label>
 					<input id="asso-siret" v-model="form.legal.siretNumber" type="text" inputmode="numeric" :class="inputClass" />
 				</div>
 				<div class="sm:col-span-2">
-					<label for="asso-president" :class="labelClass">Président·e</label>
+					<label for="asso-president" class="champ-libelle">Président·e</label>
 					<input id="asso-president" v-model="form.legal.president" type="text" :class="inputClass" />
 				</div>
 				<div>
-					<label for="asso-manager" :class="labelClass">Responsable de la publication</label>
+					<label for="asso-manager" class="champ-libelle">Responsable de la publication</label>
 					<input id="asso-manager" v-model="form.legal.publicationManager" type="text" :placeholder="form.legal.president" :class="inputClass" />
-					<p :class="helpClass">Souvent le·la président·e (repris si vide).</p>
+					<p class="champ-aide">Souvent le·la président·e (repris si vide).</p>
 				</div>
 				<div>
-					<label for="asso-role" :class="labelClass">Sa fonction dans l'association</label>
+					<label for="asso-role" class="champ-libelle">Sa fonction dans l'association</label>
 					<input id="asso-role" v-model="form.legal.publicationManagerRole" type="text" placeholder="Président·e" :class="inputClass" />
 				</div>
 			</div>
 			<fieldset class="mx-4 mb-4 space-y-3 rounded-xl bg-gray-100 p-4">
 				<legend class="float-left mb-1 font-heading text-sm font-semibold text-gray-900">Hébergeur du site</legend>
 				<div class="clear-left">
-					<label for="asso-host-name" :class="labelClass">Nom</label>
+					<label for="asso-host-name" class="champ-libelle">Nom</label>
 					<input id="asso-host-name" v-model="form.legal.hosting.name" type="text" :class="inputClass" />
 				</div>
 				<div>
-					<label for="asso-host-address" :class="labelClass">Adresse</label>
+					<label for="asso-host-address" class="champ-libelle">Adresse</label>
 					<input id="asso-host-address" v-model="form.legal.hosting.address" type="text" :class="inputClass" />
 				</div>
 				<div>
-					<label for="asso-host-phone" :class="labelClass">Téléphone</label>
+					<label for="asso-host-phone" class="champ-libelle">Téléphone</label>
 					<input id="asso-host-phone" v-model="form.legal.hosting.phone" type="tel" :class="inputClass" />
 				</div>
 			</fieldset>

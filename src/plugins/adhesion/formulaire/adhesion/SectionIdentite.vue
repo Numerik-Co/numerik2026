@@ -38,10 +38,9 @@ const emit = defineEmits<{
 	submitContact: [payload: ContactPayload];
 }>();
 
-const inputBase =
-	'mt-1 w-full rounded-lg border px-3 py-1.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary/20';
+const inputBase = 'mt-1 champ';
 const champ = (err?: string) =>
-	`${inputBase} ${err ? 'border-red-400 focus:border-red-400' : 'border-gray-200 focus:border-primary'}`;
+	`${inputBase} ${err ? 'champ-erreur' : ''}`;
 
 // --- Validation ---
 const montreErreurs = ref(false);
@@ -94,36 +93,36 @@ function envoyerContact() {
 				<p class="text-sm text-gray-600">Recevez nos actualités et informations sans adhérer.</p>
 				<div class="mt-4 grid gap-4 sm:grid-cols-2">
 					<label class="block">
-						<span class="text-sm font-medium text-gray-700">Nom</span>
+						<span class="champ-libelle">Nom</span>
 						<input
 							v-model.trim="contact.nom"
 							autocomplete="family-name"
 							:class="champ(montreErreursContact ? erreursContact.nom : undefined)"
 						/>
-						<span v-if="montreErreursContact && erreursContact.nom" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreursContact && erreursContact.nom" class="champ-erreur-texte">
 							{{ erreursContact.nom }}
 						</span>
 					</label>
 					<label class="block">
-						<span class="text-sm font-medium text-gray-700">Prénom</span>
+						<span class="champ-libelle">Prénom</span>
 						<input
 							v-model.trim="contact.prenom"
 							autocomplete="given-name"
 							:class="champ(montreErreursContact ? erreursContact.prenom : undefined)"
 						/>
-						<span v-if="montreErreursContact && erreursContact.prenom" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreursContact && erreursContact.prenom" class="champ-erreur-texte">
 							{{ erreursContact.prenom }}
 						</span>
 					</label>
 					<label class="block sm:col-span-2">
-						<span class="text-sm font-medium text-gray-700">Courriel</span>
+						<span class="champ-libelle">Courriel</span>
 						<input
 							v-model.trim="contact.email"
 							type="email"
 							autocomplete="email"
 							:class="champ(montreErreursContact ? erreursContact.email : undefined)"
 						/>
-						<span v-if="montreErreursContact && erreursContact.email" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreursContact && erreursContact.email" class="champ-erreur-texte">
 							{{ erreursContact.email }}
 						</span>
 					</label>
@@ -158,24 +157,24 @@ function envoyerContact() {
 			<form v-else class="mt-5" @submit.prevent="onSubmit" novalidate>
 				<div v-if="mode === 'renouvellement'" class="grid gap-4 sm:grid-cols-2">
 					<label class="block">
-						<span class="text-sm font-medium text-gray-700">Nom</span>
+						<span class="champ-libelle">Nom</span>
 						<input
 							v-model.trim="renouv.nom"
 							autocomplete="family-name"
 							:class="champ(montreErreurs ? erreursRenouv.nom : undefined)"
 						/>
-						<span v-if="montreErreurs && erreursRenouv.nom" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreurs && erreursRenouv.nom" class="champ-erreur-texte">
 							{{ erreursRenouv.nom }}
 						</span>
 					</label>
 					<label class="block">
-						<span class="text-sm font-medium text-gray-700">Prénom</span>
+						<span class="champ-libelle">Prénom</span>
 						<input
 							v-model.trim="renouv.prenom"
 							autocomplete="given-name"
 							:class="champ(montreErreurs ? erreursRenouv.prenom : undefined)"
 						/>
-						<span v-if="montreErreurs && erreursRenouv.prenom" class="mt-1 block text-xs text-red-600">
+						<span v-if="montreErreurs && erreursRenouv.prenom" class="champ-erreur-texte">
 							{{ erreursRenouv.prenom }}
 						</span>
 					</label>
@@ -230,7 +229,7 @@ function envoyerContact() {
 					</p>
 
 					<fieldset class="mt-3 space-y-2">
-						<legend class="text-sm font-medium text-gray-700">Vos préférences</legend>
+						<legend class="champ-libelle">Vos préférences</legend>
 						<label class="flex items-start gap-3">
 							<input v-model="renouvPrefs.newsletter" type="checkbox" class="mt-1" />
 							<span class="text-sm text-gray-600">

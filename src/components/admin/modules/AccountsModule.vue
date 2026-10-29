@@ -171,7 +171,7 @@ onBeforeUnmount(stopCloseRequest);
 </script>
 
 <template>
-	<p v-if="notice" class="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800" role="status">{{ notice }}</p>
+	<p v-if="notice" class="mb-4 alerte-succes" role="status">{{ notice }}</p>
 	<div
 		v-if="shownPassword"
 		class="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-900"
@@ -184,7 +184,7 @@ onBeforeUnmount(stopCloseRequest);
 		</p>
 		<p class="mt-2 font-light">Elle pourra le changer dans « Mon compte ».</p>
 	</div>
-	<p v-if="error" class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">{{ error }}</p>
+	<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
 
 	<!-- Liste -->
 	<template v-if="view.name === 'list'">
@@ -233,7 +233,7 @@ onBeforeUnmount(stopCloseRequest);
 
 		<form class="space-y-4" @submit.prevent="view.name === 'create' ? create() : save()">
 			<div v-if="view.name === 'create'">
-				<label for="acc-login" class="block text-sm font-medium text-gray-700">Identifiant</label>
+				<label for="acc-login" class="champ-libelle">Identifiant</label>
 				<input
 					id="acc-login"
 					v-model="form.login"
@@ -245,20 +245,20 @@ onBeforeUnmount(stopCloseRequest);
 					placeholder="prenom.nom"
 					:class="inputClass"
 				/>
-				<p class="mt-1 text-xs font-light text-gray-500">Minuscules, chiffres, « . », « - » ou « _ ».</p>
+				<p class="champ-aide">Minuscules, chiffres, « . », « - » ou « _ ».</p>
 			</div>
 			<div>
-				<label for="acc-fullname" class="block text-sm font-medium text-gray-700">Prénom et nom</label>
+				<label for="acc-fullname" class="champ-libelle">Prénom et nom</label>
 				<input id="acc-fullname" v-model="form.fullname" type="text" required :class="inputClass" />
 			</div>
 			<div>
-				<label for="acc-email" class="block text-sm font-medium text-gray-700">
+				<label for="acc-email" class="champ-libelle">
 					Email <span class="font-light text-gray-500">(facultatif)</span>
 				</label>
 				<input id="acc-email" v-model="form.email" type="email" :class="inputClass" />
 			</div>
 			<fieldset>
-				<legend class="block text-sm font-medium text-gray-700">Groupes</legend>
+				<legend class="champ-libelle">Groupes</legend>
 				<div class="mt-2 space-y-2">
 					<label v-for="[key, group] in groupEntries" :key="key" class="flex items-start gap-2 text-sm text-gray-700">
 						<input
@@ -277,11 +277,11 @@ onBeforeUnmount(stopCloseRequest);
 				<p v-if="props.self" class="mt-2 text-xs font-light text-gray-500">Les groupes se changent par le bureau, dans le module « Comptes ».</p>
 			</fieldset>
 			<div v-if="view.name === 'create'">
-				<label for="acc-password" class="block text-sm font-medium text-gray-700">
+				<label for="acc-password" class="champ-libelle">
 					Mot de passe provisoire <span class="font-light text-gray-500">(facultatif)</span>
 				</label>
 				<input id="acc-password" v-model="form.password" type="text" autocomplete="off" :class="inputClass" />
-				<p class="mt-1 text-xs font-light text-gray-500">Laissez vide pour en générer un automatiquement.</p>
+				<p class="champ-aide">Laissez vide pour en générer un automatiquement.</p>
 			</div>
 			<label v-else-if="!props.self" class="flex items-center gap-2 text-sm text-gray-700">
 				<input

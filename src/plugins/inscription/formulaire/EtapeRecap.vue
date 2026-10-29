@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { DISPO_ATTENTE } from '../../lib/choices';
-import { formatPrix } from '../adhesion/format';
+import { DISPO_ATTENTE } from '../../adhesion/lib/choices';
+import { formatPrix } from '../../adhesion/formulaire/adhesion/format';
 
 defineProps<{
 	membreLabel: string;

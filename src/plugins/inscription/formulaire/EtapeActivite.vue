@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { ActiviteOption } from '../../lib/types';
-import { formatPrix } from '../adhesion/format';
+import type { ActiviteOption } from '../../adhesion/lib/types';
+import { formatPrix } from '../../adhesion/formulaire/adhesion/format';
 
 const props = defineProps<{
 	options: ActiviteOption[];
@@ -148,7 +148,7 @@ function valider() {
 					</label>
 				</div>
 
-				<p v-if="montreErreur && activiteId === null" class="mt-3 text-sm text-red-600">
+				<p v-if="montreErreur && activiteId === null" class="mt-3 message-erreur">
 					Choisissez {{ preinscription ? 'un créneau' : 'une activité' }}.
 				</p>
 
