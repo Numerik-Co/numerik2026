@@ -19,7 +19,7 @@
 name: 'NUMERIK&Co'
 
 # Une phrase de présentation : page d'accueil, moteurs de recherche (obligatoire).
-description: "Une association qui accompagne la découverte et l'appropriation du numérique pour toutes et tous."
+description: "Espace de médiation numérique des Landes situé à Saint-Pierre-du-Mont, l'association accompagne les habitant·e·s, les associations et les écoles dans l'appropriation et le diffusion des outils numériques libre et lutte contre la fracture numérique et l'illectronisme."
 
 # Coordonnées de contact (obligatoires).
 email: 'contact@clubmicrosaintpierre.fr'
@@ -44,7 +44,8 @@ legal:
   president: 'M. BURKE Xavier'
   publicationManager: 'M. BURKE Xavier' # Responsable de la publication (souvent le·la président·e)
   publicationManagerRole: 'Président' # Fonction de ce·tte responsable dans l'association
-  hosting: # Hébergeur du site
+  hosting:
+    # Hébergeur du site
     name: 'OVH'
     address: ''
     phone: ''

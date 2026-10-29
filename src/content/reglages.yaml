@@ -46,12 +46,14 @@ share:
   copy: true # « Copier le lien »
 
 # Plugins : volets du site à activer ou non (true / false), inactifs si
-# rien n'est écrit, sauf l'adhésion (active : adhesion: false pour la
-# retirer). Changer une valeur demande de reconstruire le site.
-#   adhesion → adhésion en ligne et bulletin PDF, inscription aux activités,
-#              « Je participe », planning lu dans Grist
-#   rdv      → prise de rendez-vous en ligne (page, permanences dans le planning,
-#              encart d'accueil) ; se règle dans src/content/rdv.yaml
+# rien n'est écrit, sauf l'adhésion et l'inscription (actives : false pour
+# les retirer). Changer une valeur demande de reconstruire le site.
+#   adhesion    → adhésion en ligne et bulletin PDF, « Je participe »,
+#                 planning lu dans Grist
+#   inscription → /inscription et bouton « S'inscrire » des activités
+#                 (requiert adhesion : inactive aussi sans elle)
+#   rdv         → prise de rendez-vous en ligne (page, permanences dans le
+#                 planning, encart d'accueil) ; se règle dans src/content/rdv.yaml
 plugins:
   rdv: true
 

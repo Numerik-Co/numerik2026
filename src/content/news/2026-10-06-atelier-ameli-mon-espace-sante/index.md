@@ -1,11 +1,11 @@
 ---
-title: "Atelier numérique : apprivoisez AMELI et « Mon espace santé » !"
+title: "Apprivoisez AMELI et « Mon espace santé » !"
 isPublish: true
-publishAt: 2026-10-06
-excerpt: "Vendredi 9 octobre, Marie, notre conseillère numérique, vous propose un atelier collectif gratuit pour tout comprendre d'AMELI et de « Mon espace santé », pas à pas et sans jargon."
+publishAt: "2026-10-06"
+excerpt: "Ce 9 octobre, Marie, notre conseillère numérique, propose un atelier gratuit pour tout comprendre d'AMELI et de « Mon espace santé », pas à pas et sans jargon."
 tag: "Conseiller·ère Numérique"
 author: "numérik&Co"
-cover: ./cover.jpg
+cover: "./cover.jpg"
 ---
 
 Remboursements, attestations, carte Vitale, ordonnances, résultats d'analyses… Vos démarches santé se font de plus en plus en ligne, et ce n'est pas toujours simple de s'y retrouver.
