@@ -133,7 +133,7 @@ function reorderItems(bloc: Bloc, list: NonNullable<Bloc['items']>) {
 			</div>
 			<button
 				type="button"
-				class="rounded-full border-2 border-primary px-4 py-2 font-heading text-sm font-semibold text-primary hover:bg-primary hover:text-white"
+				class="bouton bouton-contour"
 				@click="add"
 			>
 				<i class="fa-solid fa-plus mr-1" aria-hidden="true"></i>Ajouter

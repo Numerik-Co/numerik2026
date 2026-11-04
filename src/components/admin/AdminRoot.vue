@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
 					<div v-if="lot.length" class="mt-4 flex flex-wrap items-center gap-3">
 						<button
 							type="button"
-							class="rounded-full bg-primary px-4 py-2 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
+							class="bouton bouton-primaire bouton-mini"
 							:disabled="lotBusy || publishing"
 							@click="publishLotFromBar"
 						>

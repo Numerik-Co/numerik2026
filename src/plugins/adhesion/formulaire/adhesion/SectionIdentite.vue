@@ -142,7 +142,7 @@ function envoyerContact() {
 				<div class="mt-6 flex items-center gap-4">
 					<button
 						type="submit"
-						class="rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+						class="bouton bouton-accent"
 						:disabled="busy"
 					>
 						{{ busy ? 'Envoi…' : 'Je m’inscris aux actualités' }}
@@ -246,7 +246,7 @@ function envoyerContact() {
 
 					<button
 						type="button"
-						class="mt-4 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+						class="bouton bouton-accent mt-4"
 						:disabled="busy"
 						@click="emit('confirmerRenouvellement')"
 					>
@@ -257,7 +257,7 @@ function envoyerContact() {
 				<button
 					v-if="!renouvEtat"
 					type="submit"
-					class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+					class="bouton bouton-accent mt-6"
 					:disabled="busy"
 				>
 					{{ busy ? 'Envoi…' : 'Continuer' }}

@@ -13,10 +13,7 @@ defineProps<{ label?: string; busy?: boolean; disabled?: boolean; compact?: bool
 	<button
 		type="submit"
 		:disabled="disabled || busy"
-		:class="[
-			'rounded-full bg-primary font-heading font-semibold text-white hover:opacity-90 disabled:opacity-60',
-			compact ? 'px-4 py-1.5 text-xs' : 'px-6 py-3 text-sm',
-		]"
+		:class="['bouton bouton-primaire', { 'bouton-mini': compact }]"
 	>
 		{{ busy ? 'Envoi…' : (label ?? 'Enregistrer et publier') }}
 	</button>
@@ -24,10 +21,7 @@ defineProps<{ label?: string; busy?: boolean; disabled?: boolean; compact?: bool
 		type="submit"
 		data-sans-publier
 		:disabled="disabled || busy"
-		:class="[
-			'rounded-full border border-primary bg-white font-heading font-semibold text-primary hover:bg-primary/5 disabled:opacity-60',
-			compact ? 'px-4 py-1.5 text-xs' : 'px-6 py-3 text-sm',
-		]"
+		:class="['bouton bouton-contour', { 'bouton-mini': compact }]"
 		title="La modification est enregistrée mais pas encore mise en ligne : publiez ensuite toutes les modifications en attente en une fois."
 	>
 		Enregistrer sans publier

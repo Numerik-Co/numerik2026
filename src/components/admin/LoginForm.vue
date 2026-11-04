@@ -50,7 +50,7 @@ async function submit() {
 		<button
 			type="submit"
 			:disabled="busy"
-			class="w-full rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+			class="bouton bouton-primaire w-full"
 		>
 			{{ busy ? 'Connexion…' : 'Se connecter' }}
 		</button>

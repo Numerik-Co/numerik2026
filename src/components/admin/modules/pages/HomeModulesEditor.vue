@@ -142,7 +142,7 @@ const summary = (m: HomeModule) => m.titre || '';
 			</select>
 			<button
 				type="button"
-				class="rounded-full border-2 border-primary px-4 py-1.5 font-heading text-sm font-semibold text-primary hover:bg-primary hover:text-white disabled:opacity-50"
+				class="bouton bouton-contour"
 				:disabled="!newType"
 				@click="add"
 			>

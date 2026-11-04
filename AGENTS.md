@@ -370,7 +370,11 @@ service = l'y ajouter). Détail : [docs/referencement.md](docs/referencement.md)
 `--champ-py`), `champ-erreur`, `champ-groupe` (préfixe + champ),
 `champ-libelle`, `champ-aide`, `champ-erreur-texte` (sous un champ),
 `message-erreur` (groupe, étape), encarts `alerte-erreur` / `alerte-succes` /
-`alerte-attention`. **Jamais de chaîne de classes de champ recopiée** : `class="champ"`, ou `inputClass` /
+`alerte-attention`, boutons `bouton` + `bouton-primaire` / `-accent` /
+`-contour` / `-accent-contour` / `-neutre` / `-danger` / `-danger-contour`
+(hauteur des champs, `bouton-mini`, `bouton-grand` ; aussi dans
+`src/components/ui/Button.astro` : lien = `grand` par défaut). **Jamais de
+chaîne de classes de champ ou de bouton recopiée** : `class="champ"`, ou `inputClass` /
 `compactInputClass` de `src/components/admin/context.ts` dans l'espace
 bénévoles. Détail : [docs/snippets.md](docs/snippets.md#champs-de-formulaire).
 

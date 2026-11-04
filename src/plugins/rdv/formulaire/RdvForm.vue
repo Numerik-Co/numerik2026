@@ -565,7 +565,7 @@ async function envoyer() {
 			<div class="mt-6 text-center">
 				<a
 					:href="lienIcs"
-					class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-white hover:bg-primary/90"
+					class="bouton bouton-primaire"
 				>
 					<i class="fa-solid fa-calendar-plus" aria-hidden="true"></i>Ajouter à mon agenda
 				</a>
@@ -680,7 +680,7 @@ async function envoyer() {
 					<button
 						type="button"
 						:disabled="!form.demarcheIds.length"
-						class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+						class="bouton bouton-accent mt-6"
 						@click="continuerBesoin"
 					>
 						Continuer
@@ -776,7 +776,7 @@ async function envoyer() {
 					<button
 						type="button"
 						:disabled="!creneauChoisi"
-						class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+						class="bouton bouton-accent mt-6"
 						@click="continuerCreneau"
 					>
 						Continuer
@@ -885,7 +885,7 @@ async function envoyer() {
 								type="button"
 								:disabled="etatRecherche === 'busy'"
 								@click="rechercherFiche"
-								class="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white disabled:opacity-50"
+								class="bouton bouton-contour"
 							>
 								<i class="fa-solid fa-magnifying-glass mr-1" aria-hidden="true"></i>
 								<i v-if="etatRecherche === 'busy'" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ etatRecherche === 'busy' ? 'Recherche…' : 'Me retrouver' }}
@@ -930,7 +930,7 @@ async function envoyer() {
 					<button
 						v-if="parcours === 'nouveau' || (parcours === 'connu' && resultatsRecherche.length)"
 						type="button"
-						class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+						class="bouton bouton-accent mt-6"
 						@click="continuerCoordonnees"
 					>
 						Continuer
@@ -1026,7 +1026,7 @@ async function envoyer() {
 
 					<button
 						type="button"
-						class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+						class="bouton bouton-accent mt-6"
 						@click="continuerProfil"
 					>
 						Continuer
@@ -1057,7 +1057,7 @@ async function envoyer() {
 				<button
 					type="submit"
 					:disabled="etatEnvoi === 'busy'"
-					class="mt-4 w-full rounded-full bg-accent px-5 py-2.5 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+					class="bouton bouton-accent mt-4 w-full"
 				>
 					<i v-if="etatEnvoi === 'busy'" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ etatEnvoi === 'busy' ? 'Envoi…' : 'Confirmer le rendez-vous' }}
 				</button>

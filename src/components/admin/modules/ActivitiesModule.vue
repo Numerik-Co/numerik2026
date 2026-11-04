@@ -231,7 +231,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 		<div class="mb-5 flex flex-wrap gap-3">
 			<button
 				type="button"
-				class="rounded-full bg-primary px-5 py-2.5 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+				class="bouton bouton-primaire"
 				:disabled="locked"
 				@click="openForm(null)"
 			>
@@ -239,7 +239,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 			</button>
 			<button
 				type="button"
-				class="rounded-full border-2 border-primary px-5 py-2 font-heading text-sm font-semibold text-primary hover:bg-primary hover:text-white disabled:opacity-50"
+				class="bouton bouton-contour"
 				:disabled="locked"
 				@click="go({ name: 'category', source: null })"
 			>

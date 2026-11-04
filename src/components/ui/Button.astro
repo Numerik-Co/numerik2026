@@ -2,23 +2,25 @@
 interface Props {
 	href?: string;
 	variant?: 'primary' | 'secondary' | 'outline';
+	/** `grand` : lien d'appel (Hero, encarts) ; défaut = `grand` pour un lien, taille des champs pour un <button>. */
+	size?: 'normal' | 'grand';
 	class?: string;
 }
 
-const { href, variant = 'primary', class: className = '' } = Astro.props;
+const { href, variant = 'primary', size = href ? 'grand' : 'normal', class: className = '' } = Astro.props;
 
+// Classes `bouton-*` de src/styles/forms.css (apparence réglée là).
 const variants = {
-	primary: 'bg-primary text-white hover:opacity-90',
+	primary: 'bouton-primaire',
 	secondary: 'bg-secondary text-white hover:opacity-90',
-	outline: 'border-2 border-primary text-primary hover:bg-primary hover:text-white',
+	outline: 'bouton-contour border-2',
 };
 
-const base = 'inline-flex items-center justify-center rounded-full px-6 py-3 font-heading font-semibold text-sm transition-colors';
-const classes = `${base} ${variants[variant]} ${className}`;
+const classes = ['bouton', variants[variant], size === 'grand' && 'bouton-grand', className];
 
 const Tag = href ? 'a' : 'button';
 ---
 
-<Tag href={href} class={classes}>
+<Tag href={href} class:list={classes}>
 	<slot />
 </Tag>

@@ -91,7 +91,7 @@ const emit = defineEmits<{ dismiss: []; cancelReload: []; publishLot: [] }>();
 			</span>
 			<button
 				type="button"
-				class="rounded-full bg-primary px-4 py-2 font-heading text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
+				class="bouton bouton-primaire bouton-mini"
 				:disabled="locked"
 				@click="emit('publishLot')"
 			>

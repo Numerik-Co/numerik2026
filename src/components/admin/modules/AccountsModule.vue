@@ -211,7 +211,7 @@ onBeforeUnmount(stopCloseRequest);
 		</ul>
 		<button
 			type="button"
-			class="mt-5 rounded-full bg-primary px-5 py-2.5 font-heading text-sm font-semibold text-white hover:opacity-90"
+			class="bouton bouton-primaire mt-5"
 			@click="go({ name: 'create' })"
 		>
 			<i class="fa-solid fa-plus mr-1.5" aria-hidden="true"></i>
@@ -295,7 +295,7 @@ onBeforeUnmount(stopCloseRequest);
 			<button
 				type="submit"
 				:disabled="busy"
-				class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+				class="bouton bouton-primaire"
 			>
 				{{ view.name === 'create' ? 'Créer le compte' : 'Enregistrer' }}
 			</button>
@@ -318,7 +318,7 @@ onBeforeUnmount(stopCloseRequest);
 				<button
 					type="button"
 					:disabled="busy"
-					class="rounded-full border-2 border-primary px-5 py-2 font-heading text-sm font-semibold text-primary hover:bg-primary hover:text-white disabled:opacity-60"
+					class="bouton bouton-contour"
 					@click="resetPassword"
 				>
 					Réinitialiser le mot de passe
@@ -334,7 +334,7 @@ onBeforeUnmount(stopCloseRequest);
 				<button
 					type="button"
 					:disabled="busy || confirmDelete !== form.login"
-					class="rounded-full bg-red-600 px-5 py-2 font-heading text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+					class="bouton bouton-danger"
 					@click="remove"
 				>
 					Supprimer définitivement

@@ -134,7 +134,7 @@ function onSubmitExterieur() {
 				<button
 					v-else
 					type="submit"
-					class="mt-5 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+					class="bouton bouton-accent mt-5"
 					:disabled="busy"
 				>
 					{{ busy ? 'Recherche…' : 'Continuer' }}
@@ -193,7 +193,7 @@ function onSubmitExterieur() {
 
 				<button
 					type="submit"
-					class="mt-5 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+					class="bouton bouton-accent mt-5"
 					:disabled="busy"
 				>
 					{{ busy ? 'Envoi…' : 'Continuer' }}

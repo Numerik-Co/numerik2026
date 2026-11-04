@@ -366,7 +366,7 @@ onMounted(load);
 		<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
 			<button
 				type="button"
-				class="rounded-full bg-primary px-5 py-2.5 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+				class="bouton bouton-primaire"
 				:disabled="!availability.ok || following"
 				@click="openAdd"
 			>

@@ -163,7 +163,7 @@ const COLOR_FIELDS = [
 
 const headerClass = 'flex flex-wrap items-center gap-2 rounded-t-xl border-b border-gray-100 bg-gray-100 px-4 py-2.5';
 const fileButtonClass =
-	'inline-flex cursor-pointer items-center rounded-full border-2 border-primary px-4 py-1.5 font-heading text-xs font-semibold text-primary hover:bg-primary hover:text-white focus-within:ring-2 focus-within:ring-primary/40';
+	'bouton bouton-contour bouton-mini cursor-pointer focus-within:ring-2 focus-within:ring-primary/40';
 /** Damier : fond des aperçus d'images (transparence visible). */
 const checkerClass = 'bg-[length:16px_16px] bg-[conic-gradient(#f3f4f6_25%,#fff_0_50%,#f3f4f6_0_75%,#fff_0)]';
 

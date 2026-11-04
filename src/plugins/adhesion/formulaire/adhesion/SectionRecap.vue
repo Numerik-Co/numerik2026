@@ -77,7 +77,7 @@ const emit = defineEmits<{ recommencer: [] }>();
 			:href="bulletinHref"
 			target="_blank"
 			rel="noopener"
-			class="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-secondary"
+			class="bouton bouton-primaire mt-4"
 		>
 			<i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i>
 			Imprimer le bulletin d'adhésion (PDF)

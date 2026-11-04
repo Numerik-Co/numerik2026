@@ -13,6 +13,14 @@
    - `alerte-erreur`, `alerte-succes`, `alerte-attention` : encart en tête ou en
      pied de formulaire (échec d'envoi, « Enregistré », avertissement).
 
+   Boutons (<button>, ou <a>/<label> présentés en bouton) : `bouton` + une couleur.
+   - `bouton-primaire` : action principale (enregistrer, envoyer) ; `bouton-accent` :
+     étapes des formulaires publics, retour à la liste ; `bouton-contour` (et
+     `bouton-accent-contour`) : action secondaire ; `bouton-neutre` : annuler,
+     précédent ; `bouton-danger` / `bouton-danger-contour` : supprimer.
+   - Taille : même hauteur que `champ` (~30 px) ; `bouton-mini` plus petit (barres,
+     listes), `bouton-grand` pour les liens d'appel (Hero, encarts : Button.astro).
+
    Couche `components` : une classe Tailwind ajoutée à côté (`w-28`, `pl-9`,
    `font-mono`, `mt-4`…) l'emporte toujours. Cases à cocher et boutons radio
    ne sont pas concernés. Côté Vue, l'espace bénévoles passe par `inputClass`
@@ -22,6 +30,8 @@
 	--champ-py: 0.25rem; /* hauteur : 0.25rem = sm, 0.5rem = taille normale */
 	--champ-px: 0.75rem;
 	--champ-rayon: var(--radius-lg);
+	--bouton-py: 0.25rem; /* même hauteur que les champs */
+	--bouton-px: 1rem;
 }
 
 @layer components {
@@ -84,5 +94,39 @@
 	}
 	.alerte-attention {
 		@apply bg-amber-50 text-amber-900;
+	}
+
+	.bouton {
+		@apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-transparent font-heading text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60;
+		padding: var(--bouton-py) var(--bouton-px);
+	}
+	.bouton-mini {
+		@apply text-xs;
+		padding: 0.25rem 0.75rem;
+	}
+	.bouton-grand {
+		padding: 0.75rem 1.5rem;
+	}
+
+	.bouton-primaire {
+		@apply bg-primary text-white hover:opacity-90;
+	}
+	.bouton-accent {
+		@apply bg-accent text-white hover:opacity-90;
+	}
+	.bouton-contour {
+		@apply border-primary text-primary hover:bg-primary hover:text-white;
+	}
+	.bouton-accent-contour {
+		@apply border-accent text-accent hover:bg-accent/10;
+	}
+	.bouton-neutre {
+		@apply border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary;
+	}
+	.bouton-danger {
+		@apply bg-red-600 text-white hover:bg-red-700;
+	}
+	.bouton-danger-contour {
+		@apply border-red-200 bg-white text-red-700 hover:bg-red-50;
 	}
 }

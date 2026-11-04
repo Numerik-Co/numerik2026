@@ -440,6 +440,30 @@ Espace bénévoles : `inputClass` (`mt-1 champ`) et `compactInputClass`
 Tailwind ajoutée à côté (`w-28`, `pl-9`…) l'emporte toujours (couche
 `components`). Cases à cocher et radios ne sont pas concernés.
 
+### Boutons de formulaire
+
+Même fichier, même principe : `bouton` + une couleur, jamais de chaîne
+recopiée. Hauteur = celle des champs (`--bouton-py`, `--bouton-px`).
+
+| Classe | Usage |
+| :--- | :--- |
+| `bouton-primaire` | action principale (enregistrer, envoyer) |
+| `bouton-accent` | étapes des formulaires publics, retour à la liste |
+| `bouton-contour`, `bouton-accent-contour` | action secondaire |
+| `bouton-neutre` | annuler, précédent |
+| `bouton-danger`, `bouton-danger-contour` | supprimer |
+| `bouton-mini` | plus petit (barre d'admin, listes) |
+| `bouton-grand` | lien d'appel (Hero, encarts) |
+
+```vue
+<button type="submit" class="bouton bouton-accent mt-6" :disabled="busy">Continuer</button>
+<button type="button" class="bouton bouton-neutre" @click="retour">Précédent</button>
+```
+
+Côté `.astro` : `<Button>` (`src/components/ui/Button.astro`) les utilise ;
+un lien (`href`) est `grand` par défaut, un `<button>` à la taille des champs
+(`size="grand"` / `"normal"` pour forcer).
+
 ### Classes Tailwind récurrentes
 
 | Usage | Classes |
@@ -448,7 +472,7 @@ Tailwind ajoutée à côté (`w-28`, `pl-9`…) l'emporte toujours (couche
 | Titre de carte | `font-heading text-lg font-semibold text-gray-900` |
 | Texte secondaire | `text-sm font-light text-gray-600` |
 | Pastille d'icône | `flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-xl text-primary` |
-| Bouton d'action (formulaires Vue) | `rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white hover:opacity-90` |
+| Bouton d'action (formulaires) | `bouton bouton-accent` (voir [Boutons de formulaire](#boutons-de-formulaire)) |
 | Message d'erreur | `alerte-erreur` (voir [Champs de formulaire](#champs-de-formulaire)) |
 
 Couleurs (`primary`, `secondary`, `accent`) et polices : [theme.md](theme.md).

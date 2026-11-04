@@ -182,7 +182,7 @@ onMounted(load);
 				</button>
 				<button
 					type="button"
-					class="inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 hover:border-primary hover:text-primary disabled:opacity-60"
+					class="bouton bouton-neutre bouton-mini"
 					:disabled="pdfEnCours"
 					:aria-label="`Télécharger le PDF de la ${libelleSemaine(semaine).toLowerCase()}`"
 					title="Vue semaine en PDF (tous les RDV de la semaine, hors annulés)"

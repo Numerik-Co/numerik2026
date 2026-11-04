@@ -197,14 +197,14 @@ function message(s: SeanceCourante): string {
 					<div v-if="statuts[s.activiteId] === 'idle'" class="mt-3 flex flex-wrap gap-3">
 						<button
 							type="button"
-							class="rounded-full bg-accent px-5 py-2 text-sm font-heading font-semibold text-white transition-opacity hover:opacity-90"
+							class="bouton bouton-accent"
 							@click="repondre(s, 'present')"
 						>
 							Je participe
 						</button>
 						<button
 							type="button"
-							class="rounded-full border border-gray-300 px-5 py-2 text-sm font-heading font-semibold text-gray-600 hover:border-primary hover:text-primary"
+							class="bouton bouton-neutre"
 							@click="repondre(s, 'absent')"
 						>
 							Je ne pourrai pas venir

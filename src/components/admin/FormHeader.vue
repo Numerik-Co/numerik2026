@@ -15,7 +15,7 @@ const emit = defineEmits<{ back: [] }>();
 	<div class="mb-5">
 		<button
 			type="button"
-			class="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 font-heading text-sm font-semibold text-white transition-opacity hover:opacity-90"
+			class="bouton bouton-accent"
 			@click="emit('back')"
 		>
 			<i class="fa-solid fa-arrow-left text-xs" aria-hidden="true"></i>

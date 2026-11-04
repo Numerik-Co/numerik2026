@@ -364,13 +364,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 					<button
 						type="submit"
 						:disabled="busy || !modifie"
-						class="rounded-full bg-primary px-6 py-3 font-heading text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+						class="bouton bouton-primaire"
 					>
 						<i v-if="busy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ busy ? 'Enregistrement…' : 'Enregistrer' }}
 					</button>
 					<button
 						type="button"
-						class="rounded-full border border-gray-300 bg-white px-6 py-3 font-heading text-sm font-semibold text-gray-700 hover:bg-gray-50"
+						class="bouton bouton-neutre"
 						@click="emit('close')"
 					>
 						Fermer
@@ -378,7 +378,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 					<button
 						v-if="!suppression"
 						type="button"
-						class="ml-auto rounded-full border border-red-200 bg-white px-5 py-3 font-heading text-sm font-semibold text-red-700 hover:bg-red-50"
+						class="bouton bouton-danger-contour ml-auto"
 						@click="demanderSuppression"
 					>
 						<i class="fa-solid fa-trash mr-1.5" aria-hidden="true"></i>Supprimer
@@ -426,7 +426,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 						<button
 							type="button"
 							:disabled="suppressionBusy || !motifValide"
-							class="rounded-full bg-red-600 px-5 py-2.5 font-heading text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+							class="bouton bouton-danger"
 							@click="supprimer"
 						>
 							<i v-if="suppressionBusy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i
@@ -434,7 +434,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 						</button>
 						<button
 							type="button"
-							class="rounded-full border border-gray-300 bg-white px-5 py-2.5 font-heading text-sm font-semibold text-gray-700 hover:bg-gray-50"
+							class="bouton bouton-neutre"
 							@click="annulerSuppression"
 						>
 							Annuler

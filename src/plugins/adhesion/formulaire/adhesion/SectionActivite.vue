@@ -165,14 +165,14 @@ function valider() {
 			<div class="mt-6 flex flex-wrap items-center gap-3">
 				<button
 					type="submit"
-					class="rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+					class="bouton bouton-accent"
 					:disabled="busy || !peutValider"
 				>
 					{{ busy ? 'Envoi…' : 'Valider mon inscription' }}
 				</button>
 				<button
 					type="button"
-					class="inline-flex items-center gap-2 rounded-full border border-accent px-5 py-2.5 text-sm font-heading font-semibold text-accent hover:bg-accent/10 disabled:opacity-50"
+					class="bouton bouton-accent-contour"
 					:disabled="busy || !selectionCourante"
 					@click="ajouter"
 				>
@@ -182,7 +182,7 @@ function valider() {
 				<button
 					v-if="!inscriptions.length"
 					type="button"
-					class="rounded-full border border-gray-300 px-5 py-2.5 text-sm font-heading font-semibold text-gray-600 hover:border-primary hover:text-primary disabled:opacity-50"
+					class="bouton bouton-neutre"
 					:disabled="busy"
 					@click="emit('passer')"
 				>

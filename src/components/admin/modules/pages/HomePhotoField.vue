@@ -33,7 +33,7 @@ function set(action: 'keep' | 'remove') {
 }
 
 const fileButtonClass =
-	'inline-flex cursor-pointer items-center rounded-full border-2 border-primary px-4 py-1.5 font-heading text-xs font-semibold text-primary hover:bg-primary hover:text-white focus-within:ring-2 focus-within:ring-primary/40';
+	'bouton bouton-contour bouton-mini cursor-pointer focus-within:ring-2 focus-within:ring-primary/40';
 </script>
 
 <template>

@@ -154,7 +154,7 @@ function valider() {
 
 				<button
 					type="submit"
-					class="mt-6 rounded-full bg-accent px-6 py-2.5 font-heading font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+					class="bouton bouton-accent mt-6"
 					:disabled="busy"
 				>
 					{{ busy ? 'Envoi…' : preinscription ? 'Me préinscrire' : "Valider l'inscription" }}
