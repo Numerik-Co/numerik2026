@@ -25,6 +25,7 @@ import {
 import { ADMIN_CONTEXT, iconButtonClass, rememberOpenModule, sortableProps, takeModuleToReopen } from '../context';
 import { isDeferredSubmit, isPendingHref } from '../lot';
 import { usePublication } from '../usePublication';
+import { takePendingImport } from '../content-import';
 import ActivityForm from './activites/ActivityForm.vue';
 import CategoryForm from './activites/CategoryForm.vue';
 import DragHandle from './pages/DragHandle.vue';
@@ -37,7 +38,7 @@ const inscriptionActive = pluginActif('inscription');
 
 type View =
 	| { name: 'list' }
-	| { name: 'form'; source: ActivitySourceView | null; category: string }
+	| { name: 'form'; source: ActivitySourceView | null; category: string; file?: File }
 	| { name: 'category'; source: ActivityCategory | null };
 
 const view = ref<View>({ name: 'list' });
@@ -206,7 +207,12 @@ const stopCloseRequest = onCloseRequest(() => {
 });
 onBeforeUnmount(stopCloseRequest);
 
-onMounted(load);
+onMounted(async () => {
+	// Fichier déposé dans « Ajouter un fichier .md » (menu Contenus) : création pré-remplie, une fois les catégories connues.
+	const pending = takePendingImport('activite');
+	await load();
+	if (pending) go({ name: 'form', source: null, category: '', file: pending });
+});
 
 const badge = 'rounded-full px-2 py-0.5 text-xs';
 const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gray-600`;
@@ -435,6 +441,7 @@ const greyBadge = `${badge} bg-gray-100 ring-1 ring-inset ring-gray-200 text-gra
 		:categories="categories"
 		:source="view.source"
 		:category="view.category"
+		:initial-file="view.file"
 		:disabled="locked"
 		@published="onPublished"
 		@cancel="go({ name: 'list' })"

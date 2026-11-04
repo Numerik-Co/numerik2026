@@ -2,19 +2,21 @@
  * Fichier `.md` d'une actualité, d'une page ou d'une fiche (navigateur) :
  * en-tête YAML (frontmatter) + texte Markdown. Sert au téléchargement du
  * contenu en cours d'édition et à la lecture d'un fichier chargé
- * (`EditFileBar.vue`), ainsi qu'aux modèles du module « Pages ». Le
- * serveur revalide tout à l'enregistrement.
+ * (`EditFileBar.vue`, `ContentImportModal.vue`), ainsi qu'aux modèles. En
+ * tête, `contenu:` donne le type (./content-import.ts). Le serveur revalide
+ * tout à l'enregistrement.
  */
 import { parse as parseYaml, stringify } from 'yaml';
+import { CONTENT_KEY, type ContentKind } from './content-import';
 
 /** Même limite que le texte côté serveur. */
 export const MARKDOWN_FILE_MAX = 200 * 1024;
 
 const empty = (v: unknown) => v === undefined || v === null || v === '' || (Array.isArray(v) && v.length === 0);
 
-/** `---` + en-tête (valeurs vides retirées) + `---` + texte. */
-export function buildMarkdownFile(frontmatter: Record<string, unknown>, body: string): string {
-	const data = Object.fromEntries(Object.entries(frontmatter).filter(([, v]) => !empty(v)));
+/** `---` + `contenu: <type>` + en-tête (valeurs vides retirées) + `---` + texte. */
+export function buildMarkdownFile(kind: ContentKind, frontmatter: Record<string, unknown>, body: string): string {
+	const data = Object.fromEntries(Object.entries({ [CONTENT_KEY]: kind, ...frontmatter }).filter(([, v]) => !empty(v)));
 	return `---\n${stringify(data, { lineWidth: 0 })}---\n\n${body.trim()}\n`;
 }
 
@@ -52,7 +54,7 @@ export async function readMarkdownFile(file: File): Promise<{ data?: Record<stri
 export function keyWarnings(data: Record<string, unknown>, known: readonly string[], ignored: Record<string, string | null> = {}): string[] {
 	const warnings: string[] = [];
 	for (const key of Object.keys(data)) {
-		if (known.includes(key)) continue;
+		if (key === CONTENT_KEY || known.includes(key)) continue;
 		if (key in ignored) {
 			if (ignored[key]) warnings.push(`« ${key} » ignoré : ${ignored[key]}.`);
 		} else warnings.push(`« ${key} » ignoré (champ inconnu).`);

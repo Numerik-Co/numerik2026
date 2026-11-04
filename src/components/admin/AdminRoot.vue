@@ -6,22 +6,26 @@
  *  - sinon → modale de connexion à la demande (`numerik:auth-open`).
  * Connexion et déconnexion rechargent la page : les pages réservées et le
  * contenu rendu côté serveur reflètent ainsi le nouvel état.
+ * Menu « Contenus » : premier bouton « Ajouter un fichier .md » → modale
+ * `ContentImportModal` puis module du type de contenu, formulaire pré-rempli.
  * Bouton « À publier (N) » de la barre (rédaction, bureau) : modifications
  * enregistrées sans publier (`lot.ts`), à publier en une fois ou à annuler.
  */
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
 import { hasAdminRights } from '../../lib/auth/groups';
 import type { ModelVersionInfo } from '../../lib/model-version';
 import { ApiError, authApi, lotApi, versionApi, type AdminUser, type ReservedPage } from './client';
+import { CONTENT_KIND_IDS, CONTENT_KINDS } from './content-import';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
 import { loadLot, lot, publishing } from './lot';
 import { barEntries, modulesFor } from './modules';
 import { usePublication } from './usePublication';
 
-// Chargé à la demande (seulement pour un mot de passe provisoire), comme dans le registre des modules.
+// Chargés à la demande (mot de passe provisoire, ajout par fichier .md), comme dans le registre des modules.
 const PasswordModule = defineAsyncComponent(() => import('./modules/PasswordModule.vue'));
+const ContentImportModal = defineAsyncComponent(() => import('./ContentImportModal.vue'));
 
 const props = defineProps<{ openOnMount?: boolean }>();
 
@@ -74,6 +78,26 @@ function toggleBarMenu(id: string, event: MouseEvent) {
 function openModuleFromMenu(id: string) {
 	openMenu.value = null;
 	activeId.value = id;
+}
+
+/**
+ * « Ajouter un fichier .md » : premier bouton du menu « Contenus », modale
+ * centrée (`ContentImportModal`) qui ouvre ensuite le module du type de
+ * contenu lu dans le fichier, formulaire de création pré-rempli.
+ */
+const importOpen = ref(false);
+const importKinds = computed(() => CONTENT_KIND_IDS.filter((k) => modules.value.some((m) => m.id === CONTENT_KINDS[k].module)));
+function openImport() {
+	openMenu.value = null;
+	activeId.value = null; // un seul calque à la fois
+	importOpen.value = true;
+}
+async function onImportOpen(moduleId: string) {
+	importOpen.value = false;
+	// Module déjà ouvert : on le remonte pour qu'il prenne le fichier.
+	activeId.value = null;
+	await nextTick();
+	activeId.value = moduleId;
 }
 function onDocumentClick(e: MouseEvent) {
 	if (openMenu.value && !(e.target as Element).closest?.('[data-bar-menu]')) openMenu.value = null;
@@ -255,6 +279,20 @@ onBeforeUnmount(() => {
 				aria-orientation="horizontal"
 				:aria-label="openBarMenu.label"
 			>
+				<template v-if="openBarMenu.id === 'contenu' && importKinds.length">
+					<button
+						type="button"
+						role="menuitem"
+						class="flex items-center gap-2 rounded px-3 py-1.5 hover:bg-white/10"
+						:class="importOpen ? 'bg-white/15' : ''"
+						title="Créer une actualité, une page ou une activité à partir d'un fichier .md"
+						@click="openImport"
+					>
+						<i class="fa-solid fa-file-import w-4 text-center text-gray-300" aria-hidden="true"></i>
+						Ajouter un fichier .md
+					</button>
+					<div class="my-1 border-l border-white/15" aria-hidden="true"></div>
+				</template>
 				<button
 					v-for="m in openBarMenu.modules"
 					:key="m.id"
@@ -422,6 +460,10 @@ onBeforeUnmount(() => {
 
 	<AdminOverlay v-if="activeModule" :key="activeModule.id" :title="activeModule.label" @close="closeModule">
 		<component :is="activeModule.component" v-bind="activeModule.props" />
+	</AdminOverlay>
+
+	<AdminOverlay v-if="importOpen" title="Ajouter un contenu à partir d'un fichier .md" variant="modal" wide @close="importOpen = false">
+		<ContentImportModal :kinds="importKinds" @open="onImportOpen" />
 	</AdminOverlay>
 
 	<AdminOverlay v-if="mustChangePassword" title="Choisissez votre mot de passe" variant="modal" :closable="false">

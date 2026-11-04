@@ -27,7 +27,13 @@ import { downloadMarkdown } from '../../markdown-file';
 import BlocsEditor from './BlocsEditor.vue';
 import { downloadPageTemplate, pageMarkdownFile, parsePageMarkdown } from './page-markdown';
 
-const props = defineProps<{ dropdowns: DropdownView[]; source: PageSourceView | null; disabled: boolean }>();
+const props = defineProps<{
+	dropdowns: DropdownView[];
+	source: PageSourceView | null;
+	disabled: boolean;
+	/** Création à partir d'un fichier déposé dans « Ajouter un fichier .md » (menu Contenus). */
+	initialFile?: File;
+}>();
 const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
@@ -120,6 +126,8 @@ async function pickMarkdown(file: File | undefined) {
 	imported.value = { name: file.name, warnings };
 	typeChosen.value = true;
 }
+
+if (props.initialFile && !editing) void pickMarkdown(props.initialFile);
 
 /** Fichier de la page d'après le formulaire (modification). */
 function downloadFile() {

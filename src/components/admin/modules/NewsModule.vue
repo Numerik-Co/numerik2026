@@ -28,9 +28,10 @@ import { ApiError, newsApi, type CoverUpdate, type NewsFields, type NewsItem } f
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../context';
 import { EDIT_TABS, useFormTabs, type EditTab } from '../form-tabs';
 import { isDeferredSubmit, isPendingHref } from '../lot';
-import { downloadMarkdown, readMarkdownFile } from '../markdown-file';
+import { contentKindProblem, takePendingImport } from '../content-import';
+import { downloadMarkdown, parseMarkdownFile, readMarkdownFile } from '../markdown-file';
 import { usePublication } from '../usePublication';
-import { newsMarkdownFile, parseNewsMarkdown } from './actualites/news-markdown';
+import { downloadNewsTemplate as downloadTemplate, newsMarkdownFile, parseNewsMarkdown } from './actualites/news-markdown';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
@@ -112,8 +113,15 @@ async function pickMarkdown(file: File | undefined) {
 		error.value = 'Le texte doit être un fichier Markdown (.md).';
 		return;
 	}
+	const text = await file.text();
+	const { data } = parseMarkdownFile(text);
+	const wrongKind = data && contentKindProblem(data, 'actualite');
+	if (wrongKind) {
+		error.value = wrongKind;
+		return;
+	}
 	mdFile.value = file;
-	mdText.value = await file.text();
+	mdText.value = text;
 }
 
 function pickPhoto(file: File | undefined) {
@@ -171,45 +179,6 @@ async function submit(event: Event) {
 	} finally {
 		busy.value = false;
 	}
-}
-
-/** Modèle de fichier à compléter, daté du jour (généré dans le navigateur). */
-function downloadTemplate() {
-	const today = new Date().toLocaleDateString('sv-SE'); // AAAA-MM-JJ, heure locale
-	const template = `---
-title: "Titre de l'actualité"
-publishAt: ${today}
-excerpt: "Résumé en une ou deux phrases, affiché sur les cartes et en page d'accueil."
-tag: "Ateliers"
-author: ""
-# Facultatif — retirer le « # » en début de ligne pour activer :
-# isPublish: false
-# imageCredit: "Photo : Prénom Nom"
----
-
-Premier paragraphe : l'essentiel de l'information en quelques phrases.
-
-## Un sous-titre
-
-Du texte en **gras** ou en *italique*, et un [lien](https://exemple.org).
-
-- Un point de liste
-- Un autre point
-
-> Une citation ou un encadré à mettre en avant.
-
-## Infos pratiques
-
-- **Quand :** jour, horaires
-- **Où :** lieu
-- **Inscription :** téléphone ou email
-`;
-	const url = URL.createObjectURL(new Blob([template], { type: 'text/markdown;charset=utf-8' }));
-	const link = document.createElement('a');
-	link.href = url;
-	link.download = `${today}-modele-actualite.md`;
-	link.click();
-	URL.revokeObjectURL(url);
 }
 
 async function remove(item: NewsItem, deferred: boolean) {
@@ -343,7 +312,15 @@ function openAdd() {
 const formatDate = (iso: string) =>
 	new Date(`${iso}T00:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
-onMounted(load);
+onMounted(async () => {
+	// Fichier déposé dans « Ajouter un fichier .md » (menu Contenus) : formulaire d'ajout pré-rempli.
+	const pending = takePendingImport('actualite');
+	if (pending) {
+		openAdd();
+		void pickMarkdown(pending);
+	}
+	await load();
+});
 </script>
 
 <template>

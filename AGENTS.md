@@ -190,6 +190,15 @@ depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
 (sans publier) ; `src/components/admin/markdown-file.ts` +
 `modules/actualites/news-markdown.ts`, `modules/activites/activity-markdown.ts`,
 `modules/pages/page-markdown.ts` (`pageMarkdownFile`, `parsePageMarkdown`).
+En tête de chaque fichier `.md` d'échange (modèles, téléchargement) :
+`contenu: actualite | page | activite` (`buildMarkdownFile(kind, …)`,
+`src/components/admin/content-import.ts`, jamais écrit dans `src/content/`) ;
+fichier d'un autre type refusé au chargement (`contentKindProblem`).
+**Ajouter un fichier .md** = premier bouton du menu « Contenus »
+(`AdminRoot.vue`) → modale `ContentImportModal.vue` (type lu, sinon choisi ;
+modèles) → `setPendingImport()` puis ouverture du module, dont le
+formulaire de création se remplit (`takePendingImport()` au montage, prop
+`initialFile` de `PageForm` / `ActivityForm`).
 
 - `src/components/admin/AdminLoader.astro` (dans les deux layouts) ne
   charge l'îlot Vue (`mount.ts` → `AdminRoot.vue`) que si le cookie

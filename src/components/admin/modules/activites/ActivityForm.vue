@@ -4,7 +4,8 @@
  * L'adresse (nom du dossier) se choisit à la création seulement ; l'URL
  * publique `/activites/<catégorie>/<adresse>` change si la catégorie change.
  * Onglets Informations / Contenu / Image ; en modification, fichier `.md`
- * à télécharger ou à recharger (`EditFileBar`, ./activity-markdown.ts).
+ * à télécharger ou à recharger (`EditFileBar`, ./activity-markdown.ts) ;
+ * en création, `initialFile` (« Ajouter un fichier .md ») pré-remplit le formulaire.
  * Le serveur valide tout (src/lib/activity-writer.ts) et reconstruit le site.
  */
 import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue';
@@ -31,7 +32,14 @@ import { EDIT_TABS, useFormTabs, type EditTab } from '../../form-tabs';
 import { downloadMarkdown, readMarkdownFile } from '../../markdown-file';
 import { activityMarkdownFile, parseActivityMarkdown } from './activity-markdown';
 
-const props = defineProps<{ categories: ActivityCategory[]; source: ActivitySourceView | null; category: string; disabled: boolean }>();
+const props = defineProps<{
+	categories: ActivityCategory[];
+	source: ActivitySourceView | null;
+	category: string;
+	disabled: boolean;
+	/** Création à partir d'un fichier déposé dans « Ajouter un fichier .md » (menu Contenus). */
+	initialFile?: File;
+}>();
 const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
@@ -108,6 +116,8 @@ async function loadFile(file: File) {
 	imported.value = { name: file.name, warnings };
 }
 
+if (props.initialFile && !editing) void loadFile(props.initialFile);
+
 function onSlugInput(event: Event) {
 	slugTouched.value = true;
 	form.slug = (event.target as HTMLInputElement).value;
@@ -179,6 +189,16 @@ async function submit(event: Event) {
 	<FormHeader back="Toutes les activités" :title="form.title.trim() || (editing ? editing.title || editing.slug : 'Nouvelle activité')" :editing="Boolean(editing)" @back="emit('cancel')" />
 	<form class="space-y-5" @submit.prevent="submit" @invalid.capture="onInvalid">
 		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
+
+		<div v-if="imported && !editing" class="rounded-lg bg-primary/5 px-3 py-2 text-sm text-gray-700" role="status">
+			<p>
+				<i class="fa-solid fa-file-circle-check mr-1 text-primary" aria-hidden="true"></i>
+				Formulaire rempli depuis <strong>{{ imported.name }}</strong> : vérifiez la catégorie et l'adresse, ajoutez une photo puis publiez.
+			</p>
+			<ul v-if="imported.warnings.length" class="mt-1 list-disc pl-5 text-xs text-amber-800">
+				<li v-for="w in imported.warnings" :key="w">{{ w }}</li>
+			</ul>
+		</div>
 
 		<div>
 			<EditFileBar v-if="editing" :imported="imported" @download="downloadFile" @load="loadFile" />

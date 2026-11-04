@@ -1,12 +1,15 @@
 /**
  * Fichier `.md` d'une fiche d'activité (navigateur) : téléchargé depuis le
- * formulaire en modification, puis rechargé pour le remplir (`EditFileBar`).
+ * formulaire en modification, puis rechargé pour le remplir (`EditFileBar`),
+ * ou déposé dans « Ajouter un fichier .md » pour créer une fiche (modèle :
+ * `downloadActivityTemplate`).
  * Mêmes clés que `src/content/activites/<adresse>/index.md` (cf.
  * src/lib/activity-writer.ts) ; l'adresse, l'ordre et la photo restent dans
  * le formulaire. Le serveur revalide tout à l'enregistrement.
  */
 import { TYPES_ACTIVITE_INSCRIPTION } from '../../../../plugins/adhesion/lib/choices';
-import { buildMarkdownFile, keyWarnings, parseMarkdownFile, textField } from '../../markdown-file';
+import { contentKindProblem } from '../../content-import';
+import { buildMarkdownFile, downloadMarkdown, keyWarnings, parseMarkdownFile, textField } from '../../markdown-file';
 
 export interface ActivityFileFields {
 	title: string;
@@ -30,6 +33,7 @@ const IGNORED: Record<string, string | null> = {
 
 export function activityMarkdownFile(a: ActivityFileFields): string {
 	return buildMarkdownFile(
+		'activite',
 		{
 			title: a.title,
 			isPublish: a.isPublish,
@@ -52,6 +56,8 @@ export function parseActivityMarkdown(
 ): { fields?: Omit<ActivityFileFields, 'category' | 'typeGrist'> & { category?: string; typeGrist?: string }; warnings: string[]; error?: string } {
 	const { data, body, error } = parseMarkdownFile(source);
 	if (!data) return { warnings: [], error };
+	const wrongKind = contentKindProblem(data, 'activite');
+	if (wrongKind) return { warnings: [], error: wrongKind };
 	const warnings = keyWarnings(data, KNOWN, IGNORED);
 
 	const category = textField(data.category);
@@ -77,4 +83,36 @@ export function parseActivityMarkdown(
 		},
 		warnings,
 	};
+}
+
+/** Modèle de fiche à compléter (généré dans le navigateur). */
+export function downloadActivityTemplate(): void {
+	downloadMarkdown(
+		'modele-activite.md',
+		`---
+contenu: activite
+title: "Nom de l'activité"
+excerpt: "Une ou deux phrases, affichées sur la carte de l'activité et dans les moteurs de recherche."
+category: "adresse-de-la-categorie"   # adresse d'une catégorie existante (module « Activités »)
+# Facultatif — retirer le « # » en début de ligne pour activer :
+# level: "Débutant"
+# isPublish: false                    # brouillon
+# inscription: false                  # pas de bouton « S'inscrire »
+# activiteGrist: "Nom de l'activité dans Grist"
+# imageCredit: "Photo : Prénom Nom"
+---
+
+Présentation de l'activité : à qui elle s'adresse, ce qu'on y fait.
+
+## Déroulement
+
+- Un point de liste
+- Un autre point
+
+## Infos pratiques
+
+- **Quand :** jour, horaires
+- **Où :** lieu
+`,
+	);
 }

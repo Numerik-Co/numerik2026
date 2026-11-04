@@ -6,7 +6,8 @@
  * formulaire. Le serveur revalide tout à l'enregistrement.
  */
 import type { NewsFields } from '../../client';
-import { buildMarkdownFile, keyWarnings, parseMarkdownFile, textField } from '../../markdown-file';
+import { contentKindProblem } from '../../content-import';
+import { buildMarkdownFile, downloadMarkdown, keyWarnings, parseMarkdownFile, textField } from '../../markdown-file';
 
 type NewsFile = NewsFields & { body: string };
 
@@ -16,6 +17,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function newsMarkdownFile(n: NewsFile): string {
 	return buildMarkdownFile(
+		'actualite',
 		{
 			title: n.title,
 			publishAt: n.publishAt,
@@ -33,6 +35,8 @@ export function newsMarkdownFile(n: NewsFile): string {
 export function parseNewsMarkdown(source: string): { fields?: NewsFile; warnings: string[]; error?: string } {
 	const { data, body, error } = parseMarkdownFile(source);
 	if (!data) return { warnings: [], error };
+	const wrongKind = contentKindProblem(data, 'actualite');
+	if (wrongKind) return { warnings: [], error: wrongKind };
 	const warnings = keyWarnings(data, KNOWN, IGNORED);
 	const publishAt = textField(data.publishAt);
 	if (!DATE.test(publishAt)) warnings.push('Date de publication absente ou illisible (attendu : AAAA-MM-JJ) : date actuelle gardée.');
@@ -49,4 +53,41 @@ export function parseNewsMarkdown(source: string): { fields?: NewsFile; warnings
 		},
 		warnings,
 	};
+}
+
+/** Modèle de fichier à compléter, daté du jour (généré dans le navigateur). */
+export function downloadNewsTemplate(): void {
+	const today = new Date().toLocaleDateString('sv-SE'); // AAAA-MM-JJ, heure locale
+	downloadMarkdown(
+		`${today}-modele-actualite.md`,
+		`---
+contenu: actualite
+title: "Titre de l'actualité"
+publishAt: ${today}
+excerpt: "Résumé en une ou deux phrases, affiché sur les cartes et en page d'accueil."
+tag: "Ateliers"
+author: ""
+# Facultatif — retirer le « # » en début de ligne pour activer :
+# isPublish: false
+# imageCredit: "Photo : Prénom Nom"
+---
+
+Premier paragraphe : l'essentiel de l'information en quelques phrases.
+
+## Un sous-titre
+
+Du texte en **gras** ou en *italique*, et un [lien](https://exemple.org).
+
+- Un point de liste
+- Un autre point
+
+> Une citation ou un encadré à mettre en avant.
+
+## Infos pratiques
+
+- **Quand :** jour, horaires
+- **Où :** lieu
+- **Inscription :** téléphone ou email
+`,
+	);
 }

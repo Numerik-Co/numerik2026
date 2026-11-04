@@ -3,7 +3,7 @@
  * Calque superposé au site : `variant="drawer"` = panneau latéral à droite
  * (modules), sous la barre d'administration (`top-10`) pour qu'un clic sur
  * un autre module de la barre l'ouvre directement ; `variant="modal"` =
- * fenêtre centrée (connexion).
+ * fenêtre centrée (connexion ; `wide` = plus large, ex. ajout par fichier .md).
  * Échap ou clic sur le fond ferme (sauf `closable: false`, ex. changement de
  * mot de passe imposé) ; le focus est placé dans le calque à
  * l'ouverture et rendu à l'élément d'origine à la fermeture ; la page
@@ -11,7 +11,7 @@
  */
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
-const props = withDefaults(defineProps<{ title: string; variant?: 'drawer' | 'modal'; closable?: boolean }>(), {
+const props = withDefaults(defineProps<{ title: string; variant?: 'drawer' | 'modal'; closable?: boolean; wide?: boolean }>(), {
 	variant: 'drawer',
 	closable: true,
 });
@@ -72,7 +72,7 @@ onBeforeUnmount(() => {
 			:class="[
 				'flex flex-col bg-white shadow-2xl focus:outline-none',
 				props.variant === 'modal'
-					? 'relative max-h-full w-full max-w-sm overflow-hidden rounded-2xl'
+					? ['relative max-h-full w-full overflow-hidden rounded-2xl', props.wide ? 'max-w-lg' : 'max-w-sm']
 					: 'absolute inset-y-0 right-0 w-full max-w-xl sm:border-l sm:border-gray-200',
 			]"
 		>

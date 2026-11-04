@@ -29,6 +29,7 @@ import { isDeferredSubmit } from '../lot';
 import { usePublication } from '../usePublication';
 import DragHandle from './pages/DragHandle.vue';
 import OrderArrows from './pages/OrderArrows.vue';
+import { takePendingImport } from '../content-import';
 import PageForm from './pages/PageForm.vue';
 import PageRow from './pages/PageRow.vue';
 import SitePageForm from './pages/SitePageForm.vue';
@@ -38,7 +39,7 @@ const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
 type View =
 	| { name: 'list' }
-	| { name: 'page'; source: PageSourceView | null }
+	| { name: 'page'; source: PageSourceView | null; file?: File }
 	| { name: 'dropdown'; dropdown: DropdownView | null }
 	| { name: 'site'; page: SitePageView };
 
@@ -283,7 +284,12 @@ const stopCloseRequest = onCloseRequest(() => {
 });
 onBeforeUnmount(stopCloseRequest);
 
-onMounted(load);
+onMounted(() => {
+	// Fichier déposé dans « Ajouter un fichier .md » (menu Contenus) : création pré-remplie.
+	const pending = takePendingImport('page');
+	if (pending) go({ name: 'page', source: null, file: pending });
+	void load();
+});
 </script>
 
 <template>
@@ -631,6 +637,7 @@ onMounted(load);
 		v-else-if="view.name === 'page'"
 		:dropdowns="dropdowns"
 		:source="view.source"
+		:initial-file="view.file"
 		:disabled="locked"
 		@published="onPublished"
 		@cancel="go({ name: 'list' })"

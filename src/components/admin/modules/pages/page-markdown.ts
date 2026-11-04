@@ -7,6 +7,7 @@
  * (src/lib/page-writer.ts).
  */
 import { validateBloc, type Bloc } from '../../../../lib/blocs';
+import { contentKindProblem } from '../../content-import';
 import { buildMarkdownFile, downloadMarkdown, keyWarnings, parseMarkdownFile, textField } from '../../markdown-file';
 
 export type PageKind = 'classique' | 'enrichie';
@@ -45,6 +46,7 @@ export function pageMarkdownFile(page: {
 	body: string;
 }): string {
 	return buildMarkdownFile(
+		'page',
 		{
 			title: page.title,
 			description: page.description,
@@ -64,6 +66,8 @@ export function pageMarkdownFile(page: {
 export function parsePageMarkdown(source: string): { page?: ImportedPage; warnings: string[]; error?: string } {
 	const { data, body, error } = parseMarkdownFile(source);
 	if (!data) return { warnings: [], error };
+	const wrongKind = contentKindProblem(data, 'page');
+	if (wrongKind) return { warnings: [], error: wrongKind };
 	const warnings = keyWarnings(data, KNOWN, SET_IN_FORM);
 
 	const blocs: Record<string, Bloc> = {};
@@ -92,6 +96,7 @@ export function parsePageMarkdown(source: string): { page?: ImportedPage; warnin
 }
 
 const CLASSIQUE = `---
+contenu: page
 title: "Titre de la page"
 description: "Une ou deux phrases, affichées sous le titre et dans les moteurs de recherche."
 # Facultatif — retirer les « # » en début de ligne pour activer :
@@ -120,6 +125,7 @@ Du texte en **gras** ou en *italique*, et un [lien](/contact).
 `;
 
 const ENRICHIE = `---
+contenu: page
 title: "Titre de la page"
 description: "Une ou deux phrases, affichées sous le titre et dans les moteurs de recherche."
 type: enrichie

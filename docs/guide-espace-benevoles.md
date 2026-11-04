@@ -221,6 +221,14 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - **Contenus ▾** regroupe **Actualités**, **Pages** et **Activités** : un
   clic les affiche côte à côte, juste en dessous (fermé par un clic ailleurs
   ou **Échap**). Avec le droit d'en voir un seul, il a son propre bouton.
+- Premier bouton de **Contenus ▾** : **Ajouter un fichier .md**. Une
+  fenêtre s'ouvre au centre : on y dépose un fichier `.md` (modèles
+  téléchargeables en bas de la fenêtre). Le type de contenu est lu dans la
+  ligne `contenu:` de son en-tête (`actualite`, `page` ou `activite`) — à
+  choisir dans la fenêtre si elle manque. **Créer…** ouvre le module
+  correspondant sur son formulaire de création, déjà rempli : il reste à
+  vérifier, choisir l'emplacement ou la catégorie, ajouter une photo, puis
+  enregistrer. Un fichier d'un autre type chargé dans un formulaire est refusé.
 - Pour fermer un panneau : la croix ✕, la touche **Échap**, ou un clic sur
   la partie assombrie de la page. Dans un formulaire (actualité, page ou
   activité à ajouter ou modifier, compte à créer ou modifier), ces mêmes gestes ramènent
@@ -424,7 +432,8 @@ onglet.
 
 **Travailler dans un fichier** (modification seulement) : au-dessus des
 onglets, **Télécharger le fichier** donne le contenu du formulaire en `.md`
-(en-tête + texte, sans la photo) ; après l'avoir modifié dans un éditeur de
+(en-tête + texte, sans la photo ; la ligne `contenu:` en tête indique le
+type, ce qui permet de le réutiliser dans **Ajouter un fichier .md**) ; après l'avoir modifié dans un éditeur de
 texte, **Charger un fichier modifié** (ou le glisser sur le bouton) remplit
 le formulaire. Rien n'est publié avant **Enregistrer** ; les champs ignorés
 (photo, champ inconnu, catégorie inexistante, date illisible…) sont signalés.
