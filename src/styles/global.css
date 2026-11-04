@@ -4,24 +4,6 @@
 @import "@fortawesome/fontawesome-free/css/brands.css";
 @import "./forms.css";
 
-@font-face {
-	font-family: "Aileron";
-	src: url("./fonts/aileron/aileron-light.woff2") format("woff2"),
-		url("./fonts/aileron/aileron-light.woff") format("woff");
-	font-weight: 300;
-	font-style: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: "Como";
-	src: url("./fonts/como/como-semibold-webfont.woff2") format("woff2"),
-		url("./fonts/como/como-semibold-webfont.woff") format("woff");
-	font-weight: 600;
-	font-style: normal;
-	font-display: swap;
-}
-
 /* Couleurs par défaut du modèle : chaque association les remplace dans
    src/content/reglages.yaml (colors), injectées par les layouts (themeCss,
    src/config/site.ts). Garder ces valeurs alignées sur DEFAULTS.colors. */
@@ -30,8 +12,10 @@
 	--color-secondary: #1fa39e;
 	--color-accent: #7cb93f;
 
-	--font-heading: "Como", sans-serif;
-	--font-body: "Aileron", sans-serif;
+	/* Polices : remplacées au rendu par celles de reglages.yaml (polices:,
+	   fontsCss de src/lib/fonts.ts, injecté par les layouts). */
+	--font-heading: system-ui, sans-serif;
+	--font-body: system-ui, sans-serif;
 }
 
 body {

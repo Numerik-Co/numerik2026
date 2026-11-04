@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Onglet « Charte graphique » du module « Association » : couleurs du thème
- * (`colors:` de `reglages.yaml`), logo et icône d'onglet
+ * (`colors:` de `reglages.yaml`), polices (`polices:`, `FontsField.vue`), logo et icône d'onglet
  * (`src/content/images/`), écrits par `brand-writer.ts`. Aperçu en direct ;
  * tout part en une seule publication.
  */
@@ -17,6 +17,8 @@ import DragHandle from '../pages/DragHandle.vue';
 import OrderArrows from '../pages/OrderArrows.vue';
 import ColorField from './ColorField.vue';
 import { fullHex } from './contrast';
+import { previewFamily } from './font-preview';
+import FontsField, { type FontsDraft } from './FontsField.vue';
 
 const props = defineProps<{ locked: boolean }>();
 const emit = defineEmits<{ published: [label: string, result: SaveResult]; dirty: [value: boolean] }>();
@@ -37,6 +39,21 @@ const colors = ref({ primary: '', secondary: '', accent: '' });
 let nextId = 0;
 const stripe = ref<{ id: number; value: string }[]>([]);
 const stripeValues = computed(() => stripe.value.map((s) => s.value));
+
+/** Polices en cours de saisie (`FontsField`). */
+const fonts = ref<FontsDraft>({ titres: '', texte: '', ajouts: [], retraits: [] });
+function setFonts(source: BrandSource) {
+	fonts.value = { titres: source.fonts.titres, texte: source.fonts.texte, ajouts: [], retraits: [] };
+}
+const fontsChanged = computed(
+	() =>
+		!!source.value &&
+		(fonts.value.titres !== source.value.fonts.titres ||
+			fonts.value.texte !== source.value.fonts.texte ||
+			fonts.value.ajouts.length > 0 ||
+			fonts.value.retraits.length > 0),
+);
+const fontFamily = (value: string) => (source.value ? previewFamily(value, source.value, fonts.value.ajouts) : undefined);
 
 function setColors(c: ThemeColors) {
 	colors.value = { primary: c.primary, secondary: c.secondary, accent: c.accent };
@@ -79,7 +96,7 @@ const colorsChanged = computed(
 		JSON.stringify({ ...colors.value, stripe: stripeValues.value }) !==
 			JSON.stringify({ primary: savedColors.value.primary, secondary: savedColors.value.secondary, accent: savedColors.value.accent, stripe: savedColors.value.stripe }),
 );
-const changed = computed(() => colorsChanged.value || !!logo.value || !!favicon.value);
+const changed = computed(() => colorsChanged.value || fontsChanged.value || !!logo.value || !!favicon.value);
 watch(changed, (value) => emit('dirty', value), { immediate: true });
 
 const allValid = computed(
@@ -93,6 +110,7 @@ async function load() {
 	try {
 		source.value = await brandApi.get();
 		setColors(source.value.colors);
+		setFonts(source.value);
 	} catch (e) {
 		fail(e);
 	} finally {
@@ -107,7 +125,10 @@ function fail(e: unknown) {
 }
 
 function reset() {
-	if (source.value) setColors(source.value.colors);
+	if (source.value) {
+		setColors(source.value.colors);
+		setFonts(source.value);
+	}
 	clear('logo');
 	clear('favicon');
 	error.value = '';
@@ -140,6 +161,17 @@ async function submit(event: Event) {
 		const result = await brandApi.update(
 			{
 				colors: { ...colors.value, stripe: stripeValues.value },
+				fonts: {
+					titres: fonts.value.titres,
+					texte: fonts.value.texte,
+					retraits: fonts.value.retraits,
+					ajouts: await Promise.all(
+						fonts.value.ajouts.map(async (a) => ({
+							nom: a.nom,
+							fichiers: await Promise.all(a.fichiers.map(async (f) => ({ graisse: f.graisse, data: await fileToBase64(f.file) }))),
+						})),
+					),
+				},
 				logo: await upload(logo.value),
 				favicon: await upload(favicon.value),
 			},
@@ -198,7 +230,7 @@ onBeforeUnmount(() => {
 				<span class="font-heading font-semibold text-gray-900">Aperçu</span>
 				<span class="text-xs text-gray-500">avant publication</span>
 			</header>
-			<div class="bg-white">
+			<div class="bg-white" :style="{ fontFamily: fontFamily(fonts.texte) }">
 				<div class="flex items-center gap-3 px-4 py-3">
 					<img
 						v-if="logo || source.logo"
@@ -219,7 +251,7 @@ onBeforeUnmount(() => {
 					<span v-for="s in stripe" :key="s.id" class="flex-1" :style="{ backgroundColor: shown(s.value, '#ffffff') }"></span>
 				</div>
 				<div class="space-y-2 px-4 py-4 text-sm text-gray-700">
-					<p class="font-heading text-base font-semibold" :style="{ color: shown(colors.primary, source.colors.primary) }">
+					<p class="font-heading text-base font-semibold" :style="{ color: shown(colors.primary, source.colors.primary), fontFamily: fontFamily(fonts.titres) }">
 						Le numérique, ensemble
 					</p>
 					<p class="font-light">
@@ -315,6 +347,9 @@ onBeforeUnmount(() => {
 				<button v-if="!stripeIsDefault" type="button" class="text-xs text-gray-600 hover:underline" @click="resetStripe">bande d'origine</button>
 			</div>
 		</section>
+
+		<!-- Polices -->
+		<FontsField v-model="fonts" :source="source" :header-class="headerClass" />
 
 		<!-- Logo -->
 		<section class="overflow-hidden rounded-xl border border-gray-200">

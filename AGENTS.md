@@ -344,7 +344,17 @@ contenu hors de `src/content/`.**
   revalidé par `parseReglages()`), `logo.*` et `favicon.*` d'`images/`
   (raster passé par sharp, SVG à contenu actif refusé, SVG d'icône →
   `favicon.png` en plus), aperçu en direct et contraste du texte blanc
-  (`association/contrast.ts`).
+  (`association/contrast.ts`). **Polices** (même onglet,
+  `association/FontsField.vue`, aperçu `font-preview.ts` via `FontFace`) :
+  `polices:` de `reglages.yaml` (`titres` / `texte` = police proposée ou
+  déposée, `deposees` = fichiers de `src/content/polices/` par graisse ou
+  `variable`) ; catalogue `src/lib/font-catalogue.ts` (`FONT_CATALOGUE`,
+  `@fontsource-variable/*`, jamais Google Fonts ; défaut Montserrat + Open
+  Sans), CSS des seules polices choisies produit au build par
+  `src/lib/fonts.ts` (`fontsCss`, `fontPreloads`, injectés par les deux
+  layouts ; `@theme` de `global.css` = repli `system-ui`). Fichier déposé
+  reconnu à sa signature (WOFF2/WOFF/TTF/OTF, 2 Mo), police retirée
+  seulement si inutilisée. Détail : [docs/theme.md](docs/theme.md#polices).
 - `partenaires.yaml` (pas une collection, même principe qu'`association.yaml`)
   — `src/lib/partenaires.ts` : `partenaires` (cartes `PartenairesSection`,
   absente si liste vide), `relaisAdhesion` (`relais: true` : cités sur

@@ -3,6 +3,7 @@
  * Une erreur porte le message renvoyé par le serveur et son code HTTP
  * (`status === 401` : session expirée).
  */
+import type { FontRole, FontWeight } from '../../lib/font-catalogue';
 import type { Association } from '../../lib/association';
 import type { AuthGroup } from '../../lib/auth/groups';
 import type { ThemeColors } from '../../config/site';
@@ -365,17 +366,34 @@ export interface BrandImage {
 	preview: string;
 }
 
+export interface BrandFonts {
+	titres: string;
+	texte: string;
+	deposees: { nom: string; fichiers: { graisse: FontWeight; fichier: string; preview: string | null }[] }[];
+}
+
 export interface BrandSource {
 	colors: ThemeColors;
 	defaults: ThemeColors;
 	logo: BrandImage | null;
 	favicons: BrandImage[];
+	fonts: BrandFonts;
+	fontDefaults: Record<FontRole, string>;
+	catalogue: { id: string; label: string; family: string; weight: string; url: string }[];
+}
+
+/** Polices envoyées : rôles, polices déposées à ajouter (fichiers en base64) et à retirer. */
+export interface BrandFontsInput {
+	titres: string;
+	texte: string;
+	ajouts: { nom: string; fichiers: { graisse: FontWeight; data: string }[] }[];
+	retraits: string[];
 }
 
 export const brandApi = {
 	get: () => request<BrandSource>('GET', '/api/admin/charte'),
 	update: (
-		input: { colors: ThemeColors; logo?: { type: string; data: string }; favicon?: { type: string; data: string } },
+		input: { colors: ThemeColors; fonts: BrandFontsInput; logo?: { type: string; data: string }; favicon?: { type: string; data: string } },
 		options?: SaveOptions,
 	) => request<SaveResult>('PUT', saveUrl('/api/admin/charte', options), input),
 };

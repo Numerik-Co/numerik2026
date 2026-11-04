@@ -24,11 +24,24 @@
  * Code serveur uniquement.
  */
 
-import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { isMap, isScalar, isSeq, parseDocument, Scalar, YAMLMap, type Document } from 'yaml';
-import { COLOR_PATTERN, DEFAULT_COLORS, parseReglages, type ThemeColors } from '../config/site';
+import { COLOR_PATTERN, DEFAULT_COLORS, parseReglages, type SiteFonts, type ThemeColors, type UploadedFont } from '../config/site';
+import {
+	catalogueFont,
+	DEFAULT_FONTS,
+	FONT_CATALOGUE,
+	FONT_FILE_MAX,
+	FONT_NAME_MAX,
+	FONT_WEIGHTS,
+	fontSlug,
+	type FontExt,
+	type FontRole,
+	type FontWeight,
+} from './font-catalogue';
+import { CATALOGUE_FILES } from './fonts';
 import { contentTransaction, type Applied } from './content-transaction';
 import { siteRoot } from './news-writer';
 
@@ -50,6 +63,7 @@ const PREVIEW_TYPES: Record<string, string> = { png: 'image/png', jpg: 'image/jp
 
 const imagesDir = () => join(siteRoot(), 'src', 'content', 'images');
 const reglagesFile = () => join(siteRoot(), 'src', 'content', 'reglages.yaml');
+const fontsDir = () => join(siteRoot(), 'src', 'content', 'polices');
 
 // --- Lecture ---------------------------------------------------------------
 
@@ -59,11 +73,26 @@ export interface BrandImage {
 	preview: string;
 }
 
+export interface BrandFontFile {
+	graisse: FontWeight;
+	fichier: string;
+	/** Fichier en data URL (aperçu dans le navigateur) ; `null` = absent du disque. */
+	preview: string | null;
+}
+
+export interface BrandFonts extends Record<FontRole, string> {
+	deposees: { nom: string; fichiers: BrandFontFile[] }[];
+}
+
 export interface BrandSource {
 	colors: ThemeColors;
 	defaults: ThemeColors;
 	logo: BrandImage | null;
 	favicons: BrandImage[];
+	fonts: BrandFonts;
+	fontDefaults: Record<FontRole, string>;
+	/** Polices proposées, avec l'URL de leur fichier latin (aperçu). */
+	catalogue: { id: string; label: string; family: string; weight: string; url: string }[];
 }
 
 async function preview(file: string): Promise<BrandImage> {
@@ -86,14 +115,39 @@ async function imageFiles(name: 'logo' | 'favicon'): Promise<string[]> {
 	return files.filter((f) => f.startsWith(`${name}.`)).sort((a, b) => rank(a) - rank(b));
 }
 
+const FONT_MIME: Record<FontExt, string> = { woff2: 'font/woff2', woff: 'font/woff', ttf: 'font/ttf', otf: 'font/otf' };
+
+async function fontPreview(file: string): Promise<string | null> {
+	const data = await readFile(join(fontsDir(), file)).catch(() => null);
+	return data ? `data:${FONT_MIME[file.split('.').pop() as FontExt]};base64,${data.toString('base64')}` : null;
+}
+
+async function brandFonts(polices: SiteFonts): Promise<BrandFonts> {
+	return {
+		titres: polices.titres,
+		texte: polices.texte,
+		deposees: await Promise.all(
+			polices.deposees.map(async (d) => ({
+				nom: d.nom,
+				fichiers: await Promise.all(
+					(Object.entries(d.fichiers) as [FontWeight, string][]).map(async ([graisse, fichier]) => ({ graisse, fichier, preview: await fontPreview(fichier) })),
+				),
+			})),
+		),
+	};
+}
+
 export async function readBrandSource(): Promise<BrandSource> {
-	const { colors } = parseReglages(await readFile(reglagesFile(), 'utf8').catch(() => ''));
+	const { colors, polices } = parseReglages(await readFile(reglagesFile(), 'utf8').catch(() => ''));
 	const [logo] = await imageFiles('logo');
 	return {
 		colors,
 		defaults: DEFAULT_COLORS,
 		logo: logo ? await preview(logo) : null,
 		favicons: await Promise.all((await imageFiles('favicon')).map(preview)),
+		fonts: await brandFonts(polices),
+		fontDefaults: DEFAULT_FONTS,
+		catalogue: FONT_CATALOGUE.map((f) => ({ id: f.id, label: f.label, family: f.family, weight: f.weight, url: CATALOGUE_FILES[f.id].latin })),
 	};
 }
 
@@ -104,10 +158,24 @@ export interface BrandUpload {
 	data: Buffer;
 }
 
+export interface FontUpload {
+	nom: string;
+	fichiers: { graisse: FontWeight; data: Buffer }[];
+}
+
+export interface FontsInput extends Record<FontRole, string> {
+	/** Polices déposées à ajouter. */
+	ajouts: FontUpload[];
+	/** Noms des polices déposées à retirer. */
+	retraits: string[];
+}
+
 export interface BrandInput {
 	colors: ThemeColors;
 	logo: BrandUpload | null;
 	favicon: BrandUpload | null;
+	/** `null` = polices inchangées. */
+	fonts: FontsInput | null;
 }
 
 /** Contenus actifs interdits dans un SVG servi tel quel par le site. */
@@ -219,6 +287,110 @@ async function processFavicon(upload: BrandUpload): Promise<{ files: { ext: stri
 	}
 }
 
+/** Format d'un fichier de police d'après sa signature (jamais d'après son nom). */
+function fontExt(data: Buffer): FontExt | null {
+	if (data.length < 12) return null;
+	const tag = data.subarray(0, 4).toString('latin1');
+	if (tag === 'wOF2') return 'woff2';
+	if (tag === 'wOFF') return 'woff';
+	if (tag === 'OTTO') return 'otf';
+	if (data.readUInt32BE(0) === 0x00010000 || tag === 'true') return 'ttf';
+	return null;
+}
+
+interface FontsPlan {
+	polices: SiteFonts;
+	/** Fichiers à écrire / effacer dans `src/content/polices/`. */
+	write: { file: string; data: Buffer }[];
+	remove: string[];
+	changed: boolean;
+}
+
+/** Contrôle les polices demandées ; rend le nouveau réglage et les fichiers à écrire, ou les erreurs. */
+function planFonts(current: SiteFonts, input: FontsInput, existingFiles: string[]): FontsPlan | { errors: string[] } {
+	const errors: string[] = [];
+	const unknownRemoval = input.retraits.filter((n) => !current.deposees.some((d) => d.nom === n));
+	if (unknownRemoval.length) errors.push(`Police à retirer introuvable : ${unknownRemoval.join(', ')}.`);
+	const kept = current.deposees.filter((d) => !input.retraits.includes(d.nom));
+	const taken = new Set([...kept.map((d) => d.nom.toLowerCase())]);
+	const usedFiles = new Set([...existingFiles]);
+	for (const d of current.deposees.filter((d) => input.retraits.includes(d.nom))) for (const f of Object.values(d.fichiers)) usedFiles.delete(f!);
+
+	const added: UploadedFont[] = [];
+	const write: FontsPlan['write'] = [];
+	for (const a of input.ajouts) {
+		const nom = a.nom.trim();
+		const what = `Police « ${nom || '?'} »`;
+		if (!nom) errors.push('Une police ajoutée n’a pas de nom.');
+		else if (nom.length > FONT_NAME_MAX) errors.push(`${what} : nom trop long (${FONT_NAME_MAX} caractères au plus).`);
+		else if (!fontSlug(nom)) errors.push(`${what} : le nom doit contenir des lettres ou des chiffres.`);
+		else if (catalogueFont(nom) || FONT_CATALOGUE.some((f) => f.label.toLowerCase() === nom.toLowerCase())) errors.push(`${what} : c’est déjà une police proposée, choisissez-la dans la liste.`);
+		else if (taken.has(nom.toLowerCase())) errors.push(`${what} : ce nom est déjà pris.`);
+		if (!a.fichiers.length) errors.push(`${what} : aucun fichier.`);
+		const weights = a.fichiers.map((f) => f.graisse);
+		if (new Set(weights).size !== weights.length) errors.push(`${what} : deux fichiers pour la même graisse.`);
+		const fichiers: UploadedFont['fichiers'] = {};
+		for (const f of a.fichiers) {
+			if (!(FONT_WEIGHTS as readonly string[]).includes(f.graisse)) errors.push(`${what} : graisse inconnue « ${f.graisse} ».`);
+			if (f.data.length > FONT_FILE_MAX) errors.push(`${what} : fichier trop lourd (2 Mo max).`);
+			const ext = fontExt(f.data);
+			if (!ext) {
+				errors.push(`${what} : fichier non reconnu (formats acceptés : WOFF2, WOFF, TTF, OTF).`);
+				continue;
+			}
+			let file = `${fontSlug(nom)}-${f.graisse}.${ext}`;
+			for (let i = 2; usedFiles.has(file); i++) file = `${fontSlug(nom)}-${f.graisse}-${i}.${ext}`;
+			usedFiles.add(file);
+			fichiers[f.graisse] = file;
+			write.push({ file, data: f.data });
+		}
+		taken.add(nom.toLowerCase());
+		added.push({ nom, fichiers });
+	}
+	const deposees = [...kept, ...added];
+	const roles: Record<FontRole, string> = { titres: input.titres.trim(), texte: input.texte.trim() };
+	for (const [role, value] of Object.entries(roles) as [FontRole, string][]) {
+		const label = role === 'titres' ? 'des titres' : 'du texte';
+		if (!catalogueFont(value) && !deposees.some((d) => d.nom === value)) {
+			errors.push(input.retraits.includes(value) ? `La police « ${value} » est retirée mais reste choisie pour la police ${label}.` : `Police ${label} inconnue : « ${value} ».`);
+		}
+	}
+	if (errors.length) return { errors };
+	const remove = current.deposees.filter((d) => input.retraits.includes(d.nom)).flatMap((d) => Object.values(d.fichiers) as string[]);
+	const polices: SiteFonts = { ...roles, deposees };
+	const changed = write.length > 0 || remove.length > 0 || roles.titres !== current.titres || roles.texte !== current.texte;
+	return { polices, write, remove, changed };
+}
+
+/** `polices:` écrit dans le document (rôles en place ; liste des polices déposées réécrite). */
+function setFonts(doc: Document, polices: SiteFonts): void {
+	const map = ensureMap(doc, ['polices']);
+	for (const role of ['titres', 'texte'] as const) {
+		const node = map.get(role, true);
+		if (isScalar(node)) node.value = polices[role];
+		else map.set(role, polices[role]);
+	}
+	if (polices.deposees.length) {
+		map.set(
+			'deposees',
+			doc.createNode(
+				polices.deposees.map((d) => ({
+					nom: d.nom,
+					fichiers: Object.fromEntries(Object.entries(d.fichiers).map(([w, f]) => [w, f])),
+				})),
+			),
+		);
+		// Graisses entre apostrophes ('300') : sinon lues comme des nombres.
+		const seq = map.get('deposees', true);
+		if (isSeq(seq)) {
+			for (const item of seq.items) {
+				const files = isMap(item) ? item.get('fichiers', true) : null;
+				if (isMap(files)) for (const pair of files.items) if (isScalar(pair.key) && /^\d+$/.test(String(pair.key.value))) pair.key.type = Scalar.QUOTE_SINGLE;
+			}
+		}
+	} else map.delete('deposees');
+}
+
 export type BrandResult = { applied?: Applied; changes: string[]; errors: string[] };
 
 export async function saveBrand(input: BrandInput): Promise<BrandResult> {
@@ -230,16 +402,21 @@ export async function saveBrand(input: BrandInput): Promise<BrandResult> {
 	if (errors.length) return { changes: [], errors };
 
 	const originalReglages = await readFile(reglagesFile(), 'utf8').catch(() => null);
-	const colorsChanged = !sameColors(parseReglages(originalReglages ?? '').colors, input.colors);
-	const changes = [colorsChanged && 'couleurs', logo && 'logo', favicon && 'icône d’onglet'].filter((c): c is string => Boolean(c));
+	const current = parseReglages(originalReglages ?? '');
+	const colorsChanged = !sameColors(current.colors, input.colors);
+	const fontsPlan = input.fonts ? planFonts(current.polices, input.fonts, await readdir(fontsDir()).catch(() => [])) : null;
+	if (fontsPlan && 'errors' in fontsPlan) return { changes: [], errors: fontsPlan.errors };
+	const fontsChanged = Boolean(fontsPlan?.changed);
+	const changes = [colorsChanged && 'couleurs', fontsChanged && 'polices', logo && 'logo', favicon && 'icône d’onglet'].filter((c): c is string => Boolean(c));
 	if (!changes.length) return { changes, errors: ["Rien n'a changé."] };
 
 	let reglagesText: string | null = null;
-	if (colorsChanged) {
+	if (colorsChanged || fontsChanged) {
 		const doc = parseDocument(originalReglages ?? '');
 		if (doc.errors.length) return { changes, errors: [`reglages.yaml illisible : ${doc.errors[0].message}`] };
 		if (doc.contents === null) doc.contents = new YAMLMap() as never;
-		setColors(doc, input.colors);
+		if (colorsChanged) setColors(doc, input.colors);
+		if (fontsChanged) setFonts(doc, fontsPlan!.polices);
 		reglagesText = doc.toString({ lineWidth: 0, flowCollectionPadding: false });
 		parseReglages(reglagesText);
 	}
@@ -255,10 +432,19 @@ export async function saveBrand(input: BrandInput): Promise<BrandResult> {
 			for (const file of favicon.files) await writeFile(join(root, `favicon.${file.ext}`), file.data);
 		}
 	});
+	let fonts: Applied | null = null;
 	try {
+		if (fontsPlan && fontsChanged && (fontsPlan.write.length || fontsPlan.remove.length)) {
+			await mkdir(fontsDir(), { recursive: true });
+			fonts = await contentTransaction(fontsDir(), 'polices', async (root) => {
+				for (const f of fontsPlan.remove) await rm(join(root, f), { force: true });
+				for (const f of fontsPlan.write) await writeFile(join(root, f.file), f.data);
+			});
+		}
 		if (reglagesText !== null) await writeFile(reglagesFile(), reglagesText, 'utf8');
 	} catch (err) {
 		await images.restore();
+		await fonts?.restore();
 		throw err;
 	}
 	return {
@@ -267,10 +453,14 @@ export async function saveBrand(input: BrandInput): Promise<BrandResult> {
 		applied: {
 			restore: async () => {
 				await images.restore();
+				await fonts?.restore();
 				if (reglagesText !== null && originalReglages !== null) await writeFile(reglagesFile(), originalReglages, 'utf8');
 				else if (reglagesText !== null) await rm(reglagesFile(), { force: true });
 			},
-			purge: images.purge,
+			purge: async () => {
+				await images.purge();
+				await fonts?.purge();
+			},
 		},
 	};
 }
@@ -292,7 +482,10 @@ export function readBrandInput(raw: unknown): BrandInput | { error: string } {
 	const favicon = upload(r.favicon, 'Icône d’onglet');
 	if (logo && 'error' in logo) return logo;
 	if (favicon && 'error' in favicon) return favicon;
+	const fonts = readFontsInput(r.fonts);
+	if (fonts && 'error' in fonts) return fonts;
 	return {
+		fonts,
 		colors: {
 			primary: color(c.primary),
 			secondary: color(c.secondary),
@@ -301,5 +494,31 @@ export function readBrandInput(raw: unknown): BrandInput | { error: string } {
 		},
 		logo,
 		favicon,
+	};
+}
+
+/** Partie `fonts` du corps JSON (fichiers en base64) ; `null` = absente. */
+function readFontsInput(raw: unknown): FontsInput | null | { error: string } {
+	if (!raw || typeof raw !== 'object') return null;
+	const f = raw as Record<string, unknown>;
+	const list = (v: unknown) => (Array.isArray(v) ? v : []);
+	const ajouts: FontUpload[] = [];
+	for (const a of list(f.ajouts)) {
+		const o = (a && typeof a === 'object' ? a : {}) as Record<string, unknown>;
+		const fichiers: FontUpload['fichiers'] = [];
+		for (const file of list(o.fichiers)) {
+			const x = (file && typeof file === 'object' ? file : {}) as Record<string, unknown>;
+			const data = Buffer.from(String(x.data ?? ''), 'base64');
+			if (!data.length) return { error: `Police « ${String(o.nom ?? '')} » : fichier vide.` };
+			if (data.length > FONT_FILE_MAX) return { error: `Police « ${String(o.nom ?? '')} » : fichier trop lourd (2 Mo max).` };
+			fichiers.push({ graisse: String(x.graisse ?? '') as FontWeight, data });
+		}
+		ajouts.push({ nom: String(o.nom ?? ''), fichiers });
+	}
+	return {
+		titres: String(f.titres ?? ''),
+		texte: String(f.texte ?? ''),
+		ajouts,
+		retraits: list(f.retraits).map(String),
 	};
 }

@@ -713,6 +713,21 @@ sont conservés, il reste modifiable à la main.
   ou **peu lisible**. « couleur d'origine » remet celle du modèle.
 - **Bande de couleurs** (sous l'en-tête) : 1 à 12 couleurs, à réordonner
   (glisser-déposer ou flèches), ajouter, retirer ; « bande d'origine ».
+- **Polices** : une pour les **titres**, une pour le **texte**, choisies
+  dans la liste des **polices proposées** (Montserrat, Open Sans, Inter,
+  Roboto, Raleway, Source Sans 3, Nunito, Work Sans, Lora ; par défaut
+  Montserrat pour les titres, Open Sans pour le texte) ou parmi **vos
+  polices**. Un exemple de texte s'affiche dans la police choisie, et
+  l'aperçu en haut de l'onglet la reprend. **Ajouter une police** : un
+  nom, puis ses fichiers (WOFF2 conseillé ; WOFF, TTF, OTF acceptés ; 2 Mo
+  max), chacun avec sa **graisse** (devinée d'après le nom du fichier :
+  « Light » = 300, « Bold » = 700…) ou un seul fichier **variable**. Le
+  site emploie les graisses 300, 400, 500 et 600 pour le texte, 600 pour
+  les titres : une graisse absente est signalée (le navigateur l'imite,
+  rendu moins net). Vérifiez que la licence de la police autorise l'usage
+  sur un site web. Une police n'est retirable (✕) que si elle n'est
+  choisie ni pour les titres ni pour le texte. Les polices sont servies par
+  le site lui-même, jamais par Google Fonts.
 - **Logo** : PNG à fond transparent ou SVG de préférence (JPEG, WebP
   acceptés, 5 Mo max). Une très grande image est réduite (1 600 px de
   large).
@@ -721,9 +736,9 @@ sont conservés, il reste modifiable à la main.
   donne aussi une version PNG pour les anciens navigateurs.
 
 Un SVG contenant du script ou des liens externes est refusé par sécurité :
-l'exporter en « SVG simple » ou en PNG. Fichiers modifiés : `colors:` de
-`src/content/reglages.yaml` (autres réglages et commentaires gardés),
-`src/content/images/logo.*` et `favicon.*`. Si la reconstruction échoue,
+l'exporter en « SVG simple » ou en PNG. Fichiers modifiés : `colors:` et
+`polices:` de `src/content/reglages.yaml` (autres réglages et commentaires
+gardés), `src/content/images/logo.*` et `favicon.*`, `src/content/polices/`. Si la reconstruction échoue,
 tout est remis comme avant.
 
 ### Modifier mes informations

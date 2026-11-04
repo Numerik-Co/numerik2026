@@ -38,3 +38,12 @@ pnpm-debug.log*
 /src/content/.tmp-publication/
 /.update/
 /.dockercfg/
+
+# Contenu éditorial (pages, actualités, activités, images, polices) : propre à chaque
+# association, jamais commité. Les fichiers déjà suivis le restent (contenu
+# de démonstration nécessaire au build de la CI) ; tout nouveau fichier est ignoré.
+/src/content/news/
+/src/content/pages/
+/src/content/activites/
+/src/content/images/
+/src/content/polices/

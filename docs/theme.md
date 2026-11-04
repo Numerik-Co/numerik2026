@@ -37,32 +37,41 @@ Ces couleurs sont utilisables partout dans le code via les classes Tailwind gén
 
 ## Polices
 
-```css
---font-heading: "Como", sans-serif;  /* titres (h1-h6, boutons) */
---font-body: "Aileron", sans-serif;  /* texte courant */
+Deux rôles : **titres** (`h1`…`h6`, classe `font-heading`) et **texte**
+(tout le reste, `body`). Réglés dans `polices:` de `src/content/reglages.yaml`,
+depuis l'espace bénévoles : module **Association** → onglet **Charte
+graphique** → section **Polices**. Sans réglage : **Montserrat** (titres) et
+**Open Sans** (texte).
+
+```yaml
+polices:
+  titres: montserrat        # police proposée (id) ou nom d'une police déposée
+  texte: Aileron
+  deposees:                 # polices de l'association, src/content/polices/
+    - nom: Aileron
+      fichiers:
+        '300': aileron-300.woff2
+        '400': aileron-400.woff2
+        # variable: ma-police-variable.woff2   (fichier qui couvre toutes les graisses)
 ```
 
-Les fichiers de police sont chargés juste au-dessus dans le même fichier :
-
-```css
-@font-face {
-	font-family: "Aileron";
-	src: url("./fonts/aileron/aileron-light.woff2") format("woff2"), ...;
-	font-weight: 300;
-}
-@font-face {
-	font-family: "Como";
-	src: url("./fonts/como/como-semibold-webfont.woff2") format("woff2"), ...;
-	font-weight: 600;
-}
-```
-
-Les fichiers sont dans `src/styles/fonts/aileron/` et `src/styles/fonts/como/`. Pour changer de police :
-1. Déposer les nouveaux fichiers `.woff2`/`.woff` dans `src/styles/fonts/<nom>/`.
-2. Mettre à jour les chemins `src: url(...)` et le `font-weight` correspondant au fichier fourni.
-3. Le nom donné après `font-family:` est libre (c'est un alias interne) — il doit juste correspondre à celui utilisé dans `--font-heading` / `--font-body`.
-
-Utilisables via les classes `font-heading` et `font-body`.
+- **Polices proposées** (`src/lib/font-catalogue.ts`, `FONT_CATALOGUE`) :
+  Montserrat, Open Sans, Inter, Roboto, Raleway, Source Sans 3, Nunito,
+  Work Sans, Lora. Paquets `@fontsource-variable/<id>` servis par le site
+  lui-même (jamais Google Fonts : pas d'adresse IP des visiteurs transmise),
+  fichier « variable » = toutes les graisses. Ajouter une police : `npm i
+  @fontsource-variable/<id>`, une entrée dans `FONT_CATALOGUE` et ses deux
+  imports dans `CATALOGUE_FILES` de `src/lib/fonts.ts`.
+- **Polices déposées** : `.woff2` (conseillé), `.woff`, `.ttf` ou `.otf`,
+  2 Mo max par fichier, un fichier par graisse ou un fichier variable.
+  Graisses employées par le site : 300, 400, 500 et 600 pour le texte, 600
+  pour les titres ; une graisse absente est imitée par le navigateur (rendu
+  moins net). Vérifiez la licence : elle doit autoriser l'usage sur le web.
+- Rendu : `src/lib/fonts.ts` produit au build les `@font-face` des **seules
+  polices choisies** + `--font-heading` / `--font-body` (`fontsCss`, injecté
+  dans `<head>` par les deux layouts, avec un `preload` du fichier
+  principal) ; les valeurs de `@theme` dans `global.css` ne sont qu'un repli
+  (`system-ui`).
 
 ## Logo
 

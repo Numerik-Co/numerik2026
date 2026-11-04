@@ -1,5 +1,5 @@
 /**
- * Réglages du site : couleurs, bouton « Adhérer », lien « Je participe »,
+ * Réglages du site : couleurs, polices, bouton « Adhérer », lien « Je participe »,
  * outils de partage, ouverture/fermeture des formulaires, plugins actifs.
  *
  * Les valeurs ci-dessous (`DEFAULTS`) sont celles du modèle. Chaque
@@ -16,6 +16,7 @@
 import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
 import raw from '../content/reglages.yaml?raw';
+import { catalogueFont, DEFAULT_FONTS, FONT_FILE_PATTERN, FONT_NAME_MAX, FONT_WEIGHTS, type FontRole, type FontWeight } from '../lib/font-catalogue';
 import { actifParDefaut, PLUGIN_IDS, resoudrePlugins, type PluginId } from '../plugins/catalogue';
 
 export interface FormToggle {
@@ -25,6 +26,17 @@ export interface FormToggle {
 	closedTitle: string;
 	/** Message affiché quand le formulaire est fermé. */
 	closedMessage: string;
+}
+
+/** Police déposée par l'association : fichiers de `src/content/polices/`, par graisse. */
+export interface UploadedFont {
+	nom: string;
+	fichiers: Partial<Record<FontWeight, string>>;
+}
+
+/** Polices du site : `titres` / `texte` = id d'une police proposée (`FONT_CATALOGUE`) ou `nom` d'une police déposée. */
+export interface SiteFonts extends Record<FontRole, string> {
+	deposees: UploadedFont[];
 }
 
 interface LinkToggle {
@@ -47,6 +59,12 @@ const DEFAULTS = {
 		accent: '#7cb93f',
 		stripe: ['#4b4a9e', '#2f7fc1', '#1fa39e', '#7cb93f', '#e8b830', '#e2792f'],
 	},
+
+	/**
+	 * Polices (`src/lib/font-catalogue.ts`, CSS produit par `src/lib/fonts.ts`
+	 * et injecté par les layouts). Défaut : polices proposées par le modèle.
+	 */
+	polices: { ...DEFAULT_FONTS, deposees: [] } as SiteFonts,
 
 	/**
 	 * Bouton d'appel à l'action affiché à droite de la barre de navigation.
@@ -140,6 +158,31 @@ const color = z
 	.string({ error: "couleur attendue, entre apostrophes (ex. '#2f7fc1')" })
 	.regex(COLOR_PATTERN, "couleur au format '#2f7fc1'");
 
+const fontFile = z.string({ error: 'nom de fichier attendu' }).regex(FONT_FILE_PATTERN, 'fichier de src/content/polices/ (ex. ma-police-400.woff2)');
+const uploadedFontSchema = z.strictObject({
+	nom: text.max(FONT_NAME_MAX, `${FONT_NAME_MAX} caractères au plus`),
+	fichiers: z
+		.strictObject(Object.fromEntries(FONT_WEIGHTS.map((w) => [w, fontFile])) as Record<FontWeight, typeof fontFile>)
+		.partial()
+		.refine((f) => Object.keys(f).length > 0, 'au moins un fichier'),
+});
+const fontsSchema = z
+	.strictObject({ titres: text, texte: text, deposees: z.array(uploadedFontSchema, { error: 'liste de polices attendue' }) })
+	.partial()
+	.superRefine((v, ctx) => {
+		const names = (v.deposees ?? []).map((d) => d.nom);
+		names.forEach((n, i) => {
+			if (names.indexOf(n) !== i) ctx.addIssue({ code: 'custom', path: ['deposees', i, 'nom'], message: `police « ${n} » déclarée deux fois` });
+			if (catalogueFont(n) || catalogueFont(n.toLowerCase())) ctx.addIssue({ code: 'custom', path: ['deposees', i, 'nom'], message: `« ${n} » est déjà une police proposée` });
+		});
+		for (const role of ['titres', 'texte'] as const) {
+			const value = v[role];
+			if (value !== undefined && !catalogueFont(value) && !names.includes(value)) {
+				ctx.addIssue({ code: 'custom', path: [role], message: `police inconnue « ${value} » (police proposée ou nom d'une police de « deposees »)` });
+			}
+		}
+	});
+
 const linkSchema = z.strictObject({ label: text, href: text, enabled: bool }).partial();
 const formSchema = z.strictObject({ enabled: bool, closedTitle: text, closedMessage: text }).partial();
 
@@ -154,6 +197,7 @@ const overridesSchema = z
 				stripe: z.array(color, { error: 'liste de couleurs attendue' }).min(1, 'au moins une couleur'),
 			})
 			.partial(),
+		polices: fontsSchema,
 		cta: linkSchema,
 		presence: linkSchema,
 		share: z.strictObject(Object.fromEntries(Object.keys(DEFAULTS.share).map((k) => [k, bool])) as Record<ShareKey, z.ZodBoolean>).partial(),
@@ -180,6 +224,7 @@ export function parseReglages(text: string) {
 	const o = result.data;
 	return {
 		colors: { ...DEFAULTS.colors, ...o.colors },
+		polices: { ...DEFAULTS.polices, ...o.polices } as SiteFonts,
 		cta: { ...DEFAULTS.cta, ...o.cta },
 		presence: { ...DEFAULTS.presence, ...o.presence },
 		share: { ...DEFAULTS.share, ...o.share },
