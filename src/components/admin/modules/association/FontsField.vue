@@ -159,13 +159,18 @@ function removeAdded(key: number) {
 					</button>
 				</div>
 				<p class="text-xs font-light text-gray-500">{{ r.help }}</p>
-				<p
-					class="truncate text-gray-900"
-					:class="r.role === 'titres' ? 'text-lg font-semibold' : 'text-sm'"
-					:style="{ fontFamily: family(draft[r.role]) }"
-				>
-					{{ r.role === 'titres' ? 'Le numérique, ensemble et pour tous' : 'Ateliers, accompagnement et prêt de matériel : bienvenue à toutes et à tous.' }}
-				</p>
+				<div class="rounded-lg border border-gray-200 bg-gray-50 px-3 pt-1.5 pb-2">
+					<p class="flex items-center gap-1.5 text-[0.65rem] font-medium uppercase tracking-wide text-gray-500">
+						<i class="fa-solid fa-eye" aria-hidden="true"></i>Aperçu · {{ labelOf(draft[r.role]) }}
+					</p>
+					<p
+						class="mt-0.5 text-gray-900"
+						:class="r.role === 'titres' ? 'text-lg font-semibold' : 'text-sm'"
+						:style="{ fontFamily: family(draft[r.role]) }"
+					>
+						{{ r.role === 'titres' ? 'Le numérique, ensemble et pour tous' : 'Ateliers, accompagnement et prêt de matériel : bienvenue à toutes et à tous.' }}
+					</p>
+				</div>
 				<p v-if="missingWeights(r.role).length" class="text-xs text-amber-800">
 					<i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>
 					Graisse{{ missingWeights(r.role).length > 1 ? 's' : '' }} {{ missingWeights(r.role).join(', ') }} absente{{ missingWeights(r.role).length > 1 ? 's' : '' }} de

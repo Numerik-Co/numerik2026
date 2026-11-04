@@ -23,42 +23,40 @@ const LEVELS = {
 </script>
 
 <template>
-	<div class="flex flex-wrap items-start gap-3 px-4 py-3">
-		<input
-			:id="`${props.id}-picker`"
-			type="color"
-			:value="valid ? fullHex(model) : '#000000'"
-			class="h-11 w-11 shrink-0 cursor-pointer rounded-lg border border-gray-300 bg-white p-0.5"
-			:aria-label="`${props.label} : nuancier`"
-			@input="model = ($event.target as HTMLInputElement).value"
-		/>
-		<div class="min-w-0 flex-1">
-			<div class="flex flex-wrap items-baseline gap-x-2">
-				<label :for="props.id" class="champ-libelle">{{ props.label }}</label>
-				<span class="text-xs font-light text-gray-500">{{ props.help }}</span>
-			</div>
-			<div class="mt-1 flex flex-wrap items-center gap-2">
-				<input
-					:id="props.id"
-					v-model.trim="model"
-					type="text"
-					maxlength="7"
-					spellcheck="false"
-					:class="[compactInputClass, 'w-28 font-mono', { 'champ-erreur': !valid }]"
-				/>
-				<span v-if="level" :class="['rounded-full px-2 py-0.5 text-xs', LEVELS[level].class]" :title="`Contraste ${ratio!.toFixed(1)}:1`">
-					{{ LEVELS[level].text }}
-				</span>
-				<span v-else class="text-xs text-red-700">Format attendu : #2f7fc1</span>
-				<button
-					v-if="model.toLowerCase() !== props.defaultValue.toLowerCase()"
-					type="button"
-					class="text-xs text-primary hover:underline"
-					@click="model = props.defaultValue"
-				>
-					couleur d'origine
-				</button>
-			</div>
+	<div class="px-4 py-3">
+		<div class="flex flex-wrap items-baseline gap-x-2">
+			<label :for="props.id" class="champ-libelle">{{ props.label }}</label>
+			<span class="text-xs font-light text-gray-500">{{ props.help }}</span>
+		</div>
+		<div class="mt-1 flex flex-wrap items-center gap-2">
+			<input
+				:id="`${props.id}-picker`"
+				type="color"
+				:value="valid ? fullHex(model) : '#000000'"
+				class="champ-couleur"
+				:aria-label="`${props.label} : nuancier`"
+				@input="model = ($event.target as HTMLInputElement).value"
+			/>
+			<input
+				:id="props.id"
+				v-model.trim="model"
+				type="text"
+				maxlength="7"
+				spellcheck="false"
+				:class="[compactInputClass, 'w-28 font-mono', { 'champ-erreur': !valid }]"
+			/>
+			<span v-if="level" :class="['rounded-full px-2 py-0.5 text-xs', LEVELS[level].class]" :title="`Contraste ${ratio!.toFixed(1)}:1`">
+				{{ LEVELS[level].text }}
+			</span>
+			<span v-else class="text-xs text-red-700">Format attendu : #2f7fc1</span>
+			<button
+				v-if="model.toLowerCase() !== props.defaultValue.toLowerCase()"
+				type="button"
+				class="text-xs text-primary hover:underline"
+				@click="model = props.defaultValue"
+			>
+				couleur d'origine
+			</button>
 		</div>
 	</div>
 </template>

@@ -172,7 +172,7 @@ export function semaineHtml(lundi: string, tous: RdvAdmin[]): string {
 		<h1>${echapper(rdvConfig.textes.nom)}<span class="semaine-du">Semaine ${echapper(periode(lundi, dernier))}</span></h1>
 		<div class="total">${total} rendez-vous</div>
 	</div>
-	<div class="bande">${site.colors.stripe.map((c) => `<span style="background: ${c}"></span>`).join('')}</div>
+	${site.colors.stripeEnabled ? `<div class="bande">${site.colors.stripe.map((c) => `<span style="background: ${c}"></span>`).join('')}</div>` : ''}
 	${corps}
 	<div class="pied">Édité le ${echapper(edite)} · document interne, contient des données personnelles</div>
 </body>

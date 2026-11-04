@@ -58,6 +58,8 @@ const DEFAULTS = {
 		secondary: '#1fa39e',
 		accent: '#7cb93f',
 		stripe: ['#4b4a9e', '#2f7fc1', '#1fa39e', '#7cb93f', '#e8b830', '#e2792f'],
+		/** `false` = pas de bande de couleurs (en-tête, PDF des RDV). */
+		stripeEnabled: true,
 	},
 
 	/**
@@ -195,6 +197,7 @@ const overridesSchema = z
 				secondary: color,
 				accent: color,
 				stripe: z.array(color, { error: 'liste de couleurs attendue' }).min(1, 'au moins une couleur'),
+				stripeEnabled: bool,
 			})
 			.partial(),
 		polices: fontsSchema,

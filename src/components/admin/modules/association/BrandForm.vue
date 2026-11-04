@@ -38,6 +38,8 @@ const error = ref('');
 const colors = ref({ primary: '', secondary: '', accent: '' });
 let nextId = 0;
 const stripe = ref<{ id: number; value: string }[]>([]);
+/** Bande affichée (en-tête, PDF des RDV) ; ses couleurs sont gardées quand elle est désactivée. */
+const stripeEnabled = ref(true);
 const stripeValues = computed(() => stripe.value.map((s) => s.value));
 
 /** Polices en cours de saisie (`FontsField`). */
@@ -58,6 +60,7 @@ const fontFamily = (value: string) => (source.value ? previewFamily(value, sourc
 function setColors(c: ThemeColors) {
 	colors.value = { primary: c.primary, secondary: c.secondary, accent: c.accent };
 	stripe.value = c.stripe.map((value) => ({ id: nextId++, value }));
+	stripeEnabled.value = c.stripeEnabled;
 }
 
 /** Fichier choisi (pas encore envoyé) et son aperçu local. */
@@ -93,8 +96,14 @@ const savedColors = computed(() => source.value?.colors);
 const colorsChanged = computed(
 	() =>
 		!!savedColors.value &&
-		JSON.stringify({ ...colors.value, stripe: stripeValues.value }) !==
-			JSON.stringify({ primary: savedColors.value.primary, secondary: savedColors.value.secondary, accent: savedColors.value.accent, stripe: savedColors.value.stripe }),
+		JSON.stringify({ ...colors.value, stripe: stripeValues.value, stripeEnabled: stripeEnabled.value }) !==
+			JSON.stringify({
+				primary: savedColors.value.primary,
+				secondary: savedColors.value.secondary,
+				accent: savedColors.value.accent,
+				stripe: savedColors.value.stripe,
+				stripeEnabled: savedColors.value.stripeEnabled,
+			}),
 );
 const changed = computed(() => colorsChanged.value || fontsChanged.value || !!logo.value || !!favicon.value);
 watch(changed, (value) => emit('dirty', value), { immediate: true });
@@ -160,7 +169,7 @@ async function submit(event: Event) {
 		rememberOpenModule('association');
 		const result = await brandApi.update(
 			{
-				colors: { ...colors.value, stripe: stripeValues.value },
+				colors: { ...colors.value, stripe: stripeValues.value, stripeEnabled: stripeEnabled.value },
 				fonts: {
 					titres: fonts.value.titres,
 					texte: fonts.value.texte,
@@ -247,7 +256,7 @@ onBeforeUnmount(() => {
 						>Adhérer</span
 					>
 				</div>
-				<div class="flex h-1.5">
+				<div v-if="stripeEnabled" class="flex h-1.5">
 					<span v-for="s in stripe" :key="s.id" class="flex-1" :style="{ backgroundColor: shown(s.value, '#ffffff') }"></span>
 				</div>
 				<div class="space-y-2 px-4 py-4 text-sm text-gray-700">
@@ -296,8 +305,20 @@ onBeforeUnmount(() => {
 				<i class="fa-solid fa-grip-lines text-gray-400" aria-hidden="true"></i>
 				<span class="font-heading font-semibold text-gray-900">Bande de couleurs</span>
 				<span class="text-xs text-gray-500">sous l'en-tête, de gauche à droite</span>
+				<label class="ml-auto flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+					<input v-model="stripeEnabled" type="checkbox" class="peer sr-only" />
+					<span
+						class="relative h-5 w-9 rounded-full bg-gray-300 transition-colors peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40 after:absolute after:top-0.5 after:left-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-4"
+						aria-hidden="true"
+					></span>
+					{{ stripeEnabled ? 'Affichée' : 'Masquée' }}
+				</label>
 			</header>
+			<p v-if="!stripeEnabled" class="px-4 py-3 text-sm font-light text-gray-500">
+				Pas de bande de couleurs sur le site. Ses couleurs sont gardées : réactivez-la pour les retrouver.
+			</p>
 			<VueDraggable
+				v-show="stripeEnabled"
 				v-bind="sortableProps"
 				v-model="stripe"
 				tag="ul"
@@ -308,7 +329,7 @@ onBeforeUnmount(() => {
 					<input
 						type="color"
 						:value="shown(s.value, '#000000')"
-						class="h-8 w-8 shrink-0 cursor-pointer rounded-md border border-gray-300 bg-white p-0.5"
+						class="champ-couleur"
 						:aria-label="`Couleur ${i + 1} de la bande : nuancier`"
 						@input="s.value = ($event.target as HTMLInputElement).value"
 					/>
@@ -335,7 +356,7 @@ onBeforeUnmount(() => {
 					</span>
 				</li>
 			</VueDraggable>
-			<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 px-4 py-2.5">
+			<div v-show="stripeEnabled" class="flex flex-wrap items-center gap-3 border-t border-gray-100 px-4 py-2.5">
 				<button
 					type="button"
 					class="text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"

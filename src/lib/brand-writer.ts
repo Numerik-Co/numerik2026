@@ -225,6 +225,9 @@ function setColors(doc: Document, colors: ThemeColors): void {
 		if (isScalar(node)) node.value = colors[key];
 		else map.set(key, quoted(colors[key]));
 	}
+	// Activée = valeur par défaut : la clé n'est écrite que pour la désactiver.
+	if (colors.stripeEnabled) map.delete('stripeEnabled');
+	else map.set('stripeEnabled', false);
 	const current = map.get('stripe', true);
 	const seq = doc.createNode(colors.stripe.map(quoted), { flow: true });
 	if (isSeq(current) && isSeq(seq)) {
@@ -491,6 +494,7 @@ export function readBrandInput(raw: unknown): BrandInput | { error: string } {
 			secondary: color(c.secondary),
 			accent: color(c.accent),
 			stripe: Array.isArray(c.stripe) ? c.stripe.map(color) : [],
+			stripeEnabled: c.stripeEnabled !== false,
 		},
 		logo,
 		favicon,

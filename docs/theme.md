@@ -21,6 +21,7 @@ colors:
   secondary: '#1fa39e'
   accent: '#7cb93f'
   stripe: ['#4b4a9e', '#2f7fc1', '#1fa39e', '#7cb93f', '#e8b830', '#e2792f']  # bande sous l'en-tête
+  stripeEnabled: false  # facultatif : pas de bande (en-tête, PDF des RDV) ; absent = affichée
 ```
 
 Les layouts injectent ces valeurs dans `<head>` (`themeCss`,

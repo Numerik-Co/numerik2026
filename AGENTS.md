@@ -386,7 +386,8 @@ service = l'y ajouter). Détail : [docs/referencement.md](docs/referencement.md)
 
 `src/styles/forms.css` (importé par `global.css`, couche `components`) :
 `champ` (input, select, textarea ; taille « sm » façon Bootstrap, ~30 px,
-`--champ-py`), `champ-erreur`, `champ-groupe` (préfixe + champ),
+`--champ-py`), `champ-erreur`, `champ-groupe` (préfixe + champ), `champ-couleur`
+(nuancier carré, sans rembourrage du navigateur),
 `champ-libelle`, `champ-aide`, `champ-erreur-texte` (sous un champ),
 `message-erreur` (groupe, étape), encarts `alerte-erreur` / `alerte-succes` /
 `alerte-attention`, boutons `bouton` + `bouton-primaire` / `-accent` /

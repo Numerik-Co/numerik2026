@@ -713,6 +713,8 @@ sont conservés, il reste modifiable à la main.
   ou **peu lisible**. « couleur d'origine » remet celle du modèle.
 - **Bande de couleurs** (sous l'en-tête) : 1 à 12 couleurs, à réordonner
   (glisser-déposer ou flèches), ajouter, retirer ; « bande d'origine ».
+  L'interrupteur **Affichée / Masquée** de la section la retire du site (et
+  du PDF des rendez-vous) ; ses couleurs sont gardées pour la réactiver.
 - **Polices** : une pour les **titres**, une pour le **texte**, choisies
   dans la liste des **polices proposées** (Montserrat, Open Sans, Inter,
   Roboto, Raleway, Source Sans 3, Nunito, Work Sans, Lora ; par défaut

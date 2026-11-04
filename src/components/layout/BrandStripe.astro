@@ -1,12 +1,17 @@
 ---
 import { site } from '../../config/site';
 
-// Bande de couleurs sous l'en-tête : `colors.stripe` de src/content/reglages.yaml.
+// Bande de couleurs sous l'en-tête : `colors.stripe` de src/content/reglages.yaml,
+// absente si `colors.stripeEnabled: false`.
 const colors = site.colors.stripe;
 ---
 
-<div class="flex h-1" aria-hidden="true">
-	{colors.map((color) => (
-		<div class="flex-1" style={`background-color: ${color};`}></div>
-	))}
-</div>
+{
+	site.colors.stripeEnabled && (
+		<div class="flex h-1" aria-hidden="true">
+			{colors.map((color) => (
+				<div class="flex-1" style={`background-color: ${color};`} />
+			))}
+		</div>
+	)
+}
