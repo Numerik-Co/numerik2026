@@ -283,12 +283,11 @@ onBeforeUnmount(() => {
 					<button
 						type="button"
 						role="menuitem"
-						class="flex items-center gap-2 rounded px-3 py-1.5 hover:bg-white/10"
-						:class="importOpen ? 'bg-white/15' : ''"
+						class="flex items-center gap-2 rounded bg-primary px-3 py-1.5 font-medium text-white hover:bg-primary/80"
 						title="Créer une actualité, une page ou une activité à partir d'un fichier .md"
 						@click="openImport"
 					>
-						<i class="fa-solid fa-file-import w-4 text-center text-gray-300" aria-hidden="true"></i>
+						<i class="fa-solid fa-file-import w-4 text-center" aria-hidden="true"></i>
 						Ajouter un fichier .md
 					</button>
 					<div class="my-1 border-l border-white/15" aria-hidden="true"></div>
