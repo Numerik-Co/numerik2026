@@ -95,14 +95,23 @@ const pad = (n) => String(n).padStart(2, '0');
 function horodatage(d = new Date()) {
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}h${pad(d.getMinutes())}`;
 }
-const motifPropre = (motif) =>
-	String(motif ?? '')
+const slug = (texte, max) =>
+	String(texte ?? '')
 		.normalize('NFD')
 		.replace(/[̀-ͯ]/g, '')
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '')
-		.slice(0, 40);
+		.slice(0, max)
+		.replace(/-+$/, '');
+const motifPropre = (motif) => slug(motif, 40);
+
+/**
+ * Fichiers de `src/content/` fournis par le modèle (guide de l'éditeur) :
+ * jamais sauvegardés, jamais remplacés ni effacés par une restauration
+ * (une archive ancienne ramènerait une version périmée).
+ */
+const FICHIERS_DU_MODELE = new Set(['README.md']);
 
 // --- Création -----------------------------------------------------------------
 
@@ -116,6 +125,7 @@ export function creerSauvegarde({ root = racineSite(), dataDir = dossierDonnees(
 	const files = {};
 	const ajouter = (base, prefix) => {
 		for (const rel of fichiersDe(base)) {
+			if (prefix === 'src/content' && FICHIERS_DU_MODELE.has(rel)) continue;
 			const data = readFileSync(join(base, rel));
 			files[`${prefix}/${rel}`] = [data, { level: DEJA_COMPRESSE.test(rel) ? 0 : 6 }];
 		}
@@ -218,7 +228,8 @@ export async function deposerSauvegarde(zip, nomPropose, dataDir = dossierDonnee
 	verifierArchive(zip);
 	const dossier = dossierSauvegardes(dataDir);
 	await mkdir(dossier, { recursive: true });
-	const base = motifPropre(String(nomPropose ?? '').replace(/\.zip$/i, '')) || `sauvegarde-deposee-${horodatage()}`;
+	// Nom d'origine gardé en entier (avec son motif), dans la limite de NOM_SAUVEGARDE.
+	const base = slug(String(nomPropose ?? '').replace(/\.zip$/i, ''), 90) || `sauvegarde-deposee-${horodatage()}`;
 	let nom = `${base}.zip`;
 	for (let n = 2; existsSync(join(dossier, nom)); n++) nom = `${base}-${n}.zip`;
 	await writeFile(join(dossier, nom), zip);
@@ -254,19 +265,20 @@ export function verifierArchive(zip) {
 			throw new Error(`Chemin refusé dans l'archive : ${name}`);
 		}
 		if (!autorises.some((a) => name.startsWith(a))) throw new Error(`Fichier inattendu dans l'archive : ${name}`);
+		if (name.startsWith('src/content/') && FICHIERS_DU_MODELE.has(name.slice('src/content/'.length))) continue;
 		fichiers[name] = data;
 	}
 	return { manifeste, fichiers };
 }
 
-/** Vide un dossier sans le supprimer (point de montage Docker). */
-function viderDossier(dir) {
+/** Vide un dossier sans le supprimer (point de montage Docker), sauf `garder`. */
+function viderDossier(dir, garder = new Set()) {
 	mkdirSync(dir, { recursive: true });
-	for (const entry of readdirSync(dir)) rmSync(join(dir, entry), { recursive: true, force: true });
+	for (const entry of readdirSync(dir)) if (!garder.has(entry)) rmSync(join(dir, entry), { recursive: true, force: true });
 }
 
 function ecrire(root, dataDir, fichiers) {
-	viderDossier(join(root, 'src', 'content'));
+	viderDossier(join(root, 'src', 'content'), FICHIERS_DU_MODELE);
 	for (const d of DONNEES) viderDossier(join(dataDir, d));
 	for (const [name, data] of Object.entries(fichiers)) {
 		const cible = name.startsWith('data/') ? join(dataDir, name.slice('data/'.length)) : join(root, name);

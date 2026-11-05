@@ -216,8 +216,9 @@ const taille = (n: number) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)
 				<p class="mt-1">
 					Tout le contenu du site, les comptes et le journal de l'Espace Admin seront <strong>remplacés</strong> par ceux de
 					l'archive ({{ s.association }}, {{ dateFr(s.date) }}), puis le site sera republié. L'état actuel est d'abord
-					sauvegardé (« avant-restauration ») : vous pourrez y revenir. Si votre compte n'existe pas dans l'archive, vous serez
-					déconnecté·e.
+					sauvegardé (« avant-restauration », qui apparaîtra dans la liste) : vous pourrez y revenir. Les comptes étant ceux de
+					l'archive, vous serez <strong>déconnecté·e</strong> si votre compte n'y existe pas ou si son mot de passe y est
+					différent : reconnectez-vous avec le mot de passe de l'archive.
 				</p>
 				<div class="mt-3 flex flex-wrap gap-3">
 					<button type="button" class="bouton bouton-danger" :disabled="locked" @click="restore(s)">

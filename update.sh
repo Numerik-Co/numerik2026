@@ -84,7 +84,9 @@ fi
 MOTIF_SAUVEGARDE="avant mise à jour"
 sauvegarde_faite=0
 if [ "$sauvegarde" = 1 ] && [ -n "$(docker compose ps -q web 2>/dev/null)" ] \
-  && docker compose exec -T web test -f scripts/sauvegarde.mjs 2>/dev/null; then
+  && docker compose exec -T web grep -q -- '--garder' scripts/sauvegarde.mjs 2>/dev/null; then
+  # Outil du conteneur en ligne (≥ 0.5.4 : connaît --garder ; celui de la
+  # 0.5.3 prendrait « --garder 5 » pour le motif) ; sinon : par l'image visée.
   etape "Sauvegarde du contenu, des comptes et du journal (data/sauvegardes/)"
   docker compose exec -T web node scripts/sauvegarde.mjs creer "$MOTIF_SAUVEGARDE" --garder 5 \
     || echec "sauvegarde impossible : rien n'a été mis à jour (--sans-sauvegarde pour passer outre)."

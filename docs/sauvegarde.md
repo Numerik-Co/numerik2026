@@ -10,7 +10,7 @@ serveur, nouveau serveur, retour en arrière après une erreur).
 | --- | --- |
 | `src/content/` : pages, actualités, activités, annonces, images, polices, réglages (`*.yaml`) | `.env` (secrets : `AUTH_SECRET`, clés Grist…) — à garder à part |
 | `data/accounts/` : comptes de l'Espace Admin | `data/publication/` (état des publications) |
-| `data/journal/` : journal des modifications | les sauvegardes elles-mêmes, le code du modèle |
+| `data/journal/` : journal des modifications | les sauvegardes elles-mêmes, le code du modèle (dont `src/content/README.md`, jamais remplacé par une restauration) |
 
 Chaque archive porte un fichier `sauvegarde.json` : date, version du modèle,
 nom de l'association, motif, auteur·rice. Les archives sont rangées sur le
@@ -38,8 +38,12 @@ Super admin seul :
   (`…-avant-restauration.zip`) ; si la reconstruction échoue, il est remis
   automatiquement. Indisponible pendant une publication ou tant que des
   modifications « enregistrées sans publier » attendent (les publier ou les
-  annuler avant). Si votre compte n'existe pas dans l'archive, vous êtes
-  déconnecté·e après la restauration.
+  annuler avant). Les comptes devenant ceux de l'archive, vous êtes
+  **déconnecté·e** si votre compte n'y existe pas ou si son mot de passe y
+  est différent (cas typique : archive du serveur restaurée sur un poste de
+  développement) : se reconnecter avec le mot de passe de l'archive. La
+  sauvegarde `…-avant-restauration.zip` apparaît ensuite dans la liste : la
+  supprimer une fois le résultat vérifié.
 
 Dépôt d'une grosse archive : derrière nginx, la limite d'envoi
 (`client_max_body_size`) peut refuser le fichier (erreur 413). La relever,
@@ -108,6 +112,8 @@ En ligne de commande, la même rotation : `./sauvegarde.sh "motif" --garder 5`.
   `numerik-sauvegarde`) et `src/content/association.yaml`, et seulement des
   fichiers sous `src/content/`, `data/accounts/`, `data/journal/` (aucun
   chemin en `..`). Taille maximale : 500 Mo.
+- Archive déposée : nom d'origine gardé (motif compris), `-2`, `-3`… si
+  le nom existe déjà.
 - Les dossiers sont vidés puis remplis (jamais renommés : ce sont des
   volumes sous Docker).
 - Journal : `sauvegarde.creation`, `sauvegarde.depot`,
