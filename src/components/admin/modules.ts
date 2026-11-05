@@ -54,14 +54,6 @@ export const ADMIN_MODULES: AdminModule[] = [
 		component: defineAsyncComponent(() => import('./modules/PagesModule.vue')),
 	},
 	{
-		id: 'actualites',
-		label: 'Actualités',
-		icon: 'fa-newspaper',
-		groups: ['redacteur'],
-		menu: 'contenu',
-		component: defineAsyncComponent(() => import('./modules/NewsModule.vue')),
-	},
-	{
 		id: 'pages-site',
 		label: 'Pages',
 		icon: 'fa-sitemap',
@@ -76,6 +68,22 @@ export const ADMIN_MODULES: AdminModule[] = [
 		groups: ['redacteur'],
 		menu: 'contenu',
 		component: defineAsyncComponent(() => import('./modules/ActivitiesModule.vue')),
+	},
+	{
+		id: 'actualites',
+		label: 'Actualités',
+		icon: 'fa-newspaper',
+		groups: ['redacteur'],
+		menu: 'contenu',
+		component: defineAsyncComponent(() => import('./modules/NewsModule.vue')),
+	},
+	{
+		id: 'annonces',
+		label: 'Annonces',
+		icon: 'fa-bullhorn',
+		groups: ['redacteur'],
+		menu: 'contenu',
+		component: defineAsyncComponent(() => import('./modules/AnnoncesModule.vue')),
 	},
 	{
 		id: 'rendez-vous',

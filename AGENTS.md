@@ -207,7 +207,7 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
   (`/api/admin/comptes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
-  `/api/admin/publication`, `/api/admin/activites`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
+  `/api/admin/publication`, `/api/admin/activites`, `/api/admin/annonces`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/liens`, `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal` et `/api/admin/plugins` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
@@ -235,7 +235,7 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
   actualiser ») puis rechargement de la page, module rouvert
   (`reopenAfterReload` → `takeModuleToReopen` dans `AdminRoot`) ; page en
   404 (supprimée, déplacée) → `status.href` ou l'accueil.
-- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Actualités**, **Pages**, **Activités**, **Association** (bureau), Comptes, Journal et **Plugins** (`exclusive`,
+- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Pages**, **Activités**, **Actualités**, **Annonces**, **Association** (bureau), Comptes, Journal et **Plugins** (`exclusive`,
   `superadmin` seul ; Plugins : `PluginsModule.vue`, `src/lib/plugin-writer.ts`
   écrit `plugins.<id>` de `reglages.yaml` en place puis publie, activation
   refusée si un fichier `requis` du catalogue manque, `env` absentes
@@ -256,7 +256,7 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
   plus le changement de mot de passe : `PasswordModule.vue` intégré, aussi
   modale du mot de passe provisoire) est rangé (`placement: 'user'`) avec Déconnexion dans le menu déroulant
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
-  Actualités, Pages et Activités sont regroupées sous **Contenus ▾** (`menu: 'contenu'`,
+  Pages, Activités, Actualités et Annonces (dans cet ordre, celui du registre) sont regroupées sous **Contenus ▾** (`menu: 'contenu'`,
   `ADMIN_MENUS` / `barEntries()` dans `modules.ts`, sous-liens côte à côte ;
   un seul module visible du menu = bouton direct).
 
@@ -367,7 +367,15 @@ contenu hors de `src/content/`.**
   `public/` est vide : n'y rien mettre de propre à une asso.
 - `annonces` — `src/content/annonces.yaml` (loader `file()`, liste avec
   `id`) ; `position` ajoutée par le parser du loader pour garder l'ordre du
-  fichier. `src/lib/annonces.ts` : `getAnnonces()` (async). Détail :
+  fichier. `src/lib/annonces.ts` : `getAnnonces()` (async). Règles
+  partagées build / admin : `src/lib/annonce-schema.ts` (zod) et
+  `src/lib/annonce-options.ts` (couleurs, icônes, longueurs, sans zod, pour
+  l'îlot). **Module « Annonces »** (`redacteur`, menu Contenus) :
+  `AnnoncesModule.vue` + `modules/annonces/AnnonceForm.vue` (aperçu de la
+  bannière), `src/lib/annonce-writer.ts` (YAML modifié en place, textes entre
+  guillemets doubles, liste revalidée, `id` déduit du titre et fixé à la
+  création, fichier d'origine réécrit si le build échoue), routes
+  `/api/admin/annonces*` (`ordre` = ordre de défilement). Détail :
   [docs/annonces.md](docs/annonces.md).
 
 ## Référencement (SEO)

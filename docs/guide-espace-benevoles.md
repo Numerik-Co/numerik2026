@@ -218,7 +218,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
   (ex. « Production v0.2.0 »), visible du bureau seulement.
 - Chaque bouton ouvre un **module** dans un **panneau à droite**, par-dessus
   la page (plein écran sur téléphone, où seules les icônes s'affichent).
-- **Contenus ▾** regroupe **Actualités**, **Pages** et **Activités** : un
+- **Contenus ▾** regroupe **Pages**, **Activités**, **Actualités** et **Annonces** : un
   clic les affiche côte à côte, juste en dessous (fermé par un clic ailleurs
   ou **Échap**). Avec le droit d'en voir un seul, il a son propre bouton.
 - Premier bouton de **Contenus ▾** : **Ajouter un contenu**. Une
@@ -245,9 +245,10 @@ Les modules visibles dépendent de votre groupe :
 | Module | Super admin | Bureau (`admin`) | Rédacteur·rice | Animateur·rice |
 | :--- | :---: | :---: | :---: | :---: |
 | Pages réservées | — | — | — | ✅ |
-| Actualités | ✅ | ✅ | ✅ | — |
 | Pages | ✅ | ✅ | ✅ | — |
 | Activités | ✅ | ✅ | ✅ | — |
+| Actualités | ✅ | ✅ | ✅ | — |
+| Annonces | ✅ | ✅ | ✅ | — |
 | Rendez-vous (si le plugin `rdv` est actif) | ✅ | ✅ | — | ✅ |
 | Association | ✅ | ✅ | — | — |
 | Comptes | ✅ | ✅ | — | — |
@@ -667,6 +668,26 @@ a sa carte sur l'accueil et sur la page Activités, et sa propre page
 
 Une fiche dont la catégorie a disparu (fichier modifié à la main) est
 signalée en rouge en haut du module : ouvrez-la et choisissez-en une autre.
+
+### Gérer les annonces
+
+Les **annonces** s'affichent dans une bannière au-dessus du menu, sur toutes
+les pages, entre deux dates (assemblée générale, fermeture, recherche de
+bénévoles…). Module **Annonces** du menu **Contenus ▾**.
+
+- La liste suit l'**ordre de défilement** de la bannière, avec l'état de
+  chaque annonce : **en ligne**, **à venir**, **terminée** ou **brouillon**.
+  Poignée ⠿ ou flèches ↑/↓ pour changer l'ordre, puis enregistrer.
+- **Nouvelle annonce** (ou le crayon pour modifier) : titre, message (une à
+  deux phrases), dates d'affichage (la fin est incluse), couleur de la
+  bannière (principale, accent, urgent), icône, lien facultatif (texte **et**
+  adresse ; « Choisir une page du site » remplit l'adresse). Un aperçu de la
+  bannière suit la saisie. **Annonce active** décochée = brouillon, jamais
+  affiché.
+- Une annonce terminée ne s'affiche plus d'elle-même : la supprimer n'est
+  pas obligatoire.
+- Un visiteur qui a fermé la bannière ne la revoit pas pendant sa visite ;
+  une modification ne la lui réaffiche pas.
 
 ### Informations de l'association (bureau)
 

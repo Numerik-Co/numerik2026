@@ -17,6 +17,7 @@ import { validateBloc, type Bloc } from './lib/blocs';
 import { validateHomeModules } from './lib/home-modules';
 import { SITE_PAGE_IDS, SITE_PAGES, sitePageTextNames } from './lib/site-pages';
 import { categories } from './lib/categories';
+import { annonceFields, END_AFTER_START, endAfterStart } from './lib/annonce-schema';
 
 /**
  * Actualités : un dossier par article, `src/content/news/<AAAA-MM-JJ-slug>/`
@@ -213,8 +214,6 @@ const activites = defineCollection({
  * `position` (rang dans le fichier, ajouté à la lecture) conserve l'ordre de
  * rotation voulu par l'éditeur : `getCollection()` ne le garantit pas.
  */
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format attendu : "AAAA-MM-JJ".');
-
 const annonces = defineCollection({
 	loader: file('./src/content/annonces.yaml', {
 		parser: (text) => {
@@ -222,24 +221,8 @@ const annonces = defineCollection({
 			return Array.isArray(list) ? list.map((entry, position) => ({ ...entry, position })) : list;
 		},
 	}),
-	schema: z
-		.object({
-			id: z.string().min(1),
-			title: z.string().min(1),
-			message: z.string().min(1),
-			startDate: date,
-			/** Dernier jour d'affichage, inclus. */
-			endDate: date,
-			tone: z.enum(['info', 'accent', 'urgent']).default('info'),
-			/** Icône Font Awesome (solid). */
-			icon: z.string().default('fa-bullhorn'),
-			ctaLabel: z.string().optional(),
-			ctaHref: z.string().optional(),
-			/** `false` = brouillon, jamais affiché. */
-			active: z.boolean().default(true),
-			position: z.number(),
-		})
-		.refine((a) => a.endDate >= a.startDate, { message: '`endDate` doit être postérieure ou égale à `startDate`.' }),
+	// Règles partagées avec le module « Annonces » (src/lib/annonce-schema.ts).
+	schema: annonceFields.extend({ position: z.number() }).refine(endAfterStart, { message: END_AFTER_START }),
 });
 
 export const collections = { news, pages, pageGroups, sitePages, activites, annonces };

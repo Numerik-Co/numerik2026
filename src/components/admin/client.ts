@@ -427,6 +427,31 @@ export const activityCategoriesApi = {
 		request<SaveResult>('DELETE', saveUrl(`/api/admin/activites/categories/${slug}`, options), { confirm: slug }),
 };
 
+/** Annonce de la bannière, telle qu'écrite dans `src/content/annonces.yaml` (cf. src/lib/annonce-schema.ts). */
+export interface AnnonceItem {
+	id: string;
+	title: string;
+	message: string;
+	startDate: string;
+	endDate: string;
+	tone: 'info' | 'accent' | 'urgent';
+	icon: string;
+	ctaLabel?: string;
+	ctaHref?: string;
+	active: boolean;
+}
+export type AnnonceInput = Omit<AnnonceItem, 'id' | 'ctaLabel' | 'ctaHref'> & { ctaLabel: string; ctaHref: string };
+
+export const annoncesApi = {
+	list: () =>
+		request<{ annonces: AnnonceItem[]; status: PublishStatus; availability: { ok: boolean; reason?: string } }>('GET', '/api/admin/annonces'),
+	create: (annonce: AnnonceInput, options?: SaveOptions) => request<SaveResult>('POST', saveUrl('/api/admin/annonces', options), { annonce }),
+	update: (id: string, annonce: AnnonceInput, options?: SaveOptions) =>
+		request<SaveResult>('PUT', saveUrl(`/api/admin/annonces/${id}`, options), { annonce }),
+	remove: (id: string, options?: SaveOptions) => request<SaveResult>('DELETE', saveUrl(`/api/admin/annonces/${id}`, options), { confirm: id }),
+	saveOrder: (order: string[], options?: SaveOptions) => request<SaveResult>('PUT', saveUrl('/api/admin/annonces/ordre', options), { order }),
+};
+
 /** Modifications enregistrées sans publier (lot en attente). */
 export const lotApi = {
 	list: () => request<{ changes: LotChange[] }>('GET', '/api/admin/publication/lot'),

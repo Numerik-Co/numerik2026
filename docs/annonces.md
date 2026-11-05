@@ -15,6 +15,12 @@ assemblée générale à venir, recherche de bénévoles, fermeture exceptionnel
   de la souris et pendant la navigation au clavier, et est désactivée si le
   visiteur a demandé « animations réduites » dans son système.
 
+Les annonces se gèrent depuis l'**Espace Admin** (menu **Contenus ▾ →
+Annonces**, rédacteur·rice·s et bureau ; voir le
+[guide](guide-espace-benevoles.md#gérer-les-annonces)) ou à la main, dans le
+fichier décrit ci-dessous. Le module écrit dans ce même fichier (en gardant
+ses commentaires) puis republie le site.
+
 Toutes les annonces sont regroupées dans **un seul fichier** :
 `src/content/annonces.yaml`. Aucune base de données, aucun dossier à créer.
 

@@ -158,6 +158,7 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `GET/DELETE /api/admin/publication` | État de la dernière publication / fermeture définitive de son encadré (journalisée) — `redacteur` |
 | `GET/POST/DELETE /api/admin/publication/lot` | Modifications enregistrées sans publier : liste / publication de tout le lot en une reconstruction / annulation `{ confirm: true }` (sources remises en l'état, journalisée), cf. [publication.md](publication.md#enregistrer-sans-publier-lot-de-modifications) — `redacteur` |
 | `GET /api/admin/journal` | Journal des modifications, `?annee=AAAA` — `superadmin` seul |
+| `GET/POST /api/admin/annonces`, `PUT/DELETE /api/admin/annonces/<id>`, `PUT /api/admin/annonces/ordre` | Annonces de la bannière (`src/content/annonces.yaml`), ordre de défilement, cf. [annonces.md](annonces.md) — `redacteur` |
 | `GET/POST /api/admin/activites`, `GET/PUT/DELETE /api/admin/activites/<slug>`, `PUT /api/admin/activites/ordre`, `POST /api/admin/activites/categories`, `PUT/DELETE /api/admin/activites/categories/<slug>` | Fiches d'activité et catégories (sources), ordre des catégories et des fiches, cf. [activites.md](activites.md#module-activités-espace-admin) — `redacteur` |
 | `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>` | Pages de contenu (sources), cf. [pages.md](pages.md#module-pages-espace-admin) — `redacteur` |
 | `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>` | Menus déroulants (`_group.md`) — `redacteur` |
