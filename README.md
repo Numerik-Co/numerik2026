@@ -31,6 +31,7 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 | Afficher une annonce temporaire dans la bannière du site (AG, appel à bénévoles...) | [docs/annonces.md](docs/annonces.md) |
 | Créer ou modifier une page (ex: une nouvelle rubrique) | [docs/pages.md](docs/pages.md) |
 | Rédiger une page éditoriale et la placer dans le menu (guide éditeur) | [src/content/README.md](src/content/README.md) |
+| Sauvegarder / restaurer le contenu, les comptes et le journal d'un site (ZIP) | [docs/sauvegarde.md](docs/sauvegarde.md) |
 | Changer les couleurs, les polices ou le logo | [docs/theme.md](docs/theme.md) |
 | Savoir quels composants réutiliser (boutons, cartes, sections...) | [docs/composants.md](docs/composants.md) |
 | Modifier les liens du menu ou du pied de page | [docs/navigation.md](docs/navigation.md) |

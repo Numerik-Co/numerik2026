@@ -101,6 +101,13 @@ export const ADMIN_MODULES: AdminModule[] = [
 		component: defineAsyncComponent(() => import('./modules/AssociationModule.vue')),
 	},
 	{
+		id: 'sauvegardes',
+		label: 'Sauvegardes',
+		icon: 'fa-box-archive',
+		groups: ['admin'],
+		component: defineAsyncComponent(() => import('./modules/SauvegardesModule.vue')),
+	},
+	{
 		id: 'comptes',
 		label: 'Comptes',
 		icon: 'fa-users',

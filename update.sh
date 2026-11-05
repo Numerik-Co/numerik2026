@@ -13,7 +13,9 @@
 # tourne ; en cas d'échec, rien ne change. Puis bascule (quelques secondes),
 # vérification que le site répond, et retour à la version précédente sinon.
 # Docker : avant le téléchargement, les images du modèle autres que la version
-# en ligne (retour arrière) et la version visée sont supprimées.
+# en ligne (retour arrière) et la version visée sont supprimées ; après une
+# bascule réussie, sauvegarde.sh, restauration.sh et auth-user.sh sont
+# recopiés depuis l'image (commandes du serveur à jour).
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -143,6 +145,11 @@ docker compose up -d --no-build web
 etape "Vérification que le site répond"
 if repond; then
   docker compose logs --tail 20 web 2>&1 | grep "\[démarrage\]" || true
+  # Commandes du serveur livrées avec la version (sauvegarde, comptes) :
+  # recopiées depuis l'image, le dossier du site n'étant jamais mis à jour par git.
+  for f in sauvegarde.sh restauration.sh auth-user.sh; do
+    docker compose cp "web:/app/$f" "./$f" >/dev/null 2>&1 && chmod +x "./$f" || true
+  done
   echo "✓ Site en version $cible."
   exit 0
 fi

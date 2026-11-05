@@ -452,6 +452,40 @@ export const annoncesApi = {
 	saveOrder: (order: string[], options?: SaveOptions) => request<SaveResult>('PUT', saveUrl('/api/admin/annonces/ordre', options), { order }),
 };
 
+/** Archive de sauvegarde (`<DATA_DIR>/sauvegardes/`, cf. scripts/sauvegarde.mjs). */
+export interface SauvegardeItem {
+	nom: string;
+	taille: number;
+	date: string;
+	association: string | null;
+	modele: string | null;
+	motif: string;
+	par: string;
+	/** `false` = fichier ZIP qui n'est pas une sauvegarde du site. */
+	valide: boolean;
+}
+
+export const sauvegardesApi = {
+	list: () => request<{ sauvegardes: SauvegardeItem[]; restauration: string | null }>('GET', '/api/admin/sauvegardes'),
+	create: (motif: string) => request<{ ok: true; nom: string }>('POST', '/api/admin/sauvegardes', { motif }),
+	remove: (nom: string) => request<{ ok: true }>('DELETE', `/api/admin/sauvegardes/${nom}`, { confirm: nom }),
+	restore: (nom: string) => request<SaveResult>('POST', '/api/admin/sauvegardes/restauration', { nom, confirm: nom }),
+	/** Corps = le fichier ZIP tel quel (pas de JSON). */
+	upload: async (file: File) => {
+		const res = await fetch('/api/admin/sauvegardes/depot', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/zip', 'X-Nom-Fichier': encodeURIComponent(file.name) },
+			body: file,
+		});
+		const data = await res.json().catch(() => null);
+		if (!res.ok) {
+			const fallback = res.status === 413 ? "Archive trop volumineuse pour le serveur (erreur 413) : relever la limite (nginx : client_max_body_size) ou la restaurer en ligne de commande (./restauration.sh)." : `Erreur ${res.status}`;
+			throw new ApiError((data && data.error) || fallback, res.status);
+		}
+		return data as { ok: true; nom: string };
+	},
+};
+
 /** Modifications enregistrées sans publier (lot en attente). */
 export const lotApi = {
 	list: () => request<{ changes: LotChange[] }>('GET', '/api/admin/publication/lot'),

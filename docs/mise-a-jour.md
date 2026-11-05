@@ -23,7 +23,8 @@ d'`association.yaml` — par `npm install` / `npm ci` (`postinstall`) et par
 > **supprimerait** les fichiers de `src/content/` qui étaient suivis. Les
 > mises à jour passent par `./update.sh` (jamais de `git pull`) ; par
 > précaution, sauvegarder `src/content/` avant toute commande git sur le
-> serveur (`tar czf contenu-$(date +%F).tgz src/content`).
+> serveur (`./sauvegarde.sh`, [sauvegarde.md](sauvegarde.md), ou
+> `tar czf contenu-$(date +%F).tgz src/content`).
 
 ## Construction au démarrage
 
@@ -94,6 +95,9 @@ Dans le dossier du site, sur le serveur :
 ./update.sh            # dernière version publiée
 ./update.sh v1.2.0     # version précise — sert aussi à revenir en arrière
 ```
+
+Conseillé avant toute mise à jour : `./sauvegarde.sh "avant mise à jour"`
+(archive du contenu, des comptes et du journal, [sauvegarde.md](sauvegarde.md)).
 
 Le mode est détecté (Docker si `docker-compose.yml` et la commande `docker`
 sont présents, sinon Node seul) ; `--docker` / `--node` pour l'imposer.

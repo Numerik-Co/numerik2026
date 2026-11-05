@@ -8,6 +8,13 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
+Sauvegarde / restauration d'un site (façon Grav) : `./sauvegarde.sh`,
+`./restauration.sh <zip>` ou module « Sauvegardes » — ZIP (`fflate`) de
+`src/content/` + `data/accounts` + `data/journal` dans
+`data/sauvegardes/`, logique unique `scripts/sauvegarde.mjs` ; restaurer =
+vider puis remplir (volumes), état courant sauvegardé avant. Détail :
+[docs/sauvegarde.md](docs/sauvegarde.md).
+
 Mise à jour d'un site : `./update.sh [vX.Y.Z]` (Docker : `NUMERIK_VERSION`
 dans `.env`, construction à côté par `docker compose run` dans le volume
 `.releases`, bascule, vérification, retour arrière ; Node seul :
@@ -207,10 +214,10 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
-  (`/api/admin/comptes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
+  (`/api/admin/comptes`, `/api/admin/sauvegardes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/annonces`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/liens`, `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
-  `redacteur`, `/api/admin/journal` et `/api/admin/plugins` → `superadmin` seul).
+  `redacteur`, `/api/admin/journal`, `/api/admin/plugins` et `/api/admin/sauvegardes/restauration` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
   d'admin et par `site-build.ts` (résultat des publications).
@@ -236,7 +243,7 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
   actualiser ») puis rechargement de la page, module rouvert
   (`reopenAfterReload` → `takeModuleToReopen` dans `AdminRoot`) ; page en
   404 (supprimée, déplacée) → `status.href` ou l'accueil.
-- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Pages**, **Activités**, **Actualités**, **Annonces**, **Association** (bureau), Comptes, Journal et **Plugins** (`exclusive`,
+- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Pages**, **Activités**, **Actualités**, **Annonces**, **Association** (bureau), **Sauvegardes** (bureau ; restauration super admin : `SauvegardesModule.vue`, `scripts/sauvegarde.mjs`, routes `/api/admin/sauvegardes*`, docs/sauvegarde.md), Comptes, Journal et **Plugins** (`exclusive`,
   `superadmin` seul ; Plugins : `PluginsModule.vue`, `src/lib/plugin-writer.ts`
   écrit `plugins.<id>` de `reglages.yaml` en place puis publie, activation
   refusée si un fichier `requis` du catalogue manque, `env` absentes

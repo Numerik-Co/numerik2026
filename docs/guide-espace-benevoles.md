@@ -251,6 +251,7 @@ Les modules visibles dépendent de votre groupe :
 | Annonces | ✅ | ✅ | ✅ | — |
 | Rendez-vous (si le plugin `rdv` est actif) | ✅ | ✅ | — | ✅ |
 | Association | ✅ | ✅ | — | — |
+| Sauvegardes (restauration : super admin) | ✅ | ✅ | — | — |
 | Comptes | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
 | Plugins | ✅ | — | — | — |
@@ -768,6 +769,23 @@ l'exporter en « SVG simple » ou en PNG. Fichiers modifiés : `colors:` et
 `polices:` de `src/content/reglages.yaml` (autres réglages et commentaires
 gardés), `src/content/images/logo.*` et `favicon.*`, `src/content/polices/`. Si la reconstruction échoue,
 tout est remis comme avant.
+
+### Sauvegardes (bureau)
+
+Module **Sauvegardes** : une archive **.zip** de tout ce qui appartient à
+l'association (contenu du site, comptes et journal de l'Espace Admin ; jamais
+le `.env`), rangée sur le serveur.
+
+- **Créer une sauvegarde** (motif facultatif), puis **télécharger** (⬇) pour
+  en garder une copie hors du serveur.
+- **Déposer une sauvegarde** venue d'ailleurs : elle est rangée avec les
+  autres, rien n'est restauré.
+- **Restaurer** (↺, super admin seul) : tout est remplacé par l'archive puis
+  le site est republié ; l'état actuel est sauvegardé d'abord
+  (« avant-restauration »).
+
+Sur le serveur : `./sauvegarde.sh`, `./restauration.sh <archive.zip>`.
+Détail : [sauvegarde.md](sauvegarde.md).
 
 ### Modifier mes informations
 
