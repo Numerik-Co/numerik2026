@@ -1,0 +1,15 @@
+# Catégories d'activités, dans l'ordre du site (accueil, /activites).
+# Gérées depuis l'Espace Admin (module « Activités »).
+# slug : adresse de la page (/activites/<slug>) et valeur de « category: »
+#        dans les fiches ; ne pas la changer à la main si des fiches l'utilisent.
+# icon : icône Font Awesome, style « solid » (https://fontawesome.com/search?ic=free&s=solid).
+# description : texte du bandeau de la page de la catégorie (facultatif).
+
+- slug: ateliers
+  label: Ateliers
+  icon: fa-screwdriver-wrench
+  description: Des ateliers pratiques en petit groupe, pour apprendre à son rythme.
+- slug: accompagnement
+  label: Accompagnement
+  icon: fa-people-group
+  description: Une aide personnalisée, sur rendez-vous ou lors de nos permanences.

@@ -39,11 +39,9 @@ pnpm-debug.log*
 /.update/
 /.dockercfg/
 
-# Contenu éditorial (pages, actualités, activités, images, polices) : propre à chaque
-# association, jamais commité. Les fichiers déjà suivis le restent (contenu
-# de démonstration nécessaire au build de la CI) ; tout nouveau fichier est ignoré.
-/src/content/news/
-/src/content/pages/
-/src/content/activites/
-/src/content/images/
-/src/content/polices/
+# Contenu du site (src/content/ : pages, actualités, activités, images,
+# polices, *.yaml) : propre à chaque association, jamais commité. Un nouveau
+# site part du contenu de démonstration de contenu-initial/, copié par
+# scripts/contenu-initial.mjs. Seul le guide des éditeurs est suivi.
+/src/content/*
+!/src/content/README.md

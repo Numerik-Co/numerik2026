@@ -313,7 +313,13 @@ le site complet (déposable tel quel pour la partie contenu). Les collections
 sont déclarées dans `src/content.config.ts` (Content Layer, loader `glob`,
 schéma `zod` via `astro/zod`) — suivre la doc Astro
 (https://docs.astro.build/en/guides/content-collections/). **Ne pas stocker de
-contenu hors de `src/content/`.**
+contenu hors de `src/content/`.** `src/content/` n'est **pas suivi par git**
+(sauf `README.md`) : chaque site a le sien. Nouveau site / clone / CI :
+contenu de démonstration `contenu-initial/` (même arborescence, neutre)
+copié par `scripts/contenu-initial.mjs` si `src/content/association.yaml`
+manque (`postinstall`, `npm run contenu:init`, `scripts/start.mjs` ; jamais
+d'écrasement). Nouveau fichier de contenu exigé par le code (import direct,
+lien en dur) = l'ajouter aussi dans `contenu-initial/`.
 
 - `news` — `src/content/news/<AAAA-MM-JJ-slug>/index.md`, id = nom du
   dossier, `cover: ./cover.jpg` validé par `image()`. `src/lib/news.ts` :

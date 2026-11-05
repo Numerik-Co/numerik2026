@@ -7,7 +7,7 @@
  * 1. télécharge l'archive des sources de la version (Release GitHub) ;
  * 2. met de côté le code actuel (`.update/sauvegarde-<version>.tar.gz`) ;
  * 3. remplace le CODE : dossiers du modèle (`src/` hors `src/content/`,
- *    `scripts/`, `docs/`, `.github/`) remplacés entièrement, fichiers de la
+ *    `scripts/`, `docs/`, `.github/`, `contenu-initial/`) remplacés entièrement, fichiers de la
  *    racine écrasés. Jamais touchés : `src/content/`, `data/`, `.env`,
  *    `.releases/`, `dist`, et tout fichier ajouté à la racine ;
  * 4. `npm ci` puis construction de la nouvelle version À CÔTÉ
@@ -31,7 +31,7 @@ import { RELEASES_DIR, releaseStamp } from './releases.mjs';
 const root = resolve(process.env.SITE_ROOT || process.cwd());
 const REPO = process.env.UPDATE_REPO || 'Numerik-Co/numerik2026';
 /** Dossiers appartenant au modèle, remplacés en entier. */
-const TEMPLATE_DIRS = ['scripts', 'docs', '.github'];
+const TEMPLATE_DIRS = ['scripts', 'docs', '.github', 'contenu-initial'];
 /** Entrées de `src/` appartenant à l'association : jamais remplacées. */
 const SRC_KEEP = new Set(['content']);
 /** À la racine : jamais touchés, même si l'archive en contient. */

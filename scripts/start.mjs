@@ -3,6 +3,8 @@
  *
  *   node --env-file-if-exists=.env scripts/start.mjs     (= npm start)
  *
+ * 0. nouveau site (src/content/ sans association.yaml) : copie le contenu de
+ *    démonstration de `contenu-initial/` (scripts/contenu-initial.mjs) ;
  * 1. compare l'empreinte de l'état courant (version du modèle, SITE_URL,
  *    contenu de src/content/ — cf. releases.mjs) à celle du site en place
  *    (`dist/build-info.json`) ;
@@ -28,11 +30,14 @@ import { mkdir, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { RELEASES_DIR, computeFingerprint, findRelease, pruneReleases, readBuildInfo, releaseStamp, swapDist } from './releases.mjs';
+import { installerContenuInitial } from './contenu-initial.mjs';
 
 const root = resolve(process.env.SITE_ROOT || process.cwd());
 const log = (message) => console.log(`[démarrage] ${message}`);
 
 async function buildIfNeeded() {
+	// Nouveau site : contenu de démonstration, avant l'empreinte (qui inclut src/content/).
+	installerContenuInitial(root);
 	const current = await computeFingerprint(root, process.env.SITE_URL);
 	const built = await readBuildInfo(root);
 	const serverEntry = join(root, 'dist/server/entry.mjs');

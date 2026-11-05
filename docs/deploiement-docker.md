@@ -130,7 +130,9 @@ cd numerik2026
 cp .env.example .env
 nano .env       # renseigner SITE_URL (obligatoire) puis GRIST_BASE_URL / GRIST_DOC_ID / GRIST_API_KEY
 
-# 3. Construire et démarrer
+# 3. Construire et démarrer (premier démarrage : src/content/ est rempli avec
+#    le contenu de démonstration de contenu-initial/, à personnaliser ensuite
+#    depuis l'Espace Admin)
 docker compose up -d --build
 
 # 4. Vérifier

@@ -1,0 +1,30 @@
+# =============================================================================
+#  Partenaires de l'association
+# =============================================================================
+#
+#  Affichés en cartes sur la page Adhérer et dans le module « Partenaires » de
+#  la page d'accueil, dans l'ordre de ce fichier.
+#
+#  Ce fichier appartient à l'association : une mise à jour du site ne le
+#  remplace jamais. Un champ obligatoire manquant ou mal écrit fait échouer la
+#  construction du site avec un message indiquant le partenaire en cause.
+#
+#  Champs de chaque partenaire :
+#
+#    name       (obligatoire) nom du partenaire.
+#    role       (obligatoire) une phrase : ce qu'il apporte à l'association.
+#    url        (facultatif) site du partenaire : le nom devient un lien.
+#    relais     (facultatif) true si l'on peut retirer la fiche d'adhésion et
+#               régler sa cotisation chez ce partenaire. Il est alors cité sur
+#               la page Adhérer et à la fin du formulaire d'adhésion en ligne.
+#    avantage   (facultatif) avantage réservé aux adhérent·e·s, cité sur la
+#               page Adhérer : « Auprès de notre partenaire <name>, l'adhésion
+#               ouvre aussi droit à <avantage>. » **texte** = en gras.
+#
+#  Liste vide (partenaires: []) : les sections Partenaires disparaissent.
+# =============================================================================
+
+partenaires:
+  # Exemple à remplacer ou supprimer (module « Association » ou ici).
+  - name: 'Mairie de Ma Ville'
+    role: "Soutient l'association : mise à disposition d'une salle et subvention de fonctionnement."

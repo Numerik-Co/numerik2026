@@ -10,6 +10,21 @@ mise à jour :
 | `data/` (comptes, journal) | |
 | `.env` (`SITE_URL`, clés Grist…) | |
 
+Le contenu d'une association n'est **pas dans le dépôt** (`.gitignore`) : un
+nouveau site part du **contenu de démonstration** de `contenu-initial/`
+(« Mon association », logo neutre, une actualité, deux activités, pages
+légales génériques), copié dans `src/content/` tant que celui-ci n'a pas
+d'`association.yaml` — par `npm install` / `npm ci` (`postinstall`) et par
+`scripts/start.mjs` au démarrage (`scripts/contenu-initial.mjs`, aussi
+`npm run contenu:init`). Un site déjà en place n'est jamais touché.
+
+> ⚠️ **Site installé avec `git clone`** (premier VPS) : depuis la 0.5.3, le
+> contenu n'est plus suivi par git. Un `git pull` dans le dossier du site
+> **supprimerait** les fichiers de `src/content/` qui étaient suivis. Les
+> mises à jour passent par `./update.sh` (jamais de `git pull`) ; par
+> précaution, sauvegarder `src/content/` avant toute commande git sur le
+> serveur (`tar czf contenu-$(date +%F).tgz src/content`).
+
 ## Construction au démarrage
 
 Le site n'est construit ni dans le dépôt ni dans l'image Docker : il l'est
@@ -176,7 +191,8 @@ un moment calme (aucune publication en cours).
 ### Passer à ce système (site déjà installé)
 
 - **Docker, installé avec `git clone` + `./deploy.sh`** (cas du premier
-  site) : ajouter `SITE_URL` au `.env`, `git pull`, puis `./update.sh` une
+  site) : ajouter `SITE_URL` au `.env`, sauvegarder `src/content/` (voir
+  l'avertissement plus haut), `git pull`, puis `./update.sh` une
   fois une version publiée. `./deploy.sh` reste utilisable par le mainteneur
   (construction locale depuis les sources).
 - **Node seul** : ajouter `SITE_URL` au `.env`, remplacer `npm run build &&
