@@ -8,9 +8,10 @@
  * Rien n'est publié ici.
  */
 import { computed, ref } from 'vue';
-import { CONTENT_KEY, CONTENT_KINDS, contentKindOf, setPendingImport, type ContentKind } from './content-import';
+import { CONTENT_KEY, CONTENT_KIND_IDS, CONTENT_KINDS, contentKindOf, setPendingImport, type ContentKind } from './content-import';
 import { readMarkdownFile, textField } from './markdown-file';
 import { downloadActivityTemplate } from './modules/activites/activity-markdown';
+import { downloadAnnonceTemplate } from './modules/annonces/annonce-markdown';
 import { downloadNewsTemplate } from './modules/actualites/news-markdown';
 import { downloadPageTemplate } from './modules/pages/page-markdown';
 
@@ -43,7 +44,7 @@ async function pick(f: File | undefined) {
 	title.value = textField(read.data.title);
 	declared.value = contentKindOf(read.data);
 	if (read.data[CONTENT_KEY] !== undefined && !declared.value) {
-		error.value = `« ${CONTENT_KEY}: ${String(read.data[CONTENT_KEY])} » inconnu (attendu : actualite, page ou activite) : choisissez le type ci-dessous.`;
+		error.value = `« ${CONTENT_KEY}: ${String(read.data[CONTENT_KEY])} » inconnu (attendu : ${CONTENT_KIND_IDS.join(', ')}) : choisissez le type ci-dessous.`;
 	}
 	if (declared.value && !props.kinds.includes(declared.value)) {
 		error.value = `Vous n'avez pas accès au module « ${CONTENT_KINDS[declared.value].moduleLabel} ».`;
@@ -73,7 +74,7 @@ function open() {
 	<div class="space-y-4">
 		<p class="text-sm font-light text-gray-600">
 			Déposez un fichier <code>.md</code> : le type de contenu est lu dans son en-tête
-			(<code>{{ CONTENT_KEY }}: actualite</code>, <code>page</code> ou <code>activite</code>), puis le formulaire de création
+			(<code>{{ CONTENT_KEY }}: actualite</code>, <code>page</code>, <code>activite</code> ou <code>annonce</code>), puis le formulaire de création
 			s'ouvre, rempli. Rien n'est publié avant l'enregistrement.
 		</p>
 
@@ -129,6 +130,7 @@ function open() {
 				<button type="button" class="font-medium text-primary hover:underline" @click="downloadPageTemplate('enrichie')">page enrichie</button>
 			</template>
 			<button v-if="props.kinds.includes('activite')" type="button" class="font-medium text-primary hover:underline" @click="downloadActivityTemplate">activité</button>
+			<button v-if="props.kinds.includes('annonce')" type="button" class="font-medium text-primary hover:underline" @click="downloadAnnonceTemplate">annonce</button>
 		</p>
 	</div>
 </template>

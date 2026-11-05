@@ -19,7 +19,9 @@ Les annonces se gèrent depuis l'**Espace Admin** (menu **Contenus ▾ →
 Annonces**, rédacteur·rice·s et bureau ; voir le
 [guide](guide-espace-benevoles.md#gérer-les-annonces)) ou à la main, dans le
 fichier décrit ci-dessous. Le module écrit dans ce même fichier (en gardant
-ses commentaires) puis republie le site.
+ses commentaires) puis republie le site. Une annonce s'échange aussi en
+fichier `.md` (en-tête `contenu: annonce` + champs ci-dessous sauf `id`,
+texte = message), comme les actualités, pages et activités.
 
 Toutes les annonces sont regroupées dans **un seul fichier** :
 `src/content/annonces.yaml`. Aucune base de données, aucun dossier à créer.

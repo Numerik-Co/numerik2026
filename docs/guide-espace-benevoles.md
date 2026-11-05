@@ -224,7 +224,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - Premier bouton de **Contenus ▾** : **Ajouter un contenu**. Une
   fenêtre s'ouvre au centre : on y dépose un fichier `.md` (modèles
   téléchargeables en bas de la fenêtre). Le type de contenu est lu dans la
-  ligne `contenu:` de son en-tête (`actualite`, `page` ou `activite`) — à
+  ligne `contenu:` de son en-tête (`actualite`, `page`, `activite` ou `annonce`) — à
   choisir dans la fenêtre si elle manque. **Créer…** ouvre le module
   correspondant sur son formulaire de création, déjà rempli : il reste à
   vérifier, choisir l'emplacement ou la catégorie, ajouter une photo, puis
@@ -684,6 +684,10 @@ bénévoles…). Module **Annonces** du menu **Contenus ▾**.
   adresse ; « Choisir une page du site » remplit l'adresse). Un aperçu de la
   bannière suit la saisie. **Annonce active** décochée = brouillon, jamais
   affiché.
+- **Par fichier `.md`**, comme les autres contenus : **Ajouter un contenu**
+  (modèle « annonce », en-tête `contenu: annonce`, message = texte sous
+  l'en-tête), et en modification **Télécharger le fichier** / **Charger un
+  fichier modifié**.
 - Une annonce terminée ne s'affiche plus d'elle-même : la supprimer n'est
   pas obligatoire.
 - Un visiteur qui a fermé la bannière ne la revoit pas pendant sa visite ;

@@ -16,6 +16,7 @@ import PublishStatus from '../PublishStatus.vue';
 import { annoncesApi, ApiError, type AnnonceItem, type SaveResult } from '../client';
 import { ADMIN_CONTEXT, iconButtonClass, rememberOpenModule, sortableProps, takeModuleToReopen } from '../context';
 import { isDeferredSubmit } from '../lot';
+import { takePendingImport } from '../content-import';
 import { usePublication } from '../usePublication';
 import AnnonceForm from './annonces/AnnonceForm.vue';
 import { annonceState, frenchDay, type AnnonceState } from './annonces/dates';
@@ -24,7 +25,7 @@ import OrderArrows from './pages/OrderArrows.vue';
 
 const { sessionExpired, onCloseRequest } = inject(ADMIN_CONTEXT)!;
 
-type View = { name: 'list' } | { name: 'form'; source: AnnonceItem | null };
+type View = { name: 'list' } | { name: 'form'; source: AnnonceItem | null; file?: File };
 
 const view = ref<View>({ name: 'list' });
 const annonces = ref<AnnonceItem[]>([]);
@@ -128,7 +129,12 @@ const stopCloseRequest = onCloseRequest(() => {
 	return true;
 });
 onBeforeUnmount(stopCloseRequest);
-onMounted(load);
+onMounted(async () => {
+	// Fichier déposé dans « Ajouter un contenu » (menu Contenus) : création pré-remplie.
+	const pending = takePendingImport('annonce');
+	await load();
+	if (pending) go({ name: 'form', source: null, file: pending });
+});
 
 const STATES: Record<AnnonceState, { label: string; className: string }> = {
 	'en-cours': { label: 'en ligne', className: 'bg-green-50 text-green-800' },
@@ -237,5 +243,5 @@ const STATES: Record<AnnonceState, { label: string; className: string }> = {
 		</div>
 	</template>
 
-	<AnnonceForm v-else :source="view.source" :disabled="locked" @published="onPublished" @cancel="go({ name: 'list' })" />
+	<AnnonceForm v-else :source="view.source" :initial-file="view.file" :disabled="locked" @published="onPublished" @cancel="go({ name: 'list' })" />
 </template>

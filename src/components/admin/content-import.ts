@@ -2,7 +2,7 @@
  * Ajout direct d'un contenu par fichier `.md` (premier bouton du menu
  * « Contenus », modale `ContentImportModal.vue`). Chaque fichier `.md`
  * d'échange (modèles, « Télécharger le fichier » des formulaires) porte en
- * tête `contenu: actualite | page | activite` : la modale y lit le type,
+ * tête `contenu: actualite | page | activite | annonce` : la modale y lit le type,
  * puis ouvre le module correspondant dont le formulaire de création se
  * remplit avec le fichier (`takePendingImport()` au montage du module).
  * Rien n'est publié avant l'enregistrement dans le formulaire.
@@ -19,6 +19,7 @@ export const CONTENT_KINDS = {
 	actualite: { label: 'Actualité', une: 'une actualité', module: 'actualites', moduleLabel: 'Actualités', icon: 'fa-newspaper' },
 	page: { label: 'Page', une: 'une page', module: 'pages-site', moduleLabel: 'Pages', icon: 'fa-sitemap' },
 	activite: { label: 'Activité', une: 'une activité', module: 'activites', moduleLabel: 'Activités', icon: 'fa-person-chalkboard' },
+	annonce: { label: 'Annonce', une: 'une annonce', module: 'annonces', moduleLabel: 'Annonces', icon: 'fa-bullhorn' },
 } as const;
 export type ContentKind = keyof typeof CONTENT_KINDS;
 export const CONTENT_KIND_IDS = Object.keys(CONTENT_KINDS) as ContentKind[];

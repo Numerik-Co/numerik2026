@@ -2,7 +2,10 @@
 /**
  * Formulaire d'une annonce de la bannière (module « Annonces ») : création
  * ou modification, avec aperçu de la bannière. Le serveur valide tout
- * (src/lib/annonce-writer.ts) et reconstruit le site.
+ * (src/lib/annonce-writer.ts) et reconstruit le site. Fichier `.md`
+ * (./annonce-markdown.ts) : à télécharger ou à recharger en modification
+ * (`EditFileBar`) ; en création, `initialFile` (« Ajouter un contenu »)
+ * pré-remplit le formulaire.
  */
 import { computed, inject, reactive, ref } from 'vue';
 import {
@@ -16,13 +19,21 @@ import {
 } from '../../../../lib/annonce-options';
 import { ApiError, annoncesApi, type AnnonceInput, type AnnonceItem, type SaveResult } from '../../client';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule } from '../../context';
+import EditFileBar from '../../EditFileBar.vue';
 import FormHeader from '../../FormHeader.vue';
 import LinkPicker from '../../LinkPicker.vue';
 import { isDeferredSubmit } from '../../lot';
+import { downloadMarkdown, readMarkdownFile } from '../../markdown-file';
 import PublishButtons from '../../PublishButtons.vue';
+import { annonceMarkdownFile, parseAnnonceMarkdown } from './annonce-markdown';
 import { isoDay } from './dates';
 
-const props = defineProps<{ source: AnnonceItem | null; disabled: boolean }>();
+const props = defineProps<{
+	source: AnnonceItem | null;
+	disabled: boolean;
+	/** Création à partir d'un fichier déposé dans « Ajouter un contenu » (menu Contenus). */
+	initialFile?: File;
+}>();
 const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();
 const { sessionExpired } = inject(ADMIN_CONTEXT)!;
 
@@ -41,13 +52,37 @@ const form = reactive<AnnonceInput>({
 	ctaHref: editing?.ctaHref ?? '',
 	active: editing?.active ?? true,
 });
-/** Icône écrite à la main dans le fichier, hors de la liste proposée : gardée en tête. */
+/** Icône écrite à la main (annonces.yaml, fichier .md), hors de la liste proposée : gardée en tête. */
 const icons = computed(() =>
-	editing && !ANNONCE_ICONS.some((i) => i.icon === editing.icon) ? [{ icon: editing.icon, label: 'Icône actuelle' }, ...ANNONCE_ICONS] : ANNONCE_ICONS,
+	form.icon && !ANNONCE_ICONS.some((i) => i.icon === form.icon) ? [{ icon: form.icon, label: 'Icône actuelle' }, ...ANNONCE_ICONS] : ANNONCE_ICONS,
 );
 const hrefField = ref<HTMLInputElement | null>(null);
 const error = ref('');
 const busy = ref(false);
+/** Dernier fichier chargé et remarques de lecture. */
+const imported = ref<{ name: string; warnings: string[] } | null>(null);
+
+function downloadFile() {
+	downloadMarkdown(`annonce-${editing?.id ?? 'nouvelle'}.md`, annonceMarkdownFile(form));
+}
+
+async function loadFile(file: File) {
+	error.value = '';
+	const read = await readMarkdownFile(file);
+	if (read.error) {
+		error.value = read.error;
+		return;
+	}
+	const { fields, warnings, error: problem } = parseAnnonceMarkdown(await file.text());
+	if (!fields) {
+		error.value = problem!;
+		return;
+	}
+	Object.assign(form, fields);
+	imported.value = { name: file.name, warnings };
+}
+
+if (props.initialFile && !editing) void loadFile(props.initialFile);
 
 async function submit(event: Event) {
 	error.value = '';
@@ -83,6 +118,17 @@ async function submit(event: Event) {
 			annonces en cours défilent dans l'ordre de la liste.
 		</p>
 		<p v-if="error" class="alerte-erreur" role="alert">{{ error }}</p>
+
+		<div v-if="imported && !editing" class="rounded-lg bg-primary/5 px-3 py-2 text-sm text-gray-700" role="status">
+			<p>
+				<i class="fa-solid fa-file-circle-check mr-1 text-primary" aria-hidden="true"></i>
+				Formulaire rempli depuis <strong>{{ imported.name }}</strong> : vérifiez les dates puis publiez.
+			</p>
+			<ul v-if="imported.warnings.length" class="mt-1 list-disc pl-5 text-xs text-amber-800">
+				<li v-for="w in imported.warnings" :key="w">{{ w }}</li>
+			</ul>
+		</div>
+		<EditFileBar v-if="editing" :imported="imported" @download="downloadFile" @load="loadFile" />
 
 		<!-- Aperçu de la bannière -->
 		<div :class="['flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-lg px-4 py-2 text-center text-sm', ANNONCE_TONE_LABELS[form.tone].className]" aria-hidden="true">

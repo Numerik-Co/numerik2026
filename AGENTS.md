@@ -189,9 +189,10 @@ modification, `EditFileBar.vue` au-dessus : télécharger le `.md` construit
 depuis le formulaire / charger un `.md` modifié qui remplit le formulaire
 (sans publier) ; `src/components/admin/markdown-file.ts` +
 `modules/actualites/news-markdown.ts`, `modules/activites/activity-markdown.ts`,
-`modules/pages/page-markdown.ts` (`pageMarkdownFile`, `parsePageMarkdown`).
+`modules/pages/page-markdown.ts` (`pageMarkdownFile`, `parsePageMarkdown`),
+`modules/annonces/annonce-markdown.ts` (en-tête = champs d'une entrée d'`annonces.yaml` sans `id`, texte = message).
 En tête de chaque fichier `.md` d'échange (modèles, téléchargement) :
-`contenu: actualite | page | activite` (`buildMarkdownFile(kind, …)`,
+`contenu: actualite | page | activite | annonce` (`buildMarkdownFile(kind, …)`,
 `src/components/admin/content-import.ts`, jamais écrit dans `src/content/`) ;
 fichier d'un autre type refusé au chargement (`contentKindProblem`).
 **Ajouter un contenu** = premier bouton du menu « Contenus »

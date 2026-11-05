@@ -98,6 +98,8 @@ async function readDocument(): Promise<{ doc: Document; seq: YAMLSeq<YAMLMap>; o
 		if (doc.contents === null) doc.contents = doc.createNode([]) as YAMLSeq;
 	}
 	if (!isSeq(doc.contents)) throw new Error(`${FILE} : une liste d'annonces est attendue.`);
+	// Liste vide écrite `[]` : repasser en liste « - … », une annonce par bloc.
+	(doc.contents as YAMLSeq).flow = false;
 	return { doc, seq: doc.contents as YAMLSeq<YAMLMap>, original };
 }
 

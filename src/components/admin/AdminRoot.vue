@@ -284,7 +284,7 @@ onBeforeUnmount(() => {
 						type="button"
 						role="menuitem"
 						class="flex items-center gap-2 rounded bg-primary px-3 py-1.5 font-medium text-white hover:bg-primary/80"
-						title="Créer une actualité, une page ou une activité à partir d'un fichier .md"
+						title="Créer une page, une activité, une actualité ou une annonce à partir d'un fichier .md"
 						@click="openImport"
 					>
 						<i class="fa-solid fa-file-import w-4 text-center" aria-hidden="true"></i>
