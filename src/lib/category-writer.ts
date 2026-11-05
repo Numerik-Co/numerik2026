@@ -49,7 +49,7 @@ const SLUG_MAX = 40;
 
 const HEADER = [
 	" Catégories d'activités, dans l'ordre du site (accueil, /activites).",
-	" Gérées depuis l'espace bénévoles (module « Activités »).",
+	" Gérées depuis l'Espace Admin (module « Activités »).",
 	' slug : adresse de la page (/activites/<slug>) et valeur de « category: »',
 	"        dans les fiches ; ne pas la changer à la main si des fiches l'utilisent.",
 	' icon : icône Font Awesome, style « solid » (https://fontawesome.com/search?ic=free&s=solid).',

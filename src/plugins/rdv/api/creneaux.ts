@@ -7,7 +7,7 @@ export const prerender = false;
 
 /**
  * Créneaux de la fenêtre de réservation glissante, disponibles ou déjà pris ;
- * créneaux d'urgence réservables seulement avec une session de l'espace bénévoles.
+ * créneaux d'urgence réservables seulement avec une session de l'Espace Admin.
  */
 export const GET: APIRoute = async ({ locals }) => {
 	try {

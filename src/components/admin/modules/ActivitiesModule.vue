@@ -208,7 +208,7 @@ const stopCloseRequest = onCloseRequest(() => {
 onBeforeUnmount(stopCloseRequest);
 
 onMounted(async () => {
-	// Fichier déposé dans « Ajouter un fichier .md » (menu Contenus) : création pré-remplie, une fois les catégories connues.
+	// Fichier déposé dans « Ajouter un contenu » (menu Contenus) : création pré-remplie, une fois les catégories connues.
 	const pending = takePendingImport('activite');
 	await load();
 	if (pending) go({ name: 'form', source: null, category: '', file: pending });

@@ -1,7 +1,7 @@
 /**
  * Catégories d'activités (Parcours, Ateliers…), propres à chaque association :
  * lues dans `src/content/activites/_categories.yaml` (liste, ordre = ordre du
- * site), gérée depuis le module « Activités » de l'espace bénévoles
+ * site), gérée depuis le module « Activités » de l'Espace Admin
  * (`src/lib/category-writer.ts`). Sans ce fichier (site installé avant la
  * gestion des catégories), les catégories par défaut du modèle s'appliquent.
  *

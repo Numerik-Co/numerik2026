@@ -22,7 +22,7 @@ Voir aussi [les plugins](../README.md) (activation, organisation).
    avec l'adhésion). Adresse de l'instance, document et noms
    de tables : dans le `.env` (`GRIST_BASE_URL`, `GRIST_DOC_ID_RDV`,
    `GRIST_TABLE_*`, voir [Variables d'environnement](#variables-denvironnement))
-   **ou** dans `grist:` de `rdv.yaml`, réglable depuis l'espace bénévoles
+   **ou** dans `grist:` de `rdv.yaml`, réglable depuis l'Espace Admin
    (module « Plugins », super admin), qui passe avant le `.env`.
 3. **`src/content/rdv.yaml`** : copier [`rdv.exemple.yaml`](rdv.exemple.yaml)
    (commenté) et l'adapter : adresse de la page, textes, permanences, zones…
@@ -43,7 +43,7 @@ Plugin actif sans `rdv.yaml` = construction en échec, avec un message clair
 
 - **La page** à l'adresse `adresse:` de `rdv.yaml` (défaut `/rendez-vous`).
 - **L'encart** « prise de rendez-vous » : module de la page d'accueil et bloc
-  des pages enrichies, réglables depuis l'espace bénévoles (module « Pages ») ;
+  des pages enrichies, réglables depuis l'Espace Admin (module « Pages ») ;
   champs vides = textes de `encart:`. Sans permanence, l'encart disparaît.
 - **Les permanences** dans le planning de la page Activités (`planning:`).
 - **Ouvrir / fermer** la prise de RDV en ligne : `ouvert:` de `rdv.yaml`.
@@ -100,7 +100,7 @@ flowchart TD
   proposé.
 - **Créneau d'urgence** (`creneaux.urgence: true`) : le premier créneau de
   chaque permanence est affiché avec la mention `textes.urgence`, mais seule
-  une personne **connectée à l'espace bénévoles** peut le réserver (vérifié
+  une personne **connectée à l'Espace Admin** peut le réserver (vérifié
   aussi par le serveur).
 - Jours, horaires et lieux : `permanences:` de `rdv.yaml` (pas dans Grist).
   Une permanence par jour au plus, heures piles ou demies.
@@ -191,7 +191,7 @@ ajoutée apparaît au chargement suivant de la page) :
 | `Cree_le` | Date | |
 
 **Compte rendu après le RDV** — colonnes facultatives de `RDV`, remplies
-depuis le module « Rendez-vous » de l'espace bénévoles (une colonne absente,
+depuis le module « Rendez-vous » de l'Espace Admin (une colonne absente,
 ou d'un autre type, n'est simplement pas proposée ; choix lus dans Grist) :
 
 | Colonne | Type | Rubrique de l'éditeur |
@@ -206,7 +206,7 @@ ou d'un autre type, n'est simplement pas proposée ; choix lus dans Grist) :
 | `Suggestions_beneficiaire` | Text | Avis du bénéficiaire |
 
 Toute autre colonne est libre : le site ne l'écrit jamais. **Annuler un RDV** : passer `Statut_rdv` à « Annulé » dans
-Grist, ou depuis le module « Rendez-vous » de l'espace bénévoles, libère le créneau.
+Grist, ou depuis le module « Rendez-vous » de l'Espace Admin, libère le créneau.
 
 ## Où vont les données
 
@@ -228,7 +228,7 @@ Grist, ou depuis le module « Rendez-vous » de l'espace bénévoles, libère le
 | `formulaire/` | Îlot Vue `RdvForm.vue` (`client:load`, dans `<FormGate toggle={rdvToggle()}>`, réglages reçus en props : `rdvFormProps()`) et `client.ts` (appels aux routes) |
 | `sections/` | `RdvCtaSection.astro` (encart) et `definitions.ts` (module d'accueil et bloc `rdv`, ancien nom `rdv-conseiller` accepté à la lecture) |
 | `lib/` | Code serveur (ci-dessous) |
-| `admin/` | Module « Rendez-vous » de l'espace bénévoles : `RdvModule.vue` (liste, une semaine à la fois, chevrons ‹ › ; recherche en tête — nom, démarche, date jj/mm[/aa[aa]], mots cumulés — et statut, sur toutes les semaines), `RdvEditeur.vue` (second panneau à gauche), `client.ts`, `gestion.ts` (lecture / modification / suppression dans Grist), `semaine-pdf.ts` (PDF d'une semaine), `suivi.ts` (colonnes du compte rendu), routes `admin/api/` (`/api/admin/rdv`, `/api/admin/rdv/[id]`, `/api/admin/rdv/pdf`) |
+| `admin/` | Module « Rendez-vous » de l'Espace Admin : `RdvModule.vue` (liste, une semaine à la fois, chevrons ‹ › ; recherche en tête — nom, démarche, date jj/mm[/aa[aa]], mots cumulés — et statut, sur toutes les semaines), `RdvEditeur.vue` (second panneau à gauche), `client.ts`, `gestion.ts` (lecture / modification / suppression dans Grist), `semaine-pdf.ts` (PDF d'une semaine), `suivi.ts` (colonnes du compte rendu), routes `admin/api/` (`/api/admin/rdv`, `/api/admin/rdv/[id]`, `/api/admin/rdv/pdf`) |
 
 | `lib/` | Rôle |
 | :--- | :--- |

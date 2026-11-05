@@ -42,7 +42,7 @@ async function submit() {
 <template>
 	<form class="space-y-4" @submit.prevent="submit">
 		<p v-if="props.forced" class="alerte-attention">
-			Votre mot de passe est provisoire : choisissez le vôtre pour accéder à l'espace bénévoles.
+			Votre mot de passe est provisoire : choisissez le vôtre pour accéder à l'Espace Admin.
 		</p>
 		<p v-if="done" class="alerte-succes" role="status">
 			Mot de passe modifié. Vos autres appareils sont déconnectés.

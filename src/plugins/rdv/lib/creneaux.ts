@@ -10,7 +10,7 @@
  *
  * `creneaux.urgence: true` : le premier créneau de chaque permanence est
  * réservé aux urgences — affiché à tou·te·s, réservable seulement par une
- * personne connectée à l'espace bénévoles (`reservable`, revérifié par
+ * personne connectée à l'Espace Admin (`reservable`, revérifié par
  * `/api/rdv/prendre`).
  */
 
@@ -162,7 +162,7 @@ export function estCreneauUrgence(dateIso: string, heure: string): boolean {
 /**
  * Un créneau précis (date+heure) est-il toujours libre ? Revérifié à
  * l'écriture. `sauf` : RDV à ne pas compter (celui qu'on déplace, depuis
- * l'espace bénévoles).
+ * l'Espace Admin).
  */
 export async function creneauEstLibre(date: string, heure: string, sauf?: number): Promise<boolean> {
 	const dateEpoch = dateToEpochSeconds(date);

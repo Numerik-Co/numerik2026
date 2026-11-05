@@ -117,7 +117,7 @@ Fonctionnement technique :
   = build en échec ; `?raw` + zod, lecture synchrone comme
   `association.ts`). Nouveau formulaire / outil = une entrée dans `DEFAULTS`
   (fonctionne sans toucher au YAML des assos). Les pages du site se règlent
-  dans l'espace bénévoles.
+  dans l'Espace Admin.
 - `src/components/layout/Header.astro` — consomme `getNavTree()` ; markup
   inchangé, structure `{ label, href, children }`.
 
@@ -141,7 +141,7 @@ Grist…).
   `src/pages/contact.astro` (`contact`). Nouveau formulaire : ajouter une clé
   dans `site.forms` puis l'entourer d'un `<FormGate>`.
 
-## Espace bénévoles (authentification à plat)
+## Espace Admin (authentification à plat)
 
 Connexion du bureau, des rédacteur·rice·s et des animateur·rice·s **sans
 base de données**, façon Grav : un YAML par compte dans
@@ -154,7 +154,7 @@ créé au déploiement (`auth-user init`, mot de passe provisoire imposé —
 intouchable depuis le module « Comptes ».
 
 **Pas de pages d'administration** : tout se superpose au site. Lien
-« Espace bénévoles » du pied de page (`[data-auth-open]`) → modale de
+« Espace Admin » du pied de page (`[data-auth-open]`) → modale de
 connexion ; connecté·e → barre fixe en haut + **modules en panneau
 latéral**. Toute nouvelle fonction d'admin = un module (registre
 `src/components/admin/modules.ts`, composant dans `modules/`, routes JSON
@@ -194,7 +194,7 @@ En tête de chaque fichier `.md` d'échange (modèles, téléchargement) :
 `contenu: actualite | page | activite` (`buildMarkdownFile(kind, …)`,
 `src/components/admin/content-import.ts`, jamais écrit dans `src/content/`) ;
 fichier d'un autre type refusé au chargement (`contentKindProblem`).
-**Ajouter un fichier .md** = premier bouton du menu « Contenus »
+**Ajouter un contenu** = premier bouton du menu « Contenus »
 (`AdminRoot.vue`) → modale `ContentImportModal.vue` (type lu, sinon choisi ;
 modèles) → `setPendingImport()` puis ouverture du module, dont le
 formulaire de création se remplit (`takePendingImport()` au montage, prop
@@ -609,7 +609,7 @@ accepté à la lecture : `RDV_TYPES_RENOMMES`), champs vides = `encart:`.
   `creneaux.urgence: true` : premier créneau de chaque permanence =
   **urgence** (`urgence`, `estCreneauUrgence()`), mention `textes.urgence`
   encadrée au-dessus des horaires, réservable (`reservable`) seulement avec
-  une session de l'espace bénévoles (`locals.user`, revérifié par
+  une session de l'Espace Admin (`locals.user`, revérifié par
   `/api/rdv/prendre`, 403 sinon).
 - Étape 3 « Vous » : **« C'est mon premier rendez-vous »** (civilité si
   `genre` demandé — choix Grist libellés par `civilite:` —, nom,

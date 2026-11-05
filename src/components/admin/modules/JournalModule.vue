@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Module « Journal » (groupe `superadmin` seul) : historique des
- * modifications faites depuis l'espace bénévoles, par année, du plus récent
+ * modifications faites depuis l'Espace Admin, par année, du plus récent
  * au plus ancien (cf. src/lib/journal.ts). Lecture seule.
  */
 import { computed, inject, onMounted, ref } from 'vue';
@@ -92,7 +92,7 @@ onMounted(() => load());
 
 <template>
 	<p class="mb-4 text-sm font-light text-gray-600">
-		Toutes les modifications faites depuis l'espace bénévoles, avec leur auteur·rice et leur résultat. Visible par le
+		Toutes les modifications faites depuis l'Espace Admin, avec leur auteur·rice et leur résultat. Visible par le
 		super admin uniquement.
 	</p>
 

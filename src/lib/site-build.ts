@@ -1,5 +1,5 @@
 /**
- * Publication depuis l'espace bénévoles : reconstruit le site (`npm run
+ * Publication depuis l'Espace Admin : reconstruit le site (`npm run
  * build`) après une modification de contenu dans `src/content/`, sur le
  * serveur Node lui-même. Tout le contenu restant dans les sources, le site
  * publié est toujours le produit d'un build complet (cf. docs/publication.md).

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Modale « Ajouter un fichier .md » (premier bouton du menu « Contenus »,
+ * Modale « Ajouter un contenu » (premier bouton du menu « Contenus »,
  * `AdminRoot.vue`) : dépôt d'un fichier, type lu dans `contenu:` de
  * l'en-tête (à choisir s'il manque), puis `open` → le parent ouvre le module
  * du type, dont le formulaire de création se remplit avec le fichier

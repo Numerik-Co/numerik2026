@@ -31,7 +31,7 @@ Au démarrage, le script calcule une **empreinte** (version du modèle dans
 - **construction en échec** → l'ancien site reste servi, l'erreur est dans
   le journal ; sans ancien site, arrêt (code 1).
 
-Les publications depuis l'espace bénévoles construisent elles-mêmes
+Les publications depuis l'Espace Admin construisent elles-mêmes
 (`src/lib/site-build.ts`, mêmes fonctions) : au redémarrage qui suit,
 l'empreinte correspond, rien n'est reconstruit.
 
@@ -69,7 +69,7 @@ Suivi : onglet **Actions** du dépôt ; résultat : onglet **Releases** et
 
 ## Mettre à jour un site (association)
 
-Le bureau est prévenu dans l'espace bénévoles : badge **Mise à jour X.Y.Z**
+Le bureau est prévenu dans l'Espace Admin : badge **Mise à jour X.Y.Z**
 dans la barre dès qu'une version plus récente est publiée
 (`src/lib/model-version.ts`, vérifié au plus toutes les 6 h).
 

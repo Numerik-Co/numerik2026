@@ -1,6 +1,6 @@
 /**
  * « Transaction » sur un dossier de `src/content/` (pages, activités) pour les
- * modules de l'espace bénévoles : copie de sauvegarde du dossier entier
+ * modules de l'Espace Admin : copie de sauvegarde du dossier entier
  * (quelques fichiers), modification, puis `restore` (reconstruction du site
  * en échec) ou `purge` (nouvelle version en ligne).
  *

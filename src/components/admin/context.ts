@@ -56,7 +56,7 @@ export function takeModuleToReopen(): string | null {
 	}
 }
 
-/** Champs de formulaire de l'espace bénévoles : classe `champ` de src/styles/forms.css (apparence réglée là). */
+/** Champs de formulaire de l'Espace Admin : classe `champ` de src/styles/forms.css (apparence réglée là). */
 export const inputClass = 'mt-1 champ';
 
 /** Champ court sur la même ligne que d'autres éléments (couleur hexadécimale…) : largeur à ajouter. */

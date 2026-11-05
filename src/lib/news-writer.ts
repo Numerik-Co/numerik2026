@@ -1,6 +1,6 @@
 /**
  * Écriture d'une actualité dans les sources (`src/content/news/<AAAA-MM-JJ-slug>/`)
- * depuis le module « Actualités » de l'espace bénévoles. La publication
+ * depuis le module « Actualités » de l'Espace Admin. La publication
  * elle-même (reconstruction du site) est faite par `site-build.ts`.
  *
  * Tout est vérifié AVANT d'écrire, avec les mêmes règles que le schéma de la

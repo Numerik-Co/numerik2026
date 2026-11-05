@@ -4,7 +4,7 @@ Deux mécanismes coexistent :
 
 - **Pages de contenu** (éditoriales) — un simple fichier Markdown dans
   `src/content/pages/`, créé à la main ou depuis le module **« Pages »** de
-  l'espace bénévoles (voir plus bas). Aucune ligne de code à écrire. **C'est
+  l'Espace Admin (voir plus bas). Aucune ligne de code à écrire. **C'est
   le cas courant.**
   Guide pas-à-pas pour les éditeurs : [`src/content/README.md`](../src/content/README.md).
 - **Pages applicatives** — un `.astro` dans `src/pages/` (routage par fichiers
@@ -96,7 +96,7 @@ balisage et classes gardés), variables remplacées, puis découpé aux
 marqueurs de blocs (`pageParts()`, `src/lib/content-pages.ts`). Le texte
 Markdown des blocs passe par le même nettoyage (`markdown-fragment.ts`).
 
-## Module « Pages » (espace bénévoles)
+## Module « Pages » (Espace Admin)
 
 Groupes `redacteur` / `admin` / `superadmin`. Écrit dans les sources puis
 reconstruit le site, comme le module « Actualités »
@@ -242,7 +242,7 @@ import PageHeader from '../components/sections/PageHeader.astro';
 </Layout>
 ```
 
-Pour qu'elle soit réglable depuis l'espace bénévoles (menu, textes,
+Pour qu'elle soit réglable depuis l'Espace Admin (menu, textes,
 activation), l'ajouter à la bibliothèque `SITE_PAGES` de
 `src/lib/site-pages.ts` (voir plus haut) — le routage par fichiers crée la
 route, mais pas l'entrée de menu.

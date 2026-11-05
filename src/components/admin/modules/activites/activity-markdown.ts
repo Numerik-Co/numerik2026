@@ -1,7 +1,7 @@
 /**
  * Fichier `.md` d'une fiche d'activité (navigateur) : téléchargé depuis le
  * formulaire en modification, puis rechargé pour le remplir (`EditFileBar`),
- * ou déposé dans « Ajouter un fichier .md » pour créer une fiche (modèle :
+ * ou déposé dans « Ajouter un contenu » pour créer une fiche (modèle :
  * `downloadActivityTemplate`).
  * Mêmes clés que `src/content/activites/<adresse>/index.md` (cf.
  * src/lib/activity-writer.ts) ; l'adresse, l'ordre et la photo restent dans

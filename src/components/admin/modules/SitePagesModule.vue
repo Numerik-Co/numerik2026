@@ -285,7 +285,7 @@ const stopCloseRequest = onCloseRequest(() => {
 onBeforeUnmount(stopCloseRequest);
 
 onMounted(() => {
-	// Fichier déposé dans « Ajouter un fichier .md » (menu Contenus) : création pré-remplie.
+	// Fichier déposé dans « Ajouter un contenu » (menu Contenus) : création pré-remplie.
 	const pending = takePendingImport('page');
 	if (pending) go({ name: 'page', source: null, file: pending });
 	void load();
@@ -563,7 +563,7 @@ onMounted(() => {
 						icon: 'fa-file-lines',
 						list: freePages,
 					},
-					{ key: 'reservee', title: 'Pages réservées', hint: 'espace bénévoles, connexion requise', icon: 'fa-lock', list: reservedPages },
+					{ key: 'reservee', title: 'Pages réservées', hint: 'Espace Admin, connexion requise', icon: 'fa-lock', list: reservedPages },
 				]"
 				:key="group.key"
 				class="overflow-hidden rounded-xl border border-gray-200"

@@ -1,7 +1,7 @@
 /**
  * Écriture des informations de l'association (`src/content/association.yaml`,
  * lu par `src/lib/association.ts`) depuis le module « Association » de
- * l'espace bénévoles (bureau). La publication (reconstruction du site) est
+ * l'Espace Admin (bureau). La publication (reconstruction du site) est
  * faite par `site-build.ts`, via `admin-publish.ts`.
  *
  * Le YAML est modifié en place (`yaml` Document) : commentaires, guillemets

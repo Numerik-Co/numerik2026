@@ -9,13 +9,13 @@ de toucher au code : créer une page = créer un fichier Markdown.
 | --- | --- |
 | `pages/` | Pages « éditoriales » (présentation, statuts, mentions légales…), photo citée par `cover:` ; `pages/espace-benevoles/` = pages réservées |
 | `news/` | Articles d'actualité (un dossier par article ; photo citée par `cover: ./cover.jpg` dans le frontmatter) — voir `docs/actualites.md` |
-| `activites/` | Fiches d'activité (un dossier par fiche) et leurs catégories (`_categories.yaml`) ; aussi gérables depuis le module « Activités » de l'espace bénévoles — voir `docs/activites.md` |
+| `activites/` | Fiches d'activité (un dossier par fiche) et leurs catégories (`_categories.yaml`) ; aussi gérables depuis le module « Activités » de l'Espace Admin — voir `docs/activites.md` |
 | `annonces.yaml` | Annonces de la bannière en haut du site (liste, ordre = ordre de défilement) — voir `docs/annonces.md` |
-| `reglages.yaml` | Couleurs du site, bouton « Adhérer », lien « Je participe », partage, ouverture/fermeture des formulaires, plugins activés (`plugins:`, ex. prise de RDV) (commentaires dans le fichier) — couleurs modifiables aussi depuis l'espace bénévoles, module « Association » (onglet Charte graphique) |
+| `reglages.yaml` | Couleurs du site, bouton « Adhérer », lien « Je participe », partage, ouverture/fermeture des formulaires, plugins activés (`plugins:`, ex. prise de RDV) (commentaires dans le fichier) — couleurs modifiables aussi depuis l'Espace Admin, module « Association » (onglet Charte graphique) |
 | `partenaires.yaml` | Partenaires (cartes de la page Adhérer et de l'accueil), relais d'adhésion, avantages adhérent·e·s (commentaires dans le fichier) |
 | `rdv.yaml` | Prise de rendez-vous en ligne (plugin `rdv`, à activer dans `reglages.yaml`) : adresse de la page, textes, encart d'accueil, permanences (jours, horaires, lieux), zones géographiques (commentaires dans le fichier) — voir `src/plugins/rdv/README.md` |
-| `images/` | Logo (`logo.png`, obligatoire), photo d'accueil (`accueil.jpg`), icône d'onglet (`favicon.svg` / `.ico`) — remplacer le fichier en gardant le nom, ou logo et icône depuis l'espace bénévoles (module « Association », onglet Charte graphique) ; voir `docs/theme.md` |
-| `association.yaml` | Nom, coordonnées, réseaux sociaux et mentions légales de l'association (commentaires dans le fichier) — modifiable aussi par le bureau depuis l'espace bénévoles, module « Association » (onglet Généralités) |
+| `images/` | Logo (`logo.png`, obligatoire), photo d'accueil (`accueil.jpg`), icône d'onglet (`favicon.svg` / `.ico`) — remplacer le fichier en gardant le nom, ou logo et icône depuis l'Espace Admin (module « Association », onglet Charte graphique) ; voir `docs/theme.md` |
+| `association.yaml` | Nom, coordonnées, réseaux sociaux et mentions légales de l'association (commentaires dans le fichier) — modifiable aussi par le bureau depuis l'Espace Admin, module « Association » (onglet Généralités) |
 
 Les pages du site (Accueil, Activités, Actualités, Contact) sont fournies par
 le template : on les active et on règle leurs textes depuis le module
@@ -132,7 +132,7 @@ La page reste consultable via son URL (utile pour les liens de pied de page).
 ### Page réservée au bureau ou aux animateur·rice·s
 
 Ranger la page dans le dossier **`pages/espace-benevoles/`** : elle n'est
-visible qu'après connexion (lien « Espace bénévoles » en pied de page), son
+visible qu'après connexion (lien « Espace Admin » en pied de page), son
 adresse commence par `/espace-benevoles/` et elle n'apparaît jamais dans le
 menu public. Les personnes autorisées la retrouvent dans « Pages réservées »
 de la barre d'administration (dans le module « Pages » pour le bureau et

@@ -5,7 +5,7 @@
  * publique `/activites/<catégorie>/<adresse>` change si la catégorie change.
  * Onglets Informations / Contenu / Image ; en modification, fichier `.md`
  * à télécharger ou à recharger (`EditFileBar`, ./activity-markdown.ts) ;
- * en création, `initialFile` (« Ajouter un fichier .md ») pré-remplit le formulaire.
+ * en création, `initialFile` (« Ajouter un contenu ») pré-remplit le formulaire.
  * Le serveur valide tout (src/lib/activity-writer.ts) et reconstruit le site.
  */
 import { computed, inject, onBeforeUnmount, reactive, ref } from 'vue';
@@ -37,7 +37,7 @@ const props = defineProps<{
 	source: ActivitySourceView | null;
 	category: string;
 	disabled: boolean;
-	/** Création à partir d'un fichier déposé dans « Ajouter un fichier .md » (menu Contenus). */
+	/** Création à partir d'un fichier déposé dans « Ajouter un contenu » (menu Contenus). */
 	initialFile?: File;
 }>();
 const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();

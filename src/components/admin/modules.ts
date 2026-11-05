@@ -1,5 +1,5 @@
 /**
- * Modules de l'espace bénévoles : chacun apparaît comme un bouton de la
+ * Modules de l'Espace Admin : chacun apparaît comme un bouton de la
  * barre d'administration (ou du menu du nom, `placement: 'user'`) et s'ouvre
  * dans le panneau latéral.
  *

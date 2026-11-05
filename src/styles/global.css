@@ -99,7 +99,7 @@ h6 {
 	list-style: disc;
 }
 
-/* Barre de l'espace bénévoles (src/components/admin/AdminRoot.vue) : fixe en
+/* Barre de l'Espace Admin (src/components/admin/AdminRoot.vue) : fixe en
    haut, elle décale la page et le header collant (top: var(--admin-bar-h)). */
 html.has-admin-bar {
 	--admin-bar-h: 2.5rem;
@@ -108,7 +108,7 @@ html.has-admin-bar body {
 	padding-top: var(--admin-bar-h);
 }
 
-/* Ascenseur fin (panneaux de l'espace bénévoles) : même largeur sur tous les
+/* Ascenseur fin (panneaux de l'Espace Admin) : même largeur sur tous les
    écrans ; ::-webkit-scrollbar pour les navigateurs sans scrollbar-width. */
 @utility scrollbar-fin {
 	scrollbar-width: thin;

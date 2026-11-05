@@ -1,5 +1,5 @@
 /**
- * Utilitaires des routes JSON de l'espace bénévoles (`/api/auth/*`,
+ * Utilitaires des routes JSON de l'Espace Admin (`/api/auth/*`,
  * `/api/admin/*`).
  *
  * `security.checkOrigin` d'Astro ne couvre que les envois de formulaires :

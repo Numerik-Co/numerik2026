@@ -1,5 +1,5 @@
 /**
- * Plugins depuis le module « Plugins » de l'espace bénévoles (super admin
+ * Plugins depuis le module « Plugins » de l'Espace Admin (super admin
  * seul) : un enregistrement unique par plugin, fichiers changés en place
  * (`yaml` Document : commentaires et autres réglages gardés) :
  *  - activation : `plugins.<id>` de `src/content/reglages.yaml`, revalidé

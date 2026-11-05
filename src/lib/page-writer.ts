@@ -1,6 +1,6 @@
 /**
  * Écriture des pages de contenu et des menus déroulants dans les sources
- * (`src/content/pages/`) depuis le module « Pages » de l'espace bénévoles.
+ * (`src/content/pages/`) depuis le module « Pages » de l'Espace Admin.
  * La publication (reconstruction du site) est faite par `site-build.ts`.
  *
  * Structure gérée (cf. `src/lib/content-pages.ts`) :

@@ -79,7 +79,7 @@ menu:
 ---
 ```
 
-### Page réservée (espace bénévoles)
+### Page réservée (Espace Admin)
 
 `src/content/pages/espace-benevoles/<slug>/index.md` → `/espace-benevoles/<slug>`,
 cf. [auth.md](auth.md#réserver-une-page-de-contenu). Jamais dans le menu.
@@ -142,7 +142,7 @@ La page déclare `type: enrichie` et ses blocs ; chaque bloc s'affiche à
 l'endroit de son marqueur, seul sur sa ligne. Catalogue et champs :
 `src/lib/blocs.ts` ; exemple complet :
 `src/content/pages/association/adhesion-associations/index.md`. Le module
-« Pages » de l'espace bénévoles produit exactement ce format.
+« Pages » de l'Espace Admin produit exactement ce format.
 
 ```md
 ---
@@ -373,7 +373,7 @@ Toujours passer par `COLS.*` / `TABLES.*` plutôt que d'écrire les noms de
 colonnes Grist en dur ; une nouvelle colonne s'ajoute dans `COLS`
 (`src/plugins/adhesion/lib/grist.ts`).
 
-### Module de l'espace bénévoles
+### Module de l'Espace Admin
 
 Panneau latéral ouvert depuis la barre admin, cf. [auth.md](auth.md#ajouter-un-module).
 
@@ -404,7 +404,7 @@ Bouton qui ouvre la connexion, n'importe où : `<button type="button" data-auth-
 
 ### Champs de formulaire
 
-Tous les champs du site (pages publiques, plugins, espace bénévoles) partagent
+Tous les champs du site (pages publiques, plugins, Espace Admin) partagent
 les classes de `src/styles/forms.css` : hauteur, bordure, focus et erreur se
 règlent **là seulement** (`--champ-py` : `0.25rem` = taille « sm » façon
 Bootstrap, ~30 px ; `0.5rem` = taille normale).
@@ -435,7 +435,7 @@ Libellés, aides et messages, mêmes fichier et principe :
 <p class="alerte-attention">Mot de passe provisoire : choisissez-en un nouveau.</p>
 ```
 
-Espace bénévoles : `inputClass` (`mt-1 champ`) et `compactInputClass`
+Espace Admin : `inputClass` (`mt-1 champ`) et `compactInputClass`
 (`champ`, largeur à ajouter) de `src/components/admin/context.ts`. Une classe
 Tailwind ajoutée à côté (`w-28`, `pl-9`…) l'emporte toujours (couche
 `components`). Cases à cocher et radios ne sont pas concernés.

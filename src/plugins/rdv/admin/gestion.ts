@@ -1,5 +1,5 @@
 /**
- * Gestion des RDV depuis l'espace bénévoles (module « Rendez-vous » du
+ * Gestion des RDV depuis l'Espace Admin (module « Rendez-vous » du
  * plugin, bureau et animateur·rice·s) : liste des RDV avec la fiche du
  * bénéficiaire, et modification d'un RDV (créneau, démarche, statut,
  * compte rendu : `suivi.ts`) ou suppression motivée. Écrit directement dans Grist : pas de reconstruction du site.

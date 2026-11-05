@@ -26,7 +26,7 @@ plugins:
   adhesion: false
 ```
 
-ou la case « Plugin actif » du module **Plugins** de l'espace bénévoles
+ou la case « Plugin actif » du module **Plugins** de l'Espace Admin
 (super admin). Voir aussi [les plugins](../README.md) (activation,
 organisation).
 
@@ -39,7 +39,7 @@ organisation).
   leur lien mène à ces pages), le bouton « Nous rejoindre » du bandeau
   d'accueil et celui de l'encart d'appel à l'action disparaissent ;
 - le planning de `/activites` n'affiche que les permanences du plugin RDV ;
-- plan du site et liens proposés dans l'espace bénévoles : sans ces pages.
+- plan du site et liens proposés dans l'Espace Admin : sans ces pages.
 
 ## Mise en place
 

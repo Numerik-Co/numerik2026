@@ -1,6 +1,6 @@
 /**
  * Authentification : renseigne `Astro.locals.user` sur chaque requête rendue
- * à la demande et garde les routes de l'espace bénévoles :
+ * à la demande et garde les routes de l'Espace Admin :
  *  - `/api/auth/*`, `/api/admin/*` : requêtes du site lui-même uniquement ;
  *  - `/api/admin/*` : connexion obligatoire (401) ;
  *  - préfixes de `GUARDS` : groupe requis (403), `admin` / `superadmin`

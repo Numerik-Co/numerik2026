@@ -1,6 +1,6 @@
 /**
  * Lot de modifications en attente de publication (« Enregistrer sans
- * publier » dans les modules de l'espace bénévoles) : la modification est
+ * publier » dans les modules de l'Espace Admin) : la modification est
  * écrite dans les sources (`src/content/`) comme d'habitude, mais le site
  * n'est pas reconstruit ; une seule reconstruction publie ensuite tout le lot
  * (bouton « Publier les modifications », `POST /api/admin/publication/lot`).
@@ -12,7 +12,7 @@
  * réussie (`clearLot`, appelé par `site-build.ts`), qu'elle ait été lancée
  * pour le lot ou pour une modification publiée aussitôt : toute
  * reconstruction met en ligne l'état des sources, donc le lot entier. Un
- * site reconstruit hors de l'espace bénévoles (redémarrage, `update.sh`)
+ * site reconstruit hors de l'Espace Admin (redémarrage, `update.sh`)
  * le publie aussi : le lot est refermé dès que l'empreinte du site en place
  * correspond aux sources (`readLot`).
  *

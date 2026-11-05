@@ -16,7 +16,7 @@
  *
  * Build en échec : l'ancien site est servi s'il existe (message d'erreur
  * dans les logs), sinon arrêt avec le code 1. Les publications depuis
- * l'espace bénévoles construisent elles-mêmes (src/lib/site-build.ts) : leur
+ * l'Espace Admin construisent elles-mêmes (src/lib/site-build.ts) : leur
  * build-info.json correspond, le redémarrage qui suit ne reconstruit pas.
  *
  * `SITE_ROOT` : dossier du projet (défaut : dossier courant), comme la publication.

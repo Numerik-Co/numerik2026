@@ -13,7 +13,7 @@ dans le site quand il est inactif.
 
 ## Activer ou désactiver un plugin
 
-Depuis l'espace bénévoles, module **« Plugins »** (super admin seul) :
+Depuis l'Espace Admin, module **« Plugins »** (super admin seul) :
 activer / désactiver, avec publication, et ce qui manque à chaque plugin
 (fichier de réglages, variable d'environnement). Ou à la main, dans
 `src/content/reglages.yaml` (fichier de l'association, jamais remplacé par
@@ -45,7 +45,7 @@ Plugin inactif :
 - ses pages et ses routes `/api/…` n'existent pas (404) : elles ne sont pas
   construites du tout ;
 - ce qu'il ajoute ailleurs disparaît : module d'accueil, bloc de page, liens
-  proposés dans l'espace bénévoles, plan du site, permanences du planning…
+  proposés dans l'Espace Admin, plan du site, permanences du planning…
 - un module d'accueil ou un bloc déjà enregistré dans le contenu est gardé
   mais n'est plus affiché : il revient si on réactive le plugin.
 
@@ -64,7 +64,7 @@ src/plugins/
     api/           ← routes /api/…
     formulaire/    ← îlots Vue des formulaires et leurs appels aux routes
     sections/      ← sections de page (accueil, blocs) et leurs définitions
-    admin/         ← modules de l'espace bénévoles
+    admin/         ← modules de l'Espace Admin
     lib/           ← code serveur
     images/        ← images propres au plugin
 ```

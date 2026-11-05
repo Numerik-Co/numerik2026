@@ -24,7 +24,7 @@ export interface PluginInfo {
 	 * sont tous, et c'est le seul dossier d'un autre plugin qu'il peut importer.
 	 */
 	requiert?: readonly string[];
-	/** Icône Font Awesome (module « Plugins » de l'espace bénévoles). */
+	/** Icône Font Awesome (module « Plugins » de l'Espace Admin). */
 	icon: string;
 	/** Documentation du plugin (chemin dans le projet). */
 	doc: string;

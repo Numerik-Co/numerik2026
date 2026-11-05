@@ -19,7 +19,7 @@ import { sanitizeNewsHtml } from './sanitize-news';
  * Pages `.md` (classiques ou enrichies de blocs, cf. `src/lib/blocs.ts`) :
  * HTML nettoyé comme celui des actualités, variables `{{…}}` remplacées
  * (`page-variables.ts`). Pages `.mdx` : écrites dans le code, rendues telles
- * quelles (jamais produites par l'espace bénévoles).
+ * quelles (jamais produites par l'Espace Admin).
  *
  * Pages publiques : prérendues par `src/pages/[...slug].astro`.
  * Pages réservées : rangées dans `RESERVED_FOLDER`, rendues à la demande par

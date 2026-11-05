@@ -33,7 +33,7 @@ formulaire (encart « fermé » à la place) : `forms.inscription` de
   « Activités » ne propose plus les réglages d'inscription d'une fiche
   (bouton affiché, activités Grist visées), gardés tels quels dans les
   fichiers ;
-- plan du site et liens proposés dans l'espace bénévoles : sans `/inscription`.
+- plan du site et liens proposés dans l'Espace Admin : sans `/inscription`.
 
 ## Organisation
 

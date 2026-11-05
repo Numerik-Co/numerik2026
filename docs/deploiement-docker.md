@@ -9,7 +9,7 @@ change rien — il empaquette juste ce build.
 | Élément | Où il vit | Ajout / modif = rebuild de l'image ? |
 | :--- | :--- | :--- |
 | **Adhésions, inscriptions, contacts** (formulaire) | **Grist** (via les routes `/api/adhesion/*`) | ❌ **Non.** C'est live, indépendant de l'image. |
-| **Comptes de l'espace bénévoles** | `data/accounts/` sur le VPS (volume) | ❌ Non — gérés depuis le site |
+| **Comptes de l'Espace Admin** | `data/accounts/` sur le VPS (volume) | ❌ Non — gérés depuis le site |
 | Autres données saisies via un futur formulaire | Grist / service externe | ❌ Non |
 | **Actualités** (`src/content/news/…`) | fichiers Markdown compilés au build | ✅ **Oui** |
 | **Activités** (`src/content/activites/…`) | idem | ✅ Oui |
@@ -53,7 +53,7 @@ plus bas, très simple.
   `localhost` **dans** le conteneur et n'est pas joignable.
 - **Port sur `127.0.0.1`** : le conteneur n'est pas exposé directement à
   Internet. Un reverse proxy (nginx/Traefik) fait le domaine + HTTPS (§5).
-- **Un seul volume, `./data`** : les comptes de l'espace bénévoles (un
+- **Un seul volume, `./data`** : les comptes de l'Espace Admin (un
   fichier YAML par compte). Tout le reste va dans Grist. À sauvegarder ;
   mise en service : [guide-espace-benevoles.md](guide-espace-benevoles.md).
 
@@ -155,7 +155,7 @@ server {
     listen 80;
     server_name numerikandco.org www.numerikandco.org;
 
-    # Photos des actualités envoyées depuis l'espace bénévoles (10 Mo max,
+    # Photos des actualités envoyées depuis l'Espace Admin (10 Mo max,
     # ~13,5 Mo encodées) : la limite par défaut de nginx (1 Mo) donne une 413.
     client_max_body_size 20m;
 

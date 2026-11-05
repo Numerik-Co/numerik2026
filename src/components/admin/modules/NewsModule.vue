@@ -313,7 +313,7 @@ const formatDate = (iso: string) =>
 	new Date(`${iso}T00:00:00Z`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 onMounted(async () => {
-	// Fichier déposé dans « Ajouter un fichier .md » (menu Contenus) : formulaire d'ajout pré-rempli.
+	// Fichier déposé dans « Ajouter un contenu » (menu Contenus) : formulaire d'ajout pré-rempli.
 	const pending = takePendingImport('actualite');
 	if (pending) {
 		openAdd();

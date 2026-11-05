@@ -49,8 +49,8 @@ La carte sur l'accueil/`/activites`, la page `/activites/<slug>` (bandeau +
 
 ## Créer une nouvelle activité
 
-Le plus simple : le **module « Activités »** de l'espace bénévoles (voir
-[plus bas](#module-activités-espace-bénévoles)). À la main, dans les
+Le plus simple : le **module « Activités »** de l'Espace Admin (voir
+[plus bas](#module-activités-espace-admin)). À la main, dans les
 sources :
 
 1. Créer un dossier dans `src/content/activites/`, nommé d'après le slug de l'activité :
@@ -99,10 +99,10 @@ L'activité apparaît alors sur :
 
 Elle n'apparaît **pas** directement sur l'accueil ni sur `/activites` : ces deux pages n'affichent que les 4 cartes de catégories (icônes), pas les activités individuelles.
 
-## Module « Activités » (espace bénévoles)
+## Module « Activités » (Espace Admin)
 
 Les fiches se créent, se modifient, se réordonnent et se suppriment depuis
-l'espace bénévoles (module **Activités**, groupe `redacteur`, le bureau
+l'Espace Admin (module **Activités**, groupe `redacteur`, le bureau
 passe toujours), sans toucher aux fichiers : mode d'emploi pour les
 bénévoles dans
 [guide-espace-benevoles.md](guide-espace-benevoles.md#gérer-les-activités).

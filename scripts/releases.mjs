@@ -4,7 +4,7 @@
  *  - `src/integrations/build-info.ts` : écrit `build-info.json` dans chaque
  *    site construit (`npm run build`) ;
  *  - `scripts/start.mjs` : au démarrage, reconstruit si l'empreinte a changé ;
- *  - `src/lib/site-build.ts` : publication depuis l'espace bénévoles.
+ *  - `src/lib/site-build.ts` : publication depuis l'Espace Admin.
  *
  * L'empreinte résume ce qui rend un build propre à un déploiement : version
  * du modèle (`package.json`), adresse du site (`SITE_URL`) et contenu de

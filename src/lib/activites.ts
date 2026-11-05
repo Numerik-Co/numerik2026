@@ -75,7 +75,7 @@ export async function getActivitiesByCategory(categorySlug: string): Promise<Act
 
 /**
  * Contenu rendu d'une fiche : HTML nettoyé et titres (sommaire). Les fiches
- * se modifient depuis l'espace bénévoles : même nettoyage que les actualités
+ * se modifient depuis l'Espace Admin : même nettoyage que les actualités
  * (`sanitizeNewsHtml`, HTML autorisé, code exécutable retiré).
  */
 export async function renderActivity(activity: Activity): Promise<{ html: string; headings: Heading[] }> {

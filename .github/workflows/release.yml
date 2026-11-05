@@ -81,7 +81,7 @@ jobs:
             type=raw,value=latest
           labels: |
             org.opencontainers.image.title=numerik2026
-            org.opencontainers.image.description=Site et espace bénévoles pour associations (Astro + Node)
+            org.opencontainers.image.description=Site et Espace Admin pour associations (Astro + Node)
 
       - uses: docker/build-push-action@v6
         with:

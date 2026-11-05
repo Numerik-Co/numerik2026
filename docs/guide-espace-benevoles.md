@@ -1,6 +1,6 @@
-# Guide de l'espace bénévoles
+# Guide de l'Espace Admin
 
-L'espace bénévoles permet au **bureau** et aux **animateur·rice·s** de se
+L'Espace Admin permet au **bureau** et aux **animateur·rice·s** de se
 connecter au site pour accéder aux pages réservées et aux outils
 d'administration. Il n'y a **pas de page d'administration séparée** : tout
 s'affiche par-dessus le site, sur la page où vous vous trouvez.
@@ -58,7 +58,7 @@ Rien à faire de plus : le dossier est créé au premier compte. Il **survit
 aux redéploiements** (`./deploy.sh`) et n'est jamais envoyé sur git.
 
 > 💾 **Sauvegardez `data/`** avec vos autres sauvegardes du VPS : c'est la
-> seule donnée de l'espace bénévoles. Perdre ce dossier = recréer les comptes.
+> seule donnée de l'Espace Admin. Perdre ce dossier = recréer les comptes.
 
 ### 3. Déployer
 
@@ -129,7 +129,7 @@ Autres commandes utiles :
 
 ### 5. Vérifier
 
-1. Ouvrir le site, cliquer sur **« Espace bénévoles »** tout en bas de la page.
+1. Ouvrir le site, cliquer sur **« Espace Admin »** tout en bas de la page.
 2. Se connecter avec le compte créé : une **barre sombre** apparaît en haut.
 
 ### Reverse proxy (nginx)
@@ -183,7 +183,7 @@ Les comptes locaux sont dans `./data/accounts/` (ignoré par git).
 
 ### Se connecter
 
-1. Sur n'importe quelle page du site, cliquer sur **« 🔒 Espace bénévoles »**
+1. Sur n'importe quelle page du site, cliquer sur **« 🔒 Espace Admin »**
    tout en bas (dernière ligne du pied de page).
 2. Saisir son **identifiant** et son **mot de passe**, puis **Se connecter**.
 3. La page se recharge et une **barre sombre** apparaît en haut de l'écran.
@@ -197,7 +197,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ ⚙ Espace d'administration   🔒 Pages réservées              🖥 Production  👤 Marie ▾ │
+│ ⚙ Espace Admin   🔒 Pages réservées              🖥 Production  👤 Marie ▾ │
 └────────────────────────────────────────────────┬─────────────────────────┤
                                                  │ 👤 Mon compte │ ⏻ Déconnexion │
                                                  └─────────────────────────┘
@@ -221,7 +221,7 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - **Contenus ▾** regroupe **Actualités**, **Pages** et **Activités** : un
   clic les affiche côte à côte, juste en dessous (fermé par un clic ailleurs
   ou **Échap**). Avec le droit d'en voir un seul, il a son propre bouton.
-- Premier bouton de **Contenus ▾** : **Ajouter un fichier .md**. Une
+- Premier bouton de **Contenus ▾** : **Ajouter un contenu**. Une
   fenêtre s'ouvre au centre : on y dépose un fichier `.md` (modèles
   téléchargeables en bas de la fenêtre). Le type de contenu est lu dans la
   ligne `contenu:` de son en-tête (`actualite`, `page` ou `activite`) — à
@@ -260,7 +260,7 @@ Le bouton **Pages réservées** n'apparaît que pour qui n'a pas le module
 réservées »).
 
 **Journal** (super admin seulement) : toutes les modifications faites depuis
-l'espace bénévoles — qui, quand, quoi, avec quel résultat (connexions,
+l'Espace Admin — qui, quand, quoi, avec quel résultat (connexions,
 mots de passe, actualités, pages, activités et catégories ajoutées /
 modifiées / supprimées, changements d'ordre, informations de l'association, résultat de
 chaque publication, comptes). Recherche par nom ou objet, connexions
@@ -433,7 +433,7 @@ onglet.
 **Travailler dans un fichier** (modification seulement) : au-dessus des
 onglets, **Télécharger le fichier** donne le contenu du formulaire en `.md`
 (en-tête + texte, sans la photo ; la ligne `contenu:` en tête indique le
-type, ce qui permet de le réutiliser dans **Ajouter un fichier .md**) ; après l'avoir modifié dans un éditeur de
+type, ce qui permet de le réutiliser dans **Ajouter un contenu**) ; après l'avoir modifié dans un éditeur de
 texte, **Charger un fichier modifié** (ou le glisser sur le bouton) remplit
 le formulaire. Rien n'est publié avant **Enregistrer** ; les champs ignorés
 (photo, champ inconnu, catégorie inexistante, date illisible…) sont signalés.
@@ -472,7 +472,7 @@ blocs :
    elles réapparaissent au clavier avec Tab) ; un bandeau propose alors **Enregistrer et publier** (une
    seule reconstruction pour tous les déplacements), **Enregistrer sans publier** ou **Annuler** ;
 2. **Pages libres** : hors du menu, accessibles par leur adresse seulement ;
-3. **Pages réservées** (espace bénévoles) ;
+3. **Pages réservées** (Espace Admin) ;
 4. **Bibliothèque de pages du site** : les pages fournies par le site
    (Activités, Actualités, Contact) désactivées, avec un bouton **Activer**.
 

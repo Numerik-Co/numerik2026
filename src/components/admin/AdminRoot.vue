@@ -1,12 +1,12 @@
 <script setup lang="ts">
 /**
- * Racine de l'espace bénévoles, montée par `mount.ts` (jamais pour un simple
+ * Racine de l'Espace Admin, montée par `mount.ts` (jamais pour un simple
  * visiteur, cf. `AdminLoader.astro`) :
  *  - personne connectée → barre fixe en haut + modules en panneau latéral ;
  *  - sinon → modale de connexion à la demande (`numerik:auth-open`).
  * Connexion et déconnexion rechargent la page : les pages réservées et le
  * contenu rendu côté serveur reflètent ainsi le nouvel état.
- * Menu « Contenus » : premier bouton « Ajouter un fichier .md » → modale
+ * Menu « Contenus » : premier bouton « Ajouter un contenu » → modale
  * `ContentImportModal` puis module du type de contenu, formulaire pré-rempli.
  * Bouton « À publier (N) » de la barre (rédaction, bureau) : modifications
  * enregistrées sans publier (`lot.ts`), à publier en une fois ou à annuler.
@@ -81,7 +81,7 @@ function openModuleFromMenu(id: string) {
 }
 
 /**
- * « Ajouter un fichier .md » : premier bouton du menu « Contenus », modale
+ * « Ajouter un contenu » : premier bouton du menu « Contenus », modale
  * centrée (`ContentImportModal`) qui ouvre ensuite le module du type de
  * contenu lu dans le fichier, formulaire de création pré-rempli.
  */
@@ -179,7 +179,7 @@ function closeModule() {
 
 provide(ADMIN_CONTEXT, { user, pages, sessionExpired, onCloseRequest });
 
-/** Lien « Espace bénévoles » : connexion, ou premier module si déjà connecté·e. */
+/** Lien « Espace Admin » : connexion, ou premier module si déjà connecté·e. */
 function open() {
 	if (user.value) activeId.value = barModules.value[0]?.id ?? null;
 	else loginOpen.value = true;
@@ -236,7 +236,7 @@ onBeforeUnmount(() => {
 		<div class="flex h-full w-full items-center gap-1 px-2 sm:px-4">
 			<span class="mr-6 hidden shrink-0 items-center gap-2 font-heading font-semibold md:flex">
 				<i class="fa-solid fa-gear text-gray-400" aria-hidden="true"></i>
-				Espace d'administration
+				Espace Admin
 			</span>
 			<nav class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto" aria-label="Modules d'administration">
 				<template v-for="entry in bar" :key="entry.kind === 'menu' ? `menu:${entry.id}` : entry.module.id">
@@ -273,7 +273,7 @@ onBeforeUnmount(() => {
 			<div
 				v-if="openBarMenu?.kind === 'menu'"
 				data-bar-menu
-				class="fixed top-[3.125rem] flex max-w-[calc(100vw-1rem)] items-stretch gap-1 overflow-x-auto whitespace-nowrap rounded-md bg-gray-900 p-1 shadow-lg ring-1 ring-white/10"
+				class="fixed top-[2.625rem] flex max-w-[calc(100vw-1rem)] items-stretch gap-1 overflow-x-auto whitespace-nowrap rounded-md bg-gray-900 p-1 shadow-lg ring-1 ring-white/10"
 				:style="{ left: `${Math.max(8, menuLeft)}px` }"
 				role="menu"
 				aria-orientation="horizontal"
@@ -288,7 +288,7 @@ onBeforeUnmount(() => {
 						@click="openImport"
 					>
 						<i class="fa-solid fa-file-import w-4 text-center" aria-hidden="true"></i>
-						Ajouter un fichier .md
+						Ajouter un contenu
 					</button>
 					<div class="my-1 border-l border-white/15" aria-hidden="true"></div>
 				</template>
@@ -328,7 +328,7 @@ onBeforeUnmount(() => {
 				</button>
 				<div
 					v-if="openMenu === 'lot'"
-					class="fixed right-2 top-[3.125rem] w-[min(24rem,calc(100vw-1rem))] rounded-lg bg-white p-4 text-sm text-gray-800 shadow-lg ring-1 ring-black/10"
+					class="fixed right-2 top-[2.625rem] w-[min(24rem,calc(100vw-1rem))] rounded-lg bg-white p-4 text-sm text-gray-800 shadow-lg ring-1 ring-black/10"
 					role="dialog"
 					aria-label="Modifications en attente de publication"
 				>
@@ -426,7 +426,7 @@ onBeforeUnmount(() => {
 				</button>
 				<div
 					v-if="openMenu === 'user'"
-					class="absolute right-0 top-full mt-2.5 flex items-stretch gap-1 overflow-hidden whitespace-nowrap rounded-md bg-gray-900 p-1 shadow-lg ring-1 ring-white/10"
+					class="absolute right-0 top-full mt-1.5 flex items-stretch gap-1 overflow-hidden whitespace-nowrap rounded-md bg-gray-900 p-1 shadow-lg ring-1 ring-white/10"
 					role="menu"
 					aria-orientation="horizontal"
 				>
@@ -472,7 +472,7 @@ onBeforeUnmount(() => {
 		</button>
 	</AdminOverlay>
 
-	<AdminOverlay v-if="loginOpen && !user" title="Espace Administration" variant="modal" @close="loginOpen = false">
+	<AdminOverlay v-if="loginOpen && !user" title="Espace Admin" variant="modal" @close="loginOpen = false">
 		<LoginForm @success="reload" />
 	</AdminOverlay>
 </template>

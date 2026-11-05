@@ -1,4 +1,4 @@
-/* Champs de formulaire du site (pages publiques, plugins, espace bénévoles).
+/* Champs de formulaire du site (pages publiques, plugins, Espace Admin).
    Seul endroit où régler leur apparence : hauteur, bordure, focus, erreur.
 
    - `champ` : input texte / email / date / nombre…, select, textarea.
@@ -23,7 +23,7 @@
 
    Couche `components` : une classe Tailwind ajoutée à côté (`w-28`, `pl-9`,
    `font-mono`, `mt-4`…) l'emporte toujours. Cases à cocher et boutons radio
-   ne sont pas concernés. Côté Vue, l'espace bénévoles passe par `inputClass`
+   ne sont pas concernés. Côté Vue, l'Espace Admin passe par `inputClass`
    (src/components/admin/context.ts), qui vaut `mt-1 champ`. */
 
 :root {
@@ -97,7 +97,7 @@
 	}
 
 	.bouton {
-		@apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-transparent font-heading text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60;
+		@apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent font-heading text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60;
 		padding: var(--bouton-py) var(--bouton-px);
 	}
 	.bouton-mini {

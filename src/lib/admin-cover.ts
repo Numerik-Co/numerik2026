@@ -1,5 +1,5 @@
 /**
- * Photo envoyée en JSON par les modules de l'espace bénévoles
+ * Photo envoyée en JSON par les modules de l'Espace Admin
  * (`{ type, data (base64) }`) : contrôles communs avant traitement par sharp.
  */
 

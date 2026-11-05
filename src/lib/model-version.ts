@@ -1,6 +1,6 @@
 /**
  * Version du modèle et dernière version publiée (badge « mise à jour
- * disponible » de l'espace bénévoles, route `/api/admin/version`).
+ * disponible » de l'Espace Admin, route `/api/admin/version`).
  *
  * `MODEL_VERSION` = `package.json` au moment de la construction : chaque
  * version est construite sur le serveur (`scripts/start.mjs`), c'est donc

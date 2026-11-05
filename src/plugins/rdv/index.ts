@@ -17,7 +17,7 @@ export function permanencesAffichees(): AgendaSession[] {
 /** Adresse de la page publique (`adresse:` de `rdv.yaml`). */
 export const RDV_HREF = rdvConfig.adresse;
 
-/** Nom de la page (menu, liens de l'espace bénévoles…). */
+/** Nom de la page (menu, liens de l'Espace Admin…). */
 export const RDV_NOM = rdvConfig.textes.nom;
 
 /** Prise de RDV en ligne ouverte (`ouvert:` de `rdv.yaml`) ? Fermée : `<FormGate>` affiche le message. */

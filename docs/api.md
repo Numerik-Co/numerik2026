@@ -75,9 +75,9 @@ configurée »), le reste du site fonctionne.
 | `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF et le PDF des semaines de RDV (module « Rendez-vous ») (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
 | `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |
 | `BULLETIN_SECRET` | Secret HMAC du lien de bulletin — **secret**, requis avec `GOTENBERG_URL` |
-| `AUTH_SECRET` | Signature des sessions de l'espace bénévoles (≥ 32 caractères) — **secret**, voir [auth.md](auth.md) |
-| `DATA_DIR` | Dossier des comptes et de l'état des publications de l'espace bénévoles (défaut `./data`) — optionnel |
-| `SITE_ROOT` / `PUBLISH_HOOK` / `PUBLISH_RESTART` | Publication depuis l'espace bénévoles — optionnel, voir [publication.md](publication.md) |
+| `AUTH_SECRET` | Signature des sessions de l'Espace Admin (≥ 32 caractères) — **secret**, voir [auth.md](auth.md) |
+| `DATA_DIR` | Dossier des comptes et de l'état des publications de l'Espace Admin (défaut `./data`) — optionnel |
+| `SITE_ROOT` / `PUBLISH_HOOK` / `PUBLISH_RESTART` | Publication depuis l'Espace Admin — optionnel, voir [publication.md](publication.md) |
 
 ### Lues au démarrage, jamais figées dans le build
 

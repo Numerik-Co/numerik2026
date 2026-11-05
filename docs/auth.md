@@ -1,11 +1,11 @@
-# Espace bénévoles — authentification à plat
+# Espace Admin — authentification à plat
 
 Connexion du bureau et des animateur·rice·s, **sans base de données**, sur le
 modèle de Grav CMS : un fichier YAML par compte, des groupes, et un `access:`
 dans le frontmatter des pages à réserver.
 
 **Aucune page d'administration** : tout se fait par-dessus le site. Le lien
-« Espace bénévoles » du pied de page ouvre une **modale de connexion** ; une
+« Espace Admin » du pied de page ouvre une **modale de connexion** ; une
 fois connecté·e, une **barre fixe en haut** donne accès aux **modules**, qui
 s'ouvrent en **panneau latéral** au-dessus de la page en cours.
 
@@ -158,8 +158,8 @@ N'importe quel élément peut ouvrir la connexion : `<button type="button" data-
 | `GET/DELETE /api/admin/publication` | État de la dernière publication / fermeture définitive de son encadré (journalisée) — `redacteur` |
 | `GET/POST/DELETE /api/admin/publication/lot` | Modifications enregistrées sans publier : liste / publication de tout le lot en une reconstruction / annulation `{ confirm: true }` (sources remises en l'état, journalisée), cf. [publication.md](publication.md#enregistrer-sans-publier-lot-de-modifications) — `redacteur` |
 | `GET /api/admin/journal` | Journal des modifications, `?annee=AAAA` — `superadmin` seul |
-| `GET/POST /api/admin/activites`, `GET/PUT/DELETE /api/admin/activites/<slug>`, `PUT /api/admin/activites/ordre`, `POST /api/admin/activites/categories`, `PUT/DELETE /api/admin/activites/categories/<slug>` | Fiches d'activité et catégories (sources), ordre des catégories et des fiches, cf. [activites.md](activites.md#module-activités-espace-bénévoles) — `redacteur` |
-| `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>` | Pages de contenu (sources), cf. [pages.md](pages.md#module-pages-espace-bénévoles) — `redacteur` |
+| `GET/POST /api/admin/activites`, `GET/PUT/DELETE /api/admin/activites/<slug>`, `PUT /api/admin/activites/ordre`, `POST /api/admin/activites/categories`, `PUT/DELETE /api/admin/activites/categories/<slug>` | Fiches d'activité et catégories (sources), ordre des catégories et des fiches, cf. [activites.md](activites.md#module-activités-espace-admin) — `redacteur` |
+| `GET/POST /api/admin/pages`, `GET/PUT/DELETE /api/admin/pages/<chemin>` | Pages de contenu (sources), cf. [pages.md](pages.md#module-pages-espace-admin) — `redacteur` |
 | `POST /api/admin/menus-deroulants`, `PUT/DELETE /api/admin/menus-deroulants/<dossier>` | Menus déroulants (`_group.md`) — `redacteur` |
 | `GET /api/admin/liens` | Pages vers lesquelles pointer depuis un texte (bloc « Insérer un lien », `src/lib/site-links.ts`, lu dans les sources) — `redacteur` |
 | `GET /api/admin/version` | Version du site et dernière version publiée (badge « mise à jour disponible », cache 6 h) — `admin` |
@@ -206,7 +206,7 @@ impossible et la modale l'indique.
   (`security.checkOrigin`). Derrière le reverse proxy HTTPS, `security.allowedDomains`
   (`astro.config.mjs`) autorise `X-Forwarded-Host`/`-Proto` pour le domaine
   de `SITE_URL` (`.env`) uniquement. **Le proxy doit transmettre ces
-  deux en-têtes**, sinon les requêtes de l'espace bénévoles risquent d'être refusées (403). Si le site
+  deux en-têtes**, sinon les requêtes de l'Espace Admin risquent d'être refusées (403). Si le site
   répond aussi sur un autre domaine (sans `www`…), le rediriger vers
   `SITE_URL` dans nginx.
 - **Force brute** : 5 échecs en 15 min par identifiant et par adresse IP →

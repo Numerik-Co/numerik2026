@@ -6,7 +6,7 @@
  * (onglets Informations / Contenu / Image ; fichier `.md` à télécharger ou à
  * recharger, `EditFileBar`). Emplacement : menu de navigation (lien direct
  * ou dans un menu déroulant), page libre (racine, hors menu) ou réservée
- * (espace bénévoles). « Menu » = menu de navigation (frontmatter `menu:`). Le serveur valide
+ * (Espace Admin). « Menu » = menu de navigation (frontmatter `menu:`). Le serveur valide
  * tout (src/lib/page-writer.ts) et reconstruit le site.
  */
 import { computed, inject, nextTick, onBeforeUnmount, reactive, ref, toRaw } from 'vue';
@@ -31,7 +31,7 @@ const props = defineProps<{
 	dropdowns: DropdownView[];
 	source: PageSourceView | null;
 	disabled: boolean;
-	/** Création à partir d'un fichier déposé dans « Ajouter un fichier .md » (menu Contenus). */
+	/** Création à partir d'un fichier déposé dans « Ajouter un contenu » (menu Contenus). */
 	initialFile?: File;
 }>();
 const emit = defineEmits<{ published: [label: string, result: SaveResult]; cancel: [] }>();
@@ -362,7 +362,7 @@ const groupChoices = ASSIGNABLE_GROUPS.map((g) => ({ value: g, label: AUTH_GROUP
 						<select id="pg-placement" v-model="form.placement" :class="inputClass">
 							<option value="menu">Menu de navigation</option>
 							<option value="libre">Page libre (hors menu, accessible par son adresse ou un lien)</option>
-							<option value="reservee">Page réservée (espace bénévoles, connexion requise)</option>
+							<option value="reservee">Page réservée (Espace Admin, connexion requise)</option>
 						</select>
 					</div>
 					<div v-if="form.placement === 'menu' && props.dropdowns.length">

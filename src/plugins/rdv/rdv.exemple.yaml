@@ -48,7 +48,7 @@ textes:
   fermeMessage: 'La prise de rendez-vous en ligne n’est pas ouverte actuellement. Vous pouvez nous contacter directement.'
 
 # Encart de la page d'accueil (et bloc « Prise de rendez-vous » des pages).
-# Textes modifiables aussi depuis l'espace bénévoles, module « Pages ».
+# Textes modifiables aussi depuis l'Espace Admin, module « Pages ».
 encart:
   surtitre: 'Sur rendez-vous'
   titre: 'Besoin d’un coup de main ?'
@@ -70,7 +70,7 @@ creneaux:
   # Jusqu'à combien de semaines à l'avance on peut réserver (1 à 8).
   semaines: 3
   # true : le premier créneau de chaque permanence est réservé aux urgences,
-  # réservable seulement par une personne connectée à l'espace bénévoles.
+  # réservable seulement par une personne connectée à l'Espace Admin.
   urgence: false
 
 # Questions facultatives posées au premier RDV (retirer celles qu'on ne
@@ -92,7 +92,7 @@ icones:
   'E-mail': fa-envelope
 
 # Document Grist des RDV (facultatif) : vide = valeurs du .env (GRIST_BASE_URL,
-# GRIST_DOC_ID_RDV, GRIST_TABLE_*). Réglable aussi depuis l'espace bénévoles,
+# GRIST_DOC_ID_RDV, GRIST_TABLE_*). Réglable aussi depuis l'Espace Admin,
 # module « Plugins ». La clé d'API (GRIST_API_KEY) reste toujours dans le .env.
 #
 # grist:

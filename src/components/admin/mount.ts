@@ -1,4 +1,4 @@
-/** Monte l'espace bénévoles (chargé à la demande par `AdminLoader.astro`). */
+/** Monte l'Espace Admin (chargé à la demande par `AdminLoader.astro`). */
 import { createApp } from 'vue';
 import AdminRoot from './AdminRoot.vue';
 

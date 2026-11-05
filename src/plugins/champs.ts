@@ -1,6 +1,6 @@
 /**
  * Champs de réglage d'un plugin, modifiables depuis le module « Plugins » de
- * l'espace bénévoles (`reglages.champs` du catalogue). Module pur : partagé
+ * l'Espace Admin (`reglages.champs` du catalogue). Module pur : partagé
  * par le catalogue, les manifestes (config Astro), la validation au build
  * (`lib/config.ts` du plugin), l'écriture (`src/lib/plugin-writer.ts`) et
  * l'îlot d'administration.

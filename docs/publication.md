@@ -1,4 +1,4 @@
-# Publication depuis l'espace bénévoles
+# Publication depuis l'Espace Admin
 
 Tout le contenu du site vit dans les sources (`src/content/`, collections
 Astro) et le site publié est **toujours** le produit d'un `npm run build`

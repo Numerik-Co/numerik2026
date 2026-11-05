@@ -1,6 +1,6 @@
 /**
  * Suivi d'une publication (reconstruction du site, cf. src/lib/site-build.ts)
- * par un module de l'espace bénévoles : état affiché par `PublishStatus.vue`,
+ * par un module de l'Espace Admin : état affiché par `PublishStatus.vue`,
  * interrogation de `/api/admin/publication` jusqu'à la mise en ligne (y
  * compris pendant le bref redémarrage du serveur), fermeture définitive de
  * l'encadré du dernier résultat.

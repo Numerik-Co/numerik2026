@@ -1,5 +1,5 @@
 /**
- * Filtre des adresses saisies depuis l'espace bénévoles (liens Markdown des
+ * Filtre des adresses saisies depuis l'Espace Admin (liens Markdown des
  * actualités et des pages, champs « lien » des blocs).
  *
  * Module sans dépendance à Astro : aussi utilisé par `src/content.config.ts`.

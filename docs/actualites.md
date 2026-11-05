@@ -1,6 +1,6 @@
 # Publier une actualité
 
-Les actualités sont des fichiers **Markdown**, un dossier par article, dans `src/content/news/`. Deux façons d'en ajouter un : **depuis l'espace bénévoles** (module « Actualités » : dépôt du `.md` + photo, le serveur écrit le dossier et reconstruit le site — voir [publication.md](publication.md) et le [guide](guide-espace-benevoles.md#publier-une-actualité)), ou à la main comme décrit ci-dessous. Aucune base de données : ajouter un dossier suffit pour que l'article apparaisse sur le site.
+Les actualités sont des fichiers **Markdown**, un dossier par article, dans `src/content/news/`. Deux façons d'en ajouter un : **depuis l'Espace Admin** (module « Actualités » : dépôt du `.md` + photo, le serveur écrit le dossier et reconstruit le site — voir [publication.md](publication.md) et le [guide](guide-espace-benevoles.md#publier-une-actualité)), ou à la main comme décrit ci-dessous. Aucune base de données : ajouter un dossier suffit pour que l'article apparaisse sur le site.
 
 ## Créer un nouvel article
 
@@ -74,7 +74,7 @@ d'article le **nettoie** (`src/lib/sanitize-news.ts`) : le balisage est gardé,
 le code exécutable retiré — `<script>`, `<style>`, attributs `on…=`, liens
 `javascript:`, `<svg>`/`<math>`, et `<iframe>` dont la source n'est pas
 YouTube, Vimeo, PeerTube ou OpenStreetMap (`IFRAME_HOSTS`). Raison : les
-actualités sont publiables depuis l'espace bénévoles, sur le même site que
+actualités sont publiables depuis l'Espace Admin, sur le même site que
 l'administration.
 
 ## Comment ça marche techniquement

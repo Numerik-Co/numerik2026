@@ -1,5 +1,5 @@
 /**
- * Journal des modifications faites depuis l'espace bénévoles (qui, quand,
+ * Journal des modifications faites depuis l'Espace Admin (qui, quand,
  * quoi, avec quel résultat), consultable par le seul groupe `superadmin`
  * (module « Journal »). Un événement par ligne JSON dans
  * `<DATA_DIR>/journal/<AAAA>.jsonl` (un fichier par année), ajouté en fin de
