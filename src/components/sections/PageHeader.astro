@@ -1,15 +1,21 @@
 ---
+import { inlineMarkdownHtml } from '../../lib/inline-markdown';
+
 interface Props {
 	title: string;
 	description?: string;
+	/** `**gras**` / `*italique*` dans la description (accroches des pages du site). */
+	markdown?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, markdown = false } = Astro.props;
 ---
 
 <section class="bg-gradient-to-r from-primary to-secondary py-16 text-center text-white">
 	<div class="mx-auto max-w-3xl px-4 sm:px-6">
 		<h1 class="text-4xl sm:text-5xl">{title}</h1>
-		{description && <p class="mt-4 font-light text-white/90">{description}</p>}
+		{description && (markdown
+			? <p class="mt-4 font-light text-white/90 [&_strong]:font-semibold [&_strong]:text-white" set:html={inlineMarkdownHtml(description)} />
+			: <p class="mt-4 font-light text-white/90">{description}</p>)}
 	</div>
 </section>

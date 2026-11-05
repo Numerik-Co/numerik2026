@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import Button from '../ui/Button.astro';
 import { association } from '../../lib/association';
+import { inlineMarkdownHtml } from '../../lib/inline-markdown';
 import { lienAdhesionIndisponible } from '../../plugins/adhesion';
 
 interface Props {
@@ -67,9 +68,11 @@ const overlayClass = {
 		<h1 class={`text-4xl sm:text-5xl ${isDark ? 'text-white' : 'text-gray-900'}`}>
 			{before}{showHighlight && <span class="text-primary">{highlight}</span>}{after}
 		</h1>
-		<p class={`mx-auto mt-6 max-w-2xl font-light ${isDark ? 'text-white/90' : 'text-gray-600'}`}>
-			{description}
-		</p>
+		<!-- `**gras**` / `*italique*` de l'accroche (texte échappé, src/lib/inline-markdown.ts). -->
+		<p
+			class={`mx-auto mt-6 max-w-2xl font-light [&_strong]:font-semibold ${isDark ? 'text-white/90 [&_strong]:text-white' : 'text-gray-600 [&_strong]:text-gray-900'}`}
+			set:html={inlineMarkdownHtml(description)}
+		/>
 		<div class="mt-8 flex flex-wrap items-center justify-center gap-4">
 			{primaryHref && primaryLabel && <Button href={primaryHref} variant="primary">{primaryLabel}</Button>}
 			{secondaryHref && secondaryLabel && !lienAdhesionIndisponible(secondaryHref) && <Button href={secondaryHref} variant="outline">{secondaryLabel}</Button>}

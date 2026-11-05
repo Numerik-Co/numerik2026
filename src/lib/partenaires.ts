@@ -10,6 +10,7 @@
 
 import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
+import { inlineMarkdownHtml } from './inline-markdown';
 import raw from '../content/partenaires.yaml?raw';
 
 const text = z.string({ error: 'champ obligatoire' }).trim().min(1, 'champ obligatoire');
@@ -55,11 +56,7 @@ export const partenaires = load();
 /** Partenaires où l'on retire la fiche d'adhésion et règle sa cotisation (`relais: true`). */
 export const relaisAdhesion = partenaires.filter((p) => p.relais).map((p) => p.name);
 
-function escapeHtml(t: string): string {
-	return t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
-}
-
 /** `**texte**` → gras ; tout le reste échappé (à rendre avec `set:html`). */
 export function avantageHtml(avantage: string): string {
-	return escapeHtml(avantage).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+	return inlineMarkdownHtml(avantage);
 }

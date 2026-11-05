@@ -22,6 +22,9 @@
 import { DEFAULT_HOME, validateHomeModules, type HomeModule } from './home-modules.ts';
 import { applyPageVariablesText } from './page-variables.ts';
 
+/** Aide des accroches (mise en forme rendue par `inlineMarkdownHtml()`). */
+const ACCROCHE_HELP = 'Mots clés en gras : **mot** ; italique : *mot*.';
+
 export interface SitePageText {
 	name: string;
 	label: string;
@@ -99,6 +102,7 @@ export const SITE_PAGES: SitePageDef[] = [
 						name: 'accroche',
 						label: 'Accroche',
 						multiline: true,
+						help: ACCROCHE_HELP,
 						default: 'Des parcours, des ateliers et des temps de médiation numérique pour tous les niveaux.',
 					},
 					{
@@ -141,6 +145,7 @@ export const SITE_PAGES: SitePageDef[] = [
 						name: 'accroche',
 						label: 'Accroche',
 						multiline: true,
+						help: ACCROCHE_HELP,
 						default: "Les dernières nouvelles de l'association et de ses actions sur le terrain.",
 					},
 					{
@@ -171,6 +176,7 @@ export const SITE_PAGES: SitePageDef[] = [
 						name: 'accroche',
 						label: 'Accroche',
 						multiline: true,
+						help: ACCROCHE_HELP,
 						default: 'Une question, un projet, une envie de vous impliquer ? Écrivez-nous.',
 					},
 					{

@@ -534,7 +534,8 @@ page est fournie par le site, l'association règle le reste.
   **photo de fond** se règle dans le module **Bandeau** : remplacer
   (JPEG, PNG ou WebP, paysage d'au moins 1 600 px, 10 Mo max ; réduite à
   2 400 px de large) ou retirer (fond uni) ; elle part avec le reste à
-  l'enregistrement. « Revenir
+  l'enregistrement. Dans l'**accroche** du bandeau (et celle des pages
+  Activités, Actualités, Contact), `**mot**` met en gras et `*mot*` en italique. « Revenir
   à l'accueil d'origine » remet les modules de départ. Rien n'est publié
   avant **Enregistrer et publier**.
 - **Référencement de l'accueil** (sous ses modules) : titre de l'onglet et

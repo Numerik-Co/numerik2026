@@ -57,6 +57,7 @@ export const HOME_MODULES = {
 				name: 'accroche',
 				label: 'Accroche',
 				type: 'textarea',
+				help: 'Mots clés en gras : **mot** ; italique : *mot*.',
 				default:
 					"{{association.nom}} accompagne les habitant·e·s, les associations et les écoles dans la découverte et l'appropriation des outils numériques.",
 			},

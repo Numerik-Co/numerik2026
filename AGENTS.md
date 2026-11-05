@@ -81,7 +81,7 @@ Fonctionnement technique :
   **modules** : `src/lib/home-modules.ts`, `HomeModulesEditor.vue`, rendu
   `src/pages/index.astro` ; photo du bandeau réglée dans le module
   « Bandeau » : `HomePhotoField.vue` → champ `photo` du PUT de l'accueil,
-  `src/lib/home-photo.ts`, fichier `images/accueil.jpg` ; `<title>`/description de l'accueil = textes `titre`/`description` de sa section « Référencement »), lien et
+  `src/lib/home-photo.ts`, fichier `images/accueil.jpg` ; accroche du bandeau et des pages du site : `**gras**` / `*italique*` (`inlineMarkdownHtml()` de `src/lib/inline-markdown.ts`, `Hero.astro`, prop `markdown` de `PageHeader.astro` ; aussi pour les avantages des partenaires) ; `<title>`/description de l'accueil = textes `titre`/`description` de sa section « Référencement »), lien et
   **textes** réglables (`SitePageForm.vue`, `PUT /api/admin/pages-du-site/<id>`,
   `saveSitePage()`), écarts écrits dans `src/content/pages/_pages-site.md`
   (collection `sitePages`) ; lecture au build `getSitePage(id)`
