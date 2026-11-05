@@ -5,6 +5,10 @@
  *   node scripts/update.mjs v1.2.0 [--archive fichier.tar.gz]
  *
  * 1. télécharge l'archive des sources de la version (Release GitHub) ;
+ * 1 bis. sauvegarde le contenu de l'association (`scripts/sauvegarde.mjs`,
+ *    motif « avant mise à jour », 5 dernières gardées dans
+ *    `data/sauvegardes/`) ; échec = mise à jour annulée, sauf
+ *    `--sans-sauvegarde` ;
  * 2. met de côté le code actuel (`.update/sauvegarde-<version>.tar.gz`) ;
  * 3. remplace le CODE : dossiers du modèle (`src/` hors `src/content/`,
  *    `scripts/`, `docs/`, `.github/`, `contenu-initial/`) remplacés entièrement, fichiers de la
@@ -51,6 +55,7 @@ const version = async (dir) => JSON.parse(await readFile(join(dir, 'package.json
 const args = process.argv.slice(2);
 const tag = args.find((a) => /^v\d/.test(a));
 const archiveArg = args.includes('--archive') ? args[args.indexOf('--archive') + 1] : null;
+const sansSauvegarde = args.includes('--sans-sauvegarde');
 if (!tag) echec('usage : node scripts/update.mjs vX.Y.Z [--archive fichier.tar.gz]');
 
 // Variables du .env (SITE_URL, UPDATE_RESTART) pour la construction et le redémarrage.
@@ -79,6 +84,18 @@ if (!archive) {
 if (!run('tar', ['-xzf', archive, '-C', nouvelle, '--strip-components=1'])) echec(`archive illisible : ${archive}`);
 const cible = await version(nouvelle);
 if (`v${cible}` !== tag) echec(`l'archive contient la version ${cible}, pas ${tag}.`);
+
+// 1 bis. Sauvegarde du contenu de l'association (outil livré depuis la 0.5.3).
+if (sansSauvegarde) {
+	etape('Sauvegarde du contenu : passée (--sans-sauvegarde)');
+} else if (existsSync(join(root, 'scripts', 'sauvegarde.mjs'))) {
+	etape('Sauvegarde du contenu, des comptes et du journal (data/sauvegardes/)');
+	if (!run('node', ['scripts/sauvegarde.mjs', 'creer', 'avant mise à jour', '--garder', '5'])) {
+		echec('sauvegarde impossible : mise à jour annulée, rien n’a été changé (--sans-sauvegarde pour passer outre).');
+	}
+} else {
+	etape('Sauvegarde du contenu : outil absent de la version actuelle (avant 0.5.3), passée');
+}
 
 // 2. Sauvegarde du code actuel (pour revenir en arrière en cas d'échec).
 await mkdir(join(root, '.update'), { recursive: true });

@@ -78,6 +78,17 @@ recopiés depuis l'image par `./update.sh` après chaque mise à jour Docker
 réussie. Pour les récupérer à la main :
 `docker compose cp web:/app/sauvegarde.sh . && docker compose cp web:/app/restauration.sh .`
 
+## Sauvegarde automatique avant chaque mise à jour
+
+`./update.sh` (Docker ou Node seul) crée lui-même une sauvegarde avant de
+changer quoi que ce soit : motif « avant mise à jour », **5 dernières
+gardées** (les plus anciennes de ce motif sont supprimées ; vos sauvegardes
+manuelles ne le sont jamais). Si la sauvegarde échoue, la mise à jour
+s'arrête sans rien changer ; `./update.sh --sans-sauvegarde` pour passer
+outre. Rien à faire de plus pour un·e novice : lancer `./update.sh` suffit.
+
+En ligne de commande, la même rotation : `./sauvegarde.sh "motif" --garder 5`.
+
 ## Déménager un site
 
 1. Ancien serveur : `./sauvegarde.sh "demenagement"`, puis récupérer

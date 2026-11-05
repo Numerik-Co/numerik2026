@@ -12,7 +12,11 @@ Sauvegarde / restauration d'un site (façon Grav) : `./sauvegarde.sh`,
 `./restauration.sh <zip>` ou module « Sauvegardes » — ZIP (`fflate`) de
 `src/content/` + `data/accounts` + `data/journal` dans
 `data/sauvegardes/`, logique unique `scripts/sauvegarde.mjs` ; restaurer =
-vider puis remplir (volumes), état courant sauvegardé avant. Détail :
+vider puis remplir (volumes), état courant sauvegardé avant. `update.sh` /
+`update.mjs` sauvegardent automatiquement avant de mettre à jour (motif
+« avant mise à jour », `--garder 5`, échec = mise à jour annulée,
+`--sans-sauvegarde`) ; Docker : par le conteneur en ligne s'il a l'outil,
+sinon par l'image visée. Détail :
 [docs/sauvegarde.md](docs/sauvegarde.md).
 
 Mise à jour d'un site : `./update.sh [vX.Y.Z]` (Docker : `NUMERIK_VERSION`

@@ -6,7 +6,12 @@
 #
 # Options : --docker / --node (mode, détecté sinon), --no-pull (Docker : image
 # déjà présente localement, tests ; pas de nettoyage des images), --archive
-# <fichier.tar.gz> (Node : archive locale au lieu du téléchargement, tests).
+# <fichier.tar.gz> (Node : archive locale au lieu du téléchargement, tests),
+# --sans-sauvegarde (pas de sauvegarde automatique du contenu).
+#
+# Avant tout changement, le contenu, les comptes et le journal sont
+# sauvegardés (data/sauvegardes/…-avant-mise-a-jour.zip, 5 dernières gardées,
+# docs/sauvegarde.md) ; si la sauvegarde échoue, rien n'est mis à jour.
 #
 # Le contenu de l'association (src/content/, data/, .env) n'est jamais touché.
 # Principe : la nouvelle version est construite À CÔTÉ pendant que l'ancienne
@@ -14,8 +19,8 @@
 # vérification que le site répond, et retour à la version précédente sinon.
 # Docker : avant le téléchargement, les images du modèle autres que la version
 # en ligne (retour arrière) et la version visée sont supprimées ; après une
-# bascule réussie, sauvegarde.sh, restauration.sh et auth-user.sh sont
-# recopiés depuis l'image (commandes du serveur à jour).
+# bascule réussie, sauvegarde.sh, restauration.sh, auth-user.sh et ce script
+# sont recopiés depuis l'image (commandes du serveur à jour).
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -23,13 +28,14 @@ REPO="${UPDATE_REPO:-Numerik-Co/numerik2026}"
 IMAGE="ghcr.io/${REPO,,}"
 PORT="${UPDATE_PORT:-4321}"
 
-mode=""; version=""; pull=1; archive=""
+mode=""; version=""; pull=1; archive=""; sauvegarde=1
 while [ $# -gt 0 ]; do
   case "$1" in
     --docker) mode=docker ;;
     --node) mode=node ;;
     --no-pull) pull=0 ;;
     --archive) archive="$2"; shift ;;
+    --sans-sauvegarde) sauvegarde=0 ;;
     v[0-9]*) version="$1" ;;
     *) echo "Option inconnue : $1 (voir l'en-tête de ce fichier)"; exit 2 ;;
   esac
@@ -57,7 +63,7 @@ fi
 
 # ── Node seul : délégué à scripts/update.mjs ────────────────────────────────
 if [ "$mode" = node ]; then
-  exec node scripts/update.mjs "$version" ${archive:+--archive "$archive"}
+  exec node scripts/update.mjs "$version" ${archive:+--archive "$archive"} $([ "$sauvegarde" = 0 ] && echo --sans-sauvegarde)
 fi
 
 # ── Docker ───────────────────────────────────────────────────────────────────
@@ -71,6 +77,18 @@ actuelle="${actuelle:-latest}"
 if [ "$cible" = "$actuelle" ] && [ "$(docker compose ps -q web 2>/dev/null)" != "" ]; then
   echo "✓ Déjà en version $cible."
   exit 0
+fi
+
+# Sauvegarde du contenu avant tout changement : par le site en ligne s'il a
+# l'outil (0.5.3 et après), sinon par l'image visée une fois téléchargée.
+MOTIF_SAUVEGARDE="avant mise à jour"
+sauvegarde_faite=0
+if [ "$sauvegarde" = 1 ] && [ -n "$(docker compose ps -q web 2>/dev/null)" ] \
+  && docker compose exec -T web test -f scripts/sauvegarde.mjs 2>/dev/null; then
+  etape "Sauvegarde du contenu, des comptes et du journal (data/sauvegardes/)"
+  docker compose exec -T web node scripts/sauvegarde.mjs creer "$MOTIF_SAUVEGARDE" --garder 5 \
+    || echec "sauvegarde impossible : rien n'a été mis à jour (--sans-sauvegarde pour passer outre)."
+  sauvegarde_faite=1
 fi
 
 # Anciennes versions du modèle : une image par version, jamais réutilisée
@@ -114,6 +132,11 @@ etape "Construction de la version $cible à côté du site en ligne (.releases/$
 compose_run() {
   NUMERIK_VERSION="$cible" docker compose run --rm --no-deps -T --pull never "$@"
 }
+if [ "$sauvegarde" = 1 ] && [ "$sauvegarde_faite" = 0 ]; then
+  etape "Sauvegarde du contenu, des comptes et du journal (data/sauvegardes/, par l'image $cible)"
+  compose_run web node scripts/sauvegarde.mjs creer "$MOTIF_SAUVEGARDE" --garder 5 \
+    || echec "sauvegarde impossible : rien n'a été mis à jour, le site reste en version $actuelle (--sans-sauvegarde pour passer outre)."
+fi
 if ! compose_run -e "ASTRO_OUT_DIR=.releases/$release" web npm run -s build; then
   # Fichiers écrits par le conteneur (root) : effacés depuis le conteneur.
   compose_run --entrypoint rm web -rf ".releases/$release" >/dev/null 2>&1 \
@@ -150,6 +173,9 @@ if repond; then
   for f in sauvegarde.sh restauration.sh auth-user.sh; do
     docker compose cp "web:/app/$f" "./$f" >/dev/null 2>&1 && chmod +x "./$f" || true
   done
+  # Ce script aussi, par renommage : le bash en cours garde l'ancien fichier ouvert.
+  docker compose cp web:/app/update.sh ./update.sh.nouveau >/dev/null 2>&1 \
+    && chmod +x ./update.sh.nouveau && mv -f ./update.sh.nouveau ./update.sh || rm -f ./update.sh.nouveau
   echo "✓ Site en version $cible."
   exit 0
 fi

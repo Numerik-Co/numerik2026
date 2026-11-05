@@ -19,7 +19,7 @@
  * directement `node scripts/sauvegarde.mjs …`) et par le module
  * « Sauvegardes » de l'Espace Admin (`/api/admin/sauvegardes*`).
  *
- *   node scripts/sauvegarde.mjs creer [motif]
+ *   node scripts/sauvegarde.mjs creer [motif] [--garder N]   (N = archives de ce motif gardées)
  *   node scripts/sauvegarde.mjs liste
  *   node scripts/sauvegarde.mjs restaurer <nom.zip | chemin> [--oui]
  *
@@ -27,7 +27,7 @@
  * (défaut : `<projet>/data`), comme le serveur.
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { createInterface } from 'node:readline/promises';
@@ -183,6 +183,25 @@ export function cheminSauvegarde(nom, dataDir = dossierDonnees()) {
 	return existsSync(chemin) ? chemin : null;
 }
 
+/**
+ * Garde les `garder` archives les plus récentes d'un motif (ex. sauvegardes
+ * automatiques « avant mise à jour ») et supprime les plus anciennes.
+ * @returns {string[]} noms supprimés
+ */
+export function elaguerSauvegardes(motif, garder, dataDir = dossierDonnees()) {
+	const slug = motifPropre(motif);
+	const dossier = dossierSauvegardes(dataDir);
+	if (!slug || !existsSync(dossier)) return [];
+	const meme = new RegExp(`^sauvegarde-\\d{4}-\\d{2}-\\d{2}-\\d{2}h\\d{2}-${slug}(-\\d+)?\\.zip$`);
+	const date = (n) => statSync(join(dossier, n)).mtimeMs;
+	const noms = readdirSync(dossier)
+		.filter((n) => meme.test(n))
+		.sort((a, b) => date(b) - date(a));
+	const anciens = noms.slice(Math.max(0, garder));
+	for (const nom of anciens) rmSync(join(dossier, nom), { force: true });
+	return anciens;
+}
+
 export async function supprimerSauvegarde(nom, dataDir = dossierDonnees()) {
 	const chemin = cheminSauvegarde(nom, dataDir);
 	if (!chemin) return false;
@@ -289,9 +308,19 @@ async function main(args) {
 	const root = racineSite();
 	const dataDir = dossierDonnees(root);
 	if (commande === 'creer') {
-		const r = creerSauvegarde({ root, dataDir, motif: reste.join(' '), par: 'ligne de commande' });
+		const i = reste.indexOf('--garder');
+		const garder = i >= 0 ? Number(reste.splice(i, 2)[1]) : NaN;
+		const motif = reste.join(' ');
+		if (!existsSync(join(root, 'src', 'content', 'association.yaml'))) {
+			console.log('Rien à sauvegarder : src/content/ est vide (site jamais démarré).');
+			return;
+		}
+		const r = creerSauvegarde({ root, dataDir, motif, par: 'ligne de commande' });
 		console.log(`✓ Sauvegarde créée : ${r.nom} (${r.fichiers} fichiers, ${taille(r.taille)})`);
 		console.log(`  ${r.chemin}`);
+		if (Number.isInteger(garder) && garder > 0) {
+			for (const nom of elaguerSauvegardes(motif, garder, dataDir)) console.log(`  ancienne sauvegarde « ${motif} » supprimée : ${nom}`);
+		}
 		return;
 	}
 	if (commande === 'liste') {

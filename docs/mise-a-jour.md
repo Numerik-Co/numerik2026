@@ -96,8 +96,13 @@ Dans le dossier du site, sur le serveur :
 ./update.sh v1.2.0     # version précise — sert aussi à revenir en arrière
 ```
 
-Conseillé avant toute mise à jour : `./sauvegarde.sh "avant mise à jour"`
-(archive du contenu, des comptes et du journal, [sauvegarde.md](sauvegarde.md)).
+**Sauvegarde automatique** : avant tout changement, `update.sh` sauvegarde
+le contenu, les comptes et le journal (`data/sauvegardes/…-avant-mise-a-jour.zip`,
+les 5 dernières sont gardées, [sauvegarde.md](sauvegarde.md)). Si elle
+échoue, rien n'est mis à jour (`--sans-sauvegarde` pour passer outre). En
+cas de souci après la mise à jour : `./restauration.sh <cette archive>`.
+Docker : après une mise à jour réussie, `update.sh`, `sauvegarde.sh`,
+`restauration.sh` et `auth-user.sh` sont recopiés depuis la nouvelle image.
 
 Le mode est détecté (Docker si `docker-compose.yml` et la commande `docker`
 sont présents, sinon Node seul) ; `--docker` / `--node` pour l'imposer.
