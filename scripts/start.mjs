@@ -14,7 +14,11 @@
  *    (construite à l'avance par `update.sh`), sinon `npm run build` dans
  *    `.releases/<horodatage>`, puis `dist` pointe dessus. Pendant ce temps le
  *    site ne répond pas (le serveur n'est pas encore lancé) ;
- * 3. lance le serveur (`dist/server/entry.mjs`).
+ * 3. lance le serveur (`dist/server/entry.mjs`, gestionnaire de l'adaptateur
+ *    Node) derrière la porte du mode maintenance (scripts/maintenance.mjs :
+ *    page « Site en maintenance » avec progression pendant une restauration,
+ *    ou maintenance manuelle décidée dans l'Espace Admin), puis retire un
+ *    éventuel reste de maintenance de restauration (la manuelle reste).
  *
  * Build en échec : l'ancien site est servi s'il existe (message d'erreur
  * dans les logs), sinon arrêt avec le code 1. Les publications depuis
@@ -25,12 +29,14 @@
  */
 
 import { spawnSync } from 'node:child_process';
+import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { RELEASES_DIR, computeFingerprint, findRelease, pruneReleases, readBuildInfo, releaseStamp, swapDist } from './releases.mjs';
 import { installerContenuInitial } from './contenu-initial.mjs';
+import { fermerMaintenance, lireMaintenance, nomAssociation, porteMaintenance } from './maintenance.mjs';
 
 const root = resolve(process.env.SITE_ROOT || process.cwd());
 const log = (message) => console.log(`[démarrage] ${message}`);
@@ -90,5 +96,26 @@ async function buildIfNeeded() {
 	log(`site construit en ${Math.round((Date.now() - started) / 1000)} s.`);
 }
 
+const dataDir = resolve(process.env.DATA_DIR || process.env.AUTH_DATA_DIR || join(root, 'data'));
+
+
 await buildIfNeeded();
-await import(pathToFileURL(join(root, 'dist/server/entry.mjs')).href);
+
+// Serveur lancé ici (et non par l'adaptateur) pour placer la porte du mode
+// maintenance devant les pages prérendues, servies avant tout middleware.
+process.env.ASTRO_NODE_AUTOSTART = 'disabled';
+const { handler, options } = await import(pathToFileURL(join(root, 'dist/server/entry.mjs')).href);
+const port = process.env.PORT ? Number(process.env.PORT) : (options.port ?? 8080);
+const host = process.env.HOST ?? (typeof options.host === 'boolean' ? (options.host ? '0.0.0.0' : 'localhost') : options.host);
+const server = createServer(porteMaintenance(handler, { dataDir, nom: () => nomAssociation(root) }));
+server.listen(port, host, () => {
+	log(`serveur à l'écoute sur http://${host}:${port}`);
+	// Fin du redémarrage qui suit une restauration (ou reste d'un serveur arrêté
+	// en cours de route). Une maintenance manuelle (Espace Admin) est gardée.
+	const maintenance = lireMaintenance(dataDir);
+	if (maintenance?.manuel) log('site en maintenance (manuelle : à lever depuis l\'Espace Admin, module « Site »).');
+	else if (maintenance) {
+		fermerMaintenance(dataDir);
+		log('mode maintenance terminé.');
+	}
+});

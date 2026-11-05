@@ -28,18 +28,18 @@ const socialLinks = Object.entries(association.social)
 		</div>
 
 		<div>
-			<p class="font-heading text-sm uppercase tracking-wide text-white/70">Contact</p>
-			<ul class="mt-2 space-y-2 text-sm text-white/80">
+			<p class="font-heading text-sm uppercase tracking-wide text-white">Contact</p>
+			<ul class="mt-2 space-y-2 text-sm text-white">
 				<li class="flex items-center gap-2">
-					<i class="fa-solid fa-envelope w-4 text-white/60" aria-hidden="true"></i>
+					<i class="fa-solid fa-envelope w-4 text-white" aria-hidden="true"></i>
 					<a href={`mailto:${association.email}`} class="hover:text-white">{association.email}</a>
 				</li>
 				<li class="flex items-center gap-2">
-					<i class="fa-solid fa-phone w-4 text-white/60" aria-hidden="true"></i>
+					<i class="fa-solid fa-phone w-4 text-white" aria-hidden="true"></i>
 					<a href={`tel:${association.phone.replace(/\s/g, '')}`} class="hover:text-white">{association.phone}</a>
 				</li>
 				<li class="flex items-center gap-2">
-					<i class="fa-solid fa-location-dot w-4 text-white/60" aria-hidden="true"></i>
+					<i class="fa-solid fa-location-dot w-4 text-white" aria-hidden="true"></i>
 					{getFullAddress()}
 				</li>
 			</ul>
@@ -48,10 +48,10 @@ const socialLinks = Object.entries(association.social)
 		{
 			socialLinks.length > 0 && (
 				<div>
-					<p class="font-heading text-sm uppercase tracking-wide text-white/70">Suivez-nous</p>
+					<p class="font-heading text-sm uppercase tracking-wide text-white">Suivez-nous</p>
 					<div class="mt-2 flex gap-4">
 						{socialLinks.map(({ url, icon, label }) => (
-							<a href={url} aria-label={label} class="text-lg text-white/80 hover:text-white">
+							<a href={url} aria-label={label} class="text-lg text-white hover:text-white">
 								<i class={icon} aria-hidden="true" />
 							</a>
 						))}

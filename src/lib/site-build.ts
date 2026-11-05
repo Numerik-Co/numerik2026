@@ -30,9 +30,10 @@
 
 import { PUBLISH_HOOK, PUBLISH_RESTART, SITE_ROOT } from 'astro:env/server';
 import { spawn } from 'node:child_process';
-import { createWriteStream, existsSync } from 'node:fs';
+import { createWriteStream, existsSync, readdirSync } from 'node:fs';
 import { access, constants, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
+import { avancerMaintenance, fermerMaintenance } from '../../scripts/maintenance.mjs';
 import { RELEASES_DIR, pruneReleases, releaseStamp, swapDist } from '../../scripts/releases.mjs';
 import { dataDir } from './data-dir';
 import { logEvent, type JournalActor } from './journal';
@@ -132,11 +133,19 @@ export function isPublishing(): boolean {
 	return current !== null;
 }
 
-function run(command: string, args: string[], env: NodeJS.ProcessEnv, log: NodeJS.WritableStream): Promise<void> {
+function run(command: string, args: string[], env: NodeJS.ProcessEnv, log: NodeJS.WritableStream, onLine?: (line: string) => void): Promise<void> {
 	return new Promise((resolvePromise, reject) => {
 		log.write(`\n$ ${command} ${args.join(' ')}\n`);
 		const child = spawn(command, args, { cwd: root(), env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
 		child.stdout.pipe(log, { end: false });
+		if (onLine) {
+			let reste = '';
+			child.stdout.on('data', (chunk: Buffer) => {
+				const lignes = (reste + chunk.toString('utf8')).split('\n');
+				reste = lignes.pop() ?? '';
+				for (const ligne of lignes) onLine(ligne.replace(/\x1b\[[0-9;]*m/g, ''));
+			});
+		}
 		child.stderr.pipe(log, { end: false });
 		child.on('error', reject);
 		child.on('close', (code) => (code === 0 ? resolvePromise() : reject(new Error(`${command} a échoué (code ${code})`))));
@@ -181,6 +190,67 @@ function restartServer(log: NodeJS.WritableStream): void {
 	setTimeout(() => process.exit(0), 500);
 }
 
+/** Nombre de pages HTML du site en ligne : estimation des pages à prérendre. */
+function pagesEnLigne(): number {
+	let n = 0;
+	const walk = (dir: string) => {
+		for (const e of readdirSync(dir, { withFileTypes: true })) {
+			if (e.isDirectory()) {
+				if (e.name !== '_astro') walk(join(dir, e.name));
+			} else if (e.name.endsWith('.html')) n++;
+		}
+	};
+	try {
+		walk(join(root(), 'dist', 'client'));
+	} catch {
+		// pas encore de site construit
+	}
+	return n;
+}
+
+/** Pages de contenu des sources (actualités, pages, activités) : le contenu restauré peut être bien plus grand que le site en ligne. */
+function pagesDesSources(): number {
+	let n = 0;
+	const walk = (dir: string) => {
+		for (const e of readdirSync(dir, { withFileTypes: true })) {
+			if (e.isDirectory()) walk(join(dir, e.name));
+			else if (/^index\.mdx?$/.test(e.name)) n++;
+		}
+	};
+	for (const d of ['news', 'pages', 'activites']) {
+		try {
+			walk(join(root(), 'src', 'content', d));
+		} catch {
+			// dossier absent
+		}
+	}
+	return n;
+}
+
+/**
+ * Progression du build lue dans sa sortie (mode maintenance) : étapes
+ * d'Astro, pages prérendues (comparées à celles du site en ligne), images
+ * optimisées (« (n/N) »). De 15 % à 90 % ; le reste = bascule et redémarrage.
+ */
+function suiviDuBuild(avancer: (etape: string, progression: number) => void): (ligne: string) => void {
+	// Pages de contenu + pages du site, catégories, listes… (≈ 15 de plus).
+	const attendues = Math.max(1, pagesEnLigne(), pagesDesSources() + 15);
+	let pages = 0;
+	return (ligne) => {
+		if (ligne.includes('Syncing content')) avancer('Lecture du contenu restauré…', 15);
+		else if (ligne.includes('Building server entrypoints')) avancer('Construction du site…', 22);
+		else if (ligne.includes('prerendering static routes')) avancer('Création des pages…', 35);
+		else if (/[├└]─ \/.*\.html/.test(ligne)) {
+			pages++;
+			avancer(`Création des pages (${pages})…`, 35 + 35 * Math.min(1, pages / attendues));
+		} else {
+			const image = ligne.match(/▶ .*\((\d+)\/(\d+)\)\s*$/);
+			if (image) avancer(`Optimisation des images (${image[1]}/${image[2]})…`, 70 + (20 * Number(image[1])) / Number(image[2]));
+			else if (ligne.includes('build:cli')) avancer('Finalisation…', 90);
+		}
+	};
+}
+
 export interface PublishRequest {
 	label: string;
 	/** Personne qui publie (journal). */
@@ -190,6 +260,12 @@ export interface PublishRequest {
 	onFailure?: () => Promise<void>;
 	/** Rend la modification définitive une fois le site reconstruit (avant le redémarrage). */
 	onSuccess?: () => Promise<void>;
+	/**
+	 * Site en mode maintenance pendant la publication (restauration) : le
+	 * fichier, ouvert par l'appelant, reçoit la progression ; il est retiré en
+	 * cas d'échec, ou par `scripts/start.mjs` après le redémarrage.
+	 */
+	maintenance?: boolean;
 }
 
 /**
@@ -207,6 +283,7 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 		// Pas de build en dev (contenu relu à chaud) : le mode est affiché dans la barre d'admin.
 		await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: startedAt, by });
 		await logEvent({ by, action: 'publication', label: request.label, href: request.href, outcome: 'ok', message: 'Serveur de développement : aucune reconstruction.' });
+		if (request.maintenance) fermerMaintenance(dataDir());
 		return { started: true };
 	}
 
@@ -216,8 +293,13 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 		const outDir = join(RELEASES_DIR, release);
 		await mkdir(statusDir(), { recursive: true });
 		const log = createWriteStream(join(statusDir(), 'build.log'));
+		const avancer = (etape: string, progression: number) => {
+			if (request.maintenance) avancerMaintenance(dataDir(), { etape, progression });
+		};
 		try {
-			await run('npm', ['run', '-s', 'build'], { ASTRO_OUT_DIR: outDir }, log);
+			avancer('Construction du site…', 12);
+			await run('npm', ['run', '-s', 'build'], { ASTRO_OUT_DIR: outDir }, log, request.maintenance ? suiviDuBuild(avancer) : undefined);
+			avancer('Mise en ligne de la nouvelle version…', 93);
 			await swapDist(root(), release);
 			await request.onSuccess?.().catch(() => {});
 			// Les sources entières sont en ligne : lot en attente compris.
@@ -234,11 +316,14 @@ export async function publish(request: PublishRequest): Promise<{ started: boole
 			await writeStatus({ state: 'succeeded', label: request.label, href: request.href, startedAt, finishedAt: new Date().toISOString(), message, by });
 			await logEvent({ by, action: 'publication', label: request.label, href: request.href, outcome: 'ok', message });
 			if (PUBLISH_RESTART) {
+				// La maintenance prend fin quand le serveur relancé écoute (scripts/start.mjs).
+				if (request.maintenance) avancerMaintenance(dataDir(), { etape: 'Redémarrage du serveur…', progression: 96, etat: 'redemarrage' });
 				log.write('\nPublication terminée : redémarrage du serveur.\n');
 				restartServer(log);
-			}
+			} else if (request.maintenance) fermerMaintenance(dataDir());
 		} catch (err) {
 			await request.onFailure?.().catch(() => {});
+			if (request.maintenance) fermerMaintenance(dataDir());
 			await rm(join(root(), outDir), { recursive: true, force: true });
 			const message = `La reconstruction du site a échoué, rien n'a été publié (${(err as Error).message}). Détail : ${join(statusDir(), 'build.log')}`;
 			await writeStatus({ state: 'failed', label: request.label, startedAt, finishedAt: new Date().toISOString(), message, by });

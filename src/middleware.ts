@@ -29,6 +29,7 @@ const GUARDS: { prefix: string; groups: AuthGroup[]; message: string; noAdmin?: 
 	{ prefix: '/api/admin/rdv', groups: ['animateur'], message: 'La gestion des rendez-vous est réservée au bureau et aux animateur·rice·s.' },
 	{ prefix: '/api/admin/comptes', groups: ['admin'], message: 'La gestion des comptes est réservée au bureau.' },
 	{ prefix: '/api/admin/version', groups: ['admin'], message: 'Réservé au bureau.' },
+	{ prefix: '/api/admin/maintenance', groups: ['admin'], message: 'Le mode maintenance est réservé au bureau.' },
 	{ prefix: '/api/admin/association', groups: ['admin'], message: "Les informations de l'association sont réservées au bureau." },
 	{ prefix: '/api/admin/charte', groups: ['admin'], message: 'La charte graphique est réservée au bureau.' },
 	{ prefix: '/api/admin/actualites', groups: ['redacteur'], message: 'La publication des actualités est réservée aux rédacteur·rice·s.' },

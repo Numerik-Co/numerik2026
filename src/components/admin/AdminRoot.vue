@@ -20,6 +20,7 @@ import { ApiError, authApi, lotApi, versionApi, type AdminUser, type ReservedPag
 import { CONTENT_KIND_IDS, CONTENT_KINDS } from './content-import';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
 import { loadLot, lot, publishing } from './lot';
+import { chargerMaintenance, enMaintenance } from './maintenance';
 import { barEntries, modulesFor } from './modules';
 import { usePublication } from './usePublication';
 
@@ -217,6 +218,7 @@ onMounted(async () => {
 	// `AdminLoader.astro` a pu poser la classe d'avance (indicateur présent) : on la confirme ou on la retire.
 	document.documentElement.classList.toggle('has-admin-bar', Boolean(user.value));
 	void loadVersion();
+	if (user.value) void chargerMaintenance();
 	if (props.openOnMount) open();
 	// Rechargement après une publication (fin de publication réussie, ou Vite en dev) : on rouvre le module.
 	const reopen = takeModuleToReopen();
@@ -386,6 +388,15 @@ onBeforeUnmount(() => {
 					</div>
 				</div>
 			</div>
+			<button
+				v-if="enMaintenance"
+				type="button"
+				class="ml-1 shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white hover:bg-red-400"
+				title="Le site est en maintenance : les visiteurs voient la page de maintenance, les membres connectés voient le site. Cliquer pour gérer."
+				@click="modules.some((m) => m.id === 'site') ? (activeId = 'site') : undefined"
+			>
+				<i class="fa-solid fa-screwdriver-wrench mr-1" aria-hidden="true"></i><span class="hidden sm:inline">Maintenance</span>
+			</button>
 			<a
 				v-if="version?.updateAvailable"
 				:href="version.url ?? undefined"

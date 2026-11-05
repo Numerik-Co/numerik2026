@@ -12,11 +12,30 @@ Sauvegarde / restauration d'un site (façon Grav) : `./sauvegarde.sh`,
 `./restauration.sh <zip>` ou module « Sauvegardes » — ZIP (`fflate`) de
 `src/content/` + `data/accounts` + `data/journal` dans
 `data/sauvegardes/`, logique unique `scripts/sauvegarde.mjs` ; restaurer =
-vider puis remplir (volumes), état courant sauvegardé avant. `update.sh` /
+synchroniser en place (fichiers différents réécrits, en trop supprimés,
+jamais de dossier vidé : volumes, surveillance du dev), état courant sauvegardé avant. `update.sh` /
 `update.mjs` sauvegardent automatiquement avant de mettre à jour (motif
 « avant mise à jour », `--garder 5`, échec = mise à jour annulée,
 `--sans-sauvegarde`) ; Docker : par le conteneur en ligne s'il a l'outil,
-sinon par l'image visée. Détail :
+sinon par l'image visée. Restauration depuis l'admin = **mode maintenance**
+(`scripts/maintenance.mjs` : `maintenance.json` dans
+`<DATA_DIR>/publication/`, page 503 + barre de progression, état sur
+`/__maintenance` ; porte posée par `scripts/start.mjs`, qui lance lui-même
+le serveur HTTP — `ASTRO_NODE_AUTOSTART=disabled` + `handler` de
+l'adaptateur — et lève la maintenance une fois à l'écoute ; progression =
+`publish({ maintenance: true })` qui lit la sortie du build). Maintenance
+**manuelle** : module « Site » (`SiteModule.vue`, bureau, menu
+« Paramètres »), route `/api/admin/maintenance`, `manuel: true` + message
+dans `maintenance.json`, membres connectés admis (cookie
+`numerik_connecte`), formulaire de connexion sur la page, aperçu
+`/__maintenance/apercu`, gardée au redémarrage, pastille « Maintenance »
+de la barre (`src/components/admin/maintenance.ts`) ; en dev, porte posée
+sur le serveur Vite par `src/integrations/maintenance.ts` (le middleware ne
+voit pas les cookies des pages prérendues). Sauvegarde de
+sécurité sautée si l'état est déjà dans une archive (`empreinte` du
+manifeste) ou si c'est le contenu de démonstration ; état précédent gardé en
+mémoire pour le retour arrière. Super admin : archive déposée = restaurée
+aussitôt (case cochée par défaut). Détail :
 [docs/sauvegarde.md](docs/sauvegarde.md).
 
 Mise à jour d'un site : `./update.sh [vX.Y.Z]` (Docker : `NUMERIK_VERSION`
@@ -32,7 +51,8 @@ autres que la version en ligne et la version visée (+ `image prune`), sauf
 Production sans Docker : `npm start`
 (`node --env-file-if-exists=.env scripts/start.mjs` : construit le site si
 l'empreinte version + `SITE_URL` + `src/content/` diffère de
-`dist/build-info.json`, puis lance `dist/server/entry.mjs`). Docker : même
+`dist/build-info.json`, puis lance le serveur HTTP de `dist/server/entry.mjs`
+derrière la porte du mode maintenance). Docker : même
 script (`CMD`), image sans site construit. Versions publiées et mises à jour :
 [docs/mise-a-jour.md](docs/mise-a-jour.md).
 
@@ -218,7 +238,7 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
 - `src/middleware.ts` — `Astro.locals.user` ; `/api/auth/*` et
   `/api/admin/*` : requêtes du site seulement ; `/api/admin/*` exige une
   connexion ; `GUARDS` réserve des préfixes à des groupes
-  (`/api/admin/comptes`, `/api/admin/sauvegardes`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
+  (`/api/admin/comptes`, `/api/admin/sauvegardes`, `/api/admin/maintenance`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/annonces`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/liens`, `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
   `redacteur`, `/api/admin/journal`, `/api/admin/plugins` et `/api/admin/sauvegardes/restauration` → `superadmin` seul).
@@ -247,7 +267,7 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
   actualiser ») puis rechargement de la page, module rouvert
   (`reopenAfterReload` → `takeModuleToReopen` dans `AdminRoot`) ; page en
   404 (supprimée, déplacée) → `status.href` ou l'accueil.
-- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Pages**, **Activités**, **Actualités**, **Annonces**, **Association** (bureau), **Sauvegardes** (bureau ; restauration super admin : `SauvegardesModule.vue`, `scripts/sauvegarde.mjs`, routes `/api/admin/sauvegardes*`, docs/sauvegarde.md), Comptes, Journal et **Plugins** (`exclusive`,
+- Modules : Pages réservées (masqué pour qui a « Pages » : `replacedBy`), **Pages**, **Activités**, **Actualités**, **Annonces**, **Association** (bureau), **Sauvegardes** (bureau ; restauration super admin : `SauvegardesModule.vue`, `scripts/sauvegarde.mjs`, routes `/api/admin/sauvegardes*`, docs/sauvegarde.md), **Site** (bureau : mode maintenance), Comptes, Journal et **Plugins** (`exclusive`,
   `superadmin` seul ; Plugins : `PluginsModule.vue`, `src/lib/plugin-writer.ts`
   écrit `plugins.<id>` de `reglages.yaml` en place puis publie, activation
   refusée si un fichier `requis` du catalogue manque, `env` absentes
@@ -270,7 +290,8 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
   du nom, en fin de barre (pleine largeur, badge serveur juste avant).
   Pages, Activités, Actualités et Annonces (dans cet ordre, celui du registre) sont regroupées sous **Contenus ▾** (`menu: 'contenu'`,
   `ADMIN_MENUS` / `barEntries()` dans `modules.ts`, sous-liens côte à côte ;
-  un seul module visible du menu = bouton direct).
+  un seul module visible du menu = bouton direct) ; de même Association, Comptes, Sauvegardes et Site sous **Paramètres ▾**
+  (`menu: 'parametres'`).
 
 ### HTML des actualités
 

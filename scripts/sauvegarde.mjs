@@ -9,8 +9,9 @@
  * `sauvegarde.json` (format, date, version du modèle, association, motif).
  *
  * Restaurer = remplacer : `src/content/`, `accounts/` et `journal/` sont
- * vidés puis remplis avec l'archive (les dossiers eux-mêmes restent : ce
- * sont des volumes sous Docker). Une sauvegarde « avant-restauration » de
+ * mis dans l'état de l'archive (fichiers différents réécrits, fichiers en
+ * trop supprimés ; les dossiers eux-mêmes restent : ce sont des volumes sous
+ * Docker, et le serveur de dev ne perd pas sa surveillance). Une sauvegarde « avant-restauration » de
  * l'état courant est faite d'abord, et remise en place si l'écriture échoue.
  * Le site doit ensuite être reconstruit (redémarrage, ou publication depuis
  * l'Espace Admin).
@@ -29,6 +30,7 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
@@ -115,23 +117,46 @@ const FICHIERS_DU_MODELE = new Set(['README.md']);
 
 // --- Création -----------------------------------------------------------------
 
-/**
- * Crée une archive dans `<DATA_DIR>/sauvegardes/`.
- * @returns {{ nom: string, chemin: string, taille: number, fichiers: number }}
- */
-export function creerSauvegarde({ root = racineSite(), dataDir = dossierDonnees(root), motif = '', par = '' } = {}) {
+/** Fichiers sauvegardés de l'état courant : chemin dans l'archive → octets. */
+function etatCourant(root, dataDir) {
 	const content = join(root, 'src', 'content');
 	if (!existsSync(join(content, 'association.yaml'))) throw new Error('src/content/association.yaml introuvable : rien à sauvegarder.');
 	const files = {};
 	const ajouter = (base, prefix) => {
 		for (const rel of fichiersDe(base)) {
 			if (prefix === 'src/content' && FICHIERS_DU_MODELE.has(rel)) continue;
-			const data = readFileSync(join(base, rel));
-			files[`${prefix}/${rel}`] = [data, { level: DEJA_COMPRESSE.test(rel) ? 0 : 6 }];
+			files[`${prefix}/${rel}`] = readFileSync(join(base, rel));
 		}
 	};
 	ajouter(content, 'src/content');
 	for (const d of DONNEES) ajouter(join(dataDir, d), `data/${d}`);
+	return files;
+}
+
+/**
+ * Empreinte d'un ensemble de fichiers (chemins + contenus) : deux états
+ * identiques ont la même, quel que soit l'ordre ou la compression.
+ * `prefixe` : ne compter que les fichiers sous ce chemin.
+ */
+function empreinte(files, prefixe = '') {
+	const h = createHash('sha256');
+	for (const name of Object.keys(files).filter((n) => n.startsWith(prefixe)).sort()) {
+		h.update(name.slice(prefixe.length)).update('\0').update(createHash('sha256').update(files[name]).digest()).update('\0');
+	}
+	return h.digest('hex');
+}
+
+/** Le contenu est-il encore le contenu de démonstration (`contenu-initial/`, site neuf) ? */
+function estContenuDeDemo(root, files) {
+	const demo = join(root, 'contenu-initial');
+	if (!existsSync(demo)) return false;
+	const fichiersDemo = {};
+	for (const rel of fichiersDe(demo)) if (!FICHIERS_DU_MODELE.has(rel)) fichiersDemo[rel] = readFileSync(join(demo, rel));
+	return empreinte(fichiersDemo) === empreinte(files, 'src/content/');
+}
+
+/** Archive (octets) d'un état ; `manifeste` complété (date, version, association, empreinte…). */
+function archiver(root, files, { motif = '', par = '' } = {}) {
 	const nbFichiers = Object.keys(files).length;
 	const manifeste = {
 		format: FORMAT,
@@ -142,20 +167,36 @@ export function creerSauvegarde({ root = racineSite(), dataDir = dossierDonnees(
 		motif: String(motif ?? ''),
 		par: String(par ?? ''),
 		fichiers: nbFichiers,
+		empreinte: empreinte(files),
 	};
-	files[MANIFESTE] = strToU8(JSON.stringify(manifeste, null, 2));
+	const entrees = { [MANIFESTE]: strToU8(JSON.stringify(manifeste, null, 2)) };
+	for (const [name, data] of Object.entries(files)) entrees[name] = [data, { level: DEJA_COMPRESSE.test(name) ? 0 : 6 }];
+	return { zip: zipSync(entrees), manifeste };
+}
 
+/** Range une archive dans `<DATA_DIR>/sauvegardes/` sous un nom horodaté. */
+function ranger(dataDir, zip, motif) {
 	const dossier = dossierSauvegardes(dataDir);
 	mkdirSync(dossier, { recursive: true });
 	const suffixe = motifPropre(motif);
 	let nom = `sauvegarde-${horodatage()}${suffixe ? `-${suffixe}` : ''}.zip`;
 	for (let n = 2; existsSync(join(dossier, nom)); n++) nom = nom.replace(/(-\d+)?\.zip$/, `-${n}.zip`);
-	const zip = zipSync(files);
 	const chemin = join(dossier, nom);
 	// Écrite puis renommée : jamais d'archive à moitié écrite dans la liste.
 	writeFileSync(`${chemin}.partiel`, zip);
 	renameSync(`${chemin}.partiel`, chemin);
-	return { nom, chemin, taille: zip.length, fichiers: nbFichiers };
+	return { nom, chemin };
+}
+
+/**
+ * Crée une archive dans `<DATA_DIR>/sauvegardes/`.
+ * @returns {{ nom: string, chemin: string, taille: number, fichiers: number }}
+ */
+export function creerSauvegarde({ root = racineSite(), dataDir = dossierDonnees(root), motif = '', par = '' } = {}) {
+	const files = etatCourant(root, dataDir);
+	const { zip } = archiver(root, files, { motif, par });
+	const { nom, chemin } = ranger(dataDir, zip, motif);
+	return { nom, chemin, taille: zip.length, fichiers: Object.keys(files).length };
 }
 
 // --- Lecture / liste ----------------------------------------------------------
@@ -271,44 +312,114 @@ export function verifierArchive(zip) {
 	return { manifeste, fichiers };
 }
 
-/** Vide un dossier sans le supprimer (point de montage Docker), sauf `garder`. */
-function viderDossier(dir, garder = new Set()) {
+/**
+ * Met un dossier dans l'état de l'archive **sans le vider** : seuls les
+ * fichiers différents sont réécrits, ceux en trop supprimés, puis les
+ * dossiers devenus vides. Le dossier lui-même reste (point de montage
+ * Docker) et un serveur de développement qui le surveille ne perd pas le fil
+ * (vider puis recréer toute l'arborescence lui faisait manquer les
+ * changements).
+ * @param {string} dir dossier cible
+ * @param {Map<string, Uint8Array>} voulus chemin relatif (« / ») → octets
+ * @param {Set<string>} garder fichiers de premier niveau jamais touchés
+ */
+function synchroniserDossier(dir, voulus, garder = new Set()) {
 	mkdirSync(dir, { recursive: true });
-	for (const entry of readdirSync(dir)) if (!garder.has(entry)) rmSync(join(dir, entry), { recursive: true, force: true });
+	for (const [rel, data] of voulus) {
+		const cible = join(dir, rel);
+		if (existsSync(cible)) {
+			if (statSync(cible).isDirectory()) rmSync(cible, { recursive: true, force: true });
+			else if (Buffer.from(data).equals(readFileSync(cible))) continue;
+		}
+		mkdirSync(dirname(cible), { recursive: true });
+		writeFileSync(cible, data);
+	}
+	for (const rel of fichiersDe(dir)) {
+		if (!voulus.has(rel) && !garder.has(rel)) rmSync(join(dir, rel), { force: true });
+	}
+	const elaguer = (d) => {
+		for (const entry of readdirSync(d, { withFileTypes: true })) {
+			if (!entry.isDirectory()) continue;
+			const full = join(d, entry.name);
+			elaguer(full);
+			if (!readdirSync(full).length) rmSync(full, { recursive: true, force: true });
+		}
+	};
+	elaguer(dir);
 }
 
 function ecrire(root, dataDir, fichiers) {
-	viderDossier(join(root, 'src', 'content'), FICHIERS_DU_MODELE);
-	for (const d of DONNEES) viderDossier(join(dataDir, d));
-	for (const [name, data] of Object.entries(fichiers)) {
-		const cible = name.startsWith('data/') ? join(dataDir, name.slice('data/'.length)) : join(root, name);
-		mkdirSync(dirname(cible), { recursive: true });
-		writeFileSync(cible, data);
+	const cibles = [
+		{ prefixe: 'src/content/', dir: join(root, 'src', 'content'), garder: FICHIERS_DU_MODELE },
+		...DONNEES.map((d) => ({ prefixe: `data/${d}/`, dir: join(dataDir, d), garder: new Set() })),
+	];
+	for (const { prefixe, dir, garder } of cibles) {
+		const voulus = new Map();
+		for (const [name, data] of Object.entries(fichiers)) if (name.startsWith(prefixe)) voulus.set(name.slice(prefixe.length), data);
+		synchroniserDossier(dir, voulus, garder);
 	}
 }
 
 /**
- * Restaure une archive (octets) : sauvegarde de sécurité de l'état courant,
- * puis remplacement. Échec d'écriture = état courant remis.
- * @returns {{ manifeste: object, securite: string, fichiers: number }}
+ * Sauvegarde de sécurité avant une restauration, rangée seulement si utile :
+ * pas quand l'état courant est déjà dans une archive du dossier (même
+ * empreinte), ni quand c'est le contenu de démonstration d'un site neuf
+ * (migration). L'état précédent reste toujours en mémoire pour le retour
+ * arrière.
+ * @returns {{ etat: Record<string, Uint8Array>, nom: string | null, deja: string | null, demo: boolean }}
+ */
+function securiser(root, dataDir, par) {
+	const etat = etatCourant(root, dataDir);
+	if (estContenuDeDemo(root, etat)) return { etat, nom: null, deja: null, demo: true };
+	const cible = empreinte(etat);
+	const dossier = dossierSauvegardes(dataDir);
+	if (existsSync(dossier)) {
+		for (const nom of readdirSync(dossier).filter((n) => NOM_SAUVEGARDE.test(n))) {
+			if (lireManifeste(readFileSync(join(dossier, nom)))?.empreinte === cible) return { etat, nom: null, deja: nom, demo: false };
+		}
+	}
+	const { zip } = archiver(root, etat, { motif: 'avant-restauration', par });
+	return { etat, nom: ranger(dataDir, zip, 'avant-restauration').nom, deja: null, demo: false };
+}
+
+/**
+ * Restaure une archive (octets) : sauvegarde de sécurité de l'état courant
+ * si utile (`securiser`), puis remplacement. Échec d'écriture = état
+ * courant remis.
+ * @returns {{ manifeste: object, fichiers: number, securite: string | null, securiteExistante: string | null, demo: boolean, precedent: Record<string, Uint8Array> }}
+ *   `securite` : archive « avant-restauration » créée ; `securiteExistante` :
+ *   archive identique déjà présente ; `demo` : contenu de démonstration
+ *   remplacé ; `precedent` : état d'avant, pour `annulerRestauration`.
  */
 export function restaurerSauvegarde(zip, { root = racineSite(), dataDir = dossierDonnees(root), par = '' } = {}) {
 	const { manifeste, fichiers } = verifierArchive(zip);
-	const securite = creerSauvegarde({ root, dataDir, motif: 'avant-restauration', par });
+	const securite = securiser(root, dataDir, par);
 	try {
 		ecrire(root, dataDir, fichiers);
 	} catch (err) {
-		ecrire(root, dataDir, verifierArchive(readFileSync(securite.chemin)).fichiers);
+		ecrire(root, dataDir, securite.etat);
 		throw new Error(`Restauration impossible (${err.message}) : l'état précédent a été remis.`);
 	}
-	return { manifeste, securite: securite.nom, fichiers: Object.keys(fichiers).length };
+	return {
+		manifeste,
+		fichiers: Object.keys(fichiers).length,
+		securite: securite.nom,
+		securiteExistante: securite.deja,
+		demo: securite.demo,
+		precedent: securite.etat,
+	};
 }
 
-/** Remet l'état d'avant une restauration (publication en échec dans l'Espace Admin). */
-export function annulerRestauration(nomSecurite, { root = racineSite(), dataDir = dossierDonnees(root) } = {}) {
-	const chemin = cheminSauvegarde(nomSecurite, dataDir);
-	if (!chemin) throw new Error(`Sauvegarde de sécurité ${nomSecurite} introuvable.`);
-	ecrire(root, dataDir, verifierArchive(readFileSync(chemin)).fichiers);
+/** Phrase décrivant où est gardé l'état d'avant une restauration. */
+export function etatPrecedentGarde(r) {
+	if (r.securite) return `état précédent : ${r.securite}`;
+	if (r.securiteExistante) return `état précédent déjà sauvegardé : ${r.securiteExistante}`;
+	return 'contenu de démonstration remplacé (pas de sauvegarde de sécurité)';
+}
+
+/** Remet l'état d'avant une restauration (publication en échec) : `precedent` d'un résultat de `restaurerSauvegarde`. */
+export function annulerRestauration(precedent, { root = racineSite(), dataDir = dossierDonnees(root) } = {}) {
+	ecrire(root, dataDir, precedent);
 }
 
 // --- Ligne de commande --------------------------------------------------------
@@ -366,7 +477,7 @@ async function main(args) {
 			}
 		}
 		const r = restaurerSauvegarde(zip, { root, dataDir, par: 'ligne de commande' });
-		console.log(`✓ Restauration faite (${r.fichiers} fichiers). État précédent gardé dans ${r.securite}.`);
+		console.log(`✓ Restauration faite (${r.fichiers} fichiers) — ${etatPrecedentGarde(r)}.`);
 		console.log('  Redémarrez le site pour le reconstruire avec ce contenu.');
 		return;
 	}

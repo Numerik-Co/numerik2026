@@ -221,6 +221,10 @@ On reste connecté·e **14 jours** sur cet appareil (prolongé à chaque visite)
 - **Contenus ▾** regroupe **Pages**, **Activités**, **Actualités** et **Annonces** : un
   clic les affiche côte à côte, juste en dessous (fermé par un clic ailleurs
   ou **Échap**). Avec le droit d'en voir un seul, il a son propre bouton.
+- **Paramètres ▾** (bureau) regroupe de même **Association**, **Comptes**,
+  **Sauvegardes** et **Site** (mode maintenance).
+- **Maintenance** (pastille rouge) : le site est en maintenance pour les
+  visiteurs ; un clic ouvre le module **Site** pour la lever.
 - Premier bouton de **Contenus ▾** : **Ajouter un contenu**. Une
   fenêtre s'ouvre au centre : on y dépose un fichier `.md` (modèles
   téléchargeables en bas de la fenêtre). Le type de contenu est lu dans la
@@ -250,9 +254,10 @@ Les modules visibles dépendent de votre groupe :
 | Actualités | ✅ | ✅ | ✅ | — |
 | Annonces | ✅ | ✅ | ✅ | — |
 | Rendez-vous (si le plugin `rdv` est actif) | ✅ | ✅ | — | ✅ |
-| Association | ✅ | ✅ | — | — |
-| Sauvegardes (restauration : super admin) | ✅ | ✅ | — | — |
-| Comptes | ✅ | ✅ | — | — |
+| Association (menu Paramètres) | ✅ | ✅ | — | — |
+| Sauvegardes (menu Paramètres ; restauration : super admin) | ✅ | ✅ | — | — |
+| Comptes (menu Paramètres) | ✅ | ✅ | — | — |
+| Site (menu Paramètres : mode maintenance) | ✅ | ✅ | — | — |
 | Journal | ✅ | — | — | — |
 | Plugins | ✅ | — | — | — |
 | Mon compte | ✅ | ✅ | ✅ | ✅ |
@@ -779,13 +784,38 @@ le `.env`), rangée sur le serveur.
 - **Créer une sauvegarde** (motif facultatif), puis **télécharger** (⬇) pour
   en garder une copie hors du serveur.
 - **Déposer une sauvegarde** venue d'ailleurs : elle est rangée avec les
-  autres, rien n'est restauré.
-- **Restaurer** (↺, super admin seul) : tout est remplacé par l'archive puis
-  le site est republié ; l'état actuel est sauvegardé d'abord
-  (« avant-restauration »).
+  autres, rien n'est restauré (super admin : restaurée aussitôt si la case
+  « Restaurer l'archive dès son dépôt » est cochée — migration d'un site).
+- **Restaurer** (↺, super admin seul) : le site passe en maintenance (page
+  avec barre de progression pour tout le monde), tout est remplacé par
+  l'archive puis le site est reconstruit et revient seul ; l'état actuel est
+  sauvegardé d'abord (« avant-restauration »), sauf s'il l'est déjà ou si
+  c'est le contenu de démonstration d'un site neuf.
 
 Sur le serveur : `./sauvegarde.sh`, `./restauration.sh <archive.zip>`.
 Détail : [sauvegarde.md](sauvegarde.md).
+
+### Mode maintenance (bureau)
+
+**Paramètres ▾** → module **Site** :
+
+- **Mettre le site en maintenance**, avec un message facultatif (vide : « Le
+  site est momentanément indisponible pour maintenance… » ; **Aperçu de la
+  page** pour voir ce qu'affichent les visiteurs). Les visiteurs voient
+  alors la page « Site en maintenance » à la place de toutes les pages.
+- Vous, **connecté·e**, continuez de voir et modifier le site normalement
+  (pastille rouge **Maintenance** dans la barre). Un membre non connecté
+  peut se connecter depuis la page de maintenance (lien **Espace Admin**).
+- La maintenance reste en place après une publication ou un redémarrage du
+  serveur : **Remettre le site en ligne** pour la lever. **Enregistrer le
+  message** change le texte sans la lever.
+- Pendant une **restauration** de sauvegarde, le module affiche sa
+  progression ; la maintenance prend fin avec elle (**Lever la maintenance
+  quand même** : seulement pour une restauration bloquée). Une restauration
+  lancée pendant une maintenance manuelle la lève à sa fin.
+
+Ce n'est pas une protection : le contenu reste public (qui connaît le
+mécanisme peut passer) ; seul l'affichage est suspendu.
 
 ### Modifier mes informations
 

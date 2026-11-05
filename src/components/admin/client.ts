@@ -469,7 +469,13 @@ export const sauvegardesApi = {
 	list: () => request<{ sauvegardes: SauvegardeItem[]; restauration: string | null }>('GET', '/api/admin/sauvegardes'),
 	create: (motif: string) => request<{ ok: true; nom: string }>('POST', '/api/admin/sauvegardes', { motif }),
 	remove: (nom: string) => request<{ ok: true }>('DELETE', `/api/admin/sauvegardes/${nom}`, { confirm: nom }),
-	restore: (nom: string) => request<SaveResult>('POST', '/api/admin/sauvegardes/restauration', { nom, confirm: nom }),
+	/** `maintenance` : site en maintenance pendant la reconstruction (production) → aller sur la page de progression. */
+	restore: (nom: string) =>
+		request<SaveResult & { maintenance: boolean; securite: string | null; securiteExistante: string | null; demo: boolean }>(
+			'POST',
+			'/api/admin/sauvegardes/restauration',
+			{ nom, confirm: nom },
+		),
 	/** Corps = le fichier ZIP tel quel (pas de JSON). */
 	upload: async (file: File) => {
 		const res = await fetch('/api/admin/sauvegardes/depot', {
@@ -484,6 +490,26 @@ export const sauvegardesApi = {
 		}
 		return data as { ok: true; nom: string };
 	},
+};
+
+/** Mode maintenance (module « Site »). */
+export interface MaintenanceEtat {
+	maintenance: {
+		manuel: boolean;
+		message: string;
+		par: string;
+		debut: string;
+		motif: string;
+		etape: string;
+		progression: number;
+	} | null;
+	messageParDefaut: string;
+	dev: boolean;
+}
+export const maintenanceApi = {
+	get: () => request<MaintenanceEtat>('GET', '/api/admin/maintenance'),
+	activer: (message: string) => request<MaintenanceEtat>('PUT', '/api/admin/maintenance', { actif: true, message }),
+	lever: (forcer = false) => request<MaintenanceEtat>('PUT', '/api/admin/maintenance', { actif: false, forcer }),
 };
 
 /** Modifications enregistrées sans publier (lot en attente). */

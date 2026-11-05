@@ -1,0 +1,174 @@
+<script setup lang="ts">
+/**
+ * Module « Site » (bureau, menu « Paramètres ») : réglages techniques du
+ * site en ligne. Pour l'instant, le **mode maintenance** : état (en ligne,
+ * maintenance manuelle, restauration en cours avec sa progression), mise
+ * en maintenance avec un message libre, levée. Les membres connectés
+ * continuent de voir le site. Serveur : route `/api/admin/maintenance`,
+ * logique `scripts/maintenance.mjs` (aucune reconstruction du site).
+ */
+import { computed, inject, onMounted, ref } from 'vue';
+import { ApiError, maintenanceApi, type MaintenanceEtat } from '../client';
+import { ADMIN_CONTEXT, inputClass } from '../context';
+import { enMaintenance } from '../maintenance';
+
+const { sessionExpired } = inject(ADMIN_CONTEXT)!;
+
+const etat = ref<MaintenanceEtat | null>(null);
+const message = ref('');
+const loading = ref(true);
+const busy = ref(false);
+const error = ref('');
+const notice = ref('');
+/** Confirmation de la levée d'une maintenance de restauration. */
+const confirmerLevee = ref(false);
+
+const maintenance = computed(() => etat.value?.maintenance ?? null);
+const restauration = computed(() => Boolean(maintenance.value && !maintenance.value.manuel));
+const manuelle = computed(() => Boolean(maintenance.value?.manuel));
+const messageModifie = computed(() => manuelle.value && message.value.trim() !== (maintenance.value?.message ?? ''));
+const apercu = computed(() => `/__maintenance/apercu?message=${encodeURIComponent(message.value.trim())}`);
+
+function appliquer(e: MaintenanceEtat) {
+	etat.value = e;
+	message.value = e.maintenance?.manuel ? e.maintenance.message : message.value;
+	enMaintenance.value = Boolean(e.maintenance);
+	confirmerLevee.value = false;
+}
+
+async function act(action: () => Promise<MaintenanceEtat>, succes = '') {
+	error.value = '';
+	notice.value = '';
+	busy.value = true;
+	try {
+		appliquer(await action());
+		notice.value = succes;
+	} catch (e) {
+		if (e instanceof ApiError && e.status === 401) return sessionExpired();
+		error.value = (e as Error).message;
+	} finally {
+		busy.value = false;
+		loading.value = false;
+	}
+}
+
+const charger = () => act(() => maintenanceApi.get());
+const activer = () =>
+	act(
+		() => maintenanceApi.activer(message.value),
+		manuelle.value ? 'Message enregistré.' : 'Le site est en maintenance. Vous, connecté·e, continuez de le voir normalement.',
+	);
+const lever = () => act(() => maintenanceApi.lever(restauration.value), 'Le site est de nouveau en ligne pour tout le monde.');
+
+onMounted(charger);
+
+const dateFr = (iso: string) =>
+	new Date(iso).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+</script>
+
+<template>
+	<p class="mb-4 text-sm font-light text-gray-600">Réglages techniques du site en ligne.</p>
+
+	<section aria-labelledby="site-maintenance">
+		<h3 id="site-maintenance" class="mb-2 flex items-center gap-2 font-heading text-base font-semibold text-gray-900">
+			<i class="fa-solid fa-screwdriver-wrench text-primary" aria-hidden="true"></i>Mode maintenance
+		</h3>
+		<p class="mb-4 text-sm font-light text-gray-600">
+			En maintenance, les visiteurs voient une page « Site en maintenance » avec votre message à la place du site. Les membres
+			connectés à l'Espace Admin continuent de voir le site normalement (connexion possible depuis la page de maintenance).
+			Utile pendant une réorganisation du contenu ou une intervention sur le serveur. Une restauration de sauvegarde y met
+			le site d'elle-même, avec une barre de progression.
+		</p>
+
+		<p v-if="error" class="mb-4 alerte-erreur" role="alert">{{ error }}</p>
+		<p v-if="notice" class="mb-4 alerte-succes" role="status">{{ notice }}</p>
+
+		<p v-if="loading" class="text-sm font-light text-gray-500">Chargement…</p>
+		<template v-else-if="etat">
+			<!-- État -->
+			<div
+				class="mb-4 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm"
+				:class="
+					restauration
+						? 'border-amber-200 bg-amber-50 text-amber-900'
+						: manuelle
+							? 'border-red-200 bg-red-50 text-red-900'
+							: 'border-green-200 bg-green-50 text-green-900'
+				"
+				role="status"
+			>
+				<i
+					class="fa-solid mt-0.5"
+					:class="restauration ? 'fa-spinner fa-spin' : manuelle ? 'fa-screwdriver-wrench' : 'fa-circle-check'"
+					aria-hidden="true"
+				></i>
+				<div class="min-w-0 flex-1">
+					<template v-if="restauration && maintenance">
+						<p class="font-semibold">{{ maintenance.motif }}</p>
+						<p>{{ maintenance.etape }} ({{ maintenance.progression }} %)</p>
+						<div class="mt-2 h-2 overflow-hidden rounded-full bg-amber-200" role="progressbar" :aria-valuenow="maintenance.progression" aria-valuemin="0" aria-valuemax="100">
+							<div class="h-full rounded-full bg-amber-500" :style="{ width: `${maintenance.progression}%` }"></div>
+						</div>
+						<p class="mt-2 text-xs">Depuis {{ dateFr(maintenance.debut) }}. La maintenance prend fin avec la restauration.</p>
+					</template>
+					<template v-else-if="manuelle && maintenance">
+						<p class="font-semibold">Le site est en maintenance.</p>
+						<p class="text-xs">
+							Depuis {{ dateFr(maintenance.debut) }}<template v-if="maintenance.par">, par {{ maintenance.par }}</template>. Les
+							visiteurs voient la page de maintenance ; elle reste en place après une publication ou un redémarrage du serveur.
+						</p>
+					</template>
+					<p v-else class="font-semibold">Le site est en ligne.</p>
+				</div>
+				<button type="button" class="shrink-0 text-xs underline hover:no-underline" :disabled="busy" @click="charger">Actualiser</button>
+			</div>
+
+			<!-- Restauration en cours : levée forcée seulement -->
+			<div v-if="restauration">
+				<button v-if="!confirmerLevee" type="button" class="bouton bouton-danger-contour" :disabled="busy" @click="confirmerLevee = true">
+					Lever la maintenance quand même
+				</button>
+				<div v-else class="alerte-attention" role="alert">
+					<p>
+						Les visiteurs verront de nouveau le site actuel pendant que la reconstruction continue ; le site restauré le
+						remplacera à la fin. À réserver à une restauration bloquée.
+					</p>
+					<div class="mt-3 flex flex-wrap gap-3">
+						<button type="button" class="bouton bouton-danger" :disabled="busy" @click="lever">Lever la maintenance</button>
+						<button type="button" class="text-sm text-gray-700 hover:underline" @click="confirmerLevee = false">Annuler</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- Maintenance manuelle -->
+			<form v-else @submit.prevent="activer">
+				<label for="site-maintenance-message" class="champ-libelle">
+					Message affiché aux visiteurs <span class="font-light text-gray-500">(facultatif)</span>
+				</label>
+				<textarea
+					id="site-maintenance-message"
+					v-model="message"
+					rows="3"
+					maxlength="500"
+					:placeholder="etat.messageParDefaut"
+					:class="inputClass"
+				></textarea>
+				<p class="champ-aide">
+					Vide : « {{ etat.messageParDefaut }} »
+					· <a :href="apercu" target="_blank" rel="noopener" class="text-primary underline hover:no-underline">Aperçu de la page</a>
+				</p>
+				<div class="mt-4 flex flex-wrap gap-3">
+					<template v-if="manuelle">
+						<button type="button" class="bouton bouton-primaire" :disabled="busy" @click="lever">
+							<i class="fa-solid fa-circle-check mr-1.5" aria-hidden="true"></i>Remettre le site en ligne
+						</button>
+						<button type="submit" class="bouton bouton-contour" :disabled="busy || !messageModifie">Enregistrer le message</button>
+					</template>
+					<button v-else type="submit" class="bouton bouton-danger" :disabled="busy">
+						<i class="fa-solid fa-screwdriver-wrench mr-1.5" aria-hidden="true"></i>Mettre le site en maintenance
+					</button>
+				</div>
+			</form>
+		</template>
+	</section>
+</template>

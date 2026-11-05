@@ -20,6 +20,7 @@ import { disponible, type PluginId } from '../../plugins';
 /** Menus déroulants de la barre : libellé et icône du bouton qui regroupe les modules. */
 export const ADMIN_MENUS = {
 	contenu: { label: 'Contenus', icon: 'fa-pen-to-square' },
+	parametres: { label: 'Paramètres', icon: 'fa-sliders' },
 } as const;
 export type AdminMenuId = keyof typeof ADMIN_MENUS;
 
@@ -98,21 +99,32 @@ export const ADMIN_MODULES: AdminModule[] = [
 		label: 'Association',
 		icon: 'fa-landmark',
 		groups: ['admin'],
+		menu: 'parametres',
 		component: defineAsyncComponent(() => import('./modules/AssociationModule.vue')),
-	},
-	{
-		id: 'sauvegardes',
-		label: 'Sauvegardes',
-		icon: 'fa-box-archive',
-		groups: ['admin'],
-		component: defineAsyncComponent(() => import('./modules/SauvegardesModule.vue')),
 	},
 	{
 		id: 'comptes',
 		label: 'Comptes',
 		icon: 'fa-users',
 		groups: ['admin'],
+		menu: 'parametres',
 		component: defineAsyncComponent(() => import('./modules/AccountsModule.vue')),
+	},
+	{
+		id: 'sauvegardes',
+		label: 'Sauvegardes',
+		icon: 'fa-box-archive',
+		groups: ['admin'],
+		menu: 'parametres',
+		component: defineAsyncComponent(() => import('./modules/SauvegardesModule.vue')),
+	},
+	{
+		id: 'site',
+		label: 'Site',
+		icon: 'fa-globe',
+		groups: ['admin'],
+		menu: 'parametres',
+		component: defineAsyncComponent(() => import('./modules/SiteModule.vue')),
 	},
 	{
 		id: 'journal',
