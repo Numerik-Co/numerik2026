@@ -8,11 +8,19 @@
  * logique `scripts/maintenance.mjs` (aucune reconstruction du site).
  */
 import { computed, inject, onMounted, ref } from 'vue';
-import { ApiError, maintenanceApi, type MaintenanceEtat } from '../client';
+import { ApiError, installationApi, maintenanceApi, type MaintenanceEtat } from '../client';
 import { ADMIN_CONTEXT, inputClass } from '../context';
 import { enMaintenance } from '../maintenance';
 
-const { sessionExpired } = inject(ADMIN_CONTEXT)!;
+const { user, sessionExpired } = inject(ADMIN_CONTEXT)!;
+
+/** Super admin, site pas encore installé : lien vers l'assistant. */
+const installationRequise = ref(false);
+onMounted(async () => {
+	if (!user.value?.groups.includes('superadmin')) return;
+	installationRequise.value = await installationApi.requise().then((r) => r.requise).catch(() => false);
+});
+const reprendreInstallation = () => window.dispatchEvent(new Event('numerik:installation'));
 
 const etat = ref<MaintenanceEtat | null>(null);
 const message = ref('');
@@ -53,11 +61,17 @@ async function act(action: () => Promise<MaintenanceEtat>, succes = '') {
 }
 
 const charger = () => act(() => maintenanceApi.get());
-const activer = () =>
-	act(
+function activer() {
+	if (manuelle.value && !messageModifie.value) {
+		notice.value = '';
+		error.value = 'Aucune modification à enregistrer.';
+		return;
+	}
+	void act(
 		() => maintenanceApi.activer(message.value),
 		manuelle.value ? 'Message enregistré.' : 'Le site est en maintenance. Vous, connecté·e, continuez de le voir normalement.',
 	);
+}
 const lever = () => act(() => maintenanceApi.lever(restauration.value), 'Le site est de nouveau en ligne pour tout le monde.');
 
 onMounted(charger);
@@ -68,6 +82,12 @@ const dateFr = (iso: string) =>
 
 <template>
 	<p class="mb-4 text-sm font-light text-gray-600">Réglages techniques du site en ligne.</p>
+	<div v-if="installationRequise" class="mb-6 alerte-attention flex flex-wrap items-center gap-3" role="status">
+		<span class="flex-1">L'installation du site n'est pas terminée.</span>
+		<button type="button" class="bouton bouton-primaire" @click="reprendreInstallation">
+			<i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>Assistant d'installation
+		</button>
+	</div>
 
 	<section aria-labelledby="site-maintenance">
 		<h3 id="site-maintenance" class="mb-2 flex items-center gap-2 font-heading text-base font-semibold text-gray-900">
@@ -162,7 +182,7 @@ const dateFr = (iso: string) =>
 						<button type="button" class="bouton bouton-primaire" :disabled="busy" @click="lever">
 							<i class="fa-solid fa-circle-check mr-1.5" aria-hidden="true"></i>Remettre le site en ligne
 						</button>
-						<button type="submit" class="bouton bouton-contour" :disabled="busy || !messageModifie">Enregistrer le message</button>
+						<button type="submit" class="bouton bouton-contour" :disabled="busy">Enregistrer le message</button>
 					</template>
 					<button v-else type="submit" class="bouton bouton-danger" :disabled="busy">
 						<i class="fa-solid fa-screwdriver-wrench mr-1.5" aria-hidden="true"></i>Mettre le site en maintenance

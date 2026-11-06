@@ -23,7 +23,7 @@ export const GET: APIRoute = withErrors(async () => {
 	const finished = status.finishedAt ? Date.parse(status.finishedAt) : 0;
 	const recent = status.state === 'running' || status.state === 'idle' || Date.now() - finished < STATUS_RECALL_MS;
 	return json({
-		plugins: await readPluginsSource(),
+		plugins: (await readPluginsSource()).filter((p) => p.propose || p.actif),
 		status: recent ? status : { state: 'idle' },
 		availability: await canPublish(),
 	});

@@ -1,0 +1,30 @@
+---
+/**
+ * Page publique « Demander un devis », à l'adresse `adresse:` de
+ * `src/content/facturation.yaml` (route ajoutée par `src/integrations/plugins.ts`).
+ * Prestations proposées lues dans Grist par le formulaire (`/api/facturation/prestations`).
+ */
+import Layout from '../../../layouts/Layout.astro';
+import PageHeader from '../../../components/sections/PageHeader.astro';
+import FormGate from '../../../components/forms/FormGate.astro';
+import DemandeDevisForm from '../formulaire/DemandeDevisForm.vue';
+import { association } from '../../../lib/association';
+import { facturationConfig } from '../lib/config';
+import { devisToggle } from '../index';
+
+export const prerender = false;
+
+const { textes } = facturationConfig;
+---
+
+<Layout
+	title={`${textes.titre} · ${association.name}`}
+	description={textes.description}
+	breadcrumbs={[{ label: 'Accueil', href: '/' }, { label: textes.titre }]}
+>
+	<PageHeader slot="page-header" title={textes.titre} description={textes.description} />
+
+	<FormGate toggle={devisToggle()}>
+		<DemandeDevisForm client:load consentement={textes.consentement} confirmation={textes.confirmation} />
+	</FormGate>
+</Layout>

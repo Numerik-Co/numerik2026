@@ -7,9 +7,10 @@ dans le site quand il est inactif.
 
 | Plugin | Dossier | Contenu |
 | :--- | :--- | :--- |
-| `adhesion` | [`adhesion/`](adhesion/README.md) | Adhésion en ligne et bulletin PDF, présence, planning Grist — **actif par défaut** |
-| `inscription` | [`inscription/`](inscription/README.md) | Inscription aux activités (`/inscription`, bouton « S'inscrire ») — **actif par défaut**, requiert `adhesion` |
+| `adhesion` | [`adhesion/`](adhesion/README.md) | Adhésion en ligne et bulletin PDF, présence, planning Grist — **actif par défaut**, associations seulement |
+| `inscription` | [`inscription/`](inscription/README.md) | Inscription aux activités (`/inscription`, bouton « S'inscrire ») — **actif par défaut**, requiert `adhesion`, associations seulement |
 | `rdv` | [`rdv/`](rdv/README.md) | Prise de rendez-vous en ligne (réglages de l'asso : `src/content/rdv.yaml`) |
+| `facturation` | [`facturation/`](facturation/README.md) | Devis et factures dans Grist, PDF, page « Demander un devis » — **auto-entrepreneur seulement** |
 
 ## Activer ou désactiver un plugin
 
@@ -106,7 +107,8 @@ plugin.
 1. Une entrée dans `PLUGINS` (`catalogue.ts`) : le réglage
    `plugins.<id>` est aussitôt reconnu, inactif par défaut (`actifParDefaut:
    true` pour un volet que la plupart des associations utilisent ;
-   `requiert: ['<id>']` s'il se sert d'un autre plugin), et le plugin
+   `requiert: ['<id>']` s'il se sert d'un autre plugin ; `structures` :
+   types de structure à qui il est proposé, `src/lib/structure.ts`), et le plugin
    apparaît dans le module « Plugins » (`icon`, `doc`, `requis` = fichiers
    de `src/content/` sans lesquels l'activation est refusée, `env` =
    secrets du `.env` signalés si absents, `reglages` = fichier de
@@ -114,7 +116,12 @@ plugin.
    module : `cle` à points, `groupe`, `type` — `adresse` (page publique,
    contrôlée contre les pages du site), `url`, `identifiant`, `table`, formats
    dans `src/plugins/champs.ts` —, `defaut`, `env` de repli, `obligatoire`).
-   Le plugin lit ces valeurs dans son fichier avant le `.env`.
+   Le plugin lit ces valeurs dans son fichier avant le `.env`. Pour
+   l'assistant d'installation : `secrets` (variables demandées, écrites dans
+   `<DATA_DIR>/installation/secrets.env` ; `type` `url` / `identifiant` /
+   `cle`, `obligatoire`, `genere` = créé au hasard sans être demandé) et
+   `modele` (fichier de `src/content/` copié d'un modèle à l'activation
+   s'il manque, ex. `rdv.yaml`).
 2. Le dossier `src/plugins/<id>/` avec son `plugin.ts`, ajouté à
    `PLUGIN_MANIFESTS` (`manifests.ts`).
 3. Chaque branchement dans le reste du site passe par `pluginActif()` ou

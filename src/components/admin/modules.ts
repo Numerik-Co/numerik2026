@@ -16,6 +16,8 @@
 import { defineAsyncComponent, type Component } from 'vue';
 import { hasAdminRights, type AuthGroup } from '../../lib/auth/groups';
 import { disponible, type PluginId } from '../../plugins';
+import { site } from '../../config/site';
+import { vocabulaire } from '../../lib/structure';
 
 /** Menus déroulants de la barre : libellé et icône du bouton qui regroupe les modules. */
 export const ADMIN_MENUS = {
@@ -95,8 +97,16 @@ export const ADMIN_MODULES: AdminModule[] = [
 		component: defineAsyncComponent(() => import('../../plugins/rdv/admin/RdvModule.vue')),
 	},
 	{
+		id: 'facturation',
+		label: 'Facturation',
+		icon: 'fa-file-invoice-dollar',
+		groups: ['admin'],
+		plugin: 'facturation',
+		component: defineAsyncComponent(() => import('../../plugins/facturation/admin/FacturationModule.vue')),
+	},
+	{
 		id: 'association',
-		label: 'Association',
+		label: vocabulaire(site.structure).titre,
 		icon: 'fa-landmark',
 		groups: ['admin'],
 		menu: 'parametres',

@@ -11,12 +11,16 @@
  */
 
 import { association, getFullAddress } from './association.ts';
+import { site } from '../config/site.ts';
+import { vocabulaire } from './structure.ts';
+
+const voc = vocabulaire(site.structure);
 
 const missing = (what: string) => `[À compléter : ${what}]`;
 
 export const PAGE_VARIABLES: Record<string, { label: string; value: () => string }> = {
-	'association.nom': { label: "Nom de l'association", value: () => association.name },
-	'association.description': { label: "Présentation courte de l'association", value: () => association.description },
+	'association.nom': { label: `Nom ${voc.de}`, value: () => association.name },
+	'association.description': { label: `Présentation courte ${voc.de}`, value: () => association.description },
 	'association.email': { label: 'Email de contact', value: () => association.email },
 	'association.telephone': { label: 'Téléphone', value: () => association.phone },
 	'association.adresse': { label: 'Adresse du siège', value: () => getFullAddress() },
@@ -24,7 +28,8 @@ export const PAGE_VARIABLES: Record<string, { label: string; value: () => string
 		label: "Numéro d'enregistrement (SIRET ou RNA)",
 		value: () => association.legal.registrationNumber || association.legal.siretNumber || missing('numéro SIRET ou RNA'),
 	},
-	'association.president': { label: 'Président·e', value: () => association.legal.president || missing('président·e') },
+	'association.siret': { label: 'Numéro SIRET', value: () => association.legal.siretNumber || missing('numéro SIRET') },
+	'association.president': { label: voc.responsable, value: () => association.legal.president || missing(voc.responsable.toLowerCase()) },
 	'association.responsable-publication': {
 		label: 'Responsable de la publication',
 		value: () => association.legal.publicationManager || association.legal.president || missing('responsable de la publication'),

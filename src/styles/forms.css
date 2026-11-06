@@ -2,7 +2,8 @@
    Seul endroit où régler leur apparence : hauteur, bordure, focus, erreur.
 
    - `champ` : input texte / email / date / nombre…, select, textarea.
-     Taille « sm » façon Bootstrap (form-control-sm) : ~30 px de haut.
+     Hauteur fixe `h-8` (2rem, 32 px), texte centré verticalement ; textarea
+     et liste multiple gardent leur hauteur libre.
    - `champ-erreur` : à ajouter à `champ` quand la valeur est refusée.
    - `champ-groupe` : bordure autour d'un préfixe + champ (adresse « /activites/… »),
      sur le conteneur ; le <input> qu'il contient n'a besoin d'aucune classe.
@@ -18,8 +19,10 @@
      étapes des formulaires publics, retour à la liste ; `bouton-contour` (et
      `bouton-accent-contour`) : action secondaire ; `bouton-neutre` : annuler,
      précédent ; `bouton-danger` / `bouton-danger-contour` : supprimer.
-   - Taille : même hauteur que `champ` (~30 px) ; `bouton-mini` plus petit (barres,
-     listes), `bouton-grand` pour les liens d'appel (Hero, encarts : Button.astro).
+   - Taille : même hauteur que `champ` (`h-8`, contenu centré ; hauteur minimale,
+     un libellé sur deux lignes l'agrandit) ; `bouton-mini` plus petit (`h-7` :
+     barres, listes), `bouton-grand` pour les liens d'appel (Hero, encarts :
+     Button.astro).
 
    Couche `components` : une classe Tailwind ajoutée à côté (`w-28`, `pl-9`,
    `font-mono`, `mt-4`…) l'emporte toujours. Cases à cocher et boutons radio
@@ -27,10 +30,10 @@
    (src/components/admin/context.ts), qui vaut `mt-1 champ`. */
 
 :root {
-	--champ-py: 0.25rem; /* hauteur : 0.25rem = sm, 0.5rem = taille normale */
+	--champ-hauteur: 2rem; /* h-8 : champs, boutons, nuancier */
+	--champ-py: 0.375rem; /* textarea seulement (les autres champs ont une hauteur fixe) */
 	--champ-px: 0.75rem;
 	--champ-rayon: var(--radius-lg);
-	--bouton-py: 0.25rem; /* même hauteur que les champs */
 	--bouton-px: 1rem;
 }
 
@@ -45,6 +48,11 @@
 		@apply outline-none placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500;
 		padding: var(--champ-py) var(--champ-px);
 	}
+	/* Hauteur fixe, texte centré verticalement (pas de rembourrage vertical). */
+	.champ:not(textarea):not([multiple]):not([size]) {
+		height: var(--champ-hauteur);
+		padding-block: 0;
+	}
 
 	.champ-erreur {
 		@apply border-red-400 focus:border-red-400 focus:ring-red-400/20;
@@ -52,6 +60,7 @@
 
 	.champ-groupe {
 		@apply flex items-center focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20;
+		height: var(--champ-hauteur);
 
 		& > span {
 			@apply whitespace-nowrap text-gray-500;
@@ -61,7 +70,8 @@
 		& > input {
 			@apply min-w-0 flex-1 border-0 bg-transparent outline-none focus:ring-0;
 			border-radius: var(--champ-rayon);
-			padding: var(--champ-py) var(--champ-px) var(--champ-py) 0;
+			height: 100%;
+			padding: 0 var(--champ-px) 0 0;
 		}
 	}
 
@@ -98,11 +108,14 @@
 
 	.bouton {
 		@apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent font-heading text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60;
-		padding: var(--bouton-py) var(--bouton-px);
+		@apply leading-tight;
+		min-height: var(--champ-hauteur);
+		padding: 0 var(--bouton-px);
 	}
 	.bouton-mini {
 		@apply text-xs;
-		padding: 0.25rem 0.75rem;
+		min-height: 1.75rem; /* h-7 */
+		padding: 0 0.75rem;
 	}
 	.bouton-grand {
 		padding: 0.75rem 1.5rem;
@@ -132,11 +145,11 @@
 
 	/* Nuancier (<input type="color">) : carré plein, sans le rembourrage
 	   interne du navigateur qui en fait un rectangle ; même hauteur qu'un
-	   `champ` (interligne text-sm + 2 × --champ-py + bordures). */
+	   `champ` (h-8). */
 	.champ-couleur {
 		@apply shrink-0 cursor-pointer appearance-none overflow-hidden rounded-md border border-gray-300 bg-white p-0;
-		height: calc(1.25rem + 2 * var(--champ-py) + 2px);
-		width: calc(1.25rem + 2 * var(--champ-py) + 2px);
+		height: var(--champ-hauteur);
+		width: var(--champ-hauteur);
 	}
 	.champ-couleur::-webkit-color-swatch-wrapper {
 		padding: 0;

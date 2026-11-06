@@ -23,10 +23,13 @@ import { readSession } from './lib/auth/session';
 const GUARDS: { prefix: string; groups: AuthGroup[]; message: string; noAdmin?: true }[] = [
 	{ prefix: '/api/admin/sauvegardes/restauration', groups: ['superadmin'], message: 'La restauration est réservée au super admin.', noAdmin: true },
 	{ prefix: '/api/admin/sauvegardes', groups: ['admin'], message: 'Les sauvegardes sont réservées au bureau.' },
+	{ prefix: '/api/admin/installation', groups: ['superadmin'], message: "L'installation est réservée au super admin.", noAdmin: true },
 	{ prefix: '/api/admin/journal', groups: ['superadmin'], message: 'Le journal est réservé au super admin.', noAdmin: true },
 	{ prefix: '/api/admin/plugins', groups: ['superadmin'], message: 'La gestion des plugins est réservée au super admin.', noAdmin: true },
 	// Plugin RDV (routes ajoutées seulement s'il est actif).
 	{ prefix: '/api/admin/rdv', groups: ['animateur'], message: 'La gestion des rendez-vous est réservée au bureau et aux animateur·rice·s.' },
+	// Plugin facturation (routes ajoutées seulement s'il est actif).
+	{ prefix: '/api/admin/facturation', groups: ['admin'], message: 'La facturation est réservée aux administrateur·rice·s.' },
 	{ prefix: '/api/admin/comptes', groups: ['admin'], message: 'La gestion des comptes est réservée au bureau.' },
 	{ prefix: '/api/admin/version', groups: ['admin'], message: 'Réservé au bureau.' },
 	{ prefix: '/api/admin/maintenance', groups: ['admin'], message: 'Le mode maintenance est réservé au bureau.' },

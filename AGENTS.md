@@ -8,6 +8,14 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
+**Branches** ([docs/developpement.md](docs/developpement.md#branches-et-versions-flux-git)) :
+tout le travail se commite sur `DEV` ; `master` ne reçoit que
+`git merge --no-ff DEV` (« Merge branch 'DEV' ») et les commits « Version
+X.Y.Z » (`npm version … -m "Version %s"`, tag) ; DEV rattrape ensuite master
+(`git merge --ff-only master`). Jamais de développement ni de fusion en
+avance rapide sur `master`. Le flux git (fusions, réécriture d'historique,
+force-push) est décidé par le mainteneur : ne pas le changer sans accord.
+
 Sauvegarde / restauration d'un site (façon Grav) : `./sauvegarde.sh`,
 `./restauration.sh <zip>` ou module « Sauvegardes » — ZIP (`fflate`) de
 `src/content/` + `data/accounts` + `data/journal` dans
@@ -184,6 +192,26 @@ créé au déploiement (`auth-user init`, mot de passe provisoire imposé —
 `mot-de-passe`), tous les droits + seul à voir le **journal**, invisible et
 intouchable depuis le module « Comptes ».
 
+**Assistant d'installation** (site neuf : `installation.json` absent et
+aucun compte hors super admin, ou installation inachevée) : ouvert au super
+admin après le changement de mot de passe (`InstallationWizard.vue` dans
+`AdminRoot`, « Plus tard » = `sessionStorage`, reprise depuis le module
+Site) — **type de structure** (association ou auto-entrepreneur :
+`src/lib/structure.ts`, `structure:` de `reglages.yaml` → `site.structure` ;
+plugins filtrés par `structures` du catalogue, `proposePour()`,
+`resoudrePlugins(lus, structure)` ; vocabulaire de l'admin et des variables
+de page ; entreprise = exemples de `contenu-initial-entreprise/` appliqués
+là où le fichier est encore celui de démonstration, exemples d'association
+retirés), compte `admin`, identité (nom, coordonnées, logo), plugins tous
+décochés (état écrit pour **tous** dans `reglages.yaml`, fichier `modele`
+du catalogue copié s'il manque), réglages + `secrets` du catalogue,
+exemples gardés ou retirés (ceux encore identiques à `contenu-initial/`,
+hors socle), puis reconstruction en maintenance. Logique
+`src/lib/installation.ts`, route `/api/admin/installation` (super admin),
+secrets dans `<DATA_DIR>/installation/secrets.env` (`scripts/installation.mjs` :
+chargés par `start.mjs` et en dev par `src/integrations/installation.ts`,
+le `.env` l'emporte ; `AUTH_SECRET` généré s'il manque).
+
 **Pas de pages d'administration** : tout se superpose au site. Lien
 « Espace Admin » du pied de page (`[data-auth-open]`) → modale de
 connexion ; connecté·e → barre fixe en haut + **modules en panneau
@@ -241,7 +269,7 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
   (`/api/admin/comptes`, `/api/admin/sauvegardes`, `/api/admin/maintenance`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/annonces`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/liens`, `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
-  `redacteur`, `/api/admin/journal`, `/api/admin/plugins` et `/api/admin/sauvegardes/restauration` → `superadmin` seul).
+  `redacteur`, `/api/admin/facturation` → `admin`, `/api/admin/journal`, `/api/admin/plugins`, `/api/admin/installation` et `/api/admin/sauvegardes/restauration` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
   d'admin et par `site-build.ts` (résultat des publications).
@@ -432,8 +460,8 @@ service = l'y ajouter). Détail : [docs/referencement.md](docs/referencement.md)
 ### Champs de formulaire
 
 `src/styles/forms.css` (importé par `global.css`, couche `components`) :
-`champ` (input, select, textarea ; taille « sm » façon Bootstrap, ~30 px,
-`--champ-py`), `champ-erreur`, `champ-groupe` (préfixe + champ), `champ-couleur`
+`champ` (input, select, textarea ; hauteur `h-8` fixe, texte centré,
+`--champ-hauteur` ; textarea libre), `champ-erreur`, `champ-groupe` (préfixe + champ), `champ-couleur`
 (nuancier carré, sans rembourrage du navigateur),
 `champ-libelle`, `champ-aide`, `champ-erreur-texte` (sous un champ),
 `message-erreur` (groupe, étape), encarts `alerte-erreur` / `alerte-succes` /
@@ -616,6 +644,26 @@ le formulaire d'adhésion inscrit aussi à une activité). Reste du site :
 `inscriptionEnLigne()` (`index.ts`) pour le bouton « S'inscrire » des
 fiches, `pluginActif('inscription')` pour les réglages d'inscription du
 module « Activités », `INSCRIPTION_HREF` (plan du site, `SERVICE_PAGES`).
+
+### Devis et facturation (plugin `facturation`, auto-entrepreneur)
+
+`src/plugins/facturation/` (doc et **schéma Grist** : [src/plugins/facturation/README.md](src/plugins/facturation/README.md)),
+`structures: ['entreprise']`. Réglages `src/content/facturation.yaml`
+(`lib/config.ts`, modèle `facturation.exemple.yaml` : adresse de la page,
+textes, validité, délai, conditions, TVA, IBAN, numérotation). Document Grist
+(tables `Clients`, `Prestations`, `Devis`, `Factures`, `Lignes` : `lib/grist.ts`)
+via le client générique `src/lib/grist-client.ts` ; secrets
+`GRIST_DOC_ID_FACTURATION`, `GRIST_API_KEY_FACTURATION` (repli
+`GRIST_API_KEY`). Règles `lib/documents.ts` : devis numéroté hors « Demande »,
+« Créer la facture » → brouillon, **émission** = numéro continu de l'année
+(file en mémoire), date du jour, échéance, plus modifiable ni supprimable ;
+montants recalculés serveur (`lib/types.ts`, partagé avec l'îlot). PDF
+(`lib/pdf.ts`, Gotenberg) avec les mentions EI / SIRET / TVA. Page publique
+`/devis` (`pages/devis.astro`, `formulaire/DemandeDevisForm.vue`, piège
+`site`, 5 demandes / 15 min / IP) → devis « Demande ». Module
+**Facturation** (`admin/FacturationModule.vue`, `DocumentForm.vue`,
+`LignesEditeur.vue`, `ClientForm.vue`, routes `admin/api/` en `POST
+{ action }`, garde `admin`, `logEvent('facturation')`).
 
 ### Prise de RDV (plugin `rdv`)
 

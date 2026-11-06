@@ -13,6 +13,12 @@ import { ApiError, associationApi, type SaveResult } from '../../client';
 import { isDeferredSubmit } from '../../lot';
 import PublishButtons from '../../PublishButtons.vue';
 import { ADMIN_CONTEXT, inputClass, rememberOpenModule, takeModuleToReopen } from '../../context';
+import { site } from '../../../../config/site';
+import { vocabulaire } from '../../../../lib/structure';
+
+/** Association ou entreprise (auto-entrepreneur) : libellés et mentions légales. */
+const entreprise = site.structure === 'entreprise';
+const voc = vocabulaire(site.structure);
 
 const props = defineProps<{ source: Association; locked: boolean }>();
 const emit = defineEmits<{ published: [label: string, result: SaveResult]; dirty: [value: boolean] }>();
@@ -35,6 +41,7 @@ const changed = computed(() => JSON.stringify(form.value) !== JSON.stringify(sav
 watch(changed, (value) => emit('dirty', value), { immediate: true });
 
 async function submit(event: Event) {
+	if (!changed.value) return void (error.value = 'Aucune modification à enregistrer.');
 	error.value = '';
 	busy.value = true;
 	try {
@@ -92,7 +99,7 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 			</header>
 			<div class="space-y-4 p-4">
 				<div>
-					<label for="asso-name" class="champ-libelle">Nom de l'association</label>
+					<label for="asso-name" class="champ-libelle">Nom {{ voc.de }}</label>
 					<input id="asso-name" v-model="form.name" type="text" required maxlength="80" :class="inputClass" />
 				</div>
 				<div>
@@ -120,7 +127,7 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 					<input id="asso-phone" v-model="form.phone" type="tel" required :class="inputClass" />
 				</div>
 				<div class="sm:col-span-2">
-					<label for="asso-street" class="champ-libelle">Adresse du siège</label>
+					<label for="asso-street" class="champ-libelle">{{ entreprise ? 'Adresse' : 'Adresse du siège' }}</label>
 					<input id="asso-street" v-model="form.address.street" type="text" required placeholder="N° et rue" :class="inputClass" />
 				</div>
 				<div>
@@ -164,7 +171,7 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 				<span class="text-xs text-gray-500">facultatives ; vide = « [À compléter] » dans les pages</span>
 			</header>
 			<div class="grid gap-4 p-4 sm:grid-cols-2">
-				<div>
+				<div v-if="!entreprise">
 					<label for="asso-rna" class="champ-libelle">Numéro RNA</label>
 					<input id="asso-rna" v-model="form.legal.registrationNumber" type="text" placeholder="W…" :class="inputClass" />
 				</div>
@@ -173,15 +180,15 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 					<input id="asso-siret" v-model="form.legal.siretNumber" type="text" inputmode="numeric" :class="inputClass" />
 				</div>
 				<div class="sm:col-span-2">
-					<label for="asso-president" class="champ-libelle">Président·e</label>
+					<label for="asso-president" class="champ-libelle">{{ voc.responsable }}</label>
 					<input id="asso-president" v-model="form.legal.president" type="text" :class="inputClass" />
 				</div>
 				<div>
 					<label for="asso-manager" class="champ-libelle">Responsable de la publication</label>
 					<input id="asso-manager" v-model="form.legal.publicationManager" type="text" :placeholder="form.legal.president" :class="inputClass" />
-					<p class="champ-aide">Souvent le·la président·e (repris si vide).</p>
+					<p class="champ-aide">{{ entreprise ? "L'entrepreneur·e (repris si vide)." : 'Souvent le·la président·e (repris si vide).' }}</p>
 				</div>
-				<div>
+				<div v-if="!entreprise">
 					<label for="asso-role" class="champ-libelle">Sa fonction dans l'association</label>
 					<input id="asso-role" v-model="form.legal.publicationManagerRole" type="text" placeholder="Président·e" :class="inputClass" />
 				</div>
@@ -204,7 +211,7 @@ const inlineInputClass = inputClass.replace('mt-1 ', '');
 		</section>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<PublishButtons :busy="busy" :disabled="props.locked || !changed" />
+			<PublishButtons :busy="busy" :disabled="props.locked" />
 			<button v-if="changed" type="button" class="text-sm text-gray-600 hover:underline" @click="reset">Annuler les modifications</button>
 		</div>
 	</form>

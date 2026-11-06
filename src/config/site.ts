@@ -18,6 +18,7 @@ import { parse as parseYaml } from 'yaml';
 import raw from '../content/reglages.yaml?raw';
 import { catalogueFont, DEFAULT_FONTS, FONT_FILE_PATTERN, FONT_NAME_MAX, FONT_WEIGHTS, type FontRole, type FontWeight } from '../lib/font-catalogue';
 import { actifParDefaut, PLUGIN_IDS, resoudrePlugins, type PluginId } from '../plugins/catalogue';
+import { STRUCTURES } from '../lib/structure';
 
 export interface FormToggle {
 	/** `false` masque le formulaire et affiche `closedTitle` + `closedMessage` à la place. */
@@ -206,6 +207,8 @@ const overridesSchema = z
 		share: z.strictObject(Object.fromEntries(Object.keys(DEFAULTS.share).map((k) => [k, bool])) as Record<ShareKey, z.ZodBoolean>).partial(),
 		forms: z.strictObject(Object.fromEntries(Object.keys(DEFAULTS.forms).map((k) => [k, formSchema])) as Record<FormKey, typeof formSchema>).partial(),
 		plugins: z.strictObject(Object.fromEntries(PLUGIN_IDS.map((id) => [id, bool])) as Record<PluginId, z.ZodBoolean>).partial(),
+		/** Type de structure (src/lib/structure.ts) : `association` (défaut) ou `entreprise`. */
+		structure: z.enum(STRUCTURES, { error: `${STRUCTURES.join(' ou ')} attendu` }),
 	})
 	.partial()
 	.nullish()
@@ -225,7 +228,9 @@ export function parseReglages(text: string) {
 		throw new Error(`src/content/reglages.yaml invalide :\n${details}`);
 	}
 	const o = result.data;
+	const structure = o.structure ?? 'association';
 	return {
+		structure,
 		colors: { ...DEFAULTS.colors, ...o.colors },
 		polices: { ...DEFAULTS.polices, ...o.polices } as SiteFonts,
 		cta: { ...DEFAULTS.cta, ...o.cta },
@@ -235,7 +240,7 @@ export function parseReglages(text: string) {
 			Object.entries(DEFAULTS.forms).map(([k, d]) => [k, { ...d, ...o.forms?.[k as FormKey] }]),
 		) as Record<FormKey, FormToggle>,
 		// Valeurs écrites, sinon défauts ; inactif si un plugin requis l'est.
-		plugins: resoudrePlugins({ ...DEFAULTS.plugins, ...o.plugins }),
+		plugins: resoudrePlugins({ ...DEFAULTS.plugins, ...o.plugins }, structure),
 	};
 }
 

@@ -56,7 +56,9 @@ de `src/content/` à la main, **redémarrer suffit**.
 
 ## Publier une version du modèle (mainteneur)
 
-Sur `master`, une fois la CI au vert ([ci.md](ci.md)), arbre de travail propre :
+Sur `master`, après la fusion de DEV (`git merge --no-ff DEV` : flux des
+branches dans [developpement.md](developpement.md#branches-et-versions-flux-git)),
+une fois la CI au vert ([ci.md](ci.md)), arbre de travail propre :
 
 ```bash
 npm version minor        # 1.0.0 → 1.1.0 : met à jour package.json, commit + tag v1.1.0
@@ -84,6 +86,12 @@ Suivi : onglet **Actions** du dépôt ; résultat : onglet **Releases** et
 > serveurs ne pourront pas télécharger l'image sans identifiants.
 
 ## Mettre à jour un site (association)
+
+> Assistant d'installation et type de structure (association /
+> auto-entrepreneur) : **rien à faire** pour un site déjà en service. Il
+> garde ses comptes, reste une association (pas de `structure:` dans
+> `reglages.yaml`) et ses plugins gardent leur état ; l'assistant ne
+> s'ouvre que sur un site neuf ([installation.md](installation.md)).
 
 Le bureau est prévenu dans l'Espace Admin : badge **Mise à jour X.Y.Z**
 dans la barre dès qu'une version plus récente est publiée

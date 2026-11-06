@@ -20,7 +20,7 @@ import { join } from 'node:path';
 import { getSecret } from 'astro:env/server';
 import { isMap, parseDocument, YAMLMap, type Document } from 'yaml';
 import { parseReglages } from '../config/site';
-import { PLUGIN_IDS, PLUGINS, requis, type PluginId, type PluginInfo } from '../plugins/catalogue';
+import { PLUGIN_IDS, PLUGINS, proposePour, requis, type PluginId, type PluginInfo } from '../plugins/catalogue';
 import { FORMATS, type ChampPlugin } from '../plugins/champs';
 import { pluginActif } from '../plugins';
 import type { Applied } from './content-transaction';
@@ -61,6 +61,8 @@ export interface PluginState {
 	secrets: { nom: string; utilise: string | null }[];
 	/** Fichier des réglages (`src/content/…`), `null` si le plugin n'en a pas. */
 	fichierReglages: string | null;
+	/** Proposé au type de structure du site (`structure:` de `reglages.yaml`) ; sinon caché du module. */
+	propose: boolean;
 	champs: ChampState[];
 }
 
@@ -79,7 +81,7 @@ async function lireYaml(fichier: string): Promise<unknown> {
 }
 
 export async function readPluginsSource(): Promise<PluginState[]> {
-	const { plugins } = parseReglages(await readFile(reglagesFile(), 'utf8').catch(() => ''));
+	const { plugins, structure } = parseReglages(await readFile(reglagesFile(), 'utf8').catch(() => ''));
 	return Promise.all(
 		PLUGIN_IDS.map(async (id) => {
 			const info: PluginInfo = PLUGINS[id];
@@ -118,6 +120,7 @@ export async function readPluginsSource(): Promise<PluginState[]> {
 				avertissements,
 				secrets,
 				fichierReglages: info.reglages ? `src/content/${info.reglages.fichier}` : null,
+				propose: proposePour(id, structure),
 				champs,
 			};
 		}),
@@ -196,6 +199,7 @@ export async function savePlugin(id: unknown, actif: unknown, valeurs: unknown):
 		}
 	}
 
+	if (actif && !state.propose) errors.push(`Ce plugin n'est pas proposé à ce type de structure.`);
 	if (actif !== state.actif) {
 		if (actif && state.requisInactifs.length) {
 			errors.push(`Activation impossible : activez d'abord le plugin « ${state.requisInactifs.map((r) => r.label).join(' », « ')} », qu'il requiert.`);

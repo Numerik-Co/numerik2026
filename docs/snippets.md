@@ -406,8 +406,8 @@ Bouton qui ouvre la connexion, n'importe où : `<button type="button" data-auth-
 
 Tous les champs du site (pages publiques, plugins, Espace Admin) partagent
 les classes de `src/styles/forms.css` : hauteur, bordure, focus et erreur se
-règlent **là seulement** (`--champ-py` : `0.25rem` = taille « sm » façon
-Bootstrap, ~30 px ; `0.5rem` = taille normale).
+règlent **là seulement** (`--champ-hauteur` : `2rem` = `h-8`, texte centré
+verticalement ; textarea : `--champ-py`).
 
 ```vue
 <input v-model="nom" type="text" class="mt-1 champ" />
@@ -443,7 +443,7 @@ Tailwind ajoutée à côté (`w-28`, `pl-9`…) l'emporte toujours (couche
 ### Boutons de formulaire
 
 Même fichier, même principe : `bouton` + une couleur, jamais de chaîne
-recopiée. Hauteur = celle des champs (`--bouton-py`, `--bouton-px`).
+recopiée. Hauteur = celle des champs (`h-8` minimum, contenu centré ; `--bouton-px`).
 
 | Classe | Usage |
 | :--- | :--- |

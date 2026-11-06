@@ -162,6 +162,7 @@ async function upload(picked: Picked | null) {
 }
 
 async function submit(event: Event) {
+	if (!changed.value) return void (error.value = 'Aucune modification à enregistrer.');
 	if (!allValid.value) return void (error.value = 'Une couleur est mal saisie (format #2f7fc1).');
 	error.value = '';
 	busy.value = true;
@@ -433,7 +434,7 @@ onBeforeUnmount(() => {
 		</section>
 
 		<div class="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
-			<PublishButtons :busy="busy" :disabled="props.locked || !changed" />
+			<PublishButtons :busy="busy" :disabled="props.locked" />
 			<button v-if="changed" type="button" class="text-sm text-gray-600 hover:underline" @click="reset">Annuler les modifications</button>
 		</div>
 	</form>

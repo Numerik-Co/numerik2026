@@ -65,9 +65,68 @@ src/
 └── env.d.ts                                           # typage des variables d'environnement (import.meta.env)
 ```
 
+### Installation, type de structure, maintenance, facturation
+
+| Fichier | Rôle |
+| --- | --- |
+| `scripts/installation.mjs` | Secrets de l'installation (`<DATA_DIR>/installation/secrets.env`, chargés au démarrage en complément du `.env`), `AUTH_SECRET` généré, état `installation.json` — [installation.md](installation.md) |
+| `src/lib/installation.ts`, `src/pages/api/admin/installation.ts`, `src/components/admin/InstallationWizard.vue` | Assistant d'installation (super admin, site neuf) |
+| `src/integrations/installation.ts` | Secrets de l'installation en dev (le `.env` l'emporte) |
+| `src/lib/structure.ts` | Type de structure (`association` / `entreprise`) et vocabulaire — [structure.md](structure.md) |
+| `contenu-initial-entreprise/` | Contenu d'exemple « auto-entrepreneur », appliqué par l'assistant |
+| `scripts/maintenance.mjs`, `src/integrations/maintenance.ts` | Mode maintenance (restauration, installation, manuel) : porte devant le serveur (`scripts/start.mjs`) et en dev — [sauvegarde.md](sauvegarde.md#détails-techniques) |
+| `src/lib/grist-client.ts` | Client Grist générique des plugins (`clientGrist()`) |
+| `src/plugins/facturation/` | Plugin devis et facturation — [facturation.md](facturation.md) |
+
 À la racine du projet : `.env.example` liste les variables d'environnement attendues (à copier en `.env`, jamais commité). Elles sont déclarées dans `astro.config.mjs` (`astro:env`, lues au démarrage, jamais figées dans `dist/`) — voir [api.md](api.md#variables-denvironnement).
 
 Pas de dossier `src/assets/` ni `public/` actif à ce stade (contenu de démarrage Astro supprimé) ; les images du site vivent à côté de ce qui les utilise (`src/content/images/` pour le logo, le favicon et la photo d'accueil, cf. [theme.md](theme.md#logo) ; `src/content/news/<slug>/` et `src/content/activites/<slug>/` pour les visuels).
+
+## Branches et versions (flux git)
+
+Deux branches, un principe : **`master` ne reçoit pas le développement**.
+
+| Branche | Contient |
+| --- | --- |
+| `DEV` | Tout le travail : chaque fonctionnalité, correction ou doc y est commitée (un ou plusieurs commits) |
+| `master` | Seulement les **fusions de DEV** (commit « Merge branch 'DEV' ») et les **commits de version** (« Version X.Y.Z », tagués `vX.Y.Z`) |
+
+Sur `master`, jamais de commit de développement direct, et jamais de fusion
+en **avance rapide** : chaque passage de DEV crée un commit de fusion, ce
+qui garde DEV sur sa propre voie dans l'historique (GitKraken, `git log
+--graph`) et laisse `master` lisible fusion par fusion
+(`git log --first-parent master`).
+
+### Développer
+
+```bash
+git checkout DEV
+# … modifications …
+git commit -m "Module X : …"
+git push origin DEV          # la CI vérifie DEV (docs/ci.md)
+```
+
+### Publier (fusion + version)
+
+```bash
+git checkout master
+git merge --no-ff DEV                  # commit « Merge branch 'DEV' »
+npm version patch -m "Version %s"      # package.json + commit « Version X.Y.Z » + tag vX.Y.Z
+git checkout DEV
+git merge --ff-only master             # DEV repart de la version publiée
+git push origin master DEV --follow-tags
+```
+
+`npm version minor` / `major` selon l'ampleur (voir
+[mise-a-jour.md](mise-a-jour.md#publier-une-version-du-modèle-mainteneur)) ;
+le tag déclenche la Release. Seule DEV avance en avance rapide, pour
+rattraper `master` : `master`, lui, ne reçoit jamais DEV en avance rapide.
+
+Fusionner sans publier de version : seulement `git merge --no-ff DEV` sur
+`master`, puis `git merge --ff-only master` sur DEV.
+
+> De la v0.5.2 à la v0.5.6, DEV a été fusionnée en avance rapide :
+> l'historique de cette période est linéaire, sans commits de fusion.
 
 ## Configuration Astro (`astro.config.mjs`)
 

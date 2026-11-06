@@ -2,7 +2,16 @@
 import { Image } from 'astro:assets';
 import { logo, logoWidth } from '../../lib/site-images';
 import { SOCIAL_NETWORKS, association, getFullAddress } from '../../lib/association';
+import { getContentPages } from '../../lib/content-pages';
 const year = new Date().getFullYear();
+
+/** Pages légales du pied de page : seulement celles qui existent (statuts et règlement : associations). */
+const slugs = new Set((await getContentPages()).filter((p) => !p.access).map((p) => p.slug));
+const legalLinks = [
+	{ href: '/mentions-legales', label: 'Mentions légales', slug: 'mentions-legales' },
+	{ href: '/statuts', label: 'Statuts', slug: 'statuts' },
+	{ href: '/reglement-interieur', label: 'Règlement intérieur', slug: 'reglement-interieur' },
+].filter((l) => slugs.has(l.slug));
 
 const socialLinks = Object.entries(association.social)
 	.filter(([, url]) => !!url)
@@ -64,12 +73,16 @@ const socialLinks = Object.entries(association.social)
 	<div class="border-t border-white/10 px-4 py-4 text-center text-xs text-white/70">
 		<p>&copy; {year} {association.name}. Tous droits réservés. | Propulsé par Astro et développé par OpenPixl</p>
 		<p class="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
-			<a href="/mentions-legales" class="hover:text-white">Mentions légales</a>
-			<span aria-hidden="true">·</span>
-			<a href="/statuts" class="hover:text-white">Statuts</a>
-			<span aria-hidden="true">·</span>
-			<a href="/reglement-interieur" class="hover:text-white">Règlement intérieur</a>
-			<span aria-hidden="true">·</span>
+			{
+				legalLinks.map((l) => (
+					<>
+						<a href={l.href} class="hover:text-white">
+							{l.label}
+						</a>
+						<span aria-hidden="true">·</span>
+					</>
+				))
+			}
 			<!-- Ouvre la modale de connexion (src/components/admin/AdminLoader.astro). -->
 			<a href="#connexion" data-auth-open class="hover:text-white">
 				<i class="fa-solid fa-lock text-[10px]" aria-hidden="true"></i>

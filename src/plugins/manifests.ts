@@ -9,6 +9,7 @@ import type { PluginId } from './catalogue';
 import adhesion from './adhesion/plugin';
 import inscription from './inscription/plugin';
 import rdv from './rdv/plugin';
+import facturation from './facturation/plugin';
 
 export interface PluginManifest {
 	id: PluginId;
@@ -25,4 +26,4 @@ export interface PluginManifest {
 	env: Record<string, ReturnType<typeof envField.string>>;
 }
 
-export const PLUGIN_MANIFESTS: PluginManifest[] = [adhesion, inscription, rdv];
+export const PLUGIN_MANIFESTS: PluginManifest[] = [adhesion, inscription, rdv, facturation];
