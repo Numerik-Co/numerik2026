@@ -12,7 +12,7 @@
 import pkg from '../../package.json';
 
 export const MODEL_VERSION: string = pkg.version;
-export const MODEL_REPO = 'Numerik-Co/numerik2026';
+export const MODEL_REPO = 'OpenPixl/zerucms';
 
 export interface ModelVersionInfo {
 	current: string;
@@ -41,7 +41,7 @@ export function isNewer(candidate: string, current: string): boolean {
 async function fetchLatestRelease(): Promise<{ latest: string | null; url: string | null }> {
 	try {
 		const res = await fetch(`https://api.github.com/repos/${MODEL_REPO}/releases/latest`, {
-			headers: { Accept: 'application/vnd.github+json', 'User-Agent': `numerik2026/${MODEL_VERSION}` },
+			headers: { Accept: 'application/vnd.github+json', 'User-Agent': `zerucms/${MODEL_VERSION}` },
 			signal: AbortSignal.timeout(5000),
 		});
 		if (!res.ok) throw new Error(`GitHub ${res.status}`);

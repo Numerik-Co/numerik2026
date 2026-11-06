@@ -3,7 +3,7 @@ services:
     # Image publiée du modèle, version choisie par NUMERIK_VERSION dans le .env
     # (écrit par ./update.sh ; défaut : la dernière). `build: .` sert seulement
     # à ./deploy.sh (construction locale depuis les sources, mainteneur).
-    image: ghcr.io/numerik-co/numerik2026:${NUMERIK_VERSION:-latest}
+    image: ghcr.io/openpixl/zerucms:${NUMERIK_VERSION:-latest}
     build: .
     container_name: numerik2026
     restart: unless-stopped

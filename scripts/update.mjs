@@ -33,7 +33,7 @@ import { join, resolve } from 'node:path';
 import { RELEASES_DIR, releaseStamp } from './releases.mjs';
 
 const root = resolve(process.env.SITE_ROOT || process.cwd());
-const REPO = process.env.UPDATE_REPO || 'Numerik-Co/numerik2026';
+const REPO = process.env.UPDATE_REPO || 'OpenPixl/zerucms';
 /** Dossiers appartenant au modèle, remplacés en entier. */
 const TEMPLATE_DIRS = ['scripts', 'docs', '.github', 'contenu-initial'];
 /** Entrées de `src/` appartenant à l'association : jamais remplacées. */
