@@ -5,6 +5,9 @@
  *
  * 0. nouveau site (src/content/ sans association.yaml) : copie le contenu de
  *    démonstration de `contenu-initial/` (scripts/contenu-initial.mjs) ;
+ *    Charge ensuite les secrets saisis à l'installation
+ *    (`<DATA_DIR>/installation/secrets.env`, scripts/installation.mjs : le
+ *    .env l'emporte) et génère `AUTH_SECRET` s'il manque ;
  * 1. compare l'empreinte de l'état courant (version du modèle, SITE_URL,
  *    contenu de src/content/ — cf. releases.mjs) à celle du site en place
  *    (`dist/build-info.json`) ;
@@ -37,6 +40,7 @@ import { pathToFileURL } from 'node:url';
 import { RELEASES_DIR, computeFingerprint, findRelease, pruneReleases, readBuildInfo, releaseStamp, swapDist } from './releases.mjs';
 import { installerContenuInitial } from './contenu-initial.mjs';
 import { fermerMaintenance, lireMaintenance, nomAssociation, porteMaintenance } from './maintenance.mjs';
+import { assurerAuthSecret, chargerSecrets } from './installation.mjs';
 
 const root = resolve(process.env.SITE_ROOT || process.cwd());
 const log = (message) => console.log(`[démarrage] ${message}`);
@@ -97,6 +101,11 @@ async function buildIfNeeded() {
 }
 
 const dataDir = resolve(process.env.DATA_DIR || process.env.AUTH_DATA_DIR || join(root, 'data'));
+
+// Secrets saisis à l'installation (Espace Admin) : complètent le .env, qui l'emporte.
+const charges = chargerSecrets(dataDir);
+if (charges.length) log(`secrets de l'installation chargés : ${charges.join(', ')}.`);
+if (assurerAuthSecret(dataDir)) log("AUTH_SECRET absent : généré et gardé dans data/installation/secrets.env.");
 
 
 await buildIfNeeded();

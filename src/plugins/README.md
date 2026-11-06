@@ -114,7 +114,12 @@ plugin.
    module : `cle` à points, `groupe`, `type` — `adresse` (page publique,
    contrôlée contre les pages du site), `url`, `identifiant`, `table`, formats
    dans `src/plugins/champs.ts` —, `defaut`, `env` de repli, `obligatoire`).
-   Le plugin lit ces valeurs dans son fichier avant le `.env`.
+   Le plugin lit ces valeurs dans son fichier avant le `.env`. Pour
+   l'assistant d'installation : `secrets` (variables demandées, écrites dans
+   `<DATA_DIR>/installation/secrets.env` ; `type` `url` / `identifiant` /
+   `cle`, `obligatoire`, `genere` = créé au hasard sans être demandé) et
+   `modele` (fichier de `src/content/` copié d'un modèle à l'activation
+   s'il manque, ex. `rdv.yaml`).
 2. Le dossier `src/plugins/<id>/` avec son `plugin.ts`, ajouté à
    `PLUGIN_MANIFESTS` (`manifests.ts`).
 3. Chaque branchement dans le reste du site passe par `pluginActif()` ou

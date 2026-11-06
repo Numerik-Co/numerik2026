@@ -107,6 +107,7 @@ const nom = computed(() => [b.value.prenom, b.value.nom].filter(Boolean).join(' 
 
 async function enregistrer() {
 	error.value = '';
+	if (!modifie.value) return void (error.value = 'Aucune modification à enregistrer.');
 	enregistre.value = false;
 	if (!heure.value) return void (error.value = 'Choisissez un horaire.');
 	if (!demarcheId.value) return void (error.value = 'Choisissez une démarche.');
@@ -363,7 +364,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown, true));
 				<div class="flex flex-wrap items-center gap-2 border-t border-gray-100 pt-5">
 					<button
 						type="submit"
-						:disabled="busy || !modifie"
+						:disabled="busy"
 						class="bouton bouton-primaire"
 					>
 						<i v-if="busy" class="fa-solid fa-spinner fa-spin mr-1.5" aria-hidden="true"></i>{{ busy ? 'Enregistrement…' : 'Enregistrer' }}

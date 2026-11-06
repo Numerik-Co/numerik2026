@@ -492,6 +492,50 @@ export const sauvegardesApi = {
 	},
 };
 
+/** Assistant d'installation (super admin, premier déploiement) : cf. src/lib/installation.ts. */
+export interface InstallationSecret {
+	nom: string;
+	label: string;
+	type: 'url' | 'identifiant' | 'cle';
+	aide?: string;
+	obligatoire?: boolean;
+	/** Déjà défini par le .env : ni demandé ni écrit. */
+	dejaDefini: boolean;
+}
+export interface InstallationPlugin {
+	id: string;
+	label: string;
+	description: string;
+	icon: string;
+	requiert: string[];
+	secrets: InstallationSecret[];
+	champs: (PluginChamp & { obligatoire?: boolean; defaut?: string })[];
+}
+export interface InstallationEtat {
+	requise: boolean;
+	compte: { login: string; fullname: string } | null;
+	association: { name: string; email: string; phone: string; address: { street: string; postalCode: string; city: string } };
+	logo: string | null;
+	plugins: InstallationPlugin[];
+	exemples: number;
+	dev: boolean;
+}
+export interface InstallationSaisie {
+	compte: { login: string; fullname: string; email: string; password: string } | null;
+	association: { name: string; email: string; phone: string; street: string; postalCode: string; city: string };
+	logo: { type: string; data: string } | null;
+	plugins: Record<string, boolean>;
+	reglages: Record<string, Record<string, string>>;
+	secrets: Record<string, string>;
+	exemples: boolean;
+}
+export const installationApi = {
+	get: () => request<InstallationEtat>('GET', '/api/admin/installation'),
+	requise: () => request<{ requise: boolean }>('GET', '/api/admin/installation?requise'),
+	installer: (saisie: InstallationSaisie) =>
+		request<{ ok: true; maintenance: boolean; compte: string | null }>('POST', '/api/admin/installation', saisie),
+};
+
 /** Mode maintenance (module « Site »). */
 export interface MaintenanceEtat {
 	maintenance: {

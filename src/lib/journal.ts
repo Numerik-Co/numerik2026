@@ -40,6 +40,7 @@ export type JournalAction =
 	| 'sauvegarde.depot'
 	| 'sauvegarde.suppression'
 	| 'sauvegarde.restauration'
+	| 'installation'
 	| 'maintenance.activation'
 	| 'maintenance.modification'
 	| 'maintenance.fin'

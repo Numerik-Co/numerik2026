@@ -14,6 +14,7 @@ import sitePages from './src/integrations/site-pages.ts';
 import buildInfo from './src/integrations/build-info.ts';
 import plugins from './src/integrations/plugins.ts';
 import maintenance from './src/integrations/maintenance.ts';
+import installation from './src/integrations/installation.ts';
 import { PLUGIN_MANIFESTS } from './src/plugins/manifests.ts';
 
 /**
@@ -113,5 +114,5 @@ export default defineConfig({
   // sitePages : retire du build le HTML des pages du site désactivées (404 réel).
   // buildInfo : empreinte du build (build-info.json), lue par scripts/start.mjs.
   // plugins : routes des plugins actifs (src/plugins/, `plugins:` de reglages.yaml).
-  integrations: [mdx(), vue(), sitePages(), buildInfo(), plugins(), maintenance()]
+  integrations: [mdx(), vue(), sitePages(), buildInfo(), plugins(), maintenance(), installation()]
 });

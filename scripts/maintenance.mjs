@@ -31,7 +31,7 @@ import { join } from 'node:path';
 
 /**
  * @typedef {{ etat: 'en-cours' | 'redemarrage', motif: string, etape: string, progression: number, debut: string,
- *   manuel?: boolean, message?: string, par?: string }} Maintenance
+ *   nature?: 'restauration' | 'installation', manuel?: boolean, message?: string, par?: string }} Maintenance
  */
 
 export const ROUTE_ETAT = '/__maintenance';
@@ -59,9 +59,12 @@ function ecrireMaintenance(dataDir, etat) {
 	renameSync(`${fichier}.tmp`, fichier);
 }
 
-/** Met le site en maintenance pour une restauration (barre de progression). */
-export function ouvrirMaintenance(dataDir, motif, etape = 'Préparation…') {
-	ecrireMaintenance(dataDir, { etat: 'en-cours', motif, etape, progression: 2, debut: new Date().toISOString() });
+/**
+ * Met le site en maintenance pendant une reconstruction (barre de
+ * progression) ; `nature` complète la phrase « Le site est en cours de … ».
+ */
+export function ouvrirMaintenance(dataDir, motif, etape = 'Préparation…', nature = 'restauration') {
+	ecrireMaintenance(dataDir, { etat: 'en-cours', motif, nature, etape, progression: 2, debut: new Date().toISOString() });
 }
 
 /** Maintenance décidée depuis l'Espace Admin : message libre, membres connectés admis. */
@@ -114,7 +117,7 @@ export function pageMaintenance({ nom = '', etat, apercu = false } = {}) {
 	const pct = manuel ? 0 : (etat?.progression ?? 0);
 	const texte = manuel
 		? echapper(etat?.message || MESSAGE_PAR_DEFAUT).replace(/\n/g, '<br>')
-		: `${nom ? `Le site de ${echapper(nom)} est en cours de restauration.` : 'Le site est en cours de restauration.'} Il revient dans quelques minutes : cette page se met à jour toute seule.`;
+		: `${nom ? `Le site de ${echapper(nom)}` : 'Le site'} est en cours ${echapper(etat?.nature === 'installation' ? "d'installation" : 'de restauration')}. Il revient dans quelques minutes : cette page se met à jour toute seule.`;
 	const progression = manuel
 		? ''
 		: `<div class="barre" role="progressbar" aria-label="Avancement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><div class="plein" id="plein"></div></div>

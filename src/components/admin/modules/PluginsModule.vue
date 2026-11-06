@@ -103,6 +103,7 @@ const { status, following, receive, afterSave, publishLot, savedLabel, dismiss: 
 const locked = computed(() => !availability.value.ok || following.value);
 
 async function submit(plugin: PluginItem, event: Event) {
+	if (!modifie.value) return void (error.value = 'Aucune modification à enregistrer.');
 	error.value = '';
 	busy.value = true;
 	try {
@@ -222,7 +223,7 @@ onMounted(load);
 
 		<p v-if="error" class="mt-6 alerte-erreur" role="alert">{{ error }}</p>
 		<div class="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-5">
-			<PublishButtons :busy="busy" :disabled="locked || busy || !modifie" />
+			<PublishButtons :busy="busy" :disabled="locked || busy" />
 		</div>
 	</form>
 

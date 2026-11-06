@@ -16,7 +16,7 @@ import AdminOverlay from './AdminOverlay.vue';
 import LoginForm from './LoginForm.vue';
 import { hasAdminRights } from '../../lib/auth/groups';
 import type { ModelVersionInfo } from '../../lib/model-version';
-import { ApiError, authApi, lotApi, versionApi, type AdminUser, type ReservedPage } from './client';
+import { ApiError, authApi, installationApi, lotApi, versionApi, type AdminUser, type ReservedPage } from './client';
 import { CONTENT_KIND_IDS, CONTENT_KINDS } from './content-import';
 import { ADMIN_CONTEXT, takeModuleToReopen } from './context';
 import { loadLot, lot, publishing } from './lot';
@@ -55,6 +55,40 @@ async function loadVersion() {
 		version.value = null;
 	}
 }
+
+/**
+ * Assistant d'installation (super admin, site neuf) : ouvert d'office tant
+ * qu'il n'est pas fait, sauf « Plus tard » (jusqu'à la fermeture de l'onglet) ;
+ * repris depuis le module « Site » (évènement `numerik:installation`).
+ */
+const InstallationWizard = defineAsyncComponent(() => import('./InstallationWizard.vue'));
+const installationOuverte = ref(false);
+const PLUS_TARD = 'numerik-installation-plus-tard';
+async function verifierInstallation() {
+	if (!user.value?.groups.includes('superadmin') || mustChangePassword.value) return;
+	try {
+		if (sessionStorage.getItem(PLUS_TARD)) return;
+	} catch {
+		// sessionStorage indisponible : on propose l'assistant.
+	}
+	try {
+		installationOuverte.value = (await installationApi.requise()).requise;
+	} catch {
+		// Information seulement.
+	}
+}
+function installationPlusTard() {
+	installationOuverte.value = false;
+	try {
+		sessionStorage.setItem(PLUS_TARD, '1');
+	} catch {
+		// Rien à garder.
+	}
+}
+const ouvrirInstallation = () => {
+	activeId.value = null;
+	installationOuverte.value = true;
+};
 
 /** Mot de passe provisoire : rien d'autre n'est accessible avant de l'avoir changé. */
 const mustChangePassword = computed(() => Boolean(user.value?.mustChangePassword));
@@ -202,6 +236,7 @@ watch(user, (u) => document.documentElement.classList.toggle('has-admin-bar', Bo
 
 onMounted(async () => {
 	window.addEventListener('numerik:auth-open', open);
+	window.addEventListener('numerik:installation', ouvrirInstallation);
 	document.addEventListener('click', onDocumentClick);
 	document.addEventListener('keydown', onDocumentKeydown);
 	if (document.cookie.split('; ').includes('numerik_connecte=1')) {
@@ -219,6 +254,7 @@ onMounted(async () => {
 	document.documentElement.classList.toggle('has-admin-bar', Boolean(user.value));
 	void loadVersion();
 	if (user.value) void chargerMaintenance();
+	void verifierInstallation();
 	if (props.openOnMount) open();
 	// Rechargement après une publication (fin de publication réussie, ou Vite en dev) : on rouvre le module.
 	const reopen = takeModuleToReopen();
@@ -227,6 +263,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
 	window.removeEventListener('numerik:auth-open', open);
+	window.removeEventListener('numerik:installation', ouvrirInstallation);
 	document.removeEventListener('click', onDocumentClick);
 	document.removeEventListener('keydown', onDocumentKeydown);
 });
@@ -481,6 +518,10 @@ onBeforeUnmount(() => {
 		<button type="button" class="mt-4 w-full text-center text-xs text-gray-500 underline hover:text-gray-900" @click="logout">
 			Me déconnecter
 		</button>
+	</AdminOverlay>
+
+	<AdminOverlay v-if="installationOuverte && user && !mustChangePassword" title="Installation du site" variant="modal" wide @close="installationPlusTard">
+		<InstallationWizard @later="installationPlusTard" @done="reload" />
 	</AdminOverlay>
 
 	<AdminOverlay v-if="loginOpen && !user" title="Espace Admin" variant="modal" @close="loginOpen = false">

@@ -23,6 +23,7 @@ import { readSession } from './lib/auth/session';
 const GUARDS: { prefix: string; groups: AuthGroup[]; message: string; noAdmin?: true }[] = [
 	{ prefix: '/api/admin/sauvegardes/restauration', groups: ['superadmin'], message: 'La restauration est réservée au super admin.', noAdmin: true },
 	{ prefix: '/api/admin/sauvegardes', groups: ['admin'], message: 'Les sauvegardes sont réservées au bureau.' },
+	{ prefix: '/api/admin/installation', groups: ['superadmin'], message: "L'installation est réservée au super admin.", noAdmin: true },
 	{ prefix: '/api/admin/journal', groups: ['superadmin'], message: 'Le journal est réservé au super admin.', noAdmin: true },
 	{ prefix: '/api/admin/plugins', groups: ['superadmin'], message: 'La gestion des plugins est réservée au super admin.', noAdmin: true },
 	// Plugin RDV (routes ajoutées seulement s'il est actif).

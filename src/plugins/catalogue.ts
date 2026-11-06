@@ -11,6 +11,20 @@
 import type { ChampPlugin } from './champs';
 import { ADRESSE_DEFAUT as RDV_ADRESSE_DEFAUT } from './rdv/lib/adresse';
 
+/**
+ * Secret demandé par l'assistant d'installation (écrit dans
+ * `<DATA_DIR>/installation/secrets.env`, cf. `scripts/installation.mjs`).
+ * `genere` : jamais demandé, créé au hasard s'il manque.
+ */
+export interface SecretPlugin {
+	nom: string;
+	label: string;
+	type: 'url' | 'identifiant' | 'cle';
+	aide?: string;
+	obligatoire?: boolean;
+	genere?: boolean;
+}
+
 export interface PluginInfo {
 	label: string;
 	description: string;
@@ -42,6 +56,10 @@ export interface PluginInfo {
 	 * l'adresse de la page publique (contrôlée contre les pages du site).
 	 */
 	reglages?: { fichier: string; champs: ChampPlugin[] };
+	/** Secrets demandés par l'assistant d'installation (ensuite : `.env` seulement). */
+	secrets?: SecretPlugin[];
+	/** Fichier de `src/content/` créé à l'activation par l'assistant s'il manque, copié de ce modèle (chemin du projet). */
+	modele?: { fichier: string; source: string };
 }
 
 export const PLUGINS = {
@@ -55,6 +73,13 @@ export const PLUGINS = {
 		env: [
 			{ nom: 'GRIST_API_KEY', aide: 'Clé d’API Grist du document de l’adhésion, dans le .env. Sans clé, les formulaires (adhésion, inscription, présence) et le planning Grist ne fonctionnent pas.' },
 			{ nom: 'GRIST_DOC_ID', aide: 'Identifiant du document Grist de l’adhésion, dans le .env.' },
+		],
+		secrets: [
+			{ nom: 'GRIST_BASE_URL', label: 'Adresse de l’instance Grist', type: 'url', obligatoire: true, aide: 'Ex. https://grist.exemple.fr' },
+			{ nom: 'GRIST_DOC_ID', label: 'Identifiant du document de l’adhésion', type: 'identifiant', obligatoire: true, aide: 'Dans l’adresse du document Grist : https://…/o/…/<identifiant>/…' },
+			{ nom: 'GRIST_API_KEY', label: 'Clé d’API Grist', type: 'cle', obligatoire: true, aide: 'Grist → Paramètres du compte → Clé d’API.' },
+			{ nom: 'GOTENBERG_URL', label: 'Adresse du service PDF (Gotenberg)', type: 'url', aide: 'Facultatif : bulletin d’adhésion en PDF. Ex. http://gotenberg:3000' },
+			{ nom: 'BULLETIN_SECRET', label: 'Secret du lien de bulletin', type: 'cle', genere: true },
 		],
 	},
 	inscription: {
@@ -73,6 +98,15 @@ export const PLUGINS = {
 		icon: 'fa-calendar-check',
 		doc: 'src/plugins/rdv/README.md',
 		requis: [{ fichier: 'rdv.yaml', aide: 'Copier le modèle src/plugins/rdv/rdv.exemple.yaml puis l’adapter (adresse, textes, permanences).' }],
+		modele: { fichier: 'rdv.yaml', source: 'src/plugins/rdv/rdv.exemple.yaml' },
+		secrets: [
+			{
+				nom: 'GRIST_API_KEY_RDV',
+				label: 'Clé d’API Grist des rendez-vous',
+				type: 'cle',
+				aide: 'Facultatif si le plugin Adhésion est actif (sa clé sert alors). Conseillé : une clé limitée au document des RDV.',
+			},
+		],
 		env: [
 			{
 				nom: 'GRIST_API_KEY_RDV',

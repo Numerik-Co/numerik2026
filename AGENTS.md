@@ -184,6 +184,20 @@ créé au déploiement (`auth-user init`, mot de passe provisoire imposé —
 `mot-de-passe`), tous les droits + seul à voir le **journal**, invisible et
 intouchable depuis le module « Comptes ».
 
+**Assistant d'installation** (site neuf : `installation.json` absent et
+aucun compte hors super admin, ou installation inachevée) : ouvert au super
+admin après le changement de mot de passe (`InstallationWizard.vue` dans
+`AdminRoot`, « Plus tard » = `sessionStorage`, reprise depuis le module
+Site) — compte `admin`, association (nom, coordonnées, logo), plugins tous
+décochés (état écrit pour **tous** dans `reglages.yaml`, fichier `modele`
+du catalogue copié s'il manque), réglages + `secrets` du catalogue,
+exemples gardés ou retirés (ceux encore identiques à `contenu-initial/`,
+hors socle), puis reconstruction en maintenance. Logique
+`src/lib/installation.ts`, route `/api/admin/installation` (super admin),
+secrets dans `<DATA_DIR>/installation/secrets.env` (`scripts/installation.mjs` :
+chargés par `start.mjs` et en dev par `src/integrations/installation.ts`,
+le `.env` l'emporte ; `AUTH_SECRET` généré s'il manque).
+
 **Pas de pages d'administration** : tout se superpose au site. Lien
 « Espace Admin » du pied de page (`[data-auth-open]`) → modale de
 connexion ; connecté·e → barre fixe en haut + **modules en panneau
@@ -241,7 +255,7 @@ formulaire de création se remplit (`takePendingImport()` au montage, prop
   (`/api/admin/comptes`, `/api/admin/sauvegardes`, `/api/admin/maintenance`, `/api/admin/version`, `/api/admin/association` et `/api/admin/charte` → `admin`, `/api/admin/actualites`,
   `/api/admin/publication`, `/api/admin/activites`, `/api/admin/annonces`, `/api/admin/pages`, `/api/admin/menus-deroulants`,
   `/api/admin/liens`, `/api/admin/pages-du-site` et `/api/admin/ordre-menu` →
-  `redacteur`, `/api/admin/journal`, `/api/admin/plugins` et `/api/admin/sauvegardes/restauration` → `superadmin` seul).
+  `redacteur`, `/api/admin/journal`, `/api/admin/plugins`, `/api/admin/installation` et `/api/admin/sauvegardes/restauration` → `superadmin` seul).
 - **Journal des modifications** : `src/lib/journal.ts` (`logEvent()`,
   `<DATA_DIR>/journal/<AAAA>.jsonl`, ajout seul), appelé par chaque route
   d'admin et par `site-build.ts` (résultat des publications).
@@ -432,8 +446,8 @@ service = l'y ajouter). Détail : [docs/referencement.md](docs/referencement.md)
 ### Champs de formulaire
 
 `src/styles/forms.css` (importé par `global.css`, couche `components`) :
-`champ` (input, select, textarea ; taille « sm » façon Bootstrap, ~30 px,
-`--champ-py`), `champ-erreur`, `champ-groupe` (préfixe + champ), `champ-couleur`
+`champ` (input, select, textarea ; hauteur `h-8` fixe, texte centré,
+`--champ-hauteur` ; textarea libre), `champ-erreur`, `champ-groupe` (préfixe + champ), `champ-couleur`
 (nuancier carré, sans rembourrage du navigateur),
 `champ-libelle`, `champ-aide`, `champ-erreur-texte` (sous un champ),
 `message-erreur` (groupe, étape), encarts `alerte-erreur` / `alerte-succes` /

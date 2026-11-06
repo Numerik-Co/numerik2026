@@ -8,7 +8,7 @@ serveur, nouveau serveur, retour en arrière après une erreur).
 
 | Dans l'archive | Pas dans l'archive |
 | --- | --- |
-| `src/content/` : pages, actualités, activités, annonces, images, polices, réglages (`*.yaml`) | `.env` (secrets : `AUTH_SECRET`, clés Grist…) — à garder à part |
+| `src/content/` : pages, actualités, activités, annonces, images, polices, réglages (`*.yaml`) | `.env` et `data/installation/secrets.env` (secrets : `AUTH_SECRET`, clés Grist…) — à garder à part |
 | `data/accounts/` : comptes de l'Espace Admin | `data/publication/` (état des publications) |
 | `data/journal/` : journal des modifications | les sauvegardes elles-mêmes, le code du modèle (dont `src/content/README.md`, jamais remplacé par une restauration) |
 

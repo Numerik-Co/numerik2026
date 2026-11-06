@@ -19,9 +19,12 @@ Détail technique (fichiers, routes, sécurité) : [auth.md](auth.md).
 À faire **une fois**, sur le VPS, en plus de l'installation décrite dans
 [deploiement-docker.md](deploiement-docker.md).
 
-### 1. Générer le secret de session
+### 1. Secret de session (facultatif)
 
-Le secret signe les cookies de connexion. Sans lui, personne ne peut se connecter.
+Le secret signe les cookies de connexion. **S'il manque, le site en génère
+un au premier démarrage** et le garde dans
+`data/installation/secrets.env` : rien à faire. Pour le fixer vous-même
+(plusieurs serveurs, secret déjà connu) :
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
@@ -98,7 +101,12 @@ La commande ne fait rien si un super admin existe déjà (relançable sans
 risque). Pour imposer le mot de passe provisoire au lieu de le générer :
 `SUPERADMIN_PASSWORD='…' ./auth-user.sh init`.
 
-Puis le premier compte du bureau :
+Le reste se fait dans le navigateur : connectez-vous en super admin
+(**« Espace Admin »** en bas de page), choisissez votre mot de passe, et
+l'**assistant d'installation** s'ouvre (voir [ci-dessous](#5-assistant-dinstallation)).
+
+Sans l'assistant (ou pour un compte de plus), le compte du bureau se crée
+aussi en ligne de commande :
 
 ```bash
 ./auth-user.sh add xavier "Xavier Burke" admin
@@ -127,7 +135,40 @@ Autres commandes utiles :
 > L'identifiant : 2 à 32 caractères, minuscules, chiffres, `.`, `-` ou `_`
 > (ex. `prenom.nom`). Groupes possibles : `admin`, `animateur`, `redacteur`.
 
-### 5. Vérifier
+### 5. Assistant d'installation
+
+À la première connexion du super admin sur un site neuf (aucun autre
+compte), après le changement de mot de passe, une fenêtre **« Installation
+du site »** s'ouvre :
+
+1. **Compte** : le compte administrateur (bureau) de l'association. Un mot
+   de passe provisoire est proposé : notez-le et transmettez-le, il sera
+   changé à la première connexion.
+2. **Association** : nom, email, téléphone, adresse et, si vous l'avez, le
+   logo. Le reste (présentation, réseaux, mentions légales, couleurs) :
+   **Paramètres → Association**.
+3. **Plugins** : tous décochés au départ ; cochez les volets utiles
+   (Adhésion, Inscription, Rendez-vous). Cocher un plugin coche ceux qu'il
+   requiert.
+4. **Réglages** des plugins cochés : adresse et identifiant du document
+   Grist, clé d'API… Les **secrets** (clés, identifiants) sont gardés sur le
+   serveur dans `data/installation/secrets.env` (droits 600, jamais dans
+   les sauvegardes ni dans git) et ne se saisissent **qu'ici** : ensuite,
+   ils se changent dans le `.env`, qui l'emporte toujours. Une variable déjà
+   présente dans le `.env` est signalée et n'est pas demandée.
+5. **Contenu** : garder le contenu de démonstration, ou partir d'un site
+   vide (les mentions légales, catégories d'activités et pages du site
+   restent ; un exemple déjà modifié n'est jamais retiré).
+6. **Installer** : récapitulatif, puis le site est reconstruit (page de
+   maintenance avec barre de progression) et revient seul.
+
+**Plus tard** referme l'assistant jusqu'à la fermeture de l'onglet ; il
+se rouvre ensuite, ou depuis **Paramètres → Site**. Si la reconstruction
+échoue, le contenu est remis en l'état (le compte et les secrets restent)
+et l'assistant se rouvre. Un site déjà en service (des comptes existent)
+ne le voit jamais.
+
+### 6. Vérifier
 
 1. Ouvrir le site, cliquer sur **« Espace Admin »** tout en bas de la page.
 2. Se connecter avec le compte créé : une **barre sombre** apparaît en haut.
