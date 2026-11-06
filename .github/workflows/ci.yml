@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      IMAGE: ghcr.io/numerik-co/numerik2026
+      IMAGE: ghcr.io/openpixl/zerucms
     steps:
       - uses: actions/checkout@v4
 
@@ -114,8 +114,14 @@ jobs:
             docker build -q -t $IMAGE:$v /tmp/v
           done
 
-      - name: Site en ligne en version 0.0.1
+      # Comme un serveur installé avant le renommage du dépôt : 0.0.1 sous
+      # l'ancienne adresse de l'image, que update.sh doit migrer.
+      - name: Site en ligne en version 0.0.1 (ancienne adresse de l'image)
         run: |
+          docker tag $IMAGE:0.0.1 ghcr.io/numerik-co/numerik2026:0.0.1
+          docker image rm $IMAGE:0.0.1
+          sed -i "s#image: $IMAGE:#image: ghcr.io/numerik-co/numerik2026:#" docker-compose.yml
+          grep -q 'image: ghcr.io/numerik-co/numerik2026:' docker-compose.yml
           mkdir -p data
           printf 'SITE_URL=https://www.exemple.org\nNUMERIK_VERSION=0.0.1\n' > .env
           docker compose up -d --no-build web
@@ -133,6 +139,9 @@ jobs:
           docker compose logs web | grep "\[démarrage\]"
           docker compose ps --format '{{.Image}}' web | grep -q ':0.0.2$'
           grep -q '^NUMERIK_VERSION=0.0.2$' .env
+          # Adresse de l'image migrée, version en ligne ré-étiquetée (retour arrière).
+          grep -q "image: $IMAGE:" docker-compose.yml
+          docker image inspect $IMAGE:0.0.1 >/dev/null
           # Bascule sans reconstruction : coupure de quelques secondes au plus.
           echecs=$(grep -vc '^200$' sonde.log || true)
           [ "$echecs" -le 30 ] || { echo "::error::Site indisponible $echecs × 0,5 s pendant la bascule."; exit 1; }

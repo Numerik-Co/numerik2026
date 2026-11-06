@@ -4,7 +4,7 @@
 #  1. vérifications : le tag correspond à package.json et à un commit de
 #     master, puis la CI complète (ci.yml) ;
 #  2. image Docker publiée sur GitHub Container Registry :
-#     ghcr.io/numerik-co/numerik2026:X.Y.Z, :X.Y et :latest ;
+#     ghcr.io/<propriétaire>/<dépôt>:X.Y.Z (minuscules), ex. ghcr.io/openpixl/zerucms:X.Y.Z, :X.Y et :latest ;
 #  3. « Release » GitHub : notes = commits depuis la version précédente,
 #     archive des sources (installations Node seul) fournie par GitHub.
 
@@ -65,10 +65,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Les noms d'image sont en minuscules (l'organisation s'écrit Numerik-Co).
+      # Image = propriétaire/nom du dépôt, en minuscules (OpenPixl/zerucms → openpixl/zerucms).
       - name: Nom de l'image
         id: nom
-        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/numerik2026" >> "$GITHUB_OUTPUT"
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
       - name: Étiquettes de l'image
         id: meta
@@ -80,7 +80,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.title=numerik2026
+            org.opencontainers.image.title=${{ github.event.repository.name }}
             org.opencontainers.image.description=Site et Espace Admin pour associations (Astro + Node)
 
       - uses: docker/build-push-action@v6
@@ -106,7 +106,7 @@ jobs:
       - name: Notes de version
         run: |
           precedent=$(git describe --tags --abbrev=0 --match 'v*.*.*' "${GITHUB_REF_NAME}^" 2>/dev/null || true)
-          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/numerik2026:${GITHUB_REF_NAME#v}"
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME#v}"
           {
             echo "## Mettre à jour"
             echo

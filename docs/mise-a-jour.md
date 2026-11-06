@@ -72,7 +72,7 @@ Le tag déclenche `.github/workflows/release.yml` :
 
 1. vérifie que le tag correspond à `package.json` et à un commit de `master` ;
 2. relance la CI complète (`ci.yml`) ;
-3. publie l'image Docker `ghcr.io/numerik-co/numerik2026` avec les
+3. publie l'image Docker `ghcr.io/openpixl/zerucms` (propriétaire/nom du dépôt) avec les
    étiquettes `X.Y.Z`, `X.Y` et `latest` ;
 4. crée la **Release** GitHub : notes = consignes de mise à jour + liste des
    commits depuis la version précédente ; GitHub y joint l'archive des
@@ -82,7 +82,7 @@ Suivi : onglet **Actions** du dépôt ; résultat : onglet **Releases** et
 **Packages**.
 
 > **Première publication** : vérifier dans GitHub (organisation → Packages →
-> `numerik2026` → Package settings) que le paquet est **public**, sinon les
+> `zerucms` → Package settings) que le paquet est **public**, sinon les
 > serveurs ne pourront pas télécharger l'image sans identifiants.
 
 ## Mettre à jour un site (association)
@@ -165,7 +165,7 @@ Le principe est le même dans les deux modes :
 
 ### Docker
 
-- l'image vient de `ghcr.io/numerik-co/numerik2026`, version choisie par
+- l'image vient de `ghcr.io/openpixl/zerucms`, version choisie par
   `NUMERIK_VERSION` dans le `.env` (écrite par `update.sh`) ;
 - la construction à côté se fait dans un conteneur temporaire
   (`docker compose run`), dans le volume `./.releases` partagé avec le
@@ -173,7 +173,7 @@ Le principe est le même dans les deux modes :
 - bascule : `docker compose up -d` (nouveau conteneur), puis le site doit
   répondre en 3 minutes, sinon `NUMERIK_VERSION` reprend son ancienne valeur ;
 - **ménage des images** : avant le téléchargement, les images
-  `ghcr.io/numerik-co/numerik2026` autres que la version en ligne (gardée
+  `ghcr.io/openpixl/zerucms` autres que la version en ligne (gardée
   pour le retour arrière) et la version visée sont supprimées, ainsi que les
   couches orphelines (`docker image prune`). Une image pèse près de 1 Go :
   sans ce ménage, le disque finit plein (`no space left on device` au
@@ -181,11 +181,19 @@ Le principe est le même dans les deux modes :
   `update.sh` le dit, le site reste sur sa version ; libérer de la place
   (`df -h /`, `docker system df`, `docker builder prune -f`) puis relancer.
   Pas de ménage avec `--no-pull` (images gérées à la main) ;
-- `update.sh` lui-même vient du dépôt (`git pull` dans le dossier du site),
-  pas de l'image : le mettre à jour par `git pull` avant de s'en servir.
+- `update.sh` lui-même est recopié depuis l'image après chaque mise à jour
+  réussie (avec `sauvegarde.sh`, `restauration.sh`, `auth-user.sh`) : la
+  version suivante utilise donc le script de la version en ligne ;
+- **nouvelle adresse du dépôt** (0.5.9 et après, voir plus bas) : si
+  `docker-compose.yml` désigne encore `ghcr.io/numerik-co/numerik2026`,
+  `update.sh` le passe sur `ghcr.io/openpixl/zerucms` (original gardé dans
+  `docker-compose.yml.avant-<version>`) et ré-étiquette l'image en ligne
+  pour garder le retour arrière ; les étiquettes de l'ancienne adresse sont
+  ensuite supprimées.
 
 Testé par la CI à chaque envoi (tâche « Mise à jour Docker ») : 0.0.1 →
-0.0.2 en sondant le site, puis une 0.0.3 cassée qui doit être refusée.
+0.0.2 en sondant le site (0.0.1 lancée sous l'ancienne adresse de l'image,
+migration vérifiée), puis une 0.0.3 cassée qui doit être refusée.
 
 ### Node seul (sans Docker ni git)
 
@@ -214,3 +222,28 @@ un moment calme (aucune publication en cours).
   (construction locale depuis les sources).
 - **Node seul** : ajouter `SITE_URL` au `.env`, remplacer `npm run build &&
   npm start` par `npm start` dans le gestionnaire de process.
+
+## Changement d'adresse du dépôt (Numerik-Co/numerik2026 → OpenPixl/zerucms)
+
+Le dépôt du modèle a été transféré de l'organisation Numerik-Co à OpenPixl
+et renommé `zerucms`. La **0.5.8** est la version de transition :
+
+1. **0.5.8, publiée depuis l'ancien dépôt** (image
+   `ghcr.io/numerik-co/numerik2026:0.5.8`) : son code vise déjà
+   `OpenPixl/zerucms` (badge de mise à jour, `update.sh`,
+   `scripts/update.mjs`, `docker-compose.yml` du modèle). Un site en 0.5.7
+   ou avant s'y met à jour normalement (`./update.sh`) et récupère ainsi le
+   nouveau `update.sh`.
+2. **Transfert puis renommage** sur GitHub (mainteneur) ; GitHub redirige
+   les anciennes adresses du dépôt, mais **pas celles des images** : les
+   versions suivantes ne sont publiées que sous `ghcr.io/openpixl/zerucms`
+   (nom tiré du dépôt par `release.yml`). Paquet à passer en **public** à
+   la première publication.
+3. **0.5.9 et après** : `./update.sh` (celui de la 0.5.8) migre
+   `docker-compose.yml` vers la nouvelle image (voir « Docker » plus haut).
+   Node seul : rien à faire.
+
+Un site resté en 0.5.7 ou avant doit passer par la 0.5.8
+(`./update.sh v0.5.8`) : son `update.sh` cherche encore les images à
+l'ancienne adresse. Le dossier du serveur (`/opt/numerik2026`) et le nom du
+conteneur (`numerik2026`) ne changent pas.

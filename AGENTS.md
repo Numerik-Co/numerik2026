@@ -55,7 +55,11 @@ dans `.env`, construction à côté par `docker compose run` dans le volume
 `pruneReleases` ne supprime jamais la version active. Docker : avant le
 `docker pull`, `nettoyer_images` d'`update.sh` supprime les images du modèle
 autres que la version en ligne et la version visée (+ `image prune`), sauf
-`--no-pull` ; disque plein au pull = message dédié.
+`--no-pull` ; disque plein au pull = message dédié. Dépôt transféré de
+`Numerik-Co/numerik2026` à `OpenPixl/zerucms` (0.5.8 = transition) :
+`migrer_image` d'`update.sh` passe le `docker-compose.yml` du serveur de
+`ghcr.io/numerik-co/numerik2026` à la nouvelle image (copie
+`docker-compose.yml.avant-<version>`, image en ligne ré-étiquetée).
 Production sans Docker : `npm start`
 (`node --env-file-if-exists=.env scripts/start.mjs` : construit le site si
 l'empreinte version + `SITE_URL` + `src/content/` diffère de
@@ -779,10 +783,12 @@ Pistes de suite non traitées (à reprendre si redemandé) :
 `docker build` + démarrage d'un conteneur (site construit au démarrage, doit
 répondre). Ne déploie rien. Détail : [docs/ci.md](docs/ci.md).
 Job `mise-a-jour-docker` : images locales 0.0.1/0.0.2/0.0.3 (cassée),
-`./update.sh` sondé pendant la bascule, version cassée refusée.
+`./update.sh` sondé pendant la bascule (0.0.1 sous l'ancienne adresse
+d'image, migration vérifiée), version cassée refusée.
 Tag `vX.Y.Z` (créé par `npm version` sur master) →
 `.github/workflows/release.yml` : contrôles du tag, CI (`workflow_call`),
-image `ghcr.io/numerik-co/numerik2026` (`X.Y.Z`, `X.Y`, `latest`), Release
+image `ghcr.io/<propriétaire>/<dépôt>` en minuscules, soit
+`ghcr.io/openpixl/zerucms` (`X.Y.Z`, `X.Y`, `latest`), Release
 GitHub avec notes. Détail : [docs/mise-a-jour.md](docs/mise-a-jour.md).
 
 ## Documentation

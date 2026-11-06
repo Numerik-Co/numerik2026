@@ -24,8 +24,11 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-REPO="${UPDATE_REPO:-Numerik-Co/numerik2026}"
+REPO="${UPDATE_REPO:-OpenPixl/zerucms}"
 IMAGE="ghcr.io/${REPO,,}"
+# Adresse de l'image jusqu'à la 0.5.8 (dépôt Numerik-Co/numerik2026, devenu
+# OpenPixl/zerucms) : migrée dans docker-compose.yml par migrer_image().
+ANCIENNE_IMAGE="ghcr.io/numerik-co/numerik2026"
 PORT="${UPDATE_PORT:-4321}"
 
 mode=""; version=""; pull=1; archive=""; sauvegarde=1
@@ -106,7 +109,33 @@ nettoyer_images() {
   docker image prune -f >/dev/null 2>&1 || true
 }
 
+# Dépôt renommé : docker-compose.yml du serveur (jamais mis à jour par git)
+# encore sur l'ancienne adresse de l'image → passé sur la nouvelle (copie de
+# l'original gardée), et l'image en ligne ré-étiquetée sous la nouvelle
+# adresse pour que le retour arrière reste possible.
+migrer_image() {
+  [ "$IMAGE" != "$ANCIENNE_IMAGE" ] || return 0
+  grep -qE "^[[:space:]]*image:[[:space:]]*$ANCIENNE_IMAGE:" docker-compose.yml || return 0
+  etape "Nouvelle adresse de l'image : $IMAGE (avant : $ANCIENNE_IMAGE)"
+  cp docker-compose.yml "docker-compose.yml.avant-$cible"
+  sed -i -E "s#^([[:space:]]*image:[[:space:]]*)$ANCIENNE_IMAGE:#\1$IMAGE:#" docker-compose.yml
+  echo "  docker-compose.yml modifié (original : docker-compose.yml.avant-$cible)"
+  if docker image inspect "$ANCIENNE_IMAGE:$actuelle" >/dev/null 2>&1; then
+    docker tag "$ANCIENNE_IMAGE:$actuelle" "$IMAGE:$actuelle"
+    echo "  image en ligne ré-étiquetée : $IMAGE:$actuelle"
+  fi
+}
+migrer_image
+
 if [ "$pull" = 1 ]; then
+  # Étiquettes de l'ancienne adresse : inutiles une fois migrées (les couches
+  # de la version en ligne restent, sous la nouvelle étiquette).
+  if [ "$IMAGE" != "$ANCIENNE_IMAGE" ] && ! grep -q "$ANCIENNE_IMAGE" docker-compose.yml; then
+    docker image ls "$ANCIENNE_IMAGE" --format '{{.Tag}}' | while read -r tag; do
+      case "$tag" in "<none>" | "") continue ;; esac
+      docker image rm "$ANCIENNE_IMAGE:$tag" >/dev/null 2>&1 && echo "  image supprimée : $ANCIENNE_IMAGE:$tag" || true
+    done
+  fi
   etape "Nettoyage des anciennes images (gardées : $actuelle, $cible)"
   nettoyer_images
   etape "Téléchargement de l'image $IMAGE:$cible"
