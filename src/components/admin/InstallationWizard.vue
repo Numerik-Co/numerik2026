@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /**
  * Assistant d'installation (super admin, première connexion après le
- * déploiement, mot de passe déjà changé) : compte administrateur de
- * l'association → association (nom, coordonnées, logo) → plugins (tous
+ * déploiement, mot de passe déjà changé) : type de structure (association ou
+ * auto-entrepreneur) → compte administrateur → identité (nom, coordonnées,
+ * logo) → plugins proposés à ce type (tous
  * décochés) → réglages et secrets des plugins cochés → contenu d'exemple →
  * récapitulatif. « Installer » envoie tout d'un coup (`installationApi`,
  * src/lib/installation.ts) ; en production, le site passe en maintenance
@@ -12,6 +13,7 @@ import { computed, onMounted, ref } from 'vue';
 import { PASSWORD_MIN_LENGTH } from '../../lib/auth/password-rules';
 import { ApiError, installationApi, type InstallationEtat, type InstallationPlugin, type InstallationSaisie } from './client';
 import { fileToBase64, inputClass } from './context';
+import { STRUCTURES, vocabulaire, type Structure } from '../../lib/structure';
 
 const emit = defineEmits<{ later: []; done: [] }>();
 
@@ -19,6 +21,10 @@ const etat = ref<InstallationEtat | null>(null);
 const error = ref('');
 const busy = ref(false);
 const termine = ref(false);
+
+const structure = ref<Structure>('association');
+const voc = computed(() => vocabulaire(structure.value));
+const ICONES_STRUCTURE: Record<Structure, string> = { association: 'fa-people-group', entreprise: 'fa-briefcase' };
 
 const compte = ref({ login: '', fullname: '', email: '', password: '' });
 const association = ref({ name: '', email: '', phone: '', street: '', postalCode: '', city: '' });
@@ -39,6 +45,7 @@ onMounted(async () => {
 	try {
 		const e = await installationApi.get();
 		etat.value = e;
+		structure.value = e.structure;
 		const a = e.association;
 		association.value = { name: a.name, email: a.email, phone: a.phone, street: a.address.street, postalCode: a.address.postalCode, city: a.address.city };
 		plugins.value = Object.fromEntries(e.plugins.map((p) => [p.id, false]));
@@ -52,7 +59,9 @@ onMounted(async () => {
 const labelDe = (id: string) => etat.value?.plugins.find((p) => p.id === id)?.label ?? id;
 /** Plugin coché dont un requis ne l'est pas. */
 const requisManquants = (p: InstallationPlugin) => p.requiert.filter((r) => !plugins.value[r]);
-const actifs = computed(() => (etat.value?.plugins ?? []).filter((p) => plugins.value[p.id] && !requisManquants(p).length));
+/** Plugins proposés au type de structure choisi. */
+const proposes = computed(() => (etat.value?.plugins ?? []).filter((p) => !p.structures.length || p.structures.includes(structure.value)));
+const actifs = computed(() => proposes.value.filter((p) => plugins.value[p.id] && !requisManquants(p).length));
 /** Plugins actifs ayant quelque chose à régler. */
 const aRegler = computed(() => actifs.value.filter((p) => p.secrets.length || p.champs.length));
 
@@ -65,17 +74,24 @@ function basculer(p: InstallationPlugin) {
 	if (plugins.value[p.id]) for (const r of p.requiert) plugins.value[r] = true;
 }
 
-type Etape = 'compte' | 'association' | 'plugins' | 'reglages' | 'contenu' | 'recap';
+/** Changer de type décoche les plugins qui ne lui sont pas proposés. */
+function choisirStructure(s: Structure) {
+	structure.value = s;
+	for (const p of etat.value?.plugins ?? []) if (p.structures.length && !p.structures.includes(s)) plugins.value[p.id] = false;
+}
+
+type Etape = 'structure' | 'compte' | 'association' | 'plugins' | 'reglages' | 'contenu' | 'recap';
 const ETAPES: { id: Etape; label: string }[] = [
+	{ id: 'structure', label: 'Structure' },
 	{ id: 'compte', label: 'Compte' },
-	{ id: 'association', label: 'Association' },
+	{ id: 'association', label: 'Identité' },
 	{ id: 'plugins', label: 'Plugins' },
 	{ id: 'reglages', label: 'Réglages' },
 	{ id: 'contenu', label: 'Contenu' },
 	{ id: 'recap', label: 'Installer' },
 ];
 const etapes = computed(() => ETAPES.filter((e) => e.id !== 'reglages' || aRegler.value.length));
-const courante = ref<Etape>('compte');
+const courante = ref<Etape>('structure');
 const index = computed(() => etapes.value.findIndex((e) => e.id === courante.value));
 
 /** Contrôle de l'étape avant de passer à la suivante (le serveur revérifie tout). */
@@ -125,6 +141,7 @@ async function installer() {
 	busy.value = true;
 	try {
 		const saisie: InstallationSaisie = {
+			structure: structure.value,
 			compte: etat.value?.compte ? null : { ...compte.value, login: compte.value.login.trim().toLowerCase() },
 			association: association.value,
 			logo: logo.value ? { type: logo.value.file.type, data: await fileToBase64(logo.value.file) } : null,
@@ -188,11 +205,38 @@ const libelleChamp = 'champ-libelle';
 			</li>
 		</ol>
 
-		<!-- 1. Compte administrateur -->
-		<section v-if="courante === 'compte'" class="space-y-4">
+		<!-- 0. Type de structure -->
+		<section v-if="courante === 'structure'" class="space-y-3">
 			<p class="text-gray-600">
-				Bienvenue ! Créez d'abord le compte du <strong>bureau</strong> de l'association : il gère le site au quotidien (contenus,
-				comptes, sauvegardes). Votre compte super admin reste réservé aux interventions techniques.
+				Bienvenue ! Le site est-il celui d'une association ou d'un auto-entrepreneur ? Ce choix décide des plugins proposés,
+				des mentions légales et du contenu d'exemple.
+			</p>
+			<label
+				v-for="s in STRUCTURES"
+				:key="s"
+				class="flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3"
+				:class="structure === s ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'"
+			>
+				<input type="radio" name="inst-structure" class="mt-1" :checked="structure === s" @change="choisirStructure(s)" />
+				<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+					<i class="fa-solid" :class="ICONES_STRUCTURE[s]" aria-hidden="true"></i>
+				</span>
+				<span>
+					<span class="block font-heading font-semibold text-gray-900">{{ vocabulaire(s).choix }}</span>
+					<span class="block text-xs font-light text-gray-600">{{ vocabulaire(s).choixAide }}</span>
+				</span>
+			</label>
+		</section>
+
+		<!-- 1. Compte administrateur -->
+		<section v-else-if="courante === 'compte'" class="space-y-4">
+			<p v-if="structure === 'association'" class="text-gray-600">
+				Créez le compte du <strong>bureau</strong> de l'association : il gère le site au quotidien (contenus, comptes,
+				sauvegardes). Votre compte super admin reste réservé aux interventions techniques.
+			</p>
+			<p v-else class="text-gray-600">
+				Créez le compte de l'<strong>entrepreneur·e</strong> : il gère le site au quotidien (contenus, devis et factures,
+				sauvegardes). Votre compte super admin reste réservé aux interventions techniques.
 			</p>
 			<p v-if="etat.compte" class="alerte-succes">
 				Compte administrateur déjà créé : <strong>{{ etat.compte.fullname }}</strong> ({{ etat.compte.login }}).
@@ -228,11 +272,11 @@ const libelleChamp = 'champ-libelle';
 		<!-- 2. Association -->
 		<section v-else-if="courante === 'association'" class="space-y-4">
 			<p class="text-gray-600">
-				Nom et coordonnées de l'association, affichés sur tout le site. Le reste (présentation, réseaux sociaux, mentions légales,
-				couleurs) se règle ensuite dans <strong>Paramètres → Association</strong>.
+				Nom et coordonnées {{ voc.de }}, affichés sur tout le site. Le reste (présentation, réseaux sociaux, mentions légales
+				dont le SIRET, couleurs) se règle ensuite dans <strong>Paramètres → {{ voc.titre }}</strong>.
 			</p>
 			<div>
-				<label for="inst-nom" :class="libelleChamp">Nom de l'association</label>
+				<label for="inst-nom" :class="libelleChamp">{{ structure === 'entreprise' ? 'Nom commercial' : "Nom de l'association" }}</label>
 				<input id="inst-nom" v-model="association.name" type="text" maxlength="80" :class="inputClass" />
 			</div>
 			<div class="grid gap-4 sm:grid-cols-2">
@@ -246,7 +290,7 @@ const libelleChamp = 'champ-libelle';
 				</div>
 			</div>
 			<div>
-				<label for="inst-rue" :class="libelleChamp">Adresse du siège</label>
+				<label for="inst-rue" :class="libelleChamp">{{ structure === 'entreprise' ? 'Adresse' : 'Adresse du siège' }}</label>
 				<input id="inst-rue" v-model="association.street" type="text" :class="inputClass" />
 			</div>
 			<div class="grid gap-4 sm:grid-cols-[10rem_1fr]">
@@ -278,11 +322,11 @@ const libelleChamp = 'champ-libelle';
 		<!-- 3. Plugins -->
 		<section v-else-if="courante === 'plugins'" class="space-y-3">
 			<p class="text-gray-600">
-				Cochez les volets dont l'association a besoin. Rien n'est actif au départ ; vous pourrez en activer ou en désactiver plus
-				tard (menu <strong>Plugins</strong>).
+				Cochez les volets dont {{ voc.la }} a besoin (ceux proposés à ce type de structure). Rien n'est actif au départ ; vous
+				pourrez en activer ou en désactiver plus tard (menu <strong>Plugins</strong>).
 			</p>
 			<label
-				v-for="p in etat.plugins"
+				v-for="p in proposes"
 				:key="p.id"
 				class="flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3"
 				:class="plugins[p.id] ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'"
@@ -353,9 +397,13 @@ const libelleChamp = 'champ-libelle';
 
 		<!-- 5. Contenu d'exemple -->
 		<section v-else-if="courante === 'contenu'" class="space-y-3">
-			<p class="text-gray-600">
+			<p v-if="structure === 'association'" class="text-gray-600">
 				Le site est livré avec un contenu de démonstration : une actualité, deux activités, des pages (qui sommes-nous,
 				statuts, règlement intérieur), une annonce et un partenaire.
+			</p>
+			<p v-else class="text-gray-600">
+				Contenu de démonstration d'un auto-entrepreneur : une actualité, les pages « À propos » et « Prestations », un accueil
+				adapté et une annonce. Les mentions légales d'entreprise individuelle sont posées dans tous les cas.
 			</p>
 			<label class="flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3" :class="exemples ? 'border-primary bg-primary/5' : 'border-gray-200'">
 				<input v-model="exemples" type="radio" class="mt-1" :value="true" name="inst-exemples" />
@@ -369,8 +417,7 @@ const libelleChamp = 'champ-libelle';
 				<span>
 					<span class="block font-semibold text-gray-900">Partir d'un site vide</span>
 					<span class="block text-xs font-light text-gray-600">
-						Les exemples sont retirés ({{ etat.exemples }} fichier{{ etat.exemples > 1 ? 's' : '' }}) ; les mentions légales,
-						les catégories d'activités et les pages du site restent.
+						Les exemples sont retirés ; les mentions légales et les pages du site (accueil, actualités, contact) restent.
 					</span>
 				</span>
 			</label>
@@ -381,6 +428,10 @@ const libelleChamp = 'champ-libelle';
 			<p class="text-gray-600">Vérifiez avant d'installer :</p>
 			<dl class="divide-y divide-gray-100 rounded-xl border border-gray-200">
 				<div class="flex gap-3 px-4 py-2">
+					<dt class="w-32 shrink-0 text-gray-500">Structure</dt>
+					<dd>{{ voc.choix }}</dd>
+				</div>
+				<div class="flex gap-3 px-4 py-2">
 					<dt class="w-32 shrink-0 text-gray-500">Administrateur</dt>
 					<dd v-if="etat.compte">{{ etat.compte.fullname }} ({{ etat.compte.login }}), déjà créé</dd>
 					<dd v-else>
@@ -389,7 +440,7 @@ const libelleChamp = 'champ-libelle';
 					</dd>
 				</div>
 				<div class="flex gap-3 px-4 py-2">
-					<dt class="w-32 shrink-0 text-gray-500">Association</dt>
+					<dt class="w-32 shrink-0 text-gray-500">{{ voc.titre }}</dt>
 					<dd>
 						{{ association.name }} · {{ association.email }} · {{ association.phone }}<br />
 						{{ association.street }}, {{ association.postalCode }} {{ association.city }}<template v-if="logo"> · nouveau logo</template>

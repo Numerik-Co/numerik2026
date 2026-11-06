@@ -31,6 +31,9 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 | Afficher une annonce temporaire dans la bannière du site (AG, appel à bénévoles...) | [docs/annonces.md](docs/annonces.md) |
 | Créer ou modifier une page (ex: une nouvelle rubrique) | [docs/pages.md](docs/pages.md) |
 | Rédiger une page éditoriale et la placer dans le menu (guide éditeur) | [src/content/README.md](src/content/README.md) |
+| Installer un nouveau site (assistant : structure, compte, plugins, secrets, exemples) | [docs/installation.md](docs/installation.md) |
+| Choisir entre site d'association et site d'auto-entrepreneur | [docs/structure.md](docs/structure.md) |
+| Gérer devis et factures (auto-entrepreneur, plugin Grist) | [docs/facturation.md](docs/facturation.md) |
 | Sauvegarder / restaurer le contenu, les comptes et le journal d'un site (ZIP) | [docs/sauvegarde.md](docs/sauvegarde.md) |
 | Changer les couleurs, les polices ou le logo | [docs/theme.md](docs/theme.md) |
 | Savoir quels composants réutiliser (boutons, cartes, sections...) | [docs/composants.md](docs/composants.md) |
@@ -39,7 +42,7 @@ La documentation détaillée est dans le dossier [`docs/`](docs/), organisée **
 | Ouvrir / fermer un formulaire (adhésion, contact…) | [docs/composants.md](docs/composants.md#forms) |
 | Comprendre l'inscription en ligne à une activité (bouton « S'inscrire »), l'ouvrir / la fermer | [docs/inscription.md](docs/inscription.md) |
 | Comprendre / présenter le parcours d'adhésion en ligne | [docs/adhesion-parcours.md](docs/adhesion-parcours.md) |
-| Comprendre / présenter la prise de RDV avec le·la Conseiller·ère Numérique, gérer les démarches | [docs/rdv-conseiller-numerique.md](docs/rdv-conseiller-numerique.md) |
+| Comprendre / présenter la prise de rendez-vous en ligne, gérer les démarches (plugin `rdv`) | [src/plugins/rdv/README.md](src/plugins/rdv/README.md) |
 | Copier un bloc prêt à l'emploi (frontmatter, bouton, cartes, formulaire, route API…) | [docs/snippets.md](docs/snippets.md) |
 | Comprendre l'organisation technique du projet | [docs/developpement.md](docs/developpement.md) |
 

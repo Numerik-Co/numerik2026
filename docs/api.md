@@ -72,10 +72,12 @@ configurée »), le reste du site fonctionne.
 | `GRIST_DOC_ID_RDV` | Document Grist des RDV (plugin `rdv`) — optionnel, voir [le plugin](../src/plugins/rdv/README.md) |
 | `GRIST_API_KEY_RDV` | Clé API Grist propre au plugin `rdv` — **secret**, facultative (sinon `GRIST_API_KEY`) ; conseillée : limitée au document des RDV |
 | `GRIST_TABLE_BENEFICIAIRES` / `GRIST_TABLE_RDV` / `GRIST_TABLE_DEMARCHES` | Tables du document RDV (défauts `Beneficiaires`, `RDV`, `Demarches`) — optionnel |
+| `GRIST_DOC_ID_FACTURATION` | Document Grist de la facturation (plugin `facturation`, auto-entrepreneur) — voir [facturation.md](facturation.md) |
+| `GRIST_API_KEY_FACTURATION` | Clé API Grist propre au plugin `facturation` — **secret**, facultative (sinon `GRIST_API_KEY`) |
 | `GOTENBERG_URL` | Instance Gotenberg pour le bulletin PDF et le PDF des semaines de RDV (module « Rendez-vous ») (ex. `http://gotenberg:3000`) — optionnel, voir [bulletin-pdf.md](bulletin-pdf.md) |
 | `GOTENBERG_USERNAME` / `GOTENBERG_PASSWORD` | Auth HTTP Basic de Gotenberg — optionnel, seulement si l'instance l'exige |
 | `BULLETIN_SECRET` | Secret HMAC du lien de bulletin — **secret**, requis avec `GOTENBERG_URL` |
-| `AUTH_SECRET` | Signature des sessions de l'Espace Admin (≥ 32 caractères) — **secret**, voir [auth.md](auth.md) |
+| `AUTH_SECRET` | Signature des sessions de l'Espace Admin (≥ 32 caractères) — **secret**, voir [auth.md](auth.md) ; absent = généré au premier démarrage |
 | `DATA_DIR` | Dossier des comptes et de l'état des publications de l'Espace Admin (défaut `./data`) — optionnel |
 | `SITE_ROOT` / `PUBLISH_HOOK` / `PUBLISH_RESTART` | Publication depuis l'Espace Admin — optionnel, voir [publication.md](publication.md) |
 
@@ -98,6 +100,11 @@ Les variables propres à un plugin (document et tables Grist de l'adhésion,
 `BULLETIN_SECRET` : plugin `adhesion` ; document des RDV : plugin `rdv`)
 sont déclarées dans le manifeste du plugin (`src/plugins/<id>/plugin.ts`,
 `env`) et ajoutées au même schéma, que le plugin soit actif ou non.
+
+**Secrets de l'installation** : les valeurs saisies dans l'assistant
+d'installation sont rangées dans `<DATA_DIR>/installation/secrets.env` et
+chargées au démarrage **en complément** du `.env` (une variable définie
+dans le `.env` l'emporte) — voir [installation.md](installation.md#les-secrets).
 
 Nouvelle variable : l'ajouter à `env.schema` (`astro.config.mjs`) — ou à
 `env` du manifeste si elle n'appartient qu'à un plugin — et à

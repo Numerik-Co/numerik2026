@@ -4,6 +4,7 @@
  * (`status === 401` : session expirée).
  */
 import type { FontRole, FontWeight } from '../../lib/font-catalogue';
+import type { Structure } from '../../lib/structure';
 import type { Association } from '../../lib/association';
 import type { AuthGroup } from '../../lib/auth/groups';
 import type { ThemeColors } from '../../config/site';
@@ -507,12 +508,15 @@ export interface InstallationPlugin {
 	label: string;
 	description: string;
 	icon: string;
+	/** Types de structure à qui il est proposé (vide = tous). */
+	structures: Structure[];
 	requiert: string[];
 	secrets: InstallationSecret[];
 	champs: (PluginChamp & { obligatoire?: boolean; defaut?: string })[];
 }
 export interface InstallationEtat {
 	requise: boolean;
+	structure: Structure;
 	compte: { login: string; fullname: string } | null;
 	association: { name: string; email: string; phone: string; address: { street: string; postalCode: string; city: string } };
 	logo: string | null;
@@ -521,6 +525,7 @@ export interface InstallationEtat {
 	dev: boolean;
 }
 export interface InstallationSaisie {
+	structure: Structure;
 	compte: { login: string; fullname: string; email: string; password: string } | null;
 	association: { name: string; email: string; phone: string; street: string; postalCode: string; city: string };
 	logo: { type: string; data: string } | null;

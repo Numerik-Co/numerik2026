@@ -137,10 +137,19 @@ Autres commandes utiles :
 
 ### 5. Assistant d'installation
 
+Détail (fichiers écrits, secrets, reprise) : [installation.md](installation.md).
+
 À la première connexion du super admin sur un site neuf (aucun autre
 compte), après le changement de mot de passe, une fenêtre **« Installation
 du site »** s'ouvre :
 
+0. **Structure** : **Association** ou **Auto-entrepreneur**. Ce choix décide
+   des plugins proposés (adhésion et inscription pour une association,
+   devis et facturation pour un auto-entrepreneur, rendez-vous pour les
+   deux), du vocabulaire de l'Espace Admin (module « Association » ou
+   « Entreprise »), des mentions légales (RNA et président·e, ou SIRET et
+   entrepreneur individuel « EI ») et du contenu d'exemple (pages « À
+   propos » et « Prestations », accueil adapté, page Activités désactivée).
 1. **Compte** : le compte administrateur (bureau) de l'association. Un mot
    de passe provisoire est proposé : notez-le et transmettez-le, il sera
    changé à la première connexion.
@@ -295,6 +304,7 @@ Les modules visibles dépendent de votre groupe :
 | Actualités | ✅ | ✅ | ✅ | — |
 | Annonces | ✅ | ✅ | ✅ | — |
 | Rendez-vous (si le plugin `rdv` est actif) | ✅ | ✅ | — | ✅ |
+| Facturation (si le plugin `facturation` est actif) | ✅ | ✅ | — | — |
 | Association (menu Paramètres) | ✅ | ✅ | — | — |
 | Sauvegardes (menu Paramètres ; restauration : super admin) | ✅ | ✅ | — | — |
 | Comptes (menu Paramètres) | ✅ | ✅ | — | — |
@@ -835,6 +845,29 @@ le `.env`), rangée sur le serveur.
 
 Sur le serveur : `./sauvegarde.sh`, `./restauration.sh <archive.zip>`.
 Détail : [sauvegarde.md](sauvegarde.md).
+
+### Devis et facturation (auto-entrepreneur)
+
+Module **Facturation** (plugin `facturation`, administrateur·rice·s) ;
+données dans un document Grist dont le schéma est décrit dans
+`src/plugins/facturation/README.md`.
+
+- **Devis** : les demandes reçues par la page publique « Demander un
+  devis » arrivent en tête (statut « Demande », message du client).
+  Compléter le client, les lignes (prestations du catalogue Grist ou lignes
+  libres), le statut, puis **Enregistrer** : le devis reçoit son numéro
+  (`D-2026-001`). **PDF** pour l'envoyer ; **Créer la facture** quand il
+  est accepté.
+- **Factures** : brouillon modifiable, puis **Émettre la facture** :
+  numéro définitif (`F-2026-001`, continu dans l'année), date du jour,
+  échéance. Une facture émise ne se modifie ni ne se supprime plus (une
+  erreur se corrige par une facture d'avoir). Cocher **Facture payée**
+  (date, mode) à l'encaissement.
+- **Clients** : fiches (nom, société, coordonnées, SIRET d'un client
+  professionnel).
+
+En tête du module : demandes à traiter et montant des factures émises non
+encore payées ; une échéance dépassée est signalée en rouge.
 
 ### Mode maintenance (bureau)
 

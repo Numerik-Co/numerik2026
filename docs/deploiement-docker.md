@@ -126,9 +126,10 @@ cd /opt        # ou ~/apps, au choix
 git clone <url-du-dépôt> numerik2026
 cd numerik2026
 
-# 2. Créer le .env (secrets Grist) — NE PAS commiter
+# 2. Créer le .env — NE PAS commiter
 cp .env.example .env
-nano .env       # renseigner SITE_URL (obligatoire) puis GRIST_BASE_URL / GRIST_DOC_ID / GRIST_API_KEY
+nano .env       # SITE_URL (obligatoire) ; le reste (AUTH_SECRET, clés Grist…)
+                # peut attendre l'assistant d'installation
 
 # 3. Construire et démarrer (premier démarrage : src/content/ est rempli avec
 #    le contenu de démonstration de contenu-initial/, à personnaliser ensuite
@@ -142,6 +143,11 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:4321/
 ```
 
 Le conteneur redémarre tout seul au reboot du VPS (`restart: unless-stopped`).
+
+Ensuite : `sudo ./auth-user.sh init` (super admin), puis connexion dans le
+navigateur : l'**assistant d'installation** règle le type de structure, le
+compte administrateur, l'identité, les plugins et leurs secrets, et le
+contenu d'exemple — voir [installation.md](installation.md).
 
 ---
 

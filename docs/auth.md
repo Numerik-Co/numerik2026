@@ -198,7 +198,14 @@ Le compte est relu à chaque requête, donc :
 - changer `AUTH_SECRET` déconnecte tout le monde.
 
 Sans `AUTH_SECRET` (ou s'il fait moins de 32 caractères), la connexion est
-impossible et la modale l'indique.
+impossible et la modale l'indique. En production, `scripts/start.mjs` en
+**génère un** au démarrage s'il manque (gardé dans
+`<DATA_DIR>/installation/secrets.env`, cf. [installation.md](installation.md)).
+
+Première connexion du super admin sur un site neuf : après le changement de
+mot de passe, l'**assistant d'installation** s'ouvre
+(`/api/admin/installation`, super admin seul) — voir
+[installation.md](installation.md).
 
 ## Sécurité
 

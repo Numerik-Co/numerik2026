@@ -1,6 +1,7 @@
 /**
  * Assistant d'installation (super admin, première connexion après le
- * déploiement) : compte administrateur de l'association, identité (nom,
+ * déploiement) : type de structure (association ou auto-entrepreneur,
+ * `src/lib/structure.ts`), compte administrateur, identité (nom,
  * coordonnées, logo), plugins (tous décochés au départ) et leurs réglages et
  * secrets, contenu d'exemple gardé ou retiré. Tout est contrôlé avant la
  * moindre écriture, puis appliqué ; la reconstruction du site qui suit
@@ -22,7 +23,8 @@ import { dirname, join, relative } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import { isMap, parseDocument, YAMLMap } from 'yaml';
 import { parseReglages } from '../config/site';
-import { PLUGIN_IDS, PLUGINS, requis, type PluginId, type PluginInfo, type SecretPlugin } from '../plugins/catalogue';
+import { PLUGIN_IDS, PLUGINS, proposePour, requis, type PluginId, type PluginInfo, type SecretPlugin } from '../plugins/catalogue';
+import { estStructure, type Structure } from './structure';
 import { FORMATS } from '../plugins/champs';
 import { readAssociationSource, saveAssociation } from './association-writer';
 import { isSuperadminAccount, isValidLogin, listAccounts, normalizeLogin, readAccount, saveAccount } from './auth/accounts';
@@ -45,6 +47,13 @@ import {
 
 const contenu = () => join(siteRoot(), 'src', 'content');
 const modeles = () => join(siteRoot(), 'contenu-initial');
+/** Contenu d'exemple « auto-entrepreneur » : remplace ou complète `contenu-initial/` (cf. son README). */
+const modelesEntreprise = () => join(siteRoot(), 'contenu-initial-entreprise');
+
+/** Exemples propres aux associations, retirés pour une entreprise (s'ils sont inchangés). */
+const ASSOCIATION_SEULEMENT = ['activites/', 'pages/association/', 'pages/statuts/', 'pages/reglement-interieur/'];
+/** Fichiers de `contenu-initial-entreprise/` appliqués même sans exemples. */
+const SOCLE_ENTREPRISE = ['association.yaml', 'images/logo.svg', 'pages/mentions-legales/index.md', 'pages/_pages-site.md', 'partenaires.yaml'];
 
 /**
  * Contenu de démonstration gardé quand on retire les exemples : identité,
@@ -86,6 +95,12 @@ async function fichiersDe(dossier: string, base = dossier): Promise<string[]> {
 	return fichiers;
 }
 
+/** `src/content/<f>` est-il identique au fichier de même nom de `dossier` (contenu d'exemple inchangé) ? */
+async function identique(f: string, dossier: string): Promise<boolean> {
+	const [a, b] = await Promise.all([readFile(join(dossier, f)).catch(() => null), readFile(join(contenu(), f)).catch(() => null)]);
+	return Boolean(a && b && a.equals(b));
+}
+
 /** Exemples encore identiques à `contenu-initial/` dans `src/content/` (ceux modifiés depuis sont gardés). */
 async function exemplesPresents(): Promise<string[]> {
 	const presents: string[] = [];
@@ -104,6 +119,8 @@ export interface SecretEtat extends SecretPlugin {
 
 export interface PluginInstallation {
 	id: PluginId;
+	/** Types de structure à qui il est proposé (vide = tous). */
+	structures: Structure[];
 	label: string;
 	description: string;
 	icon: string;
@@ -114,6 +131,8 @@ export interface PluginInstallation {
 
 export interface EtatInstallation {
 	requise: boolean;
+	/** Type de structure actuel (`structure:` de `reglages.yaml`). */
+	structure: Structure;
 	/** Compte administrateur déjà créé (installation reprise après un échec). */
 	compte: { login: string; fullname: string } | null;
 	association: { name: string; email: string; phone: string; address: { street: string; postalCode: string; city: string } };
@@ -138,10 +157,20 @@ export async function lireEtat(): Promise<EtatInstallation> {
 		exemplesPresents(),
 	]);
 	const admin = comptes.find((a) => !isSuperadminAccount(a) && a.groups.includes('admin'));
+	const reglages = parseReglages(await readFile(join(contenu(), 'reglages.yaml'), 'utf8').catch(() => ''));
+	// Identité encore celle de démonstration : champs vides dans l'assistant.
+	const demo = await identique('association.yaml', modeles());
+	const vide = (v: string) => (demo ? '' : v);
 	return {
 		requise: await installationRequise(),
+		structure: reglages.structure,
 		compte: admin ? { login: admin.login, fullname: admin.fullname } : null,
-		association: { name: association.name, email: association.email, phone: association.phone, address: association.address },
+		association: {
+			name: vide(association.name),
+			email: vide(association.email),
+			phone: vide(association.phone),
+			address: { street: vide(association.address.street), postalCode: vide(association.address.postalCode), city: vide(association.address.city) },
+		},
 		logo: brand.logo?.preview ?? null,
 		plugins: PLUGIN_IDS.map((id) => {
 			const info: PluginInfo = PLUGINS[id];
@@ -150,6 +179,7 @@ export async function lireEtat(): Promise<EtatInstallation> {
 				label: info.label,
 				description: info.description,
 				icon: info.icon,
+				structures: [...(info.structures ?? [])],
 				requiert: requis(id),
 				secrets: (info.secrets ?? []).filter((s) => !s.genere).map((s) => ({ ...s, dejaDefini: definiHorsInstallation(s.nom) })),
 				champs: sources.find((p) => p.id === id)?.champs ?? [],
@@ -164,6 +194,7 @@ export async function lireEtat(): Promise<EtatInstallation> {
 // Saisie
 
 interface Saisie {
+	structure: Structure;
 	compte: { login: string; fullname: string; email: string; password: string } | null;
 	association: { name: string; email: string; phone: string; street: string; postalCode: string; city: string };
 	logo: unknown;
@@ -184,6 +215,7 @@ function lireSaisie(raw: unknown): Saisie {
 	const reglages = obj(r.reglages);
 	const secrets = obj(r.secrets);
 	return {
+		structure: estStructure(r.structure) ? r.structure : 'association',
 		compte: c && {
 			login: normalizeLogin(texte(c.login, 40)),
 			fullname: texte(c.fullname, 80),
@@ -216,7 +248,7 @@ const FORMAT_SECRET: Record<SecretPlugin['type'], { re: RegExp; message: string 
 
 /** Plugins cochés réellement actifs (un plugin dont un requis est décoché ne l'est pas). */
 function actifs(saisie: Saisie): PluginId[] {
-	const actif = (id: PluginId): boolean => saisie.plugins[id] && requis(id).every(actif);
+	const actif = (id: PluginId): boolean => saisie.plugins[id] && proposePour(id, saisie.structure) && requis(id).every(actif);
 	return PLUGIN_IDS.filter(actif);
 }
 
@@ -247,23 +279,18 @@ export async function installer(raw: unknown, user: SessionUser): Promise<Result
 		}
 	}
 
-	// 2. Association : nom et coordonnées (le reste ne change pas).
-	const source = await readAssociationSource();
+	// 2. Identité : nom et coordonnées (le reste ne change pas ; écrit après le contenu d'exemple).
 	const a = saisie.association;
-	const association = {
-		...source,
-		name: a.name,
-		email: a.email,
-		phone: a.phone,
-		address: { street: a.street, postalCode: a.postalCode, city: a.city },
-	};
+	if (!a.name || !a.email || !a.phone || !a.street || !a.postalCode || !a.city) errors.push('Identité : nom, email, téléphone et adresse sont obligatoires.');
 	const logo = saisie.logo ? readBrandInput({ ...(await readBrandSource()), logo: saisie.logo, favicon: null, fonts: null }) : null;
 	if (logo && 'error' in logo) errors.push(logo.error);
 
 	// 3. Plugins, réglages et secrets des plugins actifs.
 	const choisis = actifs(saisie);
 	for (const id of PLUGIN_IDS) {
-		if (saisie.plugins[id] && !choisis.includes(id)) {
+		if (saisie.plugins[id] && !proposePour(id, saisie.structure)) {
+			errors.push(`Plugin « ${PLUGINS[id].label} » : non proposé à ce type de structure.`);
+		} else if (saisie.plugins[id] && !choisis.includes(id)) {
 			errors.push(`Plugin « ${PLUGINS[id].label} » : il requiert « ${requis(id).map((r) => PLUGINS[r].label).join(' », « ')} ».`);
 		}
 	}
@@ -306,7 +333,17 @@ export async function installer(raw: unknown, user: SessionUser): Promise<Result
 		purges.push(applied.purge);
 	};
 	try {
-		const assoc = await saveAssociation(association);
+		// Entreprise : exemples et mentions légales propres, avant l'identité (association.yaml compris).
+		if (saisie.structure === 'entreprise') etape(await appliquerEntreprise(saisie.exemples));
+
+		const source = await readAssociationSource();
+		const assoc = await saveAssociation({
+			...source,
+			name: a.name,
+			email: a.email,
+			phone: a.phone,
+			address: { street: a.street, postalCode: a.postalCode, city: a.city },
+		});
 		if (assoc.errors.length) throw new Error(assoc.errors.join(' '));
 		etape(assoc.applied);
 
@@ -316,7 +353,7 @@ export async function installer(raw: unknown, user: SessionUser): Promise<Result
 			etape(brand.applied);
 		}
 
-		etape(await ecrirePlugins(choisis));
+		etape(await ecrirePlugins(choisis, saisie.structure));
 		for (const id of choisis) {
 			const valeurs = saisie.reglages[id] ?? {};
 			if (!Object.keys(valeurs).length) continue;
@@ -373,8 +410,11 @@ export function terminerInstallation(par: string) {
 	ecrireInstallation(dataDir(), 'terminee', par);
 }
 
-/** Écrit l'état de **tous** les plugins dans `reglages.yaml` (`actifParDefaut` ne joue plus) et crée les fichiers requis manquants. */
-async function ecrirePlugins(choisis: PluginId[]): Promise<Applied> {
+/**
+ * Écrit le type de structure et l'état de **tous** les plugins dans
+ * `reglages.yaml` (`actifParDefaut` ne joue plus) ; crée les fichiers requis manquants.
+ */
+async function ecrirePlugins(choisis: PluginId[], structure: Structure): Promise<Applied> {
 	const fichier = join(contenu(), 'reglages.yaml');
 	const original = await readFile(fichier, 'utf8');
 	const crees: string[] = [];
@@ -397,6 +437,8 @@ async function ecrirePlugins(choisis: PluginId[]): Promise<Applied> {
 		if (doc.contents === null) doc.contents = new YAMLMap() as never;
 		if (!isMap(doc.get('plugins'))) doc.set('plugins', new YAMLMap());
 		for (const id of PLUGIN_IDS) doc.setIn(['plugins', id], choisis.includes(id));
+		if (structure === 'association') doc.delete('structure');
+		else doc.set('structure', structure);
 		const nouveau = doc.toString({ lineWidth: 0, flowCollectionPadding: false });
 		parseReglages(nouveau);
 		await writeFile(fichier, nouveau, 'utf8');
@@ -417,18 +459,65 @@ async function retirerExemples(): Promise<Applied> {
 		else await rm(join(contenu(), f), { force: true });
 	}
 	// Dossiers d'exemple restés vides (actualité, fiche, page).
-	for (const f of presents) {
+	await elaguer(presents);
+	return {
+		restore: async () => {
+			for (const [f, data] of copies) {
+				await mkdir(dirname(join(contenu(), f)), { recursive: true });
+				await writeFile(join(contenu(), f), data);
+			}
+		},
+		purge: async () => {},
+	};
+}
+
+/** Supprime les dossiers devenus vides au-dessus des fichiers retirés. */
+async function elaguer(fichiers: string[]) {
+	for (const f of fichiers) {
 		let dossier = dirname(join(contenu(), f));
 		while (dossier !== contenu() && (await readdir(dossier).catch(() => ['?'])).length === 0) {
 			await rm(dossier, { recursive: true, force: true });
 			dossier = dirname(dossier);
 		}
 	}
+}
+
+/**
+ * Type « entreprise » : retire les exemples propres aux associations encore
+ * inchangés, puis pose ceux de `contenu-initial-entreprise/` (le socle
+ * seulement sans exemples) là où le fichier manque ou est encore celui de
+ * démonstration. Copie de chaque fichier touché gardée pour l'annulation.
+ */
+async function appliquerEntreprise(exemples: boolean): Promise<Applied> {
+	const avant = new Map<string, Buffer | null>();
+	const garder = async (f: string) => {
+		if (!avant.has(f)) avant.set(f, await readFile(join(contenu(), f)).catch(() => null));
+	};
+	const retires: string[] = [];
+	for (const f of await fichiersDe(modeles())) {
+		if (f === 'activites/_categories.yaml' || !ASSOCIATION_SEULEMENT.some((p) => f.startsWith(p))) continue;
+		if (!(await identique(f, modeles()))) continue;
+		await garder(f);
+		await rm(join(contenu(), f), { force: true });
+		retires.push(f);
+	}
+	for (const f of await fichiersDe(modelesEntreprise())) {
+		if (f === 'README.md' || (!exemples && !SOCLE_ENTREPRISE.includes(f))) continue;
+		const present = await stat(join(contenu(), f)).catch(() => null);
+		if (present && !(await identique(f, modeles()))) continue; // déjà personnalisé : gardé
+		await garder(f);
+		await mkdir(dirname(join(contenu(), f)), { recursive: true });
+		await cp(join(modelesEntreprise(), f), join(contenu(), f));
+	}
+	await elaguer(retires);
 	return {
 		restore: async () => {
-			for (const [f, data] of copies) {
-				await mkdir(dirname(join(contenu(), f)), { recursive: true });
-				await writeFile(join(contenu(), f), data);
+			for (const [f, data] of avant) {
+				if (data === null) await rm(join(contenu(), f), { force: true });
+				else {
+					await mkdir(dirname(join(contenu(), f)), { recursive: true });
+					await writeFile(join(contenu(), f), data);
+				}
 			}
 		},
 		purge: async () => {},

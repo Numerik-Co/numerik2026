@@ -9,7 +9,9 @@
  * (cf. `src/plugins/README.md`).
  */
 import type { ChampPlugin } from './champs';
+import type { Structure } from '../lib/structure';
 import { ADRESSE_DEFAUT as RDV_ADRESSE_DEFAUT } from './rdv/lib/adresse';
+import { ADRESSE_DEFAUT as DEVIS_ADRESSE_DEFAUT } from './facturation/lib/adresse';
 
 /**
  * Secret demandé par l'assistant d'installation (écrit dans
@@ -38,6 +40,11 @@ export interface PluginInfo {
 	 * sont tous, et c'est le seul dossier d'un autre plugin qu'il peut importer.
 	 */
 	requiert?: readonly string[];
+	/**
+	 * Types de structure à qui le plugin est proposé (absent = tous) ; pour un
+	 * autre type, il est inactif et caché (module « Plugins », assistant).
+	 */
+	structures?: readonly Structure[];
 	/** Icône Font Awesome (module « Plugins » de l'Espace Admin). */
 	icon: string;
 	/** Documentation du plugin (chemin dans le projet). */
@@ -68,6 +75,7 @@ export const PLUGINS = {
 		description:
 			'Adhésion en ligne et bulletin PDF, présence (« Je participe »), planning des activités lu dans Grist.',
 		actifParDefaut: true,
+		structures: ['association'],
 		icon: 'fa-id-card',
 		doc: 'src/plugins/adhesion/README.md',
 		env: [
@@ -88,6 +96,7 @@ export const PLUGINS = {
 			'Page /inscription et bouton « S’inscrire » des fiches d’activité : adhérent·e ou personne extérieure, liste d’attente, préinscription. Requiert le plugin Adhésion (même document Grist).',
 		actifParDefaut: true,
 		requiert: ['adhesion'],
+		structures: ['association'],
 		icon: 'fa-clipboard-list',
 		doc: 'src/plugins/inscription/README.md',
 	},
@@ -149,6 +158,48 @@ export const PLUGINS = {
 			],
 		},
 	},
+	facturation: {
+		label: 'Devis et facturation',
+		description:
+			'Clients, devis et factures dans un document Grist : numérotation continue, PDF avec les mentions de l’auto-entrepreneur, page publique « Demander un devis » (réglages : src/content/facturation.yaml).',
+		structures: ['entreprise'],
+		icon: 'fa-file-invoice-dollar',
+		doc: 'src/plugins/facturation/README.md',
+		requis: [{ fichier: 'facturation.yaml', aide: 'Copier le modèle src/plugins/facturation/facturation.exemple.yaml puis l’adapter.' }],
+		modele: { fichier: 'facturation.yaml', source: 'src/plugins/facturation/facturation.exemple.yaml' },
+		env: [
+			{ nom: 'GRIST_DOC_ID_FACTURATION', aide: 'Identifiant du document Grist de la facturation, dans le .env.' },
+			{
+				nom: 'GRIST_API_KEY_FACTURATION',
+				repli: 'GRIST_API_KEY',
+				aide: 'Clé d’API Grist, dans le .env : GRIST_API_KEY_FACTURATION (ou, à défaut, GRIST_API_KEY).',
+			},
+		],
+		reglages: {
+			fichier: 'facturation.yaml',
+			champs: [
+				{
+					cle: 'adresse',
+					label: 'Adresse de la page « Demander un devis »',
+					groupe: 'Page publique',
+					type: 'adresse',
+					defaut: DEVIS_ADRESSE_DEFAUT,
+				},
+			],
+		},
+		secrets: [
+			{ nom: 'GRIST_BASE_URL', label: 'Adresse de l’instance Grist', type: 'url', obligatoire: true, aide: 'Ex. https://grist.exemple.fr' },
+			{
+				nom: 'GRIST_DOC_ID_FACTURATION',
+				label: 'Identifiant du document de facturation',
+				type: 'identifiant',
+				obligatoire: true,
+				aide: 'Document Grist créé d’après le schéma du plugin (README) : https://…/o/…/<identifiant>/…',
+			},
+			{ nom: 'GRIST_API_KEY_FACTURATION', label: 'Clé d’API Grist', type: 'cle', obligatoire: true, aide: 'Grist → Paramètres du compte → Clé d’API.' },
+			{ nom: 'GOTENBERG_URL', label: 'Adresse du service PDF (Gotenberg)', type: 'url', aide: 'Facultatif, mais nécessaire pour les PDF des devis et factures. Ex. http://gotenberg:3000' },
+		],
+	},
 } as const satisfies Record<string, PluginInfo>;
 
 export type PluginId = keyof typeof PLUGINS;
@@ -160,6 +211,12 @@ export function actifParDefaut(id: PluginId): boolean {
 	return (PLUGINS[id] as PluginInfo).actifParDefaut === true;
 }
 
+/** Plugin proposé au type de structure `structure` ? */
+export function proposePour(id: PluginId, structure: Structure): boolean {
+	const structures = (PLUGINS[id] as PluginInfo).structures;
+	return !structures || structures.includes(structure);
+}
+
 /** Plugins requis par `id` (`requiert`). */
 export function requis(id: PluginId): PluginId[] {
 	return [...((PLUGINS[id] as PluginInfo).requiert ?? [])] as PluginId[];
@@ -167,10 +224,12 @@ export function requis(id: PluginId): PluginId[] {
 
 /**
  * Plugins réellement actifs d'après `plugins:` de `reglages.yaml` : valeur
- * écrite, sinon `actifParDefaut` ; puis inactif si un plugin requis l'est.
+ * écrite, sinon `actifParDefaut` ; inactif s'il n'est pas proposé au type
+ * de structure (`structure:`) ou si un plugin requis l'est.
  */
-export function resoudrePlugins(lus: Partial<Record<string, unknown>>): Record<PluginId, boolean> {
-	const voulu = (id: PluginId) => (typeof lus[id] === 'boolean' ? (lus[id] as boolean) : actifParDefaut(id));
+export function resoudrePlugins(lus: Partial<Record<string, unknown>>, structure: Structure = 'association'): Record<PluginId, boolean> {
+	const voulu = (id: PluginId) =>
+		proposePour(id, structure) && (typeof lus[id] === 'boolean' ? (lus[id] as boolean) : actifParDefaut(id));
 	const actif = (id: PluginId, vus: PluginId[] = []): boolean =>
 		voulu(id) && requis(id).every((r) => !vus.includes(r) && actif(r, [...vus, id]));
 	return Object.fromEntries(PLUGIN_IDS.map((id) => [id, actif(id)])) as Record<PluginId, boolean>;

@@ -35,6 +35,7 @@ const ACTIONS: Record<string, { label: string; icon: string }> = {
 	'sauvegarde.depot': { label: 'Sauvegarde déposée', icon: 'fa-file-arrow-up' },
 	'sauvegarde.suppression': { label: 'Sauvegarde supprimée', icon: 'fa-trash' },
 	'sauvegarde.restauration': { label: 'Sauvegarde restaurée', icon: 'fa-clock-rotate-left' },
+	facturation: { label: 'Facturation', icon: 'fa-file-invoice-dollar' },
 	installation: { label: 'Site installé', icon: 'fa-wand-magic-sparkles' },
 	'maintenance.activation': { label: 'Site mis en maintenance', icon: 'fa-screwdriver-wrench' },
 	'maintenance.modification': { label: 'Message de maintenance modifié', icon: 'fa-screwdriver-wrench' },

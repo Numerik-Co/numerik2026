@@ -15,12 +15,14 @@ import type { AstroIntegration } from 'astro';
 import { parse as parseYaml } from 'yaml';
 import { resoudrePlugins } from '../plugins/catalogue';
 import { PLUGIN_MANIFESTS } from '../plugins/manifests';
+import { estStructure, type Structure } from '../lib/structure';
 
-function pluginsActifs(file: URL): Record<string, unknown> {
+function lireReglages(file: URL): { plugins: Record<string, unknown>; structure: Structure } {
 	try {
-		return parseYaml(readFileSync(file, 'utf8'))?.plugins ?? {};
+		const r = parseYaml(readFileSync(file, 'utf8'));
+		return { plugins: r?.plugins ?? {}, structure: estStructure(r?.structure) ? r.structure : 'association' };
 	} catch {
-		return {};
+		return { plugins: {}, structure: 'association' };
 	}
 }
 
@@ -32,7 +34,8 @@ export default function plugins(): AstroIntegration {
 				const reglages = new URL('src/content/reglages.yaml', config.root);
 				addWatchFile(reglages);
 				addWatchFile(new URL('src/content/rdv.yaml', config.root));
-				const actifs = resoudrePlugins(pluginsActifs(reglages));
+				const lus = lireReglages(reglages);
+				const actifs = resoudrePlugins(lus.plugins, lus.structure);
 				for (const plugin of PLUGIN_MANIFESTS) {
 					// Écrit dans reglages.yaml, sinon défaut du catalogue ; plugins requis actifs.
 					if (!actifs[plugin.id]) continue;

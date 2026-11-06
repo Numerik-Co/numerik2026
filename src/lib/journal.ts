@@ -58,6 +58,7 @@ export type JournalAction =
 	| 'plugin.modification'
 	| 'rdv.modification'
 	| 'rdv.suppression'
+	| 'facturation'
 	| 'compte.creation'
 	| 'compte.modification'
 	| 'compte.reinitialisation'

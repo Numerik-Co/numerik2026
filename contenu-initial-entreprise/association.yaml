@@ -1,0 +1,52 @@
+# =============================================================================
+#  Informations de l'entreprise
+# =============================================================================
+#
+#  Entreprise individuelle (auto-entrepreneur) : nom commercial, coordonnées,
+#  mentions légales. Affichées dans l'en-tête, le pied de page, la page Contact, les
+#  aperçus de partage… et dans le texte des pages via les variables
+#  {{association.nom}}, {{association.email}}… (voir README.md).
+#
+#  Contenu de démonstration : remplacez ces valeurs (module « Entreprise » de
+#  l'Espace Admin, onglet Généralités, ou directement ici).
+#
+#  Ce fichier appartient à l'entreprise : une mise à jour du site ne le
+#  remplace jamais. Un champ obligatoire manquant ou mal écrit fait échouer la
+#  construction du site avec un message indiquant le champ en cause.
+#
+#  Laissez '' (vide) un champ facultatif inconnu : les pages qui l'utilisent
+#  affichent alors « [À compléter : …] ».
+# =============================================================================
+
+# Nom affiché partout sur le site (obligatoire).
+name: 'Mon entreprise'
+
+# Une phrase de présentation : page d'accueil, moteurs de recherche (obligatoire).
+description: "Entrepreneur individuel : présentez ici en une phrase vos prestations, votre clientèle et votre secteur."
+
+# Coordonnées de contact (obligatoires).
+email: 'contact@exemple.org'
+phone: '01 23 45 67 89'
+
+# Adresse du siège (obligatoire).
+address:
+  street: '1, place de la Mairie'
+  postalCode: '00000'
+  city: 'Ma Ville'
+
+# Réseaux sociaux, en pied de page (facultatif : supprimez la ligne ou laissez
+# '' pour masquer). Possibles : facebook, instagram, linkedin, twitter,
+# youtube, tiktok.
+social:
+  facebook: ''
+
+# Mentions légales (facultatives).
+legal:
+  siretNumber: '' # Numéro SIRET (obligatoire sur le site et les factures)
+  president: '' # Prénom et nom de l'entrepreneur·e
+  publicationManager: '' # Responsable de la publication (l'entrepreneur·e, repris si vide)
+  hosting:
+    # Hébergeur du site
+    name: ''
+    address: ''
+    phone: ''

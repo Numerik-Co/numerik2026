@@ -7,9 +7,10 @@ dans le site quand il est inactif.
 
 | Plugin | Dossier | Contenu |
 | :--- | :--- | :--- |
-| `adhesion` | [`adhesion/`](adhesion/README.md) | Adhésion en ligne et bulletin PDF, présence, planning Grist — **actif par défaut** |
-| `inscription` | [`inscription/`](inscription/README.md) | Inscription aux activités (`/inscription`, bouton « S'inscrire ») — **actif par défaut**, requiert `adhesion` |
+| `adhesion` | [`adhesion/`](adhesion/README.md) | Adhésion en ligne et bulletin PDF, présence, planning Grist — **actif par défaut**, associations seulement |
+| `inscription` | [`inscription/`](inscription/README.md) | Inscription aux activités (`/inscription`, bouton « S'inscrire ») — **actif par défaut**, requiert `adhesion`, associations seulement |
 | `rdv` | [`rdv/`](rdv/README.md) | Prise de rendez-vous en ligne (réglages de l'asso : `src/content/rdv.yaml`) |
+| `facturation` | [`facturation/`](facturation/README.md) | Devis et factures dans Grist, PDF, page « Demander un devis » — **auto-entrepreneur seulement** |
 
 ## Activer ou désactiver un plugin
 
@@ -106,7 +107,8 @@ plugin.
 1. Une entrée dans `PLUGINS` (`catalogue.ts`) : le réglage
    `plugins.<id>` est aussitôt reconnu, inactif par défaut (`actifParDefaut:
    true` pour un volet que la plupart des associations utilisent ;
-   `requiert: ['<id>']` s'il se sert d'un autre plugin), et le plugin
+   `requiert: ['<id>']` s'il se sert d'un autre plugin ; `structures` :
+   types de structure à qui il est proposé, `src/lib/structure.ts`), et le plugin
    apparaît dans le module « Plugins » (`icon`, `doc`, `requis` = fichiers
    de `src/content/` sans lesquels l'activation est refusée, `env` =
    secrets du `.env` signalés si absents, `reglages` = fichier de
